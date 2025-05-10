@@ -15,9 +15,8 @@ plugins {
 
 kotlin {
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_18)
         }
     }
     
@@ -56,7 +55,7 @@ kotlin {
     
     sourceSets {
         val desktopMain by getting
-        
+
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
@@ -134,10 +133,10 @@ kotlin {
 
         }
         commonMain.dependencies {
-            implementation(compose.runtime)
+//            implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
-            implementation(compose.ui)
+//            implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
@@ -147,6 +146,34 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.json)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.serialization.gson.jvm)
+
+            implementation(libs.navigation.compose)
+            implementation(libs.lifecycle.viewmodel.compose)
+
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.okhttp)
+
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.coroutines.swing)
+
+            implementation(libs.datastore)
+            implementation(libs.datastore.preferences)
+
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+
+            implementation(libs.compose.material.icons.extended)
+
+            implementation(libs.compose.native.tray)
+            implementation(libs.compose.native.notification)
+            implementation(libs.calendar.compose.multiplatform)
         }
     }
 }
@@ -184,11 +211,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.esteban.ruano.MainKt"
+        mainClass = "com.esteban.ruano.lifecommander.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.esteban.ruano"
+            packageName = "com.esteban.ruano.lifecommander"
             packageVersion = "1.0.0"
         }
     }
