@@ -1,0 +1,18 @@
+package com.esteban.ruano.core_ui.view_model.state
+
+import com.esteban.ruano.core_ui.utils.SnackbarType
+import com.esteban.ruano.core_ui.view_model.Effect
+import com.esteban.ruano.core_ui.view_model.ViewState
+
+
+data class MainState(
+    val isSynced: Boolean = false,
+    val isLoading: Boolean = false,
+    val isError: Boolean = false,
+    val errorMessage: String? = null
+    ): ViewState
+
+sealed class MainEffect: Effect {
+    data class ShowSnackBar(val message: String, val type:SnackbarType = SnackbarType.INFO) : MainEffect()
+}
+

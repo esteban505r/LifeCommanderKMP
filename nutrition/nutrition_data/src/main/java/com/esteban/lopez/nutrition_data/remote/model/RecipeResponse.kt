@@ -1,0 +1,11 @@
+package com.esteban.ruano.nutrition_data.remote.model
+
+data class RecipeResponse(
+    val id: String,
+    val name: String,
+    val note: String? = null,
+    val protein: Double? = null,
+    val image: String? = null,
+    val day: Int? = null,
+    val mealTag:String? = null
+)

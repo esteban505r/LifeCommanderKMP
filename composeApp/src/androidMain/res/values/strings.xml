@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">LifeCommander</string>
+    <string name="session_expired_message">The session has expired, please log in again!</string>
 </resources>
