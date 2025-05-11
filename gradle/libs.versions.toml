@@ -10,6 +10,7 @@ app-version-name = "1.0.0"
 
 # Kotlin
 kotlin = "2.1.20"
+kotlinx-datetime = "0.5.0"
 
 #Calendar
 calendar = "2.6.0-beta02"
@@ -24,6 +25,7 @@ compose-navigation = "2.7.7"
 androidx-test-junit = "1.2.1"
 compose-runtime = "1.7.0"
 compose-multiplatform = "1.8.0"
+compose-foundation = "1.6.3"
 
 # AndroidX
 androidx-activityCompose = "1.10.1"
@@ -97,12 +99,14 @@ flyway = "10.11.1"
 bcrypt = "0.9.0"
 postgres = "42.7.2"
 aws-sdk = "2.31.15"
+moko-resources = "0.24.0"
 dotenv = "6.4.1"
 
 [libraries]
 # Kotlin
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
 # AndroidX
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
@@ -132,7 +136,13 @@ compose-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts" }
 compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "compose-navigation" }
 compose-hilt-navigation = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "compose-hilt-navigation" }
 compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "compose-runtime" }
+compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "compose-foundation" }
+compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "compose-foundation" }
 
+
+#MOKO
+moko-resources = { module = "dev.icerock.moko:resources", version.ref = "moko-resources" }
+moko-resources-compose = { module = "dev.icerock.moko:resources-compose", version.ref = "moko-resources" }
 
 # Material
 google-material = { module = "com.google.android.material:material", version.ref = "material" }
@@ -266,3 +276,4 @@ kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+moko-resources = { id = "dev.icerock.mobile.multiplatform-resources", version.ref = "moko-resources" }

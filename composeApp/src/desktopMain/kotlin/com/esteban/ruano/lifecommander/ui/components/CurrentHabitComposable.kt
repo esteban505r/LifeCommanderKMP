@@ -1,25 +1,20 @@
-package ui.components
+package com.esteban.ruano.lifecommander.ui.components
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import services.habits.models.HabitResponse
 import utils.DateUIUtils.toLocalDateTime
 import utils.DateUtils.format
-import utils.DateUtils.toLocalTime
-import utils.TimeBasedItemUtils
-import java.time.Duration
-import java.time.LocalDateTime
+import com.esteban.ruano.lifecommander.utils.TimeBasedItemUtils
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 

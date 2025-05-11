@@ -1,17 +1,16 @@
-package utils
+package com.esteban.ruano.lifecommander.utils
 
+import com.esteban.ruano.utils.TimeBasedItemInfo
+import com.esteban.ruano.utils.TimeBasedUtils
+import com.esteban.ruano.utils.TimeFormatUtils
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
+import kotlinx.datetime.toKotlinLocalTime
 import services.habits.models.HabitResponse
 import services.tasks.models.TaskResponse
 import utils.DateUIUtils.toLocalDateTime
-import java.time.Duration
 import java.time.LocalDateTime
-import java.time.LocalTime
-
-data class TimeBasedItemInfo<T>(
-    val currentItem: T?,
-    val nextItem: T?,
-    val timeRemaining: Duration?
-)
+import java.time.LocalTime as JavaLocalTime
 
 data class StatusBarInfo(
     val title: String,
@@ -21,66 +20,19 @@ data class StatusBarInfo(
 )
 
 object TimeBasedItemUtils {
-    private fun getDayLetter(dateTime: LocalDateTime): String {
-        return when (dateTime.dayOfWeek) {
-            java.time.DayOfWeek.MONDAY -> "M"
-            java.time.DayOfWeek.TUESDAY -> "T"
-            java.time.DayOfWeek.WEDNESDAY -> "W"
-            java.time.DayOfWeek.THURSDAY -> "Th"
-            java.time.DayOfWeek.FRIDAY -> "F"
-            java.time.DayOfWeek.SATURDAY -> "Sa"
-            java.time.DayOfWeek.SUNDAY -> "Su"
-        }
-    }
-
-    fun <T> calculateItemTimes(
-        items: List<T>,
-        currentTime: LocalTime,
-        getTime: (T) -> LocalTime?
-    ): TimeBasedItemInfo<T> {
-        val itemsWithTimes = items.mapNotNull { item ->
-            getTime(item)?.let { time ->
-                item to time
-            }
-        }
-
-        // Find current item (closest in time, but before current hour)
-        val currentItem = itemsWithTimes
-            .filter { (_, time) -> 
-                time <= currentTime
-            }
-            .maxByOrNull { (_, time) -> time }?.first
-
-        // Find next item (closest in future)
-        val nextItem = itemsWithTimes
-            .filter { (_, time) -> time > currentTime }
-            .minByOrNull { (_, time) -> 
-                Duration.between(currentTime, time).toMinutes()
-            }?.first
-
-        // Calculate time remaining for current item
-        val timeRemaining = nextItem?.let { item ->
-            getTime(item)?.let { habitTime ->
-                Duration.between(currentTime, habitTime)
-            }
-        }
-
-        return TimeBasedItemInfo(currentItem, nextItem, timeRemaining)
-    }
-
     // Convenience function for habits
-    fun calculateHabitTimes(habits: List<HabitResponse>, currentTime: LocalTime): TimeBasedItemInfo<HabitResponse> {
-        return calculateItemTimes(habits, currentTime) { habit ->
-            habit.dateTime?.toLocalDateTime()?.toLocalTime()
+    fun calculateHabitTimes(habits: List<HabitResponse>, currentTime: JavaLocalTime): TimeBasedItemInfo<HabitResponse> {
+        return TimeBasedUtils.calculateItemTimes(habits, currentTime.toKotlinLocalTime()) { habit ->
+            habit.dateTime?.toLocalDateTime()?.toLocalTime()?.toKotlinLocalTime()
         }
     }
 
     // Convenience function for tasks
-    fun calculateTaskTimes(tasks: List<TaskResponse>, currentTime: LocalTime): TimeBasedItemInfo<TaskResponse> {
-        return calculateItemTimes(tasks, currentTime) { task ->
+    fun calculateTaskTimes(tasks: List<TaskResponse>, currentTime: JavaLocalTime): TimeBasedItemInfo<TaskResponse> {
+        return TimeBasedUtils.calculateItemTimes(tasks, currentTime.toKotlinLocalTime()) { task ->
             // Prioritize scheduled time over due time
-            task.scheduledDateTime?.toLocalDateTime()?.toLocalTime() 
-                ?: task.dueDateTime?.toLocalDateTime()?.toLocalTime()
+            task.scheduledDateTime?.toLocalDateTime()?.toLocalTime()?.toKotlinLocalTime()
+                ?: task.dueDateTime?.toLocalDateTime()?.toLocalTime()?.toKotlinLocalTime()
         }
     }
 
@@ -96,16 +48,18 @@ object TimeBasedItemUtils {
 
         if (overdueTasks.isNotEmpty()) {
             val overdueTask = overdueTasks[0]
-            val overdueTime = overdueTask.dueDateTime?.toLocalDateTime()
-            val timeOverdue = overdueTime?.let { Duration.between(it, currentTime) }
-            val overdueText = when {
-                timeOverdue?.toHours() ?: 0 > 0 -> "${timeOverdue?.toHours()}h ${timeOverdue?.toMinutesPart()}m"
-                else -> "${timeOverdue?.toMinutes()}m"
+            val overdueTime = overdueTask.dueDateTime?.toLocalDateTime()?.toKotlinLocalDateTime()
+            val timeOverdue = overdueTime?.let { 
+                TimeFormatUtils.calculateTimeDifference(
+                    currentTime.toLocalTime().toKotlinLocalTime(),
+                    it.toJavaLocalDateTime().toLocalTime().toKotlinLocalTime()
+                )
             }
+            val overdueText = TimeFormatUtils.formatDuration(timeOverdue)
             
             return when (overdueTasks.size) {
-                1 -> "⚠️ Overdue: ${overdueTask.name} (${getDayLetter(overdueTime!!)} ${overdueTime.toLocalTime()}, +$overdueText)"
-                2 -> "⚠️ 2 overdue: ${overdueTasks[0].name} (${getDayLetter(overdueTasks[0].dueDateTime?.toLocalDateTime()!!)} ${overdueTasks[0].dueDateTime?.toLocalDateTime()?.toLocalTime()}, +${Duration.between(overdueTasks[0].dueDateTime?.toLocalDateTime(), currentTime).toHours()}h), ${overdueTasks[1].name}"
+                1 -> "⚠️ Overdue: ${overdueTask.name} (${TimeFormatUtils.getDayLetter(overdueTime!!)} ${overdueTime.toJavaLocalDateTime()}, +$overdueText)"
+                2 -> "⚠️ 2 overdue: ${overdueTasks[0].name} (${TimeFormatUtils.getDayLetter(overdueTasks[0].dueDateTime!!.toLocalDateTime().toKotlinLocalDateTime())} ${overdueTasks[0].dueDateTime?.toLocalDateTime()?.toLocalTime()}, +${TimeFormatUtils.calculateTimeDifference(currentTime.toLocalTime().toKotlinLocalTime(), overdueTasks[0].dueDateTime?.toLocalDateTime()?.toLocalTime()?.toKotlinLocalTime() ?: currentTime.toLocalTime().toKotlinLocalTime()).inWholeHours}h), ${overdueTasks[1].name}"
                 else -> "⚠️ ${overdueTasks.size} overdue tasks"
             }
         }
@@ -120,10 +74,10 @@ object TimeBasedItemUtils {
             val taskDateTime = priorityTask.scheduledDateTime?.toLocalDateTime() 
                 ?: priorityTask.dueDateTime?.toLocalDateTime()
             val taskTime = taskDateTime?.toLocalTime()
-            
+
             return when (highPriorityTasks.size) {
-                1 -> "🔴 Priority: ${priorityTask.name} (${getDayLetter(taskDateTime!!)} ${taskTime})"
-                2 -> "🔴 2 priority: ${highPriorityTasks[0].name} (${getDayLetter(highPriorityTasks[0].scheduledDateTime?.toLocalDateTime()!!)} ${highPriorityTasks[0].scheduledDateTime?.toLocalDateTime()?.toLocalTime()}), ${highPriorityTasks[1].name}"
+                1 -> "🔴 Priority: ${priorityTask.name} (${TimeFormatUtils.getDayLetter(taskDateTime?.toKotlinLocalDateTime())} ${taskTime})"
+                2 -> "🔴 2 priority: ${highPriorityTasks[0].name} (${TimeFormatUtils.getDayLetter(highPriorityTasks[0].scheduledDateTime?.toLocalDateTime()?.toKotlinLocalDateTime())} ${highPriorityTasks[0].scheduledDateTime?.toLocalDateTime()?.toLocalTime()}), ${highPriorityTasks[1].name}"
                 else -> "🔴 ${highPriorityTasks.size} priority tasks"
             }
         }
@@ -133,7 +87,7 @@ object TimeBasedItemUtils {
             val taskDateTime = currentTask.scheduledDateTime?.toLocalDateTime() 
                 ?: currentTask.dueDateTime?.toLocalDateTime()
             val taskTime = taskDateTime?.toLocalTime()
-            return "📝 ${currentTask.name} (${getDayLetter(taskDateTime!!)} ${taskTime})"
+            return "📝 ${currentTask.name} (${TimeFormatUtils.getDayLetter(taskDateTime?.toKotlinLocalDateTime())} ${taskTime})"
         }
 
         // Show next task if available
@@ -142,17 +96,14 @@ object TimeBasedItemUtils {
                 ?: nextTask.dueDateTime?.toLocalDateTime()
             
             if (nextTaskDateTime != null) {
-                val timeUntilNext = Duration.between(currentTime, nextTaskDateTime)
-                val minutesUntilNext = timeUntilNext.toMinutes()
-                val timeText = when {
-                    timeUntilNext.toHours() > 0 -> "${timeUntilNext.toHours()}h ${timeUntilNext.toMinutesPart()}m"
-                    else -> "${timeUntilNext.toMinutes()}m"
-                }
+                val timeUntilNext = taskTimeInfo.timeRemaining
+                val minutesUntilNext = timeUntilNext?.inWholeMinutes ?: 0
+                val timeText = TimeFormatUtils.formatDuration(timeUntilNext)
                 
                 return when {
-                    minutesUntilNext < 5 -> "⏰ Starting soon: ${nextTask.name} (${getDayLetter(nextTaskDateTime)} ${nextTaskDateTime.toLocalTime()}, in $timeText)"
-                    minutesUntilNext < 30 -> "⏳ Next task in ${minutesUntilNext}m: ${nextTask.name} (${getDayLetter(nextTaskDateTime)} ${nextTaskDateTime.toLocalTime()})"
-                    else -> "📅 Next task in ${timeUntilNext.toHours()}h: ${nextTask.name} (${getDayLetter(nextTaskDateTime)} ${nextTaskDateTime.toLocalTime()})"
+                    minutesUntilNext < 5 -> "⏰ Starting soon: ${nextTask.name} (${TimeFormatUtils.getDayLetter(nextTaskDateTime?.toKotlinLocalDateTime())} ${nextTaskDateTime.toLocalTime()}, in $timeText)"
+                    minutesUntilNext < 30 -> "⏳ Next task in ${minutesUntilNext}m: ${nextTask.name} (${TimeFormatUtils.getDayLetter(nextTaskDateTime?.toKotlinLocalDateTime())} ${nextTaskDateTime.toLocalTime()})"
+                    else -> "📅 Next task in ${timeUntilNext?.inWholeHours}h: ${nextTask.name} (${TimeFormatUtils.getDayLetter(nextTaskDateTime.toKotlinLocalDateTime())} ${nextTaskDateTime.toLocalTime()})"
                 }
             }
         }
@@ -169,7 +120,7 @@ object TimeBasedItemUtils {
         val todayOverdueHabits = habits.filter { habit ->
             val habitDateTime = habit.dateTime?.toLocalDateTime()
             habitDateTime != null &&
-            habitDateTime.toLocalTime().isBefore(currentTime.toLocalTime()) &&
+            TimeFormatUtils.isTimeBefore(habitDateTime.toLocalTime().toKotlinLocalTime(), currentTime.toLocalTime().toKotlinLocalTime()) &&
             habit.done != true
         }
 
@@ -180,7 +131,7 @@ object TimeBasedItemUtils {
             val overdueText = if (todayOverdueHabits.isNotEmpty()) {
                 " (${todayOverdueHabits.size} overdue today)"
             } else ""
-            return "🔄 ${currentHabit.name} (${getDayLetter(habitDateTime!!)} ${habitTime})$overdueText"
+            return "🔄 ${currentHabit.name} (${TimeFormatUtils.getDayLetter(habitDateTime?.toKotlinLocalDateTime())} ${habitTime})$overdueText"
         }
 
         // Show next habit if available
@@ -188,21 +139,18 @@ object TimeBasedItemUtils {
             val nextHabitDateTime = nextHabit.dateTime?.toLocalDateTime()
             
             if (nextHabitDateTime != null) {
-                val timeUntilNext = Duration.between(currentTime, nextHabitDateTime)
-                val minutesUntilNext = timeUntilNext.toMinutes()
-                val timeText = when {
-                    timeUntilNext.toHours() > 0 -> "${timeUntilNext.toHours()}h ${timeUntilNext.toMinutesPart()}m"
-                    else -> "${timeUntilNext.toMinutes()}m"
-                }
+                val timeUntilNext = habitTimeInfo.timeRemaining
+                val minutesUntilNext = timeUntilNext?.inWholeMinutes ?: 0
+                val timeText = TimeFormatUtils.formatDuration(timeUntilNext)
                 
                 val overdueText = if (todayOverdueHabits.isNotEmpty()) {
                     " (${todayOverdueHabits.size} overdue today)"
                 } else ""
                 
                 return when {
-                    minutesUntilNext < 5 -> "⏰ Next habit starting: ${nextHabit.name} (${getDayLetter(nextHabitDateTime)} ${nextHabitDateTime.toLocalTime()}, in $timeText)$overdueText"
-                    minutesUntilNext < 30 -> "⏳ Next habit in ${minutesUntilNext}m: ${nextHabit.name} (${getDayLetter(nextHabitDateTime)} ${nextHabitDateTime.toLocalTime()})$overdueText"
-                    else -> "📅 Next habit in ${timeUntilNext.toHours()}h: ${nextHabit.name} (${getDayLetter(nextHabitDateTime)} ${nextHabitDateTime.toLocalTime()})$overdueText"
+                    minutesUntilNext < 5 -> "⏰ Next habit starting: ${nextHabit.name} (${TimeFormatUtils.getDayLetter(nextHabitDateTime.toKotlinLocalDateTime())} ${nextHabitDateTime.toLocalTime()}, in $timeText)$overdueText"
+                    minutesUntilNext < 30 -> "⏳ Next habit in ${minutesUntilNext}m: ${nextHabit.name} (${TimeFormatUtils.getDayLetter(nextHabitDateTime.toKotlinLocalDateTime())} ${nextHabitDateTime.toLocalTime()})$overdueText"
+                    else -> "📅 Next habit in ${timeUntilNext?.inWholeHours}h: ${nextHabit.name} (${TimeFormatUtils.getDayLetter(nextHabitDateTime.toKotlinLocalDateTime())} ${nextHabitDateTime.toLocalTime()})$overdueText"
                 }
             }
         }

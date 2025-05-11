@@ -1,14 +1,10 @@
 package ui.viewmodels
 
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import services.auth.TokenStorage
 import services.habits.HabitService
@@ -16,12 +12,10 @@ import services.habits.models.Frequency
 import services.habits.models.HabitResponse
 import utils.DateUtils.parseDate
 import utils.DateUtils.parseDateTime
-import utils.DateUtils.toLocalDateTime
 import utils.StatusBarService
-import utils.TimeBasedItemUtils
+import com.esteban.ruano.lifecommander.utils.TimeBasedItemUtils
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
 class HabitsViewModel(
     private val habitService: HabitService,

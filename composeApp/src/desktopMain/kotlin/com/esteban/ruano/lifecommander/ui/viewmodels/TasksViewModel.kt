@@ -1,13 +1,9 @@
 package ui.viewmodels
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import services.auth.TokenStorage
 import services.tasks.TaskService
@@ -17,7 +13,7 @@ import ui.models.TaskFilters
 import utils.DateUIUtils.toLocalDateTime
 import utils.DateUtils.parseDateTime
 import utils.StatusBarService
-import utils.TimeBasedItemUtils
+import com.esteban.ruano.lifecommander.utils.TimeBasedItemUtils
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
