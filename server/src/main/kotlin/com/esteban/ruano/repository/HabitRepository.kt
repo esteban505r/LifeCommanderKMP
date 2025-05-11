@@ -2,8 +2,9 @@ package com.esteban.ruano.repository
 
 import com.esteban.ruano.models.habits.*
 import com.esteban.ruano.service.HabitService
-import parseDate
-import parseDateTime
+import com.esteban.ruano.utils.parseDate
+
+import com.esteban.ruano.utils.parseDateTime
 import java.util.UUID
 
 class HabitRepository(private val habitService: HabitService) {

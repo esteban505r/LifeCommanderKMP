@@ -1,0 +1,9 @@
+version: '3'
+services:
+  postgres:
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "lifecommanderdb"
+      POSTGRES_ENV: "DEV"
+      POSTGRES_HOST: "localhost"

@@ -1,6 +1,5 @@
 package com.esteban.ruano.service
 
-import fromDateToLong
 import kotlinx.datetime.*
 import com.esteban.ruano.database.converters.toDTO
 import com.esteban.ruano.database.entities.Task
@@ -12,13 +11,14 @@ import com.esteban.ruano.models.tasks.CreateTaskDTO
 import com.esteban.ruano.models.tasks.TaskDTO
 import com.esteban.ruano.models.tasks.UpdateTaskDTO
 import com.esteban.ruano.utils.sortedByDefault
+import com.esteban.ruano.utils.fromDateToLong
+import com.esteban.ruano.utils.parseDateTime
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.transactions.transaction
-import parseDateTime
 import java.util.UUID
 
 class TaskService(

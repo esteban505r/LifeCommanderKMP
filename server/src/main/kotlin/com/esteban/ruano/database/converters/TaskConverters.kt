@@ -1,6 +1,6 @@
 package com.esteban.ruano.database.converters
 
-import formatDateTime
+import com.esteban.ruano.utils.formatDateTime
 import kotlinx.datetime.*
 import com.esteban.ruano.database.entities.Task
 import com.esteban.ruano.models.tasks.CreateTaskDTO

@@ -1,12 +1,12 @@
 package com.esteban.ruano.repository
 
-import WorkoutDashboardDTO
 import com.esteban.ruano.models.tasks.TaskDTO
+import com.esteban.ruano.models.workout.WorkoutDashboardDTO
 import com.esteban.ruano.models.workout.day.UpdateWorkoutDayDTO
 import com.esteban.ruano.models.workout.day.WorkoutDayDTO
 import com.esteban.ruano.models.workout.exercise.ExerciseDTO
 import com.esteban.ruano.service.WorkoutService
-import parseDate
+import com.esteban.ruano.utils.parseDate
 import java.util.UUID
 
 class WorkoutRepository(private val workoutService: WorkoutService) {

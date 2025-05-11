@@ -1,4 +1,5 @@
-package com.esteban.ruano.utilsimport kotlinx.datetime.*
+package com.esteban.ruano.utils
+import kotlinx.datetime.*
 import java.time.format.DateTimeFormatter
 
 fun parseDate(dateString: String): LocalDate {

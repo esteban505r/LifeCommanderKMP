@@ -1,8 +1,5 @@
 package com.esteban.ruano.utils
 
-import haveMoreThanAMonthOfDifference
-import haveMoreThanAWeekOfDifference
-import haveMoreThanAYearOfDifference
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import com.esteban.ruano.database.entities.HabitTrack

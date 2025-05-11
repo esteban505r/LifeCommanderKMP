@@ -1,5 +1,5 @@
-package com.esteban.ruano.routingimport io.ktor.http.*
-import io.ktor.server.application.*
+package com.esteban.ruano.routing
+import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*

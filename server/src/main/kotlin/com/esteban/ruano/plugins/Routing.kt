@@ -1,6 +1,5 @@
 package com.esteban.ruano.plugins
 
-import habitsRouting
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -8,6 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import com.esteban.ruano.repository.*
 import com.esteban.ruano.routing.*
+import com.esteban.ruano.routing.habitsRouting
 import com.esteban.ruano.service.*
 import com.esteban.ruano.utils.VERSION
 import kotlin.reflect.KClass

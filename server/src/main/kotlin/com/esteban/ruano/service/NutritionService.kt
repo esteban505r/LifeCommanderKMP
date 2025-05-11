@@ -1,16 +1,15 @@
 package com.esteban.ruano.service
 
-import fromDateToLong
 import com.esteban.ruano.database.converters.toDTO
 import com.esteban.ruano.database.entities.Recipe
 import com.esteban.ruano.database.entities.Recipes
-import com.esteban.ruano.database.entities.Tasks
 import com.esteban.ruano.database.models.MealTag
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.nutrition.*
+import com.esteban.ruano.utils.fromDateToLong
+import com.esteban.ruano.utils.parseDate
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import parseDate
 import java.util.UUID
 
 class NutritionService() : BaseService() {

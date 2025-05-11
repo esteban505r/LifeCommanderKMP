@@ -1,6 +1,6 @@
 package com.esteban.ruano.service
 
-import formatDateTime
+import com.esteban.ruano.utils.formatDateTime
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -55,7 +55,7 @@ class SyncService(
                         }
                     }
                     Habit.table.tableName -> {
-                        val habit = habitService.getByIdAndUserId(it.entityId,userId,formatDateTime(currentDateTime))!!
+                        val habit = habitService.getByIdAndUserId(it.entityId,userId, formatDateTime(currentDateTime))!!
                         habitsToSync.add(
                             SyncItemDTO(
                                 action = it.actionType,

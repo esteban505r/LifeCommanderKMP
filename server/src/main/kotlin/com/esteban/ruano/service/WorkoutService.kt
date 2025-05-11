@@ -1,7 +1,5 @@
 package com.esteban.ruano.service
 
-import WorkoutDashboardDTO
-import kotlinx.datetime.DayOfWeek
 import com.esteban.ruano.database.converters.toDTO
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.MuscleGroup
@@ -9,15 +7,15 @@ import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.workout.day.UpdateWorkoutDayDTO
 import com.esteban.ruano.models.workout.day.WorkoutDayDTO
 import com.esteban.ruano.models.workout.exercise.ExerciseDTO
+import com.esteban.ruano.models.workout.WorkoutDashboardDTO
+import com.esteban.ruano.utils.toDayOfWeek
+import com.esteban.ruano.utils.toLocalTime
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
-import toDayOfWeek
-import toLocalTime
 import java.util.UUID
 
 class WorkoutService : BaseService() {
@@ -45,7 +43,7 @@ class WorkoutService : BaseService() {
         }
     }
 
-    fun getWorkoutDashboard(userId: Int): WorkoutDashboardDTO{
+    fun getWorkoutDashboard(userId: Int): WorkoutDashboardDTO {
         return transaction {
             val workoutDays = getWorkoutDaysWithExercises(userId)
             val totalExercises = Exercises.select((Exercises.user eq userId) and (Exercises.status eq Status.ACTIVE)).count()

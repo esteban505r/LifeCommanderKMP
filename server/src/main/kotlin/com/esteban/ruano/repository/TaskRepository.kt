@@ -4,7 +4,7 @@ import com.esteban.ruano.models.tasks.CreateTaskDTO
 import com.esteban.ruano.models.tasks.TaskDTO
 import com.esteban.ruano.models.tasks.UpdateTaskDTO
 import com.esteban.ruano.service.TaskService
-import parseDate
+import com.esteban.ruano.utils.parseDate
 import java.util.*
 
 class TaskRepository(private val taskService: TaskService) {

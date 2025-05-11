@@ -8,10 +8,10 @@ import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.pomodoros.CreatePomodoroDTO
 import com.esteban.ruano.models.pomodoros.PomodoroDTO
 import com.esteban.ruano.models.pomodoros.UpdatePomodoroDTO
+import com.esteban.ruano.utils.parseDateTime
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.transactions.transaction
-import parseDateTime
 import java.util.UUID
 
 class PomodoroService : BaseService() {

@@ -1,12 +1,11 @@
 package com.esteban.ruano.database.converters
 
 
-import formatDateTime
 import com.esteban.ruano.database.entities.Habit
 import com.esteban.ruano.models.habits.CreateHabitDTO
 import com.esteban.ruano.models.habits.HabitDTO
 import com.esteban.ruano.models.habits.UpdateHabitDTO
-import java.util.*
+import com.esteban.ruano.utils.formatDateTime
 
 fun Habit.toHabitDTO(): HabitDTO {
     return HabitDTO(

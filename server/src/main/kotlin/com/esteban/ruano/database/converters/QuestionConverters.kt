@@ -1,6 +1,5 @@
 package com.esteban.ruano.database.converters
 
-import formatDateTime
 import com.esteban.ruano.database.entities.Question
 import com.esteban.ruano.models.questions.CreateQuestionDTO
 import com.esteban.ruano.models.questions.QuestionDTO

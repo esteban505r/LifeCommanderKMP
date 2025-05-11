@@ -1,6 +1,6 @@
 package com.esteban.ruano.database.converters
 
-import formatDateTime
+import com.esteban.ruano.utils.formatDateTime
 import com.esteban.ruano.database.entities.Pomodoro
 import com.esteban.ruano.models.pomodoros.CreatePomodoroDTO
 import com.esteban.ruano.models.pomodoros.PomodoroDTO

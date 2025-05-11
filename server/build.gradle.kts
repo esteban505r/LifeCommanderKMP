@@ -12,17 +12,16 @@ application {
 }
 
 dependencies {
-    implementation(projects.shared)
+//    implementation(projects.shared)
     implementation(libs.logback)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
-    implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.content.negotiation)
-    implementation(libs.ktor.serialization.gson)
+    implementation(libs.ktor.serialization.gson.jvm)
     implementation(libs.ktor.server.config.yaml)
     implementation(libs.ktor.server.netty)
 

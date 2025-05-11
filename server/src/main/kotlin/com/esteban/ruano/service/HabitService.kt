@@ -16,12 +16,12 @@ import com.esteban.ruano.models.habits.HabitDTO
 import com.esteban.ruano.models.habits.UpdateHabitDTO
 import com.esteban.ruano.models.reminders.UpdateReminderDTO
 import com.esteban.ruano.utils.HabitUtils
+import com.esteban.ruano.utils.parseDate
+import com.esteban.ruano.utils.parseDateTime
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.kotlin.datetime.minute
 import org.jetbrains.exposed.sql.transactions.transaction
-import parseDate
-import parseDateTime
 import java.util.UUID
 
 class HabitService(

@@ -5,7 +5,7 @@ import com.esteban.ruano.models.dailyjournal.CreateDailyJournalDTO
 import com.esteban.ruano.models.dailyjournal.DailyJournalDTO
 import com.esteban.ruano.models.dailyjournal.UpdateDailyJournalDTO
 import com.esteban.ruano.service.DailyJournalService
-import parseDate
+import com.esteban.ruano.utils.parseDate
 import java.util.UUID
 
 class DailyJournalRepository(private val dailyJournalService: DailyJournalService) {

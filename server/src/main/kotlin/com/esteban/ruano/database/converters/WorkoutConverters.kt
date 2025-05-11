@@ -1,15 +1,12 @@
 package com.esteban.ruano.database.converters
 
-import formatDateTime
-import formatTime
 import com.esteban.ruano.database.entities.Equipment
 import com.esteban.ruano.database.entities.Exercise
-import com.esteban.ruano.database.entities.Task
 import com.esteban.ruano.database.entities.WorkoutDay
-import com.esteban.ruano.models.tasks.TaskDTO
 import com.esteban.ruano.models.workout.day.WorkoutDayDTO
 import com.esteban.ruano.models.workout.equiment.EquipmentDTO
 import com.esteban.ruano.models.workout.exercise.ExerciseDTO
+import com.esteban.ruano.utils.formatTime
 
 
 fun WorkoutDay.toDTO(exercises: List<ExerciseDTO>): WorkoutDayDTO {

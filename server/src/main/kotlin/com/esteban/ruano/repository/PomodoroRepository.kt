@@ -5,7 +5,7 @@ import com.esteban.ruano.models.pomodoros.CreatePomodoroDTO
 import com.esteban.ruano.models.pomodoros.PomodoroDTO
 import com.esteban.ruano.models.pomodoros.UpdatePomodoroDTO
 import com.esteban.ruano.service.PomodoroService
-import parseDate
+import com.esteban.ruano.utils.parseDate
 import java.util.UUID
 
 class PomodoroRepository(private val pomodoroService: PomodoroService) {
