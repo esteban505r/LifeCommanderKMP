@@ -1,0 +1,76 @@
+package com.esteban.ruano.repository
+
+import com.esteban.ruano.models.habits.*
+import com.esteban.ruano.service.HabitService
+import parseDate
+import parseDateTime
+import java.util.UUID
+
+class HabitRepository(private val habitService: HabitService) {
+
+    fun getAll(userId: Int, filter: String, limit: Int, offset: Long, date: String? = null): List<HabitDTO> {
+
+        if (date != null) {
+            val habits = habitService.fetchAll(
+                userId,
+                filter,
+                limit,
+                offset,
+                parseDate(date)
+            )
+            return habits
+
+        }
+
+        return habitService.fetchAll(
+            userId,
+            filter,
+            limit,
+            offset,
+        )
+    }
+
+    fun getAllByDate(
+        userId: Int,
+        startDate: String,
+        endDate: String,
+        filter: String,
+        limit: Int,
+        offset: Long
+    ): List<HabitDTO> {
+        return habitService.fetchAllByDateRange(
+            userId,
+            filter,
+            parseDateTime(startDate),
+            parseDateTime(endDate),
+            limit,
+            offset
+        )
+    }
+
+
+    fun create(userId: Int, habit: CreateHabitDTO): UUID? {
+        return habitService.create(userId, habit)
+    }
+
+    fun completeTask(id: String,doneDate:String, userId: Int): Boolean {
+        return habitService.completeHabit(id,doneDate,userId)
+    }
+
+    fun unCompleteTask(id: String,unDoneDate:String,userId: Int): Boolean {
+        return habitService.unCompleteHabit(id,unDoneDate,userId)
+    }
+
+    fun getByIdAndUserId(id: UUID, userId: Int, date:String): HabitDTO? {
+        return habitService.getByIdAndUserId(id, userId,date)
+    }
+
+    fun update(userId: Int, id:UUID, habit: UpdateHabitDTO): Boolean {
+        return habitService.update(userId,id, habit)
+    }
+
+    fun delete(userId:Int,id: UUID): Boolean {
+        return habitService.delete(userId,id)
+    }
+
+}

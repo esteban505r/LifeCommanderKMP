@@ -1,0 +1,52 @@
+package com.esteban.ruano.repository
+
+import io.ktor.server.plugins.*
+import com.esteban.ruano.models.blog.PostResponse
+import com.esteban.ruano.models.habits.*
+import com.esteban.ruano.models.tasks.PostDTO
+import com.esteban.ruano.service.BlogService
+import com.esteban.ruano.service.HabitService
+import parseDate
+import parseDateTime
+import java.io.File
+import java.util.UUID
+
+class BlogRepository(private val blogService: BlogService) {
+
+    fun getPostBySlug(slug: String): String {
+        val post = blogService.getPostFromS3(slug)
+        return post
+    }
+
+
+    fun createPost(
+        title: String,
+        slug: String,
+        content: File,
+        s3Key: String,
+        publishedDate: String
+    ): UUID {
+        return blogService.createPost(
+            title = title,
+            slug = slug,
+            content = content,
+            s3Key = s3Key,
+            publishedDate = publishedDate
+        )
+    }
+
+    fun getPosts(
+        date: String? = null,
+        limit: Int = 10,
+        offset: Long = 0,
+        pattern: String = "",
+    ): List<PostDTO> {
+        return blogService.getPosts(
+            limit = limit,
+            offset = offset,
+            pattern = pattern,
+            date = date?.let{parseDate(it)}
+        )
+    }
+
+}
