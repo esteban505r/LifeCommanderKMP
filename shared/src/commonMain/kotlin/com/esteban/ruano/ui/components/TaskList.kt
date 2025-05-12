@@ -1,11 +1,9 @@
 package com.esteban.ruano.ui.components
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
+import LifeCommander.shared.MR
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.ExperimentalMaterialApi
@@ -14,40 +12,43 @@ import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.esteban.ruano.models.Task
-import com.esteban.ruano.utils.DateUtils
-import com.esteban.ruano.utils.DateUtils.getCurrentTime
-import com.esteban.ruano.utils.DateUtils.toLocalDateTime
-import com.esteban.ruano.utils.DateUtils.toResourceStringBasedOnNow
-import com.esteban.ruano.utils.UiUtils.getColorByPriority
-import com.esteban.ruano.utils.UiUtils.getIconByPriority
-import dev.icerock.moko.resources.compose.stringResource
-import com.esteban.ruano.shared.MR
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import dev.icerock.moko.resources.compose.localized
+import dev.icerock.moko.resources.desc.Resource
+import dev.icerock.moko.resources.desc.StringDesc
+
+@Composable
+expect fun isDesktop(): Boolean
 
 fun LazyListScope.taskListSection(
     taskList: List<Task>,
-    title: String? = null,
+    title: StringDesc? = null,
+    onEdit: (Task) -> Unit,
+    onDelete: (Task) -> Unit,
+    onReschedule: (Task) -> Unit,
     textDecoration: TextDecoration = TextDecoration.None,
     onTaskClick: (Task) -> Unit,
     onCheckedChange: (Task, Boolean) -> Unit,
+    itemWrapper: @Composable (content: @Composable () -> Unit, Task) -> Unit
 ) {
     if (taskList.isEmpty()) return
     if (title != null) {
         item {
             Text(
-                title,
+                title.localized(),
                 style = MaterialTheme.typography.h3,
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 2.dp)
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
                     .heightIn(
                         min = 48.dp,
                         max = 48.dp
@@ -56,48 +57,26 @@ fun LazyListScope.taskListSection(
             )
         }
     }
-    items(taskList.size) {
-        CheckableItem(
-            modifier = Modifier.padding(
-                bottom = if (it == taskList.size - 1) 24.dp else 8.dp
-            ),
-            title = taskList[it].name,
-            checked = taskList[it].done == true,
-            onCheckedChange = { checked ->
-                onCheckedChange(taskList[it], checked)
+    items(taskList.size) { index ->
+        val task = taskList[index]
+        val interactionSource = remember { MutableInteractionSource() }
+        val isHovered by interactionSource.collectIsHoveredAsState()
+
+        TaskItem(
+            task = task,
+            interactionSource = interactionSource,
+            isHovered = isHovered,
+            onCheckedChange = { task, checked ->
+                onCheckedChange(task, checked)
+            },
+            onEdit = { onEdit.invoke(task) },
+            onClick = {
+                onTaskClick(task)
             },
             textDecoration = textDecoration,
-            onClick = {
-                onTaskClick(taskList[it])
-            },
-            suffix = if (taskList[it].done != true) {
-                {
-                    val resources = taskList[it].scheduledDateTime?.toLocalDateTime()
-                        ?.toResourceStringBasedOnNow()
-                        ?: taskList[it].dueDateTime?.toLocalDateTime()
-                            ?.toResourceStringBasedOnNow()
-                    Text(
-                        text = when {
-                            taskList[it].scheduledDateTime != null -> "\u23F3 ${resources?.first ?: ""}"
-                            taskList[it].dueDateTime != null -> "\uD83D\uDD50 ${resources?.first ?: ""}"
-                            else -> resources?.first ?: ""
-                        },
-                        style = MaterialTheme.typography.body2.copy(
-                            fontSize = 18.sp,
-                            color = resources?.second ?: Color.DarkGray
-                        ),
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .weight(1f)
-                    )
-                    Icon(
-                        imageVector = getIconByPriority(taskList[it].priority),
-                        contentDescription = null,
-                        tint = getColorByPriority(taskList[it].priority),
-                        modifier = Modifier.padding(end = 16.dp)
-                    )
-                }
-            } else null
+            onDelete = { onDelete.invoke(task) },
+            onReschedule = { onReschedule.invoke(task) },
+            itemWrapper = { content -> itemWrapper(content, task) }
         )
     }
 }
@@ -110,49 +89,76 @@ fun TaskList(
     onPullRefresh: () -> Unit,
     onTaskClick: (Task) -> Unit,
     onCheckedChange: (Task, Boolean) -> Unit,
+    onEdit: (Task) -> Unit,
+    onDelete: (Task) -> Unit,
+    onReschedule: (Task) -> Unit,
+    modifier: Modifier = Modifier,
+    itemWrapper : @Composable (content: @Composable () -> Unit, Task) -> Unit,
 ) {
     val pullRefreshState =
         rememberPullRefreshState(refreshing = isRefreshing, onRefresh = onPullRefresh)
 
-    Box(modifier = Modifier.pullRefresh(pullRefreshState)) {
-        LazyColumn(Modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .then(
+                if (!isDesktop()) {
+                    Modifier.pullRefresh(pullRefreshState)
+                } else Modifier
+            )
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 8.dp)
+        ) {
+            // Overdue tasks
             taskListSection(
-                title = stringResource(MR.strings.overdue),
                 taskList = taskList.filter { item ->
-                    (item.done == false && item.dueDateTime?.let { it.toLocalDateTime() < getCurrentTime() } ?: false)
+                    (item.done == false && item.dueDateTime?.let { it.toLocalDateTime() < getCurrentDateTime() } ?: false)
                             ||
-                            (item.done == false && item.scheduledDateTime?.let { it.toLocalDateTime() < getCurrentTime() } ?: false)
+                            (item.done == false && item.scheduledDateTime?.let { it.toLocalDateTime() < getCurrentDateTime() } ?: false)
                 },
                 onTaskClick = onTaskClick,
                 onCheckedChange = { task, checked ->
-                    onCheckedChange(
-                        task,
-                        checked,
-                    )
+                    onCheckedChange(task, checked)
                 },
+                onEdit = onEdit,
+                onDelete = onDelete,
+                onReschedule = onReschedule,
+                itemWrapper = itemWrapper,
             )
+            // Pending tasks
             taskListSection(
-                title = stringResource(MR.strings.pending),
                 taskList = taskList.filter {
-                    (it.done == false && it.dueDateTime?.let { it.toLocalDateTime() >= getCurrentTime() } ?: false)
+                    (it.done == false && it.dueDateTime?.let { it.toLocalDateTime() >= getCurrentDateTime() } ?: false)
                             ||
-                            (it.done == false && it.scheduledDateTime?.let { it.toLocalDateTime() >= getCurrentTime() } ?: false)
+                            (it.done == false && it.scheduledDateTime?.let { it.toLocalDateTime() >= getCurrentDateTime() } ?: false)
                             || it.done == false && it.dueDateTime == null && it.scheduledDateTime == null
                 },
                 onTaskClick = onTaskClick,
                 onCheckedChange = onCheckedChange,
+                onEdit = onEdit,
+                onDelete = onDelete,
+                onReschedule = onReschedule,
+                itemWrapper = itemWrapper,
             )
+            // Done tasks
             taskListSection(
-                title = stringResource(MR.strings.done),
                 taskList = taskList.filter { it.done == true },
                 onTaskClick = onTaskClick,
                 onCheckedChange = onCheckedChange,
                 textDecoration = TextDecoration.LineThrough,
+                onEdit = onEdit,
+                onDelete = onDelete,
+                onReschedule = onReschedule,
+                itemWrapper = itemWrapper,
             )
             item {
                 Spacer(modifier = Modifier.height(64.dp))
             }
         }
-        PullRefreshIndicator(isRefreshing, pullRefreshState, Modifier.align(Alignment.TopCenter))
+        if (!isDesktop()) {
+            PullRefreshIndicator(isRefreshing, pullRefreshState, Modifier.align(Alignment.TopCenter))
+        }
     }
 } 

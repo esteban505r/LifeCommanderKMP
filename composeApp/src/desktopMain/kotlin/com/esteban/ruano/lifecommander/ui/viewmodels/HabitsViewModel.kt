@@ -1,71 +1,51 @@
 package ui.viewmodels
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.esteban.ruano.models.Habit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import services.auth.TokenStorage
 import services.habits.HabitService
-import services.habits.models.Frequency
-import services.habits.models.HabitResponse
 import utils.DateUtils.parseDate
 import utils.DateUtils.parseDateTime
-import utils.StatusBarService
-import com.esteban.ruano.lifecommander.utils.TimeBasedItemUtils
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class HabitsViewModel(
-    private val habitService: HabitService,
     private val tokenStorage: TokenStorage,
-    private val statusBarService: StatusBarService
-) : ViewModel(){
+    private val habitService: HabitService,
+) : ViewModel() {
 
-    private val _habits = MutableStateFlow<List<HabitResponse>>(
+    private val _habits = MutableStateFlow<List<Habit>>(
         emptyList()
     )
 
     val habits = _habits
 
-    private val _loading = MutableStateFlow(false)
-
+    val _loading = MutableStateFlow(false)
     val loading = _loading.asStateFlow()
 
-    fun getHabits(){
+    fun getHabits() {
         viewModelScope.launch {
-            getHabitsSuspend()
-        }
-    }
-
-    private suspend fun getHabitsSuspend(){
-        _loading.value = true
-        try{
-            val response = habitService.getByDate(
-                token = tokenStorage.getToken() ?: "",
-                page = 0,
-                limit = 30,
-                date = LocalDate.now().parseDate(),
-            )
-            _habits.value = response
-            statusBarService.updateHabitStatus(
-                TimeBasedItemUtils.getHabitStatusBarText(
-                    habits = response,
-                    currentTime = LocalDateTime.now()
+            _loading.value = true
+            try {
+                val response = habitService.getByDate(
+                    token = tokenStorage.getToken() ?: "",
+                    page = 0,
+                    limit = 30,
+                    date = LocalDateTime.now().toLocalDate().parseDate()
                 )
-            )
-        }
-        catch (e: Exception){
-            e.printStackTrace()
-        }
-        finally {
-            _loading.value = false
+                _habits.value = response
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _loading.value = false
+            }
         }
     }
 
-
-    fun changeCheckHabit(id:String,checked: Boolean) {
+    fun changeCheckHabit(id: String, checked: Boolean) {
         viewModelScope.launch {
             _loading.value = true
             try {
@@ -82,18 +62,22 @@ class HabitsViewModel(
                         dateTime = LocalDateTime.now().parseDateTime()
                     )
                 }
-                getHabitsSuspend()
-            }
-            catch (e: Exception) {
-               e.printStackTrace()
-            }
-            finally {
+                _habits.value = _habits.value.map {
+                    if (it.id == id) {
+                        it.copy(done = checked)
+                    } else {
+                        it
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
                 _loading.value = false
             }
         }
     }
 
-    fun addHabit(name: String, note: String?, frequency: Frequency, dateTime: String) {
+    fun addHabit(name: String, note: String?, frequency: String, dateTime: String) {
         viewModelScope.launch {
             _loading.value = true
             try {
@@ -101,21 +85,19 @@ class HabitsViewModel(
                     token = tokenStorage.getToken() ?: "",
                     name = name,
                     note = note,
-                    frequency = frequency.value,
+                    frequency = frequency,
                     dateTime = dateTime
                 )
-                getHabitsSuspend()
-            }
-            catch (e: Exception) {
+                getHabits()
+            } catch (e: Exception) {
                 e.printStackTrace()
-            }
-            finally {
+            } finally {
                 _loading.value = false
             }
         }
     }
 
-    fun updateHabit(id: String, habit: HabitResponse) {
+    fun updateHabit(id: String, habit: Habit) {
         viewModelScope.launch {
             _loading.value = true
             try {
@@ -124,34 +106,29 @@ class HabitsViewModel(
                     id = id,
                     habit = habit
                 )
-                getHabitsSuspend()
-            }
-            catch (e: Exception) {
+                getHabits()
+            } catch (e: Exception) {
                 e.printStackTrace()
-            }
-            finally {
+            } finally {
                 _loading.value = false
             }
         }
     }
 
-    fun deleteHabit(it: String) {
+    fun deleteHabit(id: String) {
         viewModelScope.launch {
             _loading.value = true
             try {
                 habitService.deleteHabit(
                     token = tokenStorage.getToken() ?: "",
-                    id = it
+                    id = id
                 )
-                getHabitsSuspend()
-            }
-            catch (e: Exception) {
+                getHabits()
+            } catch (e: Exception) {
                 e.printStackTrace()
-            }
-            finally {
+            } finally {
                 _loading.value = false
             }
         }
     }
-
 }

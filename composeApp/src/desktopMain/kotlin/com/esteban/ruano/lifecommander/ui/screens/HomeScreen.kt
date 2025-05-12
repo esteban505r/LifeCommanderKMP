@@ -14,6 +14,11 @@ import androidx.compose.ui.unit.dp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.esteban.ruano.lifecommander.ui.components.CurrentHabitComposable
+import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
+import com.esteban.ruano.models.Habit
+import com.esteban.ruano.models.Task
+import com.esteban.ruano.ui.components.HabitList
+import com.esteban.ruano.ui.components.TaskList
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -33,6 +38,7 @@ import java.time.LocalDateTime
 fun HomeScreen(
     habitsViewModel: HabitsViewModel = koinViewModel(),
     tasksViewModel: TasksViewModel = koinViewModel(),
+    calendarViewModel: CalendarViewModel = koinViewModel(),
     nightBlockService: NightBlockService = koinInject(),
     dataStore: DataStore<Preferences> = koinInject(),
     appPreferences: AppPreferencesService = koinInject(),
@@ -52,9 +58,11 @@ fun HomeScreen(
     var timerDialogMessage by remember { mutableStateOf("") }
     val showTimersDialog = appViewModel.appState.collectAsState().value.showTimersDialog
     var showCalendarView by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
-    var taskToEdit by remember { mutableStateOf<TaskResponse?>(null) }
-    var habitToEdit by remember { mutableStateOf<HabitResponse?>(null) }
+    var taskToEdit by remember { mutableStateOf<Task?>(null) }
+    var habitToEdit by remember { mutableStateOf<Habit?>(null) }
 
     val habits by habitsViewModel.habits.collectAsState()
     val tasks by tasksViewModel.tasks.collectAsState()
@@ -66,13 +74,11 @@ fun HomeScreen(
     val timer by appViewModel.timer.collectAsState()
     val timers by appViewModel.timers.collectAsState()
     val paused by appViewModel.paused.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
 
     var error by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
     val pomodoroCount = dailyJournalViewModel.state.collectAsState().value.pomodoros.size
-
 
     // Handle timer events
     LaunchedEffect(Unit) {
@@ -90,6 +96,10 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    LaunchedEffect(habits, tasks){
+        calendarViewModel.refresh()
     }
 
     LaunchedEffect(Unit){
@@ -166,7 +176,7 @@ fun HomeScreen(
             habitToEdit = null
         },
         onAddHabit = { name, note, frequency, dateTime ->
-            habitsViewModel.addHabit(name, note, frequency, dateTime)
+            habitsViewModel.addHabit(name, note, frequency.value, dateTime)
         },
         onUpdateHabit = { id, habit ->
             habitsViewModel.updateHabit(id, habit)
@@ -179,11 +189,39 @@ fun HomeScreen(
 
     Scaffold(
         floatingActionButton = {
-            FloatingHabitsComposable(
-                onHabitClick = {
-
+            Column {
+                if (expanded) {
+                    FloatingActionButton(
+                        onClick = { 
+                            showNewTaskDialog = true
+                            expanded = false
+                        },
+                        backgroundColor = MaterialTheme.colors.secondary,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
+                        Icon(Icons.Default.AddTask, contentDescription = "Add Task")
+                    }
+                    FloatingActionButton(
+                        onClick = { 
+                            showNewHabitDialog = true
+                            expanded = false
+                        },
+                        backgroundColor = MaterialTheme.colors.primary,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Habit")
+                    }
                 }
-            )
+                FloatingActionButton(
+                    onClick = { expanded = !expanded },
+                    backgroundColor = MaterialTheme.colors.primary
+                ) {
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.Close else Icons.Default.Add,
+                        contentDescription = if (expanded) "Close" else "Add"
+                    )
+                }
+            }
         },
         topBar = {
             TopAppBar(
@@ -338,42 +376,55 @@ fun HomeScreen(
             }
             if (showCalendarView) {
                 CalendarComposable(
-                    tasks = tasks,
-                    habits = habits,
                     onTaskClick = onTaskClick,
                     onHabitClick = onHabitClick,
+                    viewModel = calendarViewModel,
                     modifier = Modifier.weight(1f)
                 )
             } else {
                 Row {
                     if(!isNightBlockActive){
                         if (tasksLoading.not()) {
-                            TasksList(
-                                tasks = tasks,
-                                modifier = Modifier
-                                    .weight(1f),
-                                onTaskClick = onTaskClick,
-                                selectedFilter = selectedFilter,
-                                onFilterChange = {
-                                    tasksViewModel.changeFilter(it)
+                            TaskList(
+                                taskList = tasks,
+                                isRefreshing = false,
+                                onPullRefresh = {
+                                    tasksViewModel.getTasksByFilter()
                                 },
-                                onCheckedChange = { id, checked ->
-                                    tasksViewModel.changeCheckHabit(id, checked)
+                                onTaskClick = { task ->
+                                    onTaskClick(task.id)
                                 },
-                                onNewTaskClick = {
-                                    taskToEdit = null
+                                onCheckedChange = { task, checked ->
+                                    tasksViewModel.changeCheckHabit(task.id, checked)
+                                },
+                                modifier = Modifier.weight(1f),
+                                onEdit = { task ->
+                                    taskToEdit = task
                                     showNewTaskDialog = true
                                 },
-                                onEditTaskClick = {
-                                    taskToEdit = it
-                                    showNewTaskDialog = true
+                                onDelete = { task ->
+                                    tasksViewModel.deleteTask(task.id)
                                 },
-                                onDeleteTaskClick = {
-                                    tasksViewModel.deleteTask(it)
+                                onReschedule = { task ->
+                                    tasksViewModel.rescheduleTask(task)
                                 },
-                                onRescheduleTask = {
-                                    tasksViewModel.rescheduleTask(it)
-                                },
+                                itemWrapper = { content,task ->
+                                    ContextMenuArea(
+                                        items = {
+                                            listOf(
+                                                ContextMenuItem("Edit") {
+                                                    taskToEdit = task
+                                                    showNewTaskDialog = true
+                                                },
+                                                ContextMenuItem("Delete") {
+                                                    tasksViewModel.deleteTask(task.id)
+                                                }
+                                            )
+                                        }
+                                    ) {
+                                        content.invoke()
+                                    }
+                                }
                             )
                         }
                         else {
@@ -383,25 +434,44 @@ fun HomeScreen(
                         }
                     }
                     if (habitsLoading.not()) {
-                        HabitsList(
-                            modifier = Modifier
-                                .weight(1f),
-                            onCheckedChange = { id, checked ->
-                                habitsViewModel.changeCheckHabit(id, checked)
+                        HabitList(
+                            habitList = habits,
+                            isRefreshing = false,
+                            onPullRefresh = {
+                                habitsViewModel.getHabits()
                             },
-                            habits = habits,
-                            onNewHabitClick = {
-                                habitToEdit = null
+                            onHabitClick = { habit ->
+                                onHabitClick(habit.id)
+                            },
+                            onCheckedChange = { habit, checked, onComplete ->
+                                habitsViewModel.changeCheckHabit(habit.id, checked)
+                                onComplete(checked)
+                            },
+                            modifier = Modifier.weight(1f),
+                            onEdit = { habit ->
+                                habitToEdit = habit
                                 showNewHabitDialog = true
                             },
-                            onEditHabitClick = {
-                                habitToEdit = it
-                                showNewHabitDialog = true
+                            onDelete = { habit ->
+                                habitsViewModel.deleteHabit(habit.id)
                             },
-                            onDeleteHabitClick = {
-                                habitsViewModel.deleteHabit(it)
-                            },
-                            nightBlockService = nightBlockService
+                            itemWrapper = { content, habit ->
+                                ContextMenuArea(
+                                    items = {
+                                        listOf(
+                                            ContextMenuItem("Edit") {
+                                                habitToEdit = habit
+                                                showNewHabitDialog = true
+                                            },
+                                            ContextMenuItem("Delete") {
+                                                habitsViewModel.deleteHabit(habit.id)
+                                            }
+                                        )
+                                    }
+                                ) {
+                                    content()
+                                }
+                            }
                         )
                     } else {
                         Box(modifier = Modifier.fillMaxHeight().weight(1f)) {

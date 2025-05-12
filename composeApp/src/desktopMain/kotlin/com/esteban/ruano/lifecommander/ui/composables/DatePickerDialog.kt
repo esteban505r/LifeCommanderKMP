@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberDialogState
-import utils.DateUIUtils.parseDate
+import utils.DateUtils.parseDate
 import java.time.LocalDate
 
 @Composable

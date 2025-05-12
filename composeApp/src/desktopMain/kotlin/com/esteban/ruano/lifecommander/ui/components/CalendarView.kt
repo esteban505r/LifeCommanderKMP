@@ -16,28 +16,41 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.esteban.ruano.models.Habit
+import com.esteban.ruano.models.Task
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.kizitonwose.calendar.compose.*
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.core.atStartOfMonth
 import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaLocalDate
-import services.habits.models.HabitResponse
-import services.tasks.models.TaskResponse
-import utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUtils.toLocalDate
+import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import org.koin.compose.viewmodel.koinViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 import java.util.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.toKotlinLocalDate
 
 @Composable
 fun CalendarComposable(
-    tasks: List<TaskResponse>,
-    habits: List<HabitResponse>,
+    viewModel: CalendarViewModel = koinViewModel(),
     onTaskClick: (String) -> Unit,
     onHabitClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val tasks by viewModel.tasks.collectAsState()
+    val habits by viewModel.habits.collectAsState()
+    val isLoading = viewModel.isLoading
+    val error = viewModel.error
+
+    println("CalendarComposable: ${tasks.size} tasks, ${habits.size} habits, isLoading=$isLoading, error=$error")
+
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(12) }
     val endMonth = remember { currentMonth.plusMonths(12) }
@@ -51,6 +64,11 @@ fun CalendarComposable(
         firstVisibleMonth = currentMonth,
         firstDayOfWeek = firstDayOfWeek
     )
+
+    // Refresh data when the visible month changes
+    LaunchedEffect(state.firstVisibleMonth.yearMonth) {
+        viewModel.refresh()
+    }
 
     Column(modifier = modifier) {
         // Month navigation
@@ -81,113 +99,145 @@ fun CalendarComposable(
             }
         }
 
-        // Remove the separate days of week header since we'll use monthHeader
-        HorizontalCalendar(
-            state = state,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp),
-            monthHeader = { month ->
-                val daysOfWeek = month.weekDays.first().map { it.date.dayOfWeek }
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    for (dayOfWeek in daysOfWeek) {
-                        Text(
-                            text = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
-                            modifier = Modifier.weight(1f),
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.caption,
-                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                        )
-                    }
-                }
-            },
-            dayContent = { day ->
-                Day(day, tasks, habits, selectedDate == day.date.toJavaLocalDate()) { selectedDate = it }
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-        )
-
-        // Selected date details
-        val selectedDateTasks = tasks.filter { task ->
-            val taskDate = task.dueDateTime?.toLocalDateTime()?.toLocalDate() 
-                ?: task.scheduledDateTime?.toLocalDateTime()?.toLocalDate()
-            taskDate == selectedDate
-        }
-        val selectedDateHabits = habits.filter { habit ->
-            habit.dateTime?.toLocalDateTime()?.toLocalDate() == selectedDate
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(16.dp)
-        ) {
-            item {
+        } else if (error != null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    text = selectedDate?.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy"))
-                        ?: "Select a date to view details",
-                    style = MaterialTheme.typography.h6,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    text = "Error: $error",
+                    color = MaterialTheme.colors.error
                 )
             }
+        } else {
+            // Calendar content
+            HorizontalCalendar(
+                state = state,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp),
+                monthHeader = { month ->
+                    val daysOfWeek = month.weekDays.first().map { it.date.dayOfWeek }
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        for (dayOfWeek in daysOfWeek) {
+                            Text(
+                                text = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                },
+                dayContent = { day ->
+                    Day(day, tasks, habits, selectedDate == day.date.toJavaLocalDate()) { selectedDate = it }
+                }
+            )
 
-            if (selectedDateTasks.isNotEmpty()) {
-                item {
-                    Text(
-                        text = "Tasks",
-                        style = MaterialTheme.typography.subtitle1,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-                items(selectedDateTasks) { task ->
-                    TaskItem(task, onTaskClick)
-                }
+            // Selected date details
+            val selectedDateTasks = tasks.filter { task ->
+                val taskDate = task.dueDateTime?.toLocalDateTime()?.date 
+                    ?: task.scheduledDateTime?.toLocalDateTime()?.date
+                taskDate == selectedDate?.toKotlinLocalDate()
+            }
+            val selectedDateHabits = habits.filter { habit ->
+                val habitDate = habit.dateTime?.toLocalDateTime()?.date
+                habitDate == selectedDate?.toKotlinLocalDate()
             }
 
-            if (selectedDateHabits.isNotEmpty()) {
-                item {
-                    Text(
-                        text = "Habits",
-                        style = MaterialTheme.typography.subtitle1,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-                items(selectedDateHabits) { habit ->
-                    HabitItem(habit, onHabitClick)
-                }
-            }
+            println("Selected date: $selectedDate")
+            println("Selected date tasks: ${selectedDateTasks.size}")
+            println("Selected date habits: ${selectedDateHabits.size}")
 
-            if (selectedDate != null && selectedDateTasks.isEmpty() && selectedDateHabits.isEmpty()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(16.dp)
+            ) {
                 item {
                     Text(
-                        text = "No items scheduled for this day",
-                        style = MaterialTheme.typography.body1,
-                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(vertical = 16.dp)
+                        text = selectedDate?.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy"))
+                            ?: "Select a date to view details",
+                        style = MaterialTheme.typography.h6,
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
+                }
+
+                if (selectedDateTasks.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Tasks",
+                            style = MaterialTheme.typography.subtitle1,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                    items(selectedDateTasks) { task ->
+                        TaskItem(task, onTaskClick)
+                    }
+                }
+
+                if (selectedDateHabits.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Habits",
+                            style = MaterialTheme.typography.subtitle1,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                    items(selectedDateHabits) { habit ->
+                        HabitItem(habit, onHabitClick)
+                    }
+                }
+
+                if (selectedDate != null && selectedDateTasks.isEmpty() && selectedDateHabits.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No items scheduled for this day",
+                            style = MaterialTheme.typography.body1,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-
 @Composable
 private fun Day(
     day: CalendarDay,
-    tasks: List<TaskResponse>,
-    habits: List<HabitResponse>,
+    tasks: List<Task>,
+    habits: List<Habit>,
     isSelected: Boolean,
     onDateSelected: (LocalDate) -> Unit
 ) {
+    val kotlinDate = day.date
+    println("Processing day: $kotlinDate")
+    
     val dayTasks = tasks.filter { task ->
-        val taskDate = task.dueDateTime?.toLocalDateTime()?.toLocalDate() 
-            ?: task.scheduledDateTime?.toLocalDateTime()?.toLocalDate()
-        taskDate == day.date.toJavaLocalDate()
+        val taskDate = task.dueDateTime?.toLocalDateTime()?.date 
+            ?: task.scheduledDateTime?.toLocalDateTime()?.date
+        println("Task ${task.name}: comparing $taskDate with $kotlinDate")
+        taskDate == kotlinDate
     }
+    
     val dayHabits = habits.filter { habit ->
-        habit.dateTime?.toLocalDateTime()?.toLocalDate() == day.date.toJavaLocalDate()
+        val habitDate = habit.dateTime?.toLocalDateTime()?.date
+        println("Habit ${habit.name}: comparing $habitDate with $kotlinDate")
+        habitDate == kotlinDate
     }
+
+    println("Day $kotlinDate: ${dayTasks.size} tasks, ${dayHabits.size} habits")
 
     Box(
         modifier = Modifier
@@ -198,7 +248,8 @@ private fun Day(
                     isSelected -> MaterialTheme.colors.primary.copy(alpha = 0.2f)
                     day.position == DayPosition.MonthDate -> {
                         when {
-                            LocalDate.now() == day.date.toJavaLocalDate() -> MaterialTheme.colors.secondary.copy(alpha = 0.1f)
+                            getCurrentDateTime().date == kotlinDate ->
+                                MaterialTheme.colors.secondary.copy(alpha = 0.1f)
                             dayTasks.isNotEmpty() && dayHabits.isNotEmpty() -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
                             dayTasks.isNotEmpty() -> MaterialTheme.colors.primary.copy(alpha = 0.05f)
                             dayHabits.isNotEmpty() -> MaterialTheme.colors.secondary.copy(alpha = 0.05f)
@@ -210,7 +261,7 @@ private fun Day(
             )
             .clickable(
                 enabled = day.position == DayPosition.MonthDate,
-                onClick = { onDateSelected(day.date.toJavaLocalDate()) }
+                onClick = { onDateSelected(kotlinDate.toJavaLocalDate()) }
             ),
         contentAlignment = Alignment.TopCenter
     ) {
@@ -269,7 +320,7 @@ private fun Day(
 }
 
 @Composable
-private fun TaskItem(task: TaskResponse, onTaskClick: (String) -> Unit) {
+private fun TaskItem(task: Task, onTaskClick: (String) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -297,7 +348,7 @@ private fun TaskItem(task: TaskResponse, onTaskClick: (String) -> Unit) {
                     ?: task.scheduledDateTime?.toLocalDateTime()
                 dateTime?.let {
                     Text(
-                        text = it.format(DateTimeFormatter.ofPattern("h:mm a")),
+                        text = it.formatDefault(),
                         style = MaterialTheme.typography.caption,
                         color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                     )
@@ -308,7 +359,7 @@ private fun TaskItem(task: TaskResponse, onTaskClick: (String) -> Unit) {
 }
 
 @Composable
-private fun HabitItem(habit: HabitResponse, onHabitClick: (String) -> Unit) {
+private fun HabitItem(habit: Habit, onHabitClick: (String) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -334,7 +385,7 @@ private fun HabitItem(habit: HabitResponse, onHabitClick: (String) -> Unit) {
                 )
                 habit.dateTime?.toLocalDateTime()?.let { dateTime ->
                     Text(
-                        text = dateTime.format(DateTimeFormatter.ofPattern("h:mm a")),
+                        text = dateTime.formatDefault(),
                         style = MaterialTheme.typography.caption,
                         color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                     )

@@ -10,21 +10,25 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberDialogState
+import com.esteban.ruano.models.Reminder
+import com.esteban.ruano.models.Task
 import getColorByPriority
 import getIconByPriority
 import services.tasks.models.Priority
 import services.tasks.models.Priority.Companion.toPriority
-import services.tasks.models.Reminder
 import services.tasks.models.TaskResponse
-import utils.DateUIUtils
-import utils.DateUIUtils.getTime
-import utils.DateUIUtils.parseDate
-import utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils
+import com.esteban.ruano.utils.DateUIUtils.getTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUtils.parseDate
+import com.esteban.ruano.utils.DateUtils.parseDateTime
+import com.esteban.ruano.utils.DateUtils.toLocalDate
+import kotlinx.datetime.toKotlinLocalDateTime
+import utils.DateUtils.parseDate
 import utils.DateUtils.parseDateTime
 import utils.DateUtils.toLocalDate
 import utils.DateUtils.toLocalDateTime
@@ -32,12 +36,12 @@ import utils.DateUtils.toLocalTime
 
 @Composable
 fun NewEditTaskDialog(
-    taskToEdit: TaskResponse?,
+    taskToEdit: Task?,
     show: Boolean,
     onDismiss: () -> Unit,
-    onAddTask: (String, String, List<Reminder>, String?, String?,Int?) -> Unit,
+    onAddTask: (String, String, List<Reminder>, String?, String?, Int?) -> Unit,
     onError: (String) -> Unit,
-    onUpdateTask: (String, TaskResponse) -> Unit
+    onUpdateTask: (String, Task) -> Unit
 ) {
     var name by remember { mutableStateOf(taskToEdit?.name ?: "") }
     var notes by remember { mutableStateOf(taskToEdit?.note ?: "") }
@@ -70,10 +74,10 @@ fun NewEditTaskDialog(
         onDateSelected = { selectedDate ->
             try{
                 if(editingDueDate) {
-                    dueDate = selectedDate.toLocalDate().toLocalDateTime()
+                    dueDate = selectedDate.toLocalDate().toLocalDateTime().toKotlinLocalDateTime()
                 }
                 else {
-                    scheduledDate = selectedDate.toLocalDate().toLocalDateTime()
+                    scheduledDate = selectedDate.toLocalDate().toLocalDateTime().toKotlinLocalDateTime()
                 }
                 showDatePicker = false
                 showTimePicker = true

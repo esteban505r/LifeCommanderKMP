@@ -1,4 +1,4 @@
-package services.habits.models
+package com.esteban.ruano.models;
 
 enum class Frequency(val value: String){
     ONE_TIME("one_time"),

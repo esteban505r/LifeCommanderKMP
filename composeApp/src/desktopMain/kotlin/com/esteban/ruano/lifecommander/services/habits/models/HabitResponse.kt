@@ -1,7 +1,7 @@
 package services.habits.models
 
+import com.esteban.ruano.models.Reminder
 import kotlinx.serialization.Serializable
-import services.tasks.models.Reminder
 
 @Serializable
 data class HabitResponse(

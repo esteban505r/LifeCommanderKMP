@@ -6,14 +6,7 @@ data class Habit(
     val note: String?,
     val dateTime: String?,
     val done: Boolean?,
-    val frequency: HabitFrequency,
+    val frequency: String,
     val createdAt: String? = null,
     val updatedAt: String? = null
 )
-
-enum class HabitFrequency {
-    DAILY,
-    WEEKLY,
-    MONTHLY,
-    CUSTOM
-} 

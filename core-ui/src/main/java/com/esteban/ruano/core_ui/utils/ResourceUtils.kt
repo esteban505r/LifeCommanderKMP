@@ -46,13 +46,6 @@ fun LifeCommanderException.getResourceStringByError():String{
     }
 }
 
-fun getColorByDelay(delay: Int): Color {
-    return when {
-        delay < 0 -> SoftRed
-        delay < 2 -> SoftYellow
-        else -> SoftGreen
-    }
-}
 
 fun getDelayByTime(time: String): Int {
     val now = LocalDateTime.now()

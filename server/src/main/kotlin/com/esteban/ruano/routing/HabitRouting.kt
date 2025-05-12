@@ -21,15 +21,41 @@ fun Route.habitsRouting(
             val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
             val offset = call.request.queryParameters["offset"]?.toLong() ?: 0
             val date = call.request.queryParameters["date"]
+            val startDate = call.request.queryParameters["startDate"]
+            val endDate = call.request.queryParameters["endDate"]
+            val excludeDaily = call.request.queryParameters["excludeDaily"]?.toBoolean() ?: false
             val userId = call.authentication.principal<LoggedUserDTO>()!!.id
 
-            if(date!=null){
-                val isValid = Validator.isValidDateFormat(date)
-                if(!isValid){
-                    call.respond(HttpStatusCode.BadRequest,"Invalid date format")
+            if(startDate != null && endDate != null) {
+                val isStartDateValid = Validator.isValidDateFormat(startDate)
+                val isEndDateValid = Validator.isValidDateFormat(endDate)
+                if(!isStartDateValid || !isEndDateValid) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid date format")
                     return@get
                 }
-                try{
+                try {
+                    val habits = habitRepository.getAllByDate(
+                        userId,
+                        startDate,
+                        endDate,
+                        filter,
+                        limit,
+                        offset,
+                        excludeDaily
+                    )
+                    call.respond(habits)
+                } catch(e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@get
+                }
+            } else if(date != null) {
+                val isValid = Validator.isValidDateFormat(date)
+                if(!isValid) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid date format")
+                    return@get
+                }
+                try {
                     val habits = habitRepository.getAll(
                         userId,
                         filter,
@@ -38,15 +64,14 @@ fun Route.habitsRouting(
                         date
                     )
                     call.respond(habits)
-                }
-                catch(e: Exception){
+                } catch(e: Exception) {
                     e.printStackTrace()
                     call.respond(HttpStatusCode.BadRequest)
                     return@get
                 }
             }
 
-            call.respond(habitRepository.getAll(userId,filter,limit,offset))
+            call.respond(habitRepository.getAll(userId, filter, limit, offset))
         }
         post {
             val userId = call.authentication.principal<LoggedUserDTO>()!!.id

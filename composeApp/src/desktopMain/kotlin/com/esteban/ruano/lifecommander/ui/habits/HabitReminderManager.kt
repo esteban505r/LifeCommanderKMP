@@ -1,5 +1,6 @@
 package ui.habits
 
+import com.esteban.ruano.models.Habit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -7,7 +8,9 @@ import services.auth.TokenStorage
 import services.habits.HabitService
 import services.habits.models.HabitResponse
 import ui.models.TaskFilters
-import utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalTime
+import kotlinx.datetime.toJavaLocalTime
 import utils.DateUtils.parseDate
 import utils.DateUtils.toLocalDateTime
 import java.time.LocalDate
@@ -63,10 +66,10 @@ class HabitReminderManager(
         }
     }
 
-    private fun scheduleReminder(habit: HabitResponse): Boolean {
+    private fun scheduleReminder(habit: Habit): Boolean {
         val now = LocalTime.now()
         val habitDateTime = habit.dateTime?.toLocalDateTime()?.toLocalTime() ?: return false
-        val delayMillis = ChronoUnit.MILLIS.between(now, habitDateTime)
+        val delayMillis = ChronoUnit.MILLIS.between(now, habitDateTime.toJavaLocalTime())
 
         when {
             // Overdue habits

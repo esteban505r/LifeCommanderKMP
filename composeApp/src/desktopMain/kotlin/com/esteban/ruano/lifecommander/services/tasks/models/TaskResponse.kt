@@ -1,5 +1,6 @@
 package services.tasks.models
 
+import com.esteban.ruano.models.Reminder
 import kotlinx.serialization.Serializable
 
 @Serializable

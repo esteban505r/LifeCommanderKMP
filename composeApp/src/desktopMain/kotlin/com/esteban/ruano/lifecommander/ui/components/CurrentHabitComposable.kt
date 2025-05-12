@@ -4,7 +4,6 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,15 +11,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import services.habits.models.HabitResponse
-import utils.DateUIUtils.toLocalDateTime
-import utils.DateUtils.format
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.lifecommander.utils.TimeBasedItemUtils
+import com.esteban.ruano.models.Habit
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUtils.formatDefault
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun CurrentHabitComposable(
-    habits: List<HabitResponse>
+    habits: List<Habit>
 ) {
     var currentTime by remember { mutableStateOf(LocalTime.now()) }
     var habitTimeInfo by remember { mutableStateOf(TimeBasedItemUtils.calculateHabitTimes(habits, currentTime)) }
@@ -79,7 +80,7 @@ fun CurrentHabitComposable(
                                 horizontalAlignment = Alignment.End
                             ) {
                                 Text(
-                                    text = duration.format(),
+                                    text = duration.formatDefault(),
                                     style = MaterialTheme.typography.h6,
                                     color = MaterialTheme.colors.primary
                                 )
@@ -132,7 +133,7 @@ fun CurrentHabitComposable(
                                 horizontalAlignment = Alignment.End
                             ) {
                                 Text(
-                                    text = time.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                                    text = time.toLocalDateTime().formatDefault(),
                                     style = MaterialTheme.typography.h6,
                                     color = MaterialTheme.colors.secondary
                                 )

@@ -1,7 +1,18 @@
 package com.esteban.ruano.utils
 
+import LifeCommander.shared.MR
 import androidx.compose.ui.graphics.Color
+import com.esteban.ruano.ui.LightGray
+import com.esteban.ruano.ui.SoftRed
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getTime
+import dev.icerock.moko.resources.StringResource
+import dev.icerock.moko.resources.desc.Raw
+import dev.icerock.moko.resources.desc.Resource
+import dev.icerock.moko.resources.desc.ResourceFormatted
+import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.datetime.*
+import kotlin.time.Duration
 
 object DateUtils {
 
@@ -21,6 +32,22 @@ object DateUtils {
     fun parseTime(timeString: String): LocalTime {
         val (hours, minutes) = timeString.split(":").map { it.toInt() }
         return LocalTime(hours, minutes)
+    }
+
+    fun LocalDateTime.parseDateTime(): String {
+        val day = this.date.dayOfMonth.toString().padStart(2, '0')
+        val month = this.date.monthNumber.toString().padStart(2, '0')
+        val year = this.date.year.toString()
+        val hour = this.hour.toString().padStart(2, '0')
+        val minute = this.minute.toString().padStart(2, '0')
+        return "$day/$month/$year $hour:$minute"
+    }
+
+    fun LocalDate.parseDate(): String {
+        val day = dayOfMonth.toString().padStart(2, '0')
+        val month = monthNumber.toString().padStart(2, '0')
+        val year = year.toString()
+        return "$day/$month/$year"
     }
 
     // Formatting functions
@@ -90,118 +117,77 @@ object DateUtils {
         return this * 60000
     }
 
-    fun LocalDateTime.toResourceStringBasedOnNow(
-        context: Context,
-    ): Pair<String, Color> {
-        if (this.minusDays(7).toLocalDate() > LocalDate.now()) {
-            return Pair(this.parseDateTime(), DarkGray)
+
+    fun LocalDateTime.toResourceStringBasedOnNow(): Pair<StringDesc, Color> {
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+
+        if (this.date > today.plus(7, DateTimeUnit.DAY)) {
+            return Pair(StringDesc.Raw(this.toString()), LightGray)
         }
 
-        if (LocalDateTime.now().toLocalDate() == this.toLocalDate()) {
-            val color = if (LocalDateTime.now().isAfter(this)) SoftRed else DarkGray
-            val resource = context.getString(MR.string.todayAt, this.getTime())
+        if (this.date == today) {
+            val color = if (now > this) SoftRed else LightGray
+            val resource = StringDesc.ResourceFormatted(MR.strings.todayAt, this.time.formatDefault())
             return Pair(resource, color)
         }
 
-        if(LocalDate.now().minusDays(1) == this.toLocalDate()){
-            val resource = context.getString(MR.string.yesterdayAt, this.getTime())
+        if (this.date == today.minus(1, DateTimeUnit.DAY)) {
+            val resource = StringDesc.ResourceFormatted(MR.strings.yesterdayAt, this.time.formatDefault())
             return Pair(resource, SoftRed)
         }
 
-        if(LocalDate.now().plusDays(1) == this.toLocalDate()){
-            val resource = context.getString(MR.string.tomorrowAt, this.getTime())
-            return Pair(resource, DarkGray)
+        if (this.date == today.plus(1, DateTimeUnit.DAY)) {
+            val resource = StringDesc.ResourceFormatted(MR.strings.tomorrowAt, this.time.formatDefault())
+            return Pair(resource, LightGray)
         }
 
-        if (LocalDate.now() < this.toLocalDate() && LocalDate.now()
-                .plusDays(7) > this.toLocalDate()
-        ) {
-            val first = when (this.dayOfWeek) {
-                DayOfWeek.MONDAY -> context.getString(
-                    MR.string.at_day,
-                    context.getString(MR.string.monday)
-                )
-
-                DayOfWeek.TUESDAY -> context.getString(
-                    MR.string.at_day,
-                    context.getString(MR.string.tuesday)
-                )
-
-                DayOfWeek.WEDNESDAY -> context.getString(
-                    MR.string.at_day,
-                    context.getString(MR.string.wednesday)
-                )
-
-                DayOfWeek.THURSDAY -> context.getString(
-                    MR.string.at_day,
-                    context.getString(MR.string.thursday)
-                )
-
-                DayOfWeek.FRIDAY -> context.getString(
-                    MR.string.at_day,
-                    context.getString(MR.string.friday)
-                )
-
-                DayOfWeek.SATURDAY -> context.getString(
-                    MR.string.at_day,
-                    context.getString(MR.string.saturday)
-                )
-
-                DayOfWeek.SUNDAY -> context.getString(
-                    MR.string.at_day,
-                    context.getString(MR.string.sunday)
-                )
-
-                else -> context.getString(MR.string.empty)
-            }
-            return Pair(first, DarkGray)
+        if (this.date > today && this.date < today.plus(7, DateTimeUnit.DAY)) {
+            val dayString = this.date.dayOfWeek.toDayStringRes()
+            val resource = StringDesc.ResourceFormatted(MR.strings.at_day, StringDesc.Resource(dayString))
+            return Pair(resource, LightGray)
         }
-        if (LocalDate.now().minusDays(7) > this.toLocalDate()) {
-            return Pair(this.parseDateTime(), SoftRed)
+
+        if (this.date < today.minus(7, DateTimeUnit.DAY)) {
+            return Pair(StringDesc.Raw(this.toString()), SoftRed)
         }
-        if (this.toLocalDate() < LocalDate.now() && LocalDate.now()
-                .minusDays(7) < this.toLocalDate()
-        ) {
-            val first = when (this.dayOfWeek) {
-                DayOfWeek.MONDAY -> context.getString(
-                    MR.string.last_day,
-                    context.getString(MR.string.monday)
-                )
 
-                DayOfWeek.TUESDAY -> context.getString(
-                    MR.string.last_day,
-                    context.getString(MR.string.tuesday)
-                )
-
-                DayOfWeek.WEDNESDAY -> context.getString(
-                    MR.string.last_day,
-                    context.getString(MR.string.wednesday)
-                )
-
-                DayOfWeek.THURSDAY -> context.getString(
-                    MR.string.last_day,
-                    context.getString(MR.string.thursday)
-                )
-
-                DayOfWeek.FRIDAY -> context.getString(
-                    MR.string.last_day,
-                    context.getString(MR.string.friday)
-                )
-
-                DayOfWeek.SATURDAY -> context.getString(
-                    MR.string.last_day,
-                    context.getString(MR.string.saturday)
-                )
-
-                DayOfWeek.SUNDAY -> context.getString(
-                    MR.string.last_day,
-                    context.getString(MR.string.sunday)
-                )
-
-                else -> context.getString(MR.string.empty)
-            }
-            return Pair(first, SoftRed)
+        if (this.date < today && this.date > today.minus(7, DateTimeUnit.DAY)) {
+            val dayString = this.date.dayOfWeek.toDayStringRes()
+            val resource = StringDesc.ResourceFormatted(MR.strings.last_day, StringDesc.Resource(dayString))
+            return Pair(resource, SoftRed)
         }
-        return Pair(this.parseDateTime(), SoftRed)
+
+        return Pair(StringDesc.Raw(this.toString()), SoftRed)
     }
+
+    private fun DayOfWeek.toDayStringRes(): StringResource{
+        return when (this) {
+            DayOfWeek.MONDAY -> MR.strings.monday
+            DayOfWeek.TUESDAY -> MR.strings.tuesday
+            DayOfWeek.WEDNESDAY -> MR.strings.wednesday
+            DayOfWeek.THURSDAY -> MR.strings.thursday
+            DayOfWeek.FRIDAY -> MR.strings.friday
+            DayOfWeek.SATURDAY -> MR.strings.saturday
+            DayOfWeek.SUNDAY -> MR.strings.sunday
+            else -> MR.strings.unknown
+        }
+    }
+
+
+    fun Duration.formatDefault(): String {
+        val totalSeconds = this.inWholeSeconds
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+
+        return if (hours > 0) {
+            "${pad(hours)}:${pad(minutes)}:${pad(seconds)}"
+        } else {
+            "${pad(minutes)}:${pad(seconds)}"
+        }
+    }
+
+    private fun pad(value: Long): String = value.toString().padStart(2, '0')
+
 } 

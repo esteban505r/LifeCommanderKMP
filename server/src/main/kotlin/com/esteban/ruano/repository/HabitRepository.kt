@@ -37,7 +37,8 @@ class HabitRepository(private val habitService: HabitService) {
         endDate: String,
         filter: String,
         limit: Int,
-        offset: Long
+        offset: Long,
+        excludeDaily: Boolean = false
     ): List<HabitDTO> {
         return habitService.fetchAllByDateRange(
             userId,
@@ -45,7 +46,8 @@ class HabitRepository(private val habitService: HabitService) {
             parseDateTime(startDate),
             parseDateTime(endDate),
             limit,
-            offset
+            offset,
+            excludeDaily
         )
     }
 

@@ -2,15 +2,15 @@ package ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.esteban.ruano.models.Task
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import services.auth.TokenStorage
 import services.tasks.TaskService
-import services.tasks.models.TaskResponse
 import services.tasks.sortedByDefault
 import ui.models.TaskFilters
-import utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import utils.DateUtils.parseDateTime
 import utils.StatusBarService
 import com.esteban.ruano.lifecommander.utils.TimeBasedItemUtils
@@ -23,17 +23,16 @@ class TasksViewModel(
     private val statusBarService: StatusBarService,
 ) : ViewModel() {
 
-    private val _tasks = MutableStateFlow<List<TaskResponse>>(
+    private val _tasks = MutableStateFlow<List<Task>>(
         emptyList()
     )
 
     val tasks = _tasks
 
-    private val _currentTask = MutableStateFlow<TaskResponse?>(null)
+    private val _currentTask = MutableStateFlow<Task?>(null)
 
     private val _selectedFilter = MutableStateFlow(TaskFilters.TODAY)
     val selectedFilter = _selectedFilter.asStateFlow()
-
 
     val _loading = MutableStateFlow(false)
     val loading = _loading.asStateFlow()
@@ -77,7 +76,7 @@ class TasksViewModel(
         }
     }
 
-    fun changeCheckHabit(id:String,checked: Boolean) {
+    fun changeCheckHabit(id:String, checked: Boolean) {
         viewModelScope.launch {
             _loading.value = true
             try {
@@ -154,7 +153,7 @@ class TasksViewModel(
         viewModelScope.launch {
             _loading.value = true
             try {
-                val response = taskService.addTask(
+                taskService.addTask(
                     token = tokenStorage.getToken() ?: "",
                     name = name,
                     dueDate = dueDate,
@@ -173,7 +172,7 @@ class TasksViewModel(
         }
     }
 
-    fun updateTask(id: String, task: TaskResponse) {
+    fun updateTask(id: String, task: Task) {
         viewModelScope.launch {
             _loading.value = true
             try {
@@ -217,7 +216,7 @@ class TasksViewModel(
         getTasksByFilter()
     }
 
-    fun rescheduleTask(task: TaskResponse) {
+    fun rescheduleTask(task: Task) {
         viewModelScope.launch {
             _loading.value = true
             try {

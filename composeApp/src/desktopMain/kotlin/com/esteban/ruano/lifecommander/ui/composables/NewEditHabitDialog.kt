@@ -12,12 +12,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberDialogState
-import services.habits.models.Frequency
+import com.esteban.ruano.models.Frequency
+import com.esteban.ruano.models.Habit
 import services.habits.models.HabitResponse
-import utils.DateUIUtils
-import utils.DateUIUtils.parseDate
-import utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalTime
+import com.esteban.ruano.utils.DateUtils.toLocalDate
+import kotlinx.datetime.toKotlinLocalDateTime
 import utils.DateUtils.getTime
+import utils.DateUtils.parseDate
 import utils.DateUtils.parseDateTime
 import utils.DateUtils.toLocalDate
 import utils.DateUtils.toLocalDateTime
@@ -25,12 +30,12 @@ import utils.DateUtils.toLocalTime
 
 @Composable
 fun NewEditHabitDialog(
-    habitToEdit: HabitResponse?,
+    habitToEdit: Habit?,
     show: Boolean,
     onDismiss: () -> Unit,
-    onAddHabit: (String, String?,Frequency, String) -> Unit,
+    onAddHabit: (String, String?, Frequency, String) -> Unit,
     onError: (String) -> Unit,
-    onUpdateHabit: (String, HabitResponse) -> Unit
+    onUpdateHabit: (String, Habit) -> Unit
 ) {
     var name by remember { mutableStateOf(habitToEdit?.name ?: "") }
     var notes by remember { mutableStateOf(habitToEdit?.note ?: "") }
@@ -52,12 +57,12 @@ fun NewEditHabitDialog(
     }
 
     DatePickerDialog(
-        date = dateTime?.toLocalDate()?.parseDate(),
+        date = dateTime?.toLocalDate()?.formatDefault(),
         show = showDatePicker,
         onDismiss = { showDatePicker = false },
         onDateSelected = { selectedDate ->
             try{
-                dateTime = selectedDate.toLocalDate().toLocalDateTime()
+                dateTime = selectedDate.toLocalDate().toLocalDateTime().toKotlinLocalDateTime()
                 showDatePicker = false
                 showTimePicker = true
             }
@@ -70,7 +75,7 @@ fun NewEditHabitDialog(
     )
 
     TimePickerDialog(
-        timep = dateTime?.toLocalTime()?.getTime(),
+        timep = dateTime?.toLocalTime()?.formatDefault(),
         show = showTimePicker,
         onDismiss = { showTimePicker = false },
         onTimeSelected = { selectedTime ->
@@ -171,7 +176,7 @@ fun NewEditHabitDialog(
                                     name = name,
                                     note = notes,
                                     frequency = frequency.value,
-                                    dateTime = dateTime?.parseDateTime()
+                                    dateTime = dateTime?.formatDefault()
 
                                 )
                             )
@@ -185,7 +190,7 @@ fun NewEditHabitDialog(
                                 name,
                                 notes,
                                 frequency,
-                                baseDateTime.parseDateTime()
+                                baseDateTime.formatDefault()
                             )
                         }
                         onDismiss()

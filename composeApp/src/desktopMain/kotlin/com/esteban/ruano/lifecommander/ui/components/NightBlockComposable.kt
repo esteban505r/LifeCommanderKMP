@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.esteban.ruano.models.Habit
 import kotlinx.coroutines.launch
 import services.NightBlockService
 import services.dailyjournal.models.QuestionDTO
@@ -25,7 +26,7 @@ import ui.viewmodels.DailyJournalViewModel
 @Composable
 fun NightBlockComposable(
     nightBlockService: NightBlockService,
-    habits: List<HabitResponse>,
+    habits: List<Habit>,
     onOverride: (String) -> Unit,
     modifier: Modifier = Modifier,
     dailyJournalViewModel: DailyJournalViewModel,

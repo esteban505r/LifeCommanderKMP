@@ -7,7 +7,8 @@ import services.auth.TokenStorage
 import services.tasks.TaskService
 import services.tasks.models.TaskResponse
 import ui.models.TaskFilters
-import utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import kotlinx.datetime.toJavaLocalDateTime
 import utils.DateUtils.toLocalDateTime
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -57,8 +58,8 @@ class TaskReminderManager(
         tasks.forEach { task ->
             if (task.dueDateTime != null) {
                 val now = LocalDateTime.now()
-                val taskDateTime = task.dueDateTime.toLocalDateTime()
-                val delayMillis = ChronoUnit.MILLIS.between(now, taskDateTime)
+                val taskDateTime = task?.dueDateTime?.toLocalDateTime()
+                val delayMillis = ChronoUnit.MILLIS.between(now, taskDateTime?.toJavaLocalDateTime())
 
                 when {
                     // Overdue tasks

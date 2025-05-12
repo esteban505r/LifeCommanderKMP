@@ -1,12 +1,12 @@
-package services.HabitResponses
+package com.esteban.ruano.lifecommander.services.habits
 
-import services.habits.models.Frequency
+import com.esteban.ruano.models.Frequency
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getTime
 import services.habits.models.HabitResponse
-import utils.DateUIUtils.toLocalDateTime
-import utils.DateUtils.getTime
-import utils.DateUtils.parseDate
-import utils.DateUtils.parseDateTime
-import utils.DateUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUtils.toLocalDate
+import kotlinx.datetime.toJavaLocalTime
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
@@ -16,13 +16,13 @@ object HabitUtils {
 
     fun HabitResponse.time() = this.dateTime?.toLocalDateTime()?.getTime()
 
-    fun HabitResponse.date() = this.dateTime?.toLocalDateTime()?.toLocalDate()?.parseDate()
+    fun HabitResponse.date() = this.dateTime?.toLocalDateTime()?.toLocalDate()?.formatDefault()
 
     fun List<HabitResponse>.findCurrentHabitResponse(): HabitResponse? {
         val currentTime = LocalTime.now()
         return this.minByOrNull {
-            val HabitResponseTime = it.dateTime?.toLocalDateTime()?.toLocalTime()
-            HabitResponseTime?.let { ChronoUnit.MINUTES.between(currentTime, it).absoluteValue } ?: Long.MAX_VALUE
+            val HabitResponseTime = it.dateTime?.toLocalDateTime()?.time
+            HabitResponseTime?.let { ChronoUnit.MINUTES.between(currentTime, it.toJavaLocalTime()).absoluteValue } ?: Long.MAX_VALUE
         }
     }
 
@@ -49,11 +49,11 @@ object HabitUtils {
             }
 
             Frequency.YEARLY -> {
-                this.dateTime?.toLocalDateTime()?.toLocalDate()?.parseDate()
+                this.dateTime?.toLocalDateTime()?.toLocalDate()?.formatDefault()
             }
 
             Frequency.ONE_TIME -> {
-                this.dateTime?.toLocalDateTime()?.parseDateTime()
+                this.dateTime?.toLocalDateTime()?.formatDefault()
             }
         } ?: ""
     }

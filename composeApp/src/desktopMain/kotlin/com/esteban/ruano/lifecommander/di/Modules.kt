@@ -13,6 +13,7 @@ import services.auth.AuthService
 import services.auth.TokenStorage
 import services.dailyjournal.DailyJournalService
 import com.esteban.ruano.lifecommander.services.habits.BASE_URL
+import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
 import services.habits.HabitService
 import services.tasks.TaskService
 import ui.ui.viewmodels.AuthViewModel
@@ -68,10 +69,11 @@ val servicesModule = module {
 // ViewModels Module
 val viewModelsModule = module {
     viewModel { AppViewModel(get(),get(), get(), get(), get(),get()) }
-    viewModel { HabitsViewModel(get(),get(),get()) }
+    viewModel { HabitsViewModel(get(),get()) }
     viewModel { TasksViewModel(get(),get(),get()) }
     viewModel { AuthViewModel(get()) }
     viewModel { DailyJournalViewModel(get(),get()) }
+    viewModel { CalendarViewModel(get(),get(),get()) }
 }
 
 // Combine all modules

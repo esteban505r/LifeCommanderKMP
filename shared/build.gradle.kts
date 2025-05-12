@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.api
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -32,7 +33,7 @@ kotlin {
     
     jvm()
     
-    @OptIn(ExperimentalWasmDsl::class)
+    /*@OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser {
             val rootDirPath = project.rootDir.path
@@ -47,7 +48,7 @@ kotlin {
                 }
             }
         }
-    }
+    }*/
     
     sourceSets {
         val commonMain by getting {
@@ -62,8 +63,9 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material)
                 implementation(compose.material3)
-                implementation(libs.moko.resources)
-                implementation(libs.moko.resources.compose)
+                api(libs.moko.resources)
+                api(libs.moko.resources.compose)
+                implementation(compose.materialIconsExtended)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
             }
@@ -97,6 +99,3 @@ android {
     }
 }
 
-multiplatformResources {
-    multiplatformResourcesPackage = "com.esteban.ruano.shared"
-}

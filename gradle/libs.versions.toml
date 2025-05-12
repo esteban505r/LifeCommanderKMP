@@ -84,7 +84,6 @@ ktor = "3.1.2"
 logback = "1.5.18"
 exposed = "0.48.0"
 koin-server = "3.1.2"
-ktor-gson = "2.3.10"
 navigation-compose = "2.8.0-alpha10"
 lifecycle-viewmodel-compose = "2.8.2"
 coil3 = "3.0.4"
@@ -99,7 +98,7 @@ flyway = "10.11.1"
 bcrypt = "0.9.0"
 postgres = "42.7.2"
 aws-sdk = "2.31.15"
-moko-resources = "0.24.0"
+moko-resources = "0.24.5"
 dotenv = "6.4.1"
 
 [libraries]
@@ -143,6 +142,7 @@ compose-foundation-layout = { group = "androidx.compose.foundation", name = "fou
 #MOKO
 moko-resources = { module = "dev.icerock.moko:resources", version.ref = "moko-resources" }
 moko-resources-compose = { module = "dev.icerock.moko:resources-compose", version.ref = "moko-resources" }
+moko-resources-generator = { module = "dev.icerock.moko:resources-generator", version.ref = "moko-resources" }
 
 # Material
 google-material = { module = "com.google.android.material:material", version.ref = "material" }
@@ -208,7 +208,7 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-json = { module = "io.ktor:ktor-client-json", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-ktor-serialization-gson-jvm = { module = "io.ktor:ktor-serialization-gson-jvm", version.ref = "ktor-gson" }
+ktor-serialization-gson-jvm = { module = "io.ktor:ktor-serialization-gson-jvm", version.ref = "ktor" }
 
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation-compose" }
 lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle-viewmodel-compose" }
@@ -276,4 +276,4 @@ kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-moko-resources = { id = "dev.icerock.mobile.multiplatform-resources", version.ref = "moko-resources" }
+moko-resources = { id = "dev.icerock.mobile.multiplatform-resources"}

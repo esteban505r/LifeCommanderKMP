@@ -40,7 +40,6 @@ fun CheckableItem(
             style = MaterialTheme.typography.body1.copy(
                 textDecoration = textDecoration
             ),
-            modifier = Modifier.weight(1f)
         )
         suffix?.invoke()
     }
