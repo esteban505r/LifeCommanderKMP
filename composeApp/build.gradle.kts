@@ -202,8 +202,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_18
+        targetCompatibility = JavaVersion.VERSION_18
     }
 }
 
@@ -211,14 +211,24 @@ dependencies {
     debugImplementation(compose.uiTooling)
 }
 
+
+
 compose.desktop {
+
     application {
         mainClass = "com.esteban.ruano.lifecommander.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.esteban.ruano.lifecommander"
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.AppImage,)
+            packageName = "LifeCommander"
             packageVersion = "1.0.0"
+            modules("jdk.unsupported")
+        }
+
+        buildTypes.release.proguard {
+            version.set("7.4.0")
+            isEnabled = false
+            configurationFiles.from("proguard-rules.pro")
         }
     }
 }
