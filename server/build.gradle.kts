@@ -6,9 +6,18 @@ plugins {
 
 group = "com.esteban.ruano"
 version = "1.0.0"
+
+kotlin {
+    jvmToolchain(17)
+}
+
 application {
     mainClass.set("com.esteban.ruano.ApplicationKt")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
+}
+
+repositories {
+    mavenCentral()
 }
 
 dependencies {

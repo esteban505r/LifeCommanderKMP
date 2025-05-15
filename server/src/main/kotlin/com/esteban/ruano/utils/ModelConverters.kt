@@ -73,7 +73,7 @@ object ModelConverters {
             dateTime = dateTime,
             note = note,
             done = done,
-            frequency = HabitFrequency.valueOf(frequency),
+            frequency = Frequency.valueOf(frequency).value,
             createdAt = createdAt,
             updatedAt = updatedAt
         )
@@ -86,7 +86,7 @@ object ModelConverters {
             note = note ?:"",
             dateTime = dateTime,
             done = done ?: false,
-            frequency = frequency.name,
+            frequency = frequency,
             createdAt = createdAt,
             updatedAt = updatedAt,
             reminders = emptyList()

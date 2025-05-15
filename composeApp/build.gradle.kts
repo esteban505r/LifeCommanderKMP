@@ -53,7 +53,9 @@ kotlin {
         }
         binaries.executable()
     }*/
-    
+
+
+
     sourceSets {
         val desktopMain by getting
 
@@ -145,8 +147,8 @@ kotlin {
             implementation(projects.shared)
         }
         desktopMain.dependencies {
-            implementation(projects.shared)
             implementation(compose.desktop.currentOs)
+            implementation(projects.shared)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.cio)

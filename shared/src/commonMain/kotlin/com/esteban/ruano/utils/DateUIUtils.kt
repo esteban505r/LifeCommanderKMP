@@ -12,6 +12,7 @@ import com.esteban.ruano.ui.SoftGreen
 import com.esteban.ruano.ui.SoftRed
 import com.esteban.ruano.ui.SoftYellow
 import kotlinx.datetime.*
+import kotlin.math.pow
 
 object DateUIUtils {
 
@@ -141,5 +142,15 @@ object DateUIUtils {
             else -> Icons.Default.KeyboardArrowDown
         }
     }
+    fun formatCurrency(amount: Double, symbol: String = "$"): String {
+        return "$symbol${amount.toFixed(2)}"
+    }
+
+    fun Double.toFixed(decimals: Int): String {
+        return buildString {
+            append(kotlin.math.floor(this@toFixed * 10.0.pow(decimals)) / 10.0.pow(decimals))
+        }
+    }
+
 
 }

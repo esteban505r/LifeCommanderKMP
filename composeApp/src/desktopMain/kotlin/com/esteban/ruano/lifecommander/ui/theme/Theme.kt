@@ -52,7 +52,7 @@ private val DarkColorPalette = darkColors(
     onSecondary = DarkOnSecondary,
     onBackground = DarkOnBackground,
     onSurface = DarkOnSurface,
-    onError = DarkOnError
+    onError = DarkOnError,
 )
 
 private val LightColorPalette = lightColors(

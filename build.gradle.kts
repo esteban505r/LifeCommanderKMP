@@ -8,15 +8,25 @@ plugins {
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.hilt) apply false
+    alias(libs.plugins.ktor) apply false
 }
 
 buildscript {
     repositories {
         gradlePluginPortal()
+        mavenCentral()
+        google()
     }
 
     dependencies {
         classpath(libs.moko.resources.generator)
+    }
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+        google()
     }
 }
 

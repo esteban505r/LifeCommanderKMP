@@ -3,9 +3,8 @@ package com.esteban.ruano.habits_data.repository
 import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.helpers.NetworkHelper
 import com.esteban.ruano.core.utils.DateUtils.parseDateTime
-import com.esteban.ruano.core_data.constants.Constants.DEFAULT_LIMIT
-import com.esteban.ruano.core_data.constants.Constants.DEFAULT_PAGE
-import com.esteban.ruano.core_data.models.ErrorHandlingUtils
+import com.esteban.ruano.core_data.constants.DataConstants.DEFAULT_LIMIT
+import com.esteban.ruano.core_data.constants.DataConstants.DEFAULT_PAGE
 import com.esteban.ruano.core_data.repository.BaseRepository
 import com.esteban.ruano.habits_data.datasources.HabitsDataSource
 import com.esteban.ruano.habits_domain.model.Habit

@@ -19,6 +19,11 @@ import com.esteban.ruano.utils.HabitUtils
 import com.esteban.ruano.utils.parseDate
 import com.esteban.ruano.utils.parseDateTime
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.kotlin.datetime.minute
 import org.jetbrains.exposed.sql.transactions.transaction

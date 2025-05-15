@@ -57,6 +57,11 @@ fun Application.configureRouting() {
     val questionAnswerRepository = QuestionAnswerRepository(QuestionAnswerService())
     val pomodoroRepository = PomodoroRepository(PomodoroService())
     val dailyJournalRepository = DailyJournalRepository(DailyJournalService(PomodoroService(), QuestionAnswerService()))
+    val accountRepository = AccountRepository(AccountService())
+    val budgetRepository = BudgetRepository(BudgetService())
+    val transactionRepository = TransactionRepository(TransactionService())
+    val savingsGoalRepository = SavingsGoalRepository(SavingsGoalService())
+
     routing {
         get("/") {
             call.respondText("Hello, world!")
@@ -82,6 +87,13 @@ fun Application.configureRouting() {
                 pomodoroRouting(pomodoroRepository)
 
                 dailyJournalRouting(dailyJournalRepository)
+
+                financeRouting(
+                    accountRepository = accountRepository,
+                    transactionRepository = transactionRepository,
+                    budgetRepository = budgetRepository,
+                    savingsGoalRepository = savingsGoalRepository
+                )
             }
 
             blogRouting(blogRepository)

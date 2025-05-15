@@ -1,0 +1,25 @@
+package com.esteban.ruano.lifecommander.ui.screens
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
+import org.koin.compose.viewmodel.koinViewModel
+import ui.components.CalendarComposable
+
+@Composable
+fun CalendarScreen(
+    modifier: Modifier = Modifier,
+    calendarViewModel: CalendarViewModel = koinViewModel(),
+    onTaskClick: (String) -> Unit,
+    onHabitClick: (String) -> Unit
+) {
+
+    CalendarComposable(
+        onTaskClick = onTaskClick,
+        onHabitClick = onHabitClick,
+        viewModel = calendarViewModel,
+        modifier = modifier
+    )
+} 

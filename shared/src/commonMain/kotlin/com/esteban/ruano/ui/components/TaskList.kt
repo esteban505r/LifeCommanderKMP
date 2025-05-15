@@ -158,7 +158,7 @@ fun TaskList(
             }
         }
         if (!isDesktop()) {
-            PullRefreshIndicator(isRefreshing, pullRefreshState, Modifier.align(Alignment.TopCenter))
+        PullRefreshIndicator(isRefreshing, pullRefreshState, Modifier.align(Alignment.TopCenter))
         }
     }
 } 

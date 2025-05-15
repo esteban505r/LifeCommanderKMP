@@ -14,6 +14,8 @@ import services.auth.TokenStorage
 import services.dailyjournal.DailyJournalService
 import com.esteban.ruano.lifecommander.services.habits.BASE_URL
 import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
+import services.finance.FinanceService
 import services.habits.HabitService
 import services.tasks.TaskService
 import ui.ui.viewmodels.AuthViewModel
@@ -58,6 +60,7 @@ val servicesModule = module {
     single { HabitService(get()) }
     single { TaskService(get()) }
     single { AuthService(get(),get()) }
+    single { FinanceService(BASE_URL, get(), get()) }
     single { AppPreferencesService(get()) }
     single { NightBlockService(get(),get()) }
     single { BackgroundServiceManager() }
@@ -74,6 +77,7 @@ val viewModelsModule = module {
     viewModel { AuthViewModel(get()) }
     viewModel { DailyJournalViewModel(get(),get()) }
     viewModel { CalendarViewModel(get(),get(),get()) }
+    viewModel { FinanceViewModel(get()) }
 }
 
 // Combine all modules

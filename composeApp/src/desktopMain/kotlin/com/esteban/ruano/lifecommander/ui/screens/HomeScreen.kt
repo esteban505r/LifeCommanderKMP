@@ -1,4 +1,4 @@
-package ui.screens
+package com.esteban.ruano.lifecommander.ui.screens
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -15,18 +15,19 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.esteban.ruano.lifecommander.ui.components.CurrentHabitComposable
 import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
+import com.esteban.ruano.models.Frequency
 import com.esteban.ruano.models.Habit
 import com.esteban.ruano.models.Task
+import com.esteban.ruano.models.Reminder
 import com.esteban.ruano.ui.components.HabitList
 import com.esteban.ruano.ui.components.TaskList
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import services.AppPreferencesService
 import services.NightBlockService
-import services.habits.models.HabitResponse
-import services.tasks.models.TaskResponse
 import ui.components.*
 import ui.composables.*
 import ui.viewmodels.*
@@ -46,7 +47,12 @@ fun HomeScreen(
     dailyJournalViewModel: DailyJournalViewModel = koinViewModel(),
     onTaskClick: (String) -> Unit,
     onLogoutClick: () -> Unit,
-    onHabitClick: (String) -> Unit
+    onHabitClick: (String) -> Unit,
+    onAddTask: (String, String, List<Reminder>, String?, String?, Int?) -> Unit,
+    onAddHabit: (String, String, String, Frequency) -> Unit,
+    onError: (String) -> Unit,
+    onUpdateTask: (String, Task) -> Unit,
+    onUpdateHabit: (String, Habit) -> Unit
 ) {
     var showTokenDialog by remember { mutableStateOf(false) }
     var showNewTaskDialog by remember { mutableStateOf(false) }
@@ -57,7 +63,6 @@ fun HomeScreen(
     var timerDialogTitle by remember { mutableStateOf("") }
     var timerDialogMessage by remember { mutableStateOf("") }
     val showTimersDialog = appViewModel.appState.collectAsState().value.showTimersDialog
-    var showCalendarView by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
@@ -115,7 +120,7 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         while (true) {
             nightBlockService.checkAndActivateNightBlock()
-            kotlinx.coroutines.delay(60000) // 1 minute
+            delay(60000) // 1 minute
         }
     }
 
@@ -175,7 +180,7 @@ fun HomeScreen(
             showNewHabitDialog = false
             habitToEdit = null
         },
-        onAddHabit = { name, note, frequency, dateTime ->
+        onAddHabit = { name, note, dateTime,frequency ->
             habitsViewModel.addHabit(name, note, frequency.value, dateTime)
         },
         onUpdateHabit = { id, habit ->
@@ -187,312 +192,115 @@ fun HomeScreen(
         }
     )
 
-    Scaffold(
-        floatingActionButton = {
-            Column {
-                if (expanded) {
-                    FloatingActionButton(
-                        onClick = { 
-                            showNewTaskDialog = true
-                            expanded = false
-                        },
-                        backgroundColor = MaterialTheme.colors.secondary,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    ) {
-                        Icon(Icons.Default.AddTask, contentDescription = "Add Task")
-                    }
-                    FloatingActionButton(
-                        onClick = { 
-                            showNewHabitDialog = true
-                            expanded = false
-                        },
-                        backgroundColor = MaterialTheme.colors.primary,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Habit")
-                    }
-                }
-                FloatingActionButton(
-                    onClick = { expanded = !expanded },
-                    backgroundColor = MaterialTheme.colors.primary
-                ) {
-                    Icon(
-                        imageVector = if (expanded) Icons.Default.Close else Icons.Default.Add,
-                        contentDescription = if (expanded) "Close" else "Add"
-                    )
-                }
-            }
-        },
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Row(verticalAlignment = Alignment.CenterVertically,modifier = Modifier.onClick(
-                        matcher = PointerMatcher.mouse(PointerButton.Secondary),
-                        onClick = {
-                            dailyJournalViewModel.removeLastPomodoro()
-                        }
-                    ).onClick(
-                        matcher = PointerMatcher.mouse(PointerButton.Primary),
-                        onClick = {
-                            dailyJournalViewModel.addSamplePomodoro()
-                        }
-                    )) {
-                        Text("Life Commander")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "🍅 $pomodoroCount",
-                            style = MaterialTheme.typography.subtitle1,
-                            color = MaterialTheme.colors.primary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(LocalDateTime.now().dayOfWeek.name, style = MaterialTheme.typography.subtitle1)
-                    }
-                },
-                actions = {
-                    if (timer != null) {
-                        Box(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .border(
-                                    width = 1.dp,
-                                    color = Color.White,
-                                    shape = MaterialTheme.shapes.small
-                                )
-                        ) {
-
-                            Text(
-                                text = "${timer!!.name} - ${timer!!.timeRemaining.parseTime()}",
-                                style = MaterialTheme.typography.h6,
-                                color = Color.White,
-                                modifier = Modifier.padding(vertical = 4.dp, horizontal = 6.dp)
-                            )
-                        }
-                    }
-                    IconButton(onClick = { showNightBlockDialog = true }) {
-                        Icon(
-                            imageVector = if (isNightBlockActive) Icons.Default.Nightlight 
-                                        else Icons.Default.LightMode,
-                            contentDescription = "Night Block",
-                            tint = if (isNightBlockActive) MaterialTheme.colors.error 
-                                  else MaterialTheme.colors.primary
-                        )
-                    }
-                    if ((timer == null && timers.isNotEmpty()) || paused) {
-                        IconButton(
-                            onClick = {
-                                appViewModel.playTimer()
-                            },
-                        ) {
-                            Icon(
-                                Icons.Default.PlayCircle,
-                                contentDescription = "Timer"
-                            )
-                        }
-                    }
-                    if(timer!=null && !paused){
-                        IconButton(
-                            onClick = {
-                                appViewModel.pauseTimer()
-                            },
-                        ) {
-                            Icon(
-                                Icons.Default.Pause,
-                                contentDescription = "Timer"
-                            )
-                        }
-                    }
-                    if(timer != null ){
-                        IconButton(
-                            onClick = {
-                                appViewModel.previousTimer()
-                            },
-                        ) {
-                            Icon(
-                                Icons.Default.SkipPrevious,
-                                contentDescription = "Previous Timer"
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                appViewModel.stopTimer()
-                            },
-                        ) {
-                            Icon(
-                                Icons.Default.Stop,
-                                contentDescription = "Stop Timer"
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                appViewModel.nextTimer()
-                            },
-                        ) {
-                            Icon(
-                                Icons.Default.SkipNext,
-                                contentDescription = "Next Timer"
-                            )
-                        }
-                    }
-                    IconButton(onClick = {
-                        appViewModel.showTimersDialog()
-                    }) {
-                        Icon(Icons.Default.Timer, contentDescription = "Timers")
-                    }
-                    IconButton(onClick = {
-                        habitsViewModel.getHabits()
-                        tasksViewModel.getTasksByFilter()
-                    }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Reload")
-                    }
-                    IconButton(onClick = { onLogoutClick() }) {
-                        Icon(Icons.Default.Logout, contentDescription = "Logout")
-                    }
-                    IconButton(onClick = { showCalendarView = !showCalendarView }) {
-                        Icon(
-                            imageVector = if (showCalendarView) Icons.Default.ViewList else Icons.Default.CalendarMonth,
-                            contentDescription = if (showCalendarView) "Show List View" else "Show Calendar View"
-                        )
-                    }
-                }
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        if (!isNightBlockActive) {
+            CurrentHabitComposable(
+                habits = habits,
+            )
+        } else {
+            NightBlockQuestionsComposable(
+                dailyJournalViewModel
             )
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(if (isNightBlockActive) Color.Black.copy(alpha = 0.1f) else Color.Transparent)
-        ) {
-            if(!showCalendarView){
-                if (!isNightBlockActive) {
-                    CurrentHabitComposable(
-                        habits = habits,
-                    )
-                } else {
-                    NightBlockQuestionsComposable(
-                        dailyJournalViewModel
+
+        Row {
+            if(!isNightBlockActive){
+                if (tasksLoading.not()) {
+                    TaskList(
+                        taskList = tasks,
+                        isRefreshing = false,
+                        onPullRefresh = {
+                            tasksViewModel.getTasksByFilter()
+                        },
+                        onTaskClick = { task ->
+                            onTaskClick(task.id)
+                        },
+                        onCheckedChange = { task, checked ->
+                            tasksViewModel.changeCheckHabit(task.id, checked)
+                        },
+                        modifier = Modifier.weight(1f),
+                        onEdit = { task ->
+                            taskToEdit = task
+                            showNewTaskDialog = true
+                        },
+                        onDelete = { task ->
+                            tasksViewModel.deleteTask(task.id)
+                        },
+                        onReschedule = { task ->
+                            tasksViewModel.rescheduleTask(task)
+                        },
+                        itemWrapper = { content,task ->
+                            ContextMenuArea(
+                                items = {
+                                    listOf(
+                                        ContextMenuItem("Edit") {
+                                            taskToEdit = task
+                                            showNewTaskDialog = true
+                                        },
+                                        ContextMenuItem("Delete") {
+                                            tasksViewModel.deleteTask(task.id)
+                                        }
+                                    )
+                                }
+                            ) {
+                                content.invoke()
+                            }
+                        }
                     )
                 }
+                else {
+                    Box(modifier = Modifier.fillMaxHeight().weight(1f)) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
+                }
             }
-            if (showCalendarView) {
-                CalendarComposable(
-                    onTaskClick = onTaskClick,
-                    onHabitClick = onHabitClick,
-                    viewModel = calendarViewModel,
-                    modifier = Modifier.weight(1f)
+            if (habitsLoading.not()) {
+                HabitList(
+                    habitList = habits,
+                    isRefreshing = false,
+                    onPullRefresh = {
+                        habitsViewModel.getHabits()
+                    },
+                    onHabitClick = { habit ->
+                        onHabitClick(habit.id)
+                    },
+                    onCheckedChange = { habit, checked, onComplete ->
+                        habitsViewModel.changeCheckHabit(habit.id, checked)
+                        onComplete(checked)
+                    },
+                    modifier = Modifier.weight(1f),
+                    onEdit = { habit ->
+                        habitToEdit = habit
+                        showNewHabitDialog = true
+                    },
+                    onDelete = { habit ->
+                        habitsViewModel.deleteHabit(habit.id)
+                    },
+                    itemWrapper = { content, habit ->
+                        ContextMenuArea(
+                            items = {
+                                listOf(
+                                    ContextMenuItem("Edit") {
+                                        habitToEdit = habit
+                                        showNewHabitDialog = true
+                                    },
+                                    ContextMenuItem("Delete") {
+                                        habitsViewModel.deleteHabit(habit.id)
+                                    }
+                                )
+                            }
+                        ) {
+                            content()
+                        }
+                    }
                 )
             } else {
-                Row {
-                    if(!isNightBlockActive){
-                        if (tasksLoading.not()) {
-                            TaskList(
-                                taskList = tasks,
-                                isRefreshing = false,
-                                onPullRefresh = {
-                                    tasksViewModel.getTasksByFilter()
-                                },
-                                onTaskClick = { task ->
-                                    onTaskClick(task.id)
-                                },
-                                onCheckedChange = { task, checked ->
-                                    tasksViewModel.changeCheckHabit(task.id, checked)
-                                },
-                                modifier = Modifier.weight(1f),
-                                onEdit = { task ->
-                                    taskToEdit = task
-                                    showNewTaskDialog = true
-                                },
-                                onDelete = { task ->
-                                    tasksViewModel.deleteTask(task.id)
-                                },
-                                onReschedule = { task ->
-                                    tasksViewModel.rescheduleTask(task)
-                                },
-                                itemWrapper = { content,task ->
-                                    ContextMenuArea(
-                                        items = {
-                                            listOf(
-                                                ContextMenuItem("Edit") {
-                                                    taskToEdit = task
-                                                    showNewTaskDialog = true
-                                                },
-                                                ContextMenuItem("Delete") {
-                                                    tasksViewModel.deleteTask(task.id)
-                                                }
-                                            )
-                                        }
-                                    ) {
-                                        content.invoke()
-                                    }
-                                }
-                            )
-                        }
-                        else {
-                            Box(modifier = Modifier.fillMaxHeight().weight(1f)) {
-                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                            }
-                        }
-                    }
-                    if (habitsLoading.not()) {
-                        HabitList(
-                            habitList = habits,
-                            isRefreshing = false,
-                            onPullRefresh = {
-                                habitsViewModel.getHabits()
-                            },
-                            onHabitClick = { habit ->
-                                onHabitClick(habit.id)
-                            },
-                            onCheckedChange = { habit, checked, onComplete ->
-                                habitsViewModel.changeCheckHabit(habit.id, checked)
-                                onComplete(checked)
-                            },
-                            modifier = Modifier.weight(1f),
-                            onEdit = { habit ->
-                                habitToEdit = habit
-                                showNewHabitDialog = true
-                            },
-                            onDelete = { habit ->
-                                habitsViewModel.deleteHabit(habit.id)
-                            },
-                            itemWrapper = { content, habit ->
-                                ContextMenuArea(
-                                    items = {
-                                        listOf(
-                                            ContextMenuItem("Edit") {
-                                                habitToEdit = habit
-                                                showNewHabitDialog = true
-                                            },
-                                            ContextMenuItem("Delete") {
-                                                habitsViewModel.deleteHabit(habit.id)
-                                            }
-                                        )
-                                    }
-                                ) {
-                                    content()
-                                }
-                            }
-                        )
-                    } else {
-                        Box(modifier = Modifier.fillMaxHeight().weight(1f)) {
-                            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                        }
-                    }
+                Box(modifier = Modifier.fillMaxHeight().weight(1f)) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            /* SectionTitle(title = "Habits")
-             LazyRow(
-                 modifier = Modifier.fillMaxWidth(),
-                 contentPadding = PaddingValues(horizontal = 16.dp),
-                 horizontalArrangement = Arrangement.spacedBy(8.dp)
-             ) {
-                 items(habits.size) { habit ->
-                     HabitChip(habit = habit.toString(), onClick = onHabitClick)
-                 }
-             }*/
         }
     }
 

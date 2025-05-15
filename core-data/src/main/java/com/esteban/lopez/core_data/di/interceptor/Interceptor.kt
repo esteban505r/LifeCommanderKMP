@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import com.esteban.ruano.core.data.preferences.dataStore
 import com.esteban.ruano.core.domain.preferences.Preferences
-import com.esteban.ruano.core_data.constants.Constants.HTTP_HEADER_REQUEST_IS_AUTHORIZABLE_KEY
+import com.esteban.ruano.core_data.constants.DataConstants.HTTP_HEADER_REQUEST_IS_AUTHORIZABLE_KEY
 import com.esteban.ruano.core_data.constants.StatusCodes
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
