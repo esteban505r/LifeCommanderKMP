@@ -2,7 +2,6 @@ package ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.esteban.ruano.models.Task
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -14,6 +13,7 @@ import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import utils.DateUtils.parseDateTime
 import utils.StatusBarService
 import com.esteban.ruano.lifecommander.utils.TimeBasedItemUtils
+import com.lifecommander.models.Task
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 

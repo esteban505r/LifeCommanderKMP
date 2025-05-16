@@ -2,12 +2,9 @@ package com.esteban.ruano.routing
 
 import io.ktor.http.*
 import io.ktor.http.content.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import com.esteban.ruano.models.blog.CreatePostRequest
 import com.esteban.ruano.repository.BlogRepository
 import com.esteban.ruano.utils.Validator
 import java.io.File

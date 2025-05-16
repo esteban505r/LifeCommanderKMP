@@ -1,11 +1,11 @@
 package com.esteban.ruano.repository
 
-import com.esteban.ruano.models.habits.*
+import com.esteban.ruano.models.habits.CreateHabitDTO
+import com.esteban.ruano.models.habits.HabitDTO
+import com.esteban.ruano.models.habits.UpdateHabitDTO
 import com.esteban.ruano.service.HabitService
 import com.esteban.ruano.utils.parseDate
-
-import com.esteban.ruano.utils.parseDateTime
-import java.util.UUID
+import java.util.*
 
 class HabitRepository(private val habitService: HabitService) {
 
@@ -43,8 +43,8 @@ class HabitRepository(private val habitService: HabitService) {
         return habitService.fetchAllByDateRange(
             userId,
             filter,
-            parseDateTime(startDate),
-            parseDateTime(endDate),
+            parseDate(startDate),
+            parseDate(endDate),
             limit,
             offset,
             excludeDaily

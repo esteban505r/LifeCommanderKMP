@@ -1,12 +1,15 @@
 package com.esteban.ruano.lifecommander.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.lifecommander.finance.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
-import services.finance.FinanceService
+import com.esteban.ruano.lifecommander.services.finance.FinanceService
+
 
 class FinanceViewModel(
     private val service: FinanceService
@@ -192,7 +195,9 @@ class FinanceViewModel(
     }
 
     override suspend fun getAccounts(): List<Account> {
-        return service.getAccounts()
+        val response = service.getAccounts()
+        _state.value = _state.value.copy(accounts = response)
+        return response
     }
 
     override suspend fun addBudget(budget: Budget) {
@@ -321,6 +326,25 @@ class FinanceViewModel(
         return service.getSavingsGoalProgress(goalId)
     }
 
+    fun importTransactions(text: String, accountId: String, skipDuplicates: Boolean = true) {
+        viewModelScope.launch{
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val transactionIds = service.importTransactions(text, accountId, skipDuplicates)
+                val transactions = service.getTransactions(accountId = accountId)
+                _state.value = _state.value.copy(
+                    transactions = transactions,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
     private suspend fun updateBudgetProgress(category: Category) {
         try {
             _state.value = _state.value.copy(isLoading = true, error = null)
@@ -336,6 +360,15 @@ class FinanceViewModel(
             _state.value = _state.value.copy(
                 error = e.message,
                 isLoading = false
+            )
+        }
+    }
+
+    fun previewTransactionImport(text: String, accountId: String): Unit {
+        viewModelScope.launch {
+            val response = service.previewTransactionImport(text, accountId)
+            _state.value = _state.value.copy(
+                importPreview =  response,
             )
         }
     }

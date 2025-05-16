@@ -5,12 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.esteban.ruano.models.Habit
-import com.esteban.ruano.models.Task
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
-import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.kizitonwose.calendar.core.atStartOfMonth
 import com.kizitonwose.calendar.core.yearMonth
+import com.lifecommander.models.Habit
+import com.lifecommander.models.Task
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

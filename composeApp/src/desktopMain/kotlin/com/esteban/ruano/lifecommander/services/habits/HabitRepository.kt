@@ -1,6 +1,7 @@
 package services.habits
 
-import com.esteban.ruano.models.Habit
+import com.lifecommander.models.Habit
+
 
 interface HabitRepository {
     suspend fun getByDate(token: String, page: Int, limit: Int, date: String): List<Habit>

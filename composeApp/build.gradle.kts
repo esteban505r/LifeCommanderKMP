@@ -58,6 +58,14 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
+        val desktopTest by getting {
+            dependencies {
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.mockk)
+                implementation(libs.turbine)
+            }
+        }
 
         androidMain.dependencies {
             implementation(compose.preview)
@@ -221,7 +229,7 @@ compose.desktop {
         mainClass = "com.esteban.ruano.lifecommander.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.AppImage,)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
             packageName = "LifeCommander"
             packageVersion = "1.0.0"
             modules("jdk.unsupported")

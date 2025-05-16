@@ -5,6 +5,7 @@ import com.esteban.ruano.database.entities.Transaction
 import com.esteban.ruano.database.entities.Budget
 import com.esteban.ruano.database.entities.SavingsGoal
 import com.esteban.ruano.models.finance.*
+import com.esteban.ruano.utils.DateUtils.parseDateTime
 
 fun Account.toResponseDTO(): AccountResponseDTO {
     return AccountResponseDTO(
@@ -21,10 +22,11 @@ fun Transaction.toResponseDTO(): TransactionResponseDTO {
         id = this.id.value,
         amount = this.amount.toDouble(),
         description = this.description,
-        date = this.date,
+        date = this.date.parseDateTime(),
         type = this.type,
         category = this.category,
         accountId = this.account.id.value,
+        status = this.status.toString(),
     )
 }
 

@@ -1,16 +1,13 @@
-package services.finance
+package com.esteban.ruano.lifecommander.services.finance
 
+import com.esteban.ruano.lifecommander.services.habits.appHeaders
 import com.lifecommander.finance.model.*
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.datetime.*
-import kotlinx.serialization.json.Json
 import services.auth.TokenStorage
-import com.esteban.ruano.lifecommander.services.habits.appHeaders
 
 class FinanceService(
     private val baseUrl: String,
@@ -55,7 +52,7 @@ class FinanceService(
     }
 
     suspend fun updateTransaction(transaction: Transaction): Transaction {
-        return httpClient.put("$baseUrl/finance/transactions/${transaction.id}") {
+        return httpClient.patch("$baseUrl/finance/transactions/${transaction.id}") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorage.getToken())
             setBody(transaction)
@@ -96,7 +93,7 @@ class FinanceService(
     }
 
     suspend fun updateAccount(account: Account): Account {
-        return httpClient.put("$baseUrl/finance/accounts/${account.id}") {
+        return httpClient.patch("$baseUrl/finance/accounts/${account.id}") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorage.getToken())
             setBody(account)
@@ -143,7 +140,7 @@ class FinanceService(
     }
 
     suspend fun updateBudget(budget: Budget): Budget {
-        return httpClient.put("$baseUrl/finance/budgets/${budget.id}") {
+        return httpClient.patch("$baseUrl/finance/budgets/${budget.id}") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorage.getToken())
             setBody(budget)
@@ -184,7 +181,7 @@ class FinanceService(
     }
 
     suspend fun updateSavingsGoal(goal: SavingsGoal): SavingsGoal {
-        return httpClient.put("$baseUrl/finance/savings-goals/${goal.id}") {
+        return httpClient.patch("$baseUrl/finance/savings-goals/${goal.id}") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorage.getToken())
             setBody(goal)
@@ -196,4 +193,27 @@ class FinanceService(
             appHeaders(tokenStorage.getToken())
         }
     }
-} 
+
+    suspend fun importTransactions(text: String, accountId: String, skipDuplicates: Boolean): List<String> {
+        return httpClient.post("$baseUrl/finance/transactions/import") {
+            contentType(ContentType.Application.Json)
+            appHeaders(tokenStorage.getToken())
+            setBody(mapOf(
+                "text" to text,
+                "accountId" to accountId,
+                "skipDuplicates" to skipDuplicates
+            ))
+        }.body<ImportTransactionsResponse>().transactionIds
+    }
+
+    suspend fun previewTransactionImport(text: String, accountId: String): TransactionImportPreview {
+        val response = httpClient.post("$baseUrl/finance/transactions/import/preview") {
+            contentType(ContentType.Application.Json)
+            appHeaders(tokenStorage.getToken())
+            setBody(TransactionImportPreviewRequest(text, accountId))
+        }
+        
+        return response.body()
+    }
+}
+

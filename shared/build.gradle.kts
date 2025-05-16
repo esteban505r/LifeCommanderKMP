@@ -87,3 +87,6 @@ android {
     }
 }
 
+multiplatformResources {
+    resourcesPackage.set("com.esteban.ruano")
+}

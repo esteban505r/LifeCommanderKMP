@@ -35,7 +35,7 @@ data class AccountResponseDTO(
 data class CreateTransactionDTO(
     val amount: Double,
     val description: String,
-    val date: LocalDateTime,
+    val date: String,
     val type: TransactionType,
     val category: String,
     val accountId: String
@@ -45,7 +45,7 @@ data class CreateTransactionDTO(
 data class UpdateTransactionDTO(
     val amount: Double? = null,
     val description: String? = null,
-    val date: LocalDateTime? = null,
+    val date: String? = null,
     val type: TransactionType? = null,
     val category: String? = null
 )
@@ -55,12 +55,13 @@ data class TransactionResponseDTO(
     val id: UUID,
     val amount: Double,
     val description: String,
-    val date: LocalDateTime,
+    val date: String,
     val type: TransactionType,
     val category: String,
     val accountId: UUID,
     val isRecurring: Boolean = false,
-    val recurrence: String? = null
+    val recurrence: String? = null,
+    val status: String = "ACTIVE"
 )
 
 @Serializable

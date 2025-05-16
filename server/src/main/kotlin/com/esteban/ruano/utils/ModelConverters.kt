@@ -4,6 +4,11 @@ import com.esteban.ruano.models.*
 import com.esteban.ruano.models.tasks.TaskDTO
 import com.esteban.ruano.models.habits.HabitDTO
 import com.esteban.ruano.models.reminders.ReminderDTO
+import com.lifecommander.models.Frequency
+import com.lifecommander.models.Habit
+import com.lifecommander.models.Reminder
+import com.lifecommander.models.ReminderType
+import com.lifecommander.models.Task
 import kotlinx.datetime.*
 
 object ModelConverters {

@@ -9,6 +9,11 @@ import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.models.finance.*
 import com.esteban.ruano.repository.*
 import com.esteban.ruano.database.converters.*
+import com.esteban.ruano.lifecommander.models.ErrorResponse
+import com.esteban.ruano.service.TransactionService
+import com.lifecommander.finance.model.ImportTransactionsRequest
+import com.lifecommander.finance.model.ImportTransactionsResponse
+import com.lifecommander.finance.model.TransactionImportPreviewRequest
 import kotlinx.datetime.*
 import java.util.*
 
@@ -16,7 +21,7 @@ fun Route.financeRouting(
     accountRepository: AccountRepository,
     transactionRepository: TransactionRepository,
     budgetRepository: BudgetRepository,
-    savingsGoalRepository: SavingsGoalRepository
+    savingsGoalRepository: SavingsGoalRepository,
 ) {
     route("/finance") {
         // Account routes
@@ -91,8 +96,8 @@ fun Route.financeRouting(
             get("/byDateRange") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val dto = call.receive<DateRangeQueryDTO>()
-                val startDate = LocalDateTime.parse(dto.startDate)
-                val endDate = LocalDateTime.parse(dto.endDate)
+                val startDate = dto.startDate
+                val endDate = dto.endDate
                 call.respond(transactionRepository.getByDateRange(userId, startDate, endDate))
             }
             post {
@@ -140,6 +145,38 @@ fun Route.financeRouting(
                     call.respond(HttpStatusCode.OK)
                 } else {
                     call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+            post("/import") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val dto = call.receive<ImportTransactionsRequest>()
+                try {
+                    val transactionIds = transactionRepository.importTransactionsFromText(
+                        userId = userId,
+                        text = dto.text,
+                        accountId = dto.accountId
+                    )
+                    call.respond(ImportTransactionsResponse(transactionIds.map { it.toString() }))
+                } catch (e: IllegalArgumentException) {
+                    call.respond(HttpStatusCode.BadRequest, ErrorResponse(e.message ?: "Invalid input format"))
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, ErrorResponse("Failed to import transactions"))
+                }
+            }
+            post("/import/preview"){
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val dto = call.receive<TransactionImportPreviewRequest>()
+                try {
+                    val preview = transactionRepository.importPreview(
+                        userId = userId,
+                        text = dto.text,
+                        accountId = dto.accountId
+                    )
+                    call.respond(preview)
+                } catch (e: IllegalArgumentException) {
+                    call.respond(HttpStatusCode.BadRequest, ErrorResponse(e.message ?: "Invalid input format"))
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, ErrorResponse("Failed to import transactions"))
                 }
             }
         }
@@ -281,4 +318,5 @@ fun Route.financeRouting(
             }
         }
     }
-} 
+}
+

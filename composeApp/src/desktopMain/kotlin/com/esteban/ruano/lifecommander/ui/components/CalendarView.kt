@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,25 +15,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.esteban.ruano.models.Habit
-import com.esteban.ruano.models.Task
+import com.lifecommander.models.Habit
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.kizitonwose.calendar.compose.*
 import com.kizitonwose.calendar.core.*
-import com.kizitonwose.calendar.core.atStartOfMonth
 import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaLocalDate
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
-import com.esteban.ruano.utils.DateUtils.toLocalDate
 import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import com.lifecommander.models.Task
 import org.koin.compose.viewmodel.koinViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 import java.util.*
-import kotlinx.datetime.Clock
 import kotlinx.datetime.toKotlinLocalDate
 
 @Composable
@@ -180,8 +176,8 @@ fun CalendarComposable(
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
-                    items(selectedDateTasks) { task ->
-                        TaskItem(task, onTaskClick)
+                    items(selectedDateTasks.size) { index ->
+                        TaskItem(selectedDateTasks[index], onTaskClick)
                     }
                 }
 
@@ -193,8 +189,8 @@ fun CalendarComposable(
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
-                    items(selectedDateHabits) { habit ->
-                        HabitItem(habit, onHabitClick)
+                    items(selectedDateHabits.size) { index ->
+                        HabitItem(selectedDateHabits[index], onHabitClick)
                     }
                 }
 

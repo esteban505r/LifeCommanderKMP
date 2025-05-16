@@ -16,11 +16,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.esteban.ruano.models.Habit
+import com.lifecommander.models.Habit
 import kotlinx.coroutines.launch
 import services.NightBlockService
 import services.dailyjournal.models.QuestionDTO
-import services.habits.models.HabitResponse
 import ui.viewmodels.DailyJournalViewModel
 
 @Composable

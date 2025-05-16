@@ -3,24 +3,21 @@ package com.esteban.ruano.lifecommander.ui.screens
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.unit.dp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.esteban.ruano.lifecommander.ui.components.CurrentHabitComposable
 import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
-import com.esteban.ruano.models.Frequency
-import com.esteban.ruano.models.Habit
-import com.esteban.ruano.models.Task
-import com.esteban.ruano.models.Reminder
+import com.lifecommander.models.Frequency
+import com.lifecommander.models.Habit
 import com.esteban.ruano.ui.components.HabitList
 import com.esteban.ruano.ui.components.TaskList
+import com.lifecommander.models.Reminder
+import com.lifecommander.models.Task
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
@@ -31,8 +28,6 @@ import services.NightBlockService
 import ui.components.*
 import ui.composables.*
 import ui.viewmodels.*
-import utils.DateUtils.parseTime
-import java.time.LocalDateTime
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

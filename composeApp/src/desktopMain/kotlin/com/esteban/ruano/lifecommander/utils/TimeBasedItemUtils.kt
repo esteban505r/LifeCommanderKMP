@@ -1,17 +1,15 @@
 package com.esteban.ruano.lifecommander.utils
 
-import com.esteban.ruano.models.Habit
-import com.esteban.ruano.models.Task
+import com.lifecommander.models.Habit
 import com.esteban.ruano.utils.TimeBasedItemInfo
 import com.esteban.ruano.utils.TimeBasedUtils
 import com.esteban.ruano.utils.TimeFormatUtils
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.datetime.toKotlinLocalTime
-import services.habits.models.HabitResponse
-import services.tasks.models.TaskResponse
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalTime
+import com.lifecommander.models.Task
 import java.time.LocalDateTime
 import java.time.LocalTime as JavaLocalTime
 

@@ -147,8 +147,8 @@ class HabitService(
     fun fetchAllByDateRange(
         userId: Int,
         pattern: String,
-        startDate: LocalDateTime,
-        endDate: LocalDateTime,
+        startDate: LocalDate,
+        endDate: LocalDate,
         limit: Int,
         offset: Long,
         excludeDaily: Boolean = false
@@ -157,15 +157,15 @@ class HabitService(
             val query = if (excludeDaily) {
                 (Habits.user eq userId) and 
                 (Habits.name.lowerCase() like "%${pattern.lowercase()}%") and 
-                (Habits.baseDateTime greaterEq startDate) and 
-                (Habits.baseDateTime lessEq endDate) and 
+                (Habits.baseDateTime.date() greaterEq startDate) and
+                (Habits.baseDateTime.date() lessEq endDate) and
                 (Habits.status eq Status.ACTIVE) and
                 (Habits.frequency neq Frequency.DAILY.value)
             } else {
                 (Habits.user eq userId) and 
                 (Habits.name.lowerCase() like "%${pattern.lowercase()}%") and 
-                (Habits.baseDateTime greaterEq startDate) and 
-                (Habits.baseDateTime lessEq endDate) and 
+                (Habits.baseDateTime.date() greaterEq startDate) and
+                (Habits.baseDateTime.date() lessEq endDate) and
                 (Habits.status eq Status.ACTIVE)
             }
 

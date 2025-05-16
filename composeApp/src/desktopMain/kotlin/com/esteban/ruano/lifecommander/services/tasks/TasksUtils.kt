@@ -1,9 +1,8 @@
 package services.tasks
 
-import com.esteban.ruano.models.Task
 import com.esteban.ruano.utils.DateUIUtils.getTime
-import services.tasks.models.TaskResponse
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.lifecommander.models.Task
 import kotlinx.datetime.toKotlinLocalDateTime
 import utils.DateUtils.getTime
 import utils.DateUtils.toLocalDateTime

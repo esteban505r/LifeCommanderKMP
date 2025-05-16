@@ -1,11 +1,11 @@
 package com.esteban.ruano.lifecommander.services.habits
 
-import com.esteban.ruano.models.Frequency
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getTime
 import services.habits.models.HabitResponse
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUtils.toLocalDate
+import com.lifecommander.models.Frequency
 import kotlinx.datetime.toJavaLocalTime
 import java.time.LocalDateTime
 import java.time.LocalTime

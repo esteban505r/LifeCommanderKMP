@@ -11,6 +11,8 @@ app-version-name = "1.0.0"
 # Kotlin
 kotlin = "2.2.0-Beta2"
 kotlinx-datetime = "0.6.0"
+kotlin-test = "2.1.20"
+kotlinx-coroutines-test = "1.10.1"
 
 #Calendar
 calendar = "2.6.0-beta02"
@@ -103,7 +105,7 @@ dotenv = "6.4.1"
 
 [libraries]
 # Kotlin
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin-test" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
@@ -265,6 +267,8 @@ aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }
 
 # Dotenv
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenv" }
+
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines-test" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

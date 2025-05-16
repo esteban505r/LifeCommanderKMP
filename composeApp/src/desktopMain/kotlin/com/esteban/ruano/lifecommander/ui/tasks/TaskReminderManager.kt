@@ -5,7 +5,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import services.auth.TokenStorage
 import services.tasks.TaskService
-import services.tasks.models.TaskResponse
 import ui.models.TaskFilters
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import kotlinx.datetime.toJavaLocalDateTime

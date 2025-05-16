@@ -1,6 +1,7 @@
 package services.tasks
 
-import com.esteban.ruano.models.Task
+import com.lifecommander.models.Task
+
 
 interface TaskRepository {
     suspend fun getByDate(token: String, page: Int, limit: Int, date: String): List<Task>

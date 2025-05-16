@@ -1,20 +1,17 @@
 package ui.habits
 
-import com.esteban.ruano.models.Habit
+import com.lifecommander.models.Habit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import services.auth.TokenStorage
 import services.habits.HabitService
-import services.habits.models.HabitResponse
-import ui.models.TaskFilters
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalTime
 import kotlinx.datetime.toJavaLocalTime
 import utils.DateUtils.parseDate
 import utils.DateUtils.toLocalDateTime
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 

@@ -8,13 +8,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.esteban.ruano.lifecommander.ui.components.AppLayout
 import com.esteban.ruano.lifecommander.ui.navigation.CalendarScreenDestination
-import com.esteban.ruano.lifecommander.ui.navigation.FinancialScreenDestination
+import com.esteban.ruano.lifecommander.ui.screens.FinancialScreenDestination
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import services.auth.AuthService
 import ui.ui.viewmodels.AuthViewModel
 import ui.screens.AuthScreen
 import com.esteban.ruano.lifecommander.ui.screens.HomeScreen
+import com.esteban.ruano.lifecommander.ui.screens.TransactionImportScreen
 import ui.state.AuthState
 import ui.viewmodels.AppViewModel
 import ui.viewmodels.DailyJournalViewModel
@@ -26,6 +27,7 @@ sealed class Screen(val route: String) {
     object Auth : Screen("auth")
     object Dashboard : Screen("dashboard")
     object Finance : Screen("finance")
+    object FinanceImporter : Screen("finance_importer")
     object Calendar : Screen("calendar")
 }
 
@@ -130,6 +132,17 @@ fun AppNavHost(
                     FinancialScreenDestination(
                         modifier = modifier,
                         financialViewModel = koinViewModel(),
+                        onOpenImporter = {
+                            navController.navigate(Screen.FinanceImporter.route)
+                        },
+                    )
+                }
+
+                composable(Screen.FinanceImporter.route) {
+                    TransactionImportScreen(
+                        onImportComplete = {
+                            navController.navigateUp()
+                        },
                     )
                 }
 

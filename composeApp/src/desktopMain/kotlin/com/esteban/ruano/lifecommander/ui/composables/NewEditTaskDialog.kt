@@ -1,11 +1,9 @@
 package ui.composables
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,27 +12,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberDialogState
-import com.esteban.ruano.models.Reminder
-import com.esteban.ruano.models.Task
+import com.esteban.ruano.ui.datePickerDimensionHeight
+import com.esteban.ruano.ui.datePickerDimensionWith
+import com.esteban.ruano.ui.timePickerDimensionHeight
+import com.esteban.ruano.ui.timePickerDimensionWith
 import com.lifecommander.ui.components.CustomDatePicker
-import com.lifecommander.ui.components.CustomDateTimePicker
-import getColorByPriority
 import getIconByPriority
 import services.tasks.models.Priority
 import services.tasks.models.Priority.Companion.toPriority
-import services.tasks.models.TaskResponse
-import com.esteban.ruano.utils.DateUIUtils
-import com.esteban.ruano.utils.DateUIUtils.getTime
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUtils.parseDate
-import com.esteban.ruano.utils.DateUtils.parseDateTime
-import com.esteban.ruano.utils.DateUtils.toLocalDate
+import com.lifecommander.models.Reminder
+import com.lifecommander.models.Task
+import com.lifecommander.ui.components.CustomTimePicker
 import kotlinx.datetime.*
 import utils.DateUtils.parseDate
-import utils.DateUtils.parseDateTime
-import utils.DateUtils.toLocalDate
 import utils.DateUtils.toLocalDateTime
-import utils.DateUtils.toLocalTime
+import java.awt.Dimension
 
 @Composable
 fun NewEditTaskDialog(
@@ -51,7 +47,9 @@ fun NewEditTaskDialog(
     var scheduledDate by remember { mutableStateOf(taskToEdit?.scheduledDateTime?.toLocalDateTime()) }
     var reminders by remember { mutableStateOf(taskToEdit?.reminders ?: emptyList()) }
     var prioritySelected by remember { mutableStateOf(taskToEdit?.priority?.toPriority() ?: Priority.MEDIUM) }
-
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    
     LaunchedEffect(taskToEdit) {
         name = taskToEdit?.name ?: ""
         notes = taskToEdit?.note ?: ""
@@ -101,18 +99,60 @@ fun NewEditTaskDialog(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text("Due Date", style = MaterialTheme.typography.subtitle1)
-                    CustomDateTimePicker(
-                        selectedDateTime = dueDate ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-                        onDateTimeSelected = { dueDate = it },
-                        label = null
-                    )
+                    OutlinedButton(
+                        onClick = { showDatePicker = true },
+                        enabled = true,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = dueDate?.date?.parseDate()?:"Select a date",
+                            style = MaterialTheme.typography.body1
+                        )
+                    }
+                    if(showDatePicker) {
+                       DialogWindow(
+                            onCloseRequest = { showDatePicker = false },
+                            state = rememberDialogState(position = WindowPosition(Alignment.Center))
+                        ) {
+                           LaunchedEffect(Unit) {
+                               window.size = Dimension(datePickerDimensionWith, datePickerDimensionHeight)
+                           }
+                            CustomDatePicker(
+                                selectedDate = dueDate?.date ?: getCurrentDateTime().date,
+                                onDateSelected = { dueDate = it.atTime(dueDate?.time ?: LocalTime(0, 0)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                onDismiss = { showDatePicker = false }
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Scheduled Date", style = MaterialTheme.typography.subtitle1)
-                    CustomDateTimePicker(
-                        selectedDateTime = scheduledDate ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-                        onDateTimeSelected = { scheduledDate = it },
-                        label = null
-                    )
+                    OutlinedButton(
+                        onClick = { showTimePicker = true },
+                        enabled = true,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = dueDate?.time?.formatDefault() ?: "Select a time",
+                            style = MaterialTheme.typography.body1
+                        )
+                    }
+                    if(showTimePicker) {
+                        DialogWindow(
+                            onCloseRequest = { showTimePicker = false },
+                            state = rememberDialogState(position = WindowPosition(Alignment.Center))
+                        )
+                        {
+                            LaunchedEffect(Unit) {
+                                window.size = Dimension(timePickerDimensionWith, timePickerDimensionHeight)
+                            }
+                            CustomTimePicker(
+                                selectedTime = dueDate?.time ?: LocalTime(0, 0),
+                                onTimeSelected = { dueDate = dueDate?.date?.atTime(it) },
+                                modifier = Modifier.fillMaxWidth(),
+                                onDismiss = { showTimePicker = false }
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text("Priority", style = MaterialTheme.typography.subtitle1)
                     Row(

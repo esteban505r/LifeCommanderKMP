@@ -92,7 +92,7 @@ fun Application.configureRouting() {
                     accountRepository = accountRepository,
                     transactionRepository = transactionRepository,
                     budgetRepository = budgetRepository,
-                    savingsGoalRepository = savingsGoalRepository
+                    savingsGoalRepository = savingsGoalRepository,
                 )
             }
 

@@ -7,7 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import com.esteban.ruano.lifecommander.services.habits.TASKS_ENDPOINT
 import com.esteban.ruano.lifecommander.services.habits.appHeaders
-import com.esteban.ruano.models.Task
+import com.lifecommander.models.Task
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

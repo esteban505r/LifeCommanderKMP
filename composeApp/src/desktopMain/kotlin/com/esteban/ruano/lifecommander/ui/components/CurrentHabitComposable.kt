@@ -10,14 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import services.habits.models.HabitResponse
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.lifecommander.utils.TimeBasedItemUtils
-import com.esteban.ruano.models.Habit
+import com.lifecommander.models.Habit
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUtils.formatDefault
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 
 @Composable
 fun CurrentHabitComposable(

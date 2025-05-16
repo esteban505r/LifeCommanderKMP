@@ -48,7 +48,7 @@ fun AppLayout(
 
     Scaffold(
         floatingActionButton = {
-            if (currentRoute != Screen.Finance.route) {
+            if (currentRoute != Screen.Finance.route && currentRoute != Screen.FinanceImporter.route) {
                 FloatingActionButtons(
                     onAddTask = { name, notes, reminders, dueDate, scheduledDate, priority ->
                         taskViewModel.addTask(name, dueDate, scheduledDate, notes, priority ?: Priority.NONE.value)

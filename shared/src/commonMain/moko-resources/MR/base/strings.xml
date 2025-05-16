@@ -245,4 +245,24 @@
     <string name="youvebeen_doing_this_for">You\'ve been doing this for %s</string>
     <string name="youllstart_doing_this_in">You\'ll start doing this in %s</string>
     <string name="youdidnt_do_this_at">You didn\'t do this at %s</string>
+
+    <!-- Transactions -->
+    <string name="transactions">Transactions</string>
+    <string name="transaction">Transaction</string>
+    <string name="amount">Amount</string>
+    <string name="category">Category</string>
+    <string name="date">Date</string>
+    <string name="account">Account</string>
+    <string name="income">Income</string>
+    <string name="expense">Expense</string>
+    <string name="transfer">Transfer</string>
+    <string name="edit_transaction">Edit Transaction</string>
+    <string name="new_transaction">New Transaction</string>
+    <string name="cancel">Cancel</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="paste_transactions">Paste your bank transactions here</string>
+    <string name="preview_import">Preview &amp; Import</string>
+    <string name="import_transactions">Import Transactions</string>
+    <string name="importing">Importing...</string>
 </resources>

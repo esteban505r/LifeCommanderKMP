@@ -15,7 +15,7 @@ import services.dailyjournal.DailyJournalService
 import com.esteban.ruano.lifecommander.services.habits.BASE_URL
 import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
-import services.finance.FinanceService
+import com.esteban.ruano.lifecommander.services.finance.FinanceService
 import services.habits.HabitService
 import services.tasks.TaskService
 import ui.ui.viewmodels.AuthViewModel
