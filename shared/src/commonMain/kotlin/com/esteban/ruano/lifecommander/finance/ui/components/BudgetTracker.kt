@@ -22,7 +22,8 @@ fun BudgetTracker(
     budgets: List<BudgetProgress>,
     onAddBudget: (Budget) -> Unit,
     onEditBudget: (Budget) -> Unit,
-    onDeleteBudget: (Budget) -> Unit
+    onDeleteBudget: (Budget) -> Unit,
+    ChipWrapper: @Composable (content: @Composable () -> Unit) -> Unit
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf<Budget?>(null) }
@@ -85,7 +86,8 @@ fun BudgetTracker(
                         onAddBudget(budget)
                         showAddDialog = false
                     },
-                    onCancel = { showAddDialog = false }
+                    onCancel = { showAddDialog = false },
+                    ChipWrapper = ChipWrapper
                 )
             },
             confirmButton = {},
@@ -104,7 +106,8 @@ fun BudgetTracker(
                         onEditBudget(updatedBudget)
                         showEditDialog = null
                     },
-                    onCancel = { showEditDialog = null }
+                    onCancel = { showEditDialog = null },
+                    ChipWrapper = ChipWrapper
                 )
             },
             confirmButton = {},

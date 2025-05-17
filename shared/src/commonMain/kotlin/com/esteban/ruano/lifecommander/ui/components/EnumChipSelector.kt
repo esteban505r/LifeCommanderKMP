@@ -19,12 +19,11 @@ import androidx.compose.ui.unit.dp
 fun <T : Enum<T>> EnumChipSelector(
     enumValues: Array<T>,
     selectedValue: T,
-    scrollState: ScrollState,
     onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
     labelMapper: (T) -> String = { it.name.lowercase().replaceFirstChar { c -> c.uppercase() } }
 ) {
-    LazyRow(modifier = modifier.padding(vertical = 8.dp).horizontalScroll(scrollState)) {
+    LazyRow(modifier = modifier.padding(vertical = 8.dp)) {
         items(enumValues.size) { index ->
             val isSelected = enumValues[index] == selectedValue
             FilterChip(

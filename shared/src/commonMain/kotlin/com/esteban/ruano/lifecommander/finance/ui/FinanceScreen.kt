@@ -229,7 +229,10 @@ fun FinanceScreen(
                     budgets = state.budgets.map { state.budgetProgress[it.id] ?: BudgetProgress(it) },
                     onAddBudget = { showBudgetForm = true },
                     onEditBudget = { editingBudget = it },
-                    onDeleteBudget = { scope.launch { it.id?.let { id -> actions.deleteBudget(id) } } }
+                    onDeleteBudget = { scope.launch { it.id?.let { id -> actions.deleteBudget(id) } } },
+                    ChipWrapper = {
+
+                    }
                 )
 
                 3 -> SavingsGoalTracker(
@@ -241,6 +244,7 @@ fun FinanceScreen(
             }
         }
     }
+
 
     if (showTransactionForm || editingTransaction != null) {
         AlertDialog(

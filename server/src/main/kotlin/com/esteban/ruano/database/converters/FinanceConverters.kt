@@ -8,7 +8,7 @@ import com.esteban.ruano.models.finance.*
 import com.esteban.ruano.utils.DateUtils.parseDateTime
 import com.lifecommander.finance.model.Transaction as TransactionDomainModel
 import com.lifecommander.finance.model.TransactionType as TransactionTypeDomainModel
-import com.lifecommander.finance.model.Category as CategoryDomainModel
+import com.esteban.ruano.lifecommander.models.finance.Category as CategoryDomainModel
 
 
 fun Account.toResponseDTO(): AccountResponseDTO {
@@ -54,7 +54,6 @@ fun Budget.toResponseDTO(): BudgetResponseDTO {
         amount = this.amount.toDouble(),
         category = this.category,
         startDate = this.startDate,
-        endDate = this.endDate
     )
 }
 

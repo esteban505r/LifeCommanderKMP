@@ -16,6 +16,7 @@ class AuthViewModel(
     private val authService: AuthService,
 ) : ViewModel() {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated(
+        name = "",
         email = "",
         password = "",
         errorMessage = "",
@@ -47,6 +48,17 @@ class AuthViewModel(
 
     fun setSignUp(isSignUp: Boolean) {
         _isSignUp.value = isSignUp
+    }
+
+    fun updateName(newName: String) {
+        val currentState = authState.value as? AuthState.Unauthenticated
+        currentState?.let {
+            _authState.value = it.copy(
+                name = newName,
+                errorMessage = it.errorMessage,
+                isLoading = it.isLoading
+            )
+        }
     }
 
     fun updatePassword(newPassword: String) {
@@ -81,8 +93,8 @@ class AuthViewModel(
                 setLoading()
                 val currentState = authState.value as? AuthState.Unauthenticated
                 currentState?.let {
-                    authService.signUp(it.email, it.password)
-                    setAuthenticated()
+                    authService.signUp(it.name,it.email, it.password)
+                    setSignUp(false)
                 }
             } catch (e: Exception) {
                 setError("Failed to sign up: ${e.message}")

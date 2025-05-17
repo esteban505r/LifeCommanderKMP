@@ -55,7 +55,6 @@ fun App(
 }
 
 fun main() = application {
-    // Initialize notifications
     NotificationInitializer.configure(
         AppConfig(
             appName = "LifeCommander",

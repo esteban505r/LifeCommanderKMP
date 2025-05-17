@@ -21,6 +21,7 @@ fun LoginScreen(
     onLogin: (email: String, password: String) -> Unit,
     email: String = "",
     password: String = "",
+    onSignUp: () -> Unit = {},
     onEmailChange: (String) -> Unit = {},
     onPasswordChange: (String) -> Unit = {},
     isLoading: Boolean = false,
@@ -165,7 +166,9 @@ fun LoginScreen(
         
         // Sign Up Link
         TextButton(
-            onClick = { /* TODO: Navigate to sign up */ },
+            onClick = {
+                onSignUp()
+            },
             modifier = Modifier.padding(top = 24.dp)
         ) {
             Text(

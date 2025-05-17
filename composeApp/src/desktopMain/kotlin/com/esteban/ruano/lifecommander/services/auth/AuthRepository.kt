@@ -6,7 +6,7 @@ import services.tasks.models.TaskResponse
 
 interface AuthRepository {
     suspend fun login(email: String, password: String): AuthResponse
-    suspend fun signUp(email: String, password: String): AuthResponse
+    suspend fun signUp(name:String,email: String, password: String): Unit
     suspend fun logout()
     suspend fun isAuthenticated(): Boolean
 } 

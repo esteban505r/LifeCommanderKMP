@@ -30,16 +30,14 @@ class AuthService(
         }
     }
     
-    override suspend fun signUp(email: String, password: String):AuthResponse {
+    override suspend fun signUp(name:String,email: String, password: String) {
         val response = client.post(SIGNUP_ENDPOINT) {
             contentType(ContentType.Application.Json)
-            setBody(SignUpRequest(email, password))
+            setBody(SignUpRequest(name,email, password))
         }
 
         if (response.status == HttpStatusCode.Created) {
-            val authResponse = response.body<AuthResponse>()
-            tokenStorage.saveToken(authResponse.token)
-            return authResponse
+            return
         } else {
             throw Exception("Failed to create account")
         }

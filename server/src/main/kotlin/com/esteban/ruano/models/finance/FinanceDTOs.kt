@@ -91,7 +91,6 @@ data class BudgetResponseDTO(
     val amount: Double,
     val category: String,
     val startDate: LocalDate,
-    val endDate: LocalDate
 )
 
 @Serializable

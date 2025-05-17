@@ -10,7 +10,7 @@ const val BASE_URL = "http://localhost:8080/api/v1"
 const val HABITS_ENDPOINT = "$BASE_URL/habits"
 const val TASKS_ENDPOINT = "$BASE_URL/tasks"
 const val LOGIN_ENDPOINT = "$BASE_URL/auth/login"
-const val SIGNUP_ENDPOINT = "$BASE_URL/auth/signup"
+const val SIGNUP_ENDPOINT = "$BASE_URL/auth/register"
 
 fun HttpMessageBuilder.appHeaders(token: String?): HeadersBuilder {
     return this.headers {

@@ -13,7 +13,7 @@ fun AuthScreen(
     authViewModel: AuthViewModel = koinViewModel(),
     onAuthenticated: () -> Unit,
     onLogin: (email: String, password: String) -> Unit,
-    onSignUp: (email: String, password: String) -> Unit
+    onSignUp: (name:String,email: String, password: String) -> Unit
 ) {
     val authState by authViewModel.authState.collectAsState()
     val isSignUp by authViewModel.isSignUp.collectAsState()
@@ -31,9 +31,9 @@ fun AuthScreen(
         val errorMessage = state.errorMessage
         if (isSignUp) {
             SignUpScreen(
-                onSignUp = { email, password ->
+                onSignUp = { name, email, password ->
                     authViewModel.setLoading()
-                    onSignUp(email, password)
+                    onSignUp(name,email, password)
                 },
                 onNavigateToLogin = {
                     authViewModel.setSignUp(false)
@@ -45,6 +45,9 @@ fun AuthScreen(
         } else {
             LoginScreen(
                 email = state.email,
+                onSignUp = {
+                    authViewModel.setSignUp(true)
+                },
                 password =  state.password,
                 onEmailChange = { authViewModel.updateEmail(it) },
                 onPasswordChange = { authViewModel.updatePassword(it) },

@@ -99,7 +99,8 @@ fun AppNavHost(
                             authViewModel.updatePassword(password)
                             authViewModel.login()
                         },
-                        onSignUp = { email, password ->
+                        onSignUp = {name, email, password ->
+                            authViewModel.updateName(name)
                             authViewModel.updateEmail(email)
                             authViewModel.updatePassword(password)
                             authViewModel.signUp()
@@ -178,7 +179,8 @@ fun AppNavHost(
                         authViewModel.updatePassword(password)
                         authViewModel.login()
                     },
-                    onSignUp = { email, password ->
+                    onSignUp = {name, email, password ->
+                        authViewModel.updateName(name)
                         authViewModel.updateEmail(email)
                         authViewModel.updatePassword(password)
                         authViewModel.signUp()

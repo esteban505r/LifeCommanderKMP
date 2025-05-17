@@ -29,7 +29,6 @@ class BudgetService : BaseService() {
                     it[this.amount] = amount.toBigDecimal()
                     it[this.category] = category
                     it[this.startDate] = startDate
-                    it[this.endDate] = endDate
                     it[this.user] = userId
                 }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
             }
@@ -47,8 +46,8 @@ class BudgetService : BaseService() {
         return transaction {
             Budget.find { 
                 (Budgets.user eq userId) and 
-                (Budgets.startDate lessEq endDate) and 
-                (Budgets.endDate greaterEq startDate)
+                (Budgets.startDate lessEq endDate)
+
             }.map { it.toResponseDTO() }
         }
     }
@@ -60,8 +59,7 @@ class BudgetService : BaseService() {
                 val spent = Transaction.find { 
                     (Transactions.user eq userId) and 
                     (Transactions.category eq budget.category) and
-                    (Transactions.date.date() greaterEq budget.startDate) and
-                    (Transactions.date.date() lessEq budget.endDate)
+                    (Transactions.date.date() greaterEq budget.startDate)
                 }.sumOf { it.amount.toDouble() }
                 spent / budget.amount.toDouble()
             } else {
@@ -86,7 +84,6 @@ class BudgetService : BaseService() {
                 amount?.let { budget.amount = it.toBigDecimal() }
                 category?.let { budget.category = it }
                 startDate?.let { budget.startDate = it }
-                endDate?.let { budget.endDate = it }
                 true
             } else {
                 false

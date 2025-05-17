@@ -24,7 +24,8 @@ import kotlinx.datetime.*
 fun BudgetForm(
     initialBudget: Budget? = null,
     onSave: (Budget) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    ChipWrapper: @Composable (content: @Composable () -> Unit) -> Unit
 ) {
     var name by remember { mutableStateOf(initialBudget?.name ?: "") }
     var amount by remember { mutableStateOf(initialBudget?.amount?.toString() ?: "") }
@@ -135,25 +136,28 @@ fun BudgetForm(
 
         Text("Category", style = MaterialTheme.typography.body1)
 
-        EnumChipSelector(
-            enumValues = Category.entries.toTypedArray(),
-            selectedValue = category,
-            onValueSelected = { category = it },
-          //  modifier = Modifier.fillMaxWidth(),
-            labelMapper = { it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() } }
-        )
+        ChipWrapper {
+            EnumChipSelector(
+                enumValues = Category.entries.toTypedArray(),
+                selectedValue = category,
+                onValueSelected = { category = it },
+                //  modifier = Modifier.fillMaxWidth(),
+                labelMapper = { it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() } }
+            )
+        }
 
 
         Text("Frequency", style = MaterialTheme.typography.body1)
 
-        EnumChipSelector(
-            enumValues = Frequency.entries.toTypedArray(),
-            selectedValue = frequency,
-            onValueSelected = { frequency = it },
-           // modifier = Modifier.fillMaxWidth(),
-            labelMapper = { it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() } }
-        )
-
+        ChipWrapper{
+            EnumChipSelector(
+                enumValues = Frequency.entries.toTypedArray(),
+                selectedValue = frequency,
+                onValueSelected = { frequency = it },
+                // modifier = Modifier.fillMaxWidth(),
+                labelMapper = { it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() } }
+            )
+        }
 
 
 

@@ -6,20 +6,23 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import org.koin.core.qualifier.named
 import ui.theme.*
 
 @Composable
 fun SignUpScreen(
-    onSignUp: (email: String, password: String) -> Unit,
+    onSignUp: (name:String,email: String, password: String) -> Unit,
     onNavigateToLogin: () -> Unit,
     isLoading: Boolean = false,
     errorMessage: String? = null
 ) {
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -55,7 +58,30 @@ fun SignUpScreen(
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Email Field
+
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    placeholder = { Text("Name") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Name",
+                            tint = MaterialTheme.colors.primary
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        textColor = MaterialTheme.colors.onSurface,
+                        cursorColor = MaterialTheme.colors.primary,
+                        focusedBorderColor = MaterialTheme.colors.primary,
+                        unfocusedBorderColor = DividerColor
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    enabled = !isLoading
+                )
+
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -154,7 +180,7 @@ fun SignUpScreen(
                 
                 // Sign Up Button
                 Button(
-                    onClick = { onSignUp(email, password) },
+                    onClick = { onSignUp(name,email, password) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
