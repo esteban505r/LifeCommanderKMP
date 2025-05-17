@@ -1,4 +1,4 @@
-package com.lifecommander.finance.ui
+package com.esteban.ruano.lifecommander.finance.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,6 +20,7 @@ fun AccountForm(
 ) {
     var name by remember { mutableStateOf(initialAccount?.name ?: "") }
     var type by remember { mutableStateOf(initialAccount?.type ?: AccountType.CHECKING) }
+    var initialBalance by remember { mutableStateOf(initialAccount?.initialBalance?.toString() ?: "0.00") }
     var balance by remember { mutableStateOf(initialAccount?.balance?.toString() ?: "0.00") }
     var currency by remember { mutableStateOf(initialAccount?.currency ?: "USD") }
     var expanded by remember { mutableStateOf(false) }
@@ -74,10 +75,10 @@ fun AccountForm(
         }
 
         OutlinedTextField(
-            value = balance,
+            value = initialBalance,
             onValueChange = {
                 if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
-                    balance = it
+                    initialBalance = it
                 }
             },
             label = { Text("Initial Balance") },
@@ -108,12 +109,13 @@ fun AccountForm(
                         id = initialAccount?.id,
                         name = name,
                         type = type,
+                        initialBalance = initialBalance.toDoubleOrNull() ?: 0.0,
+                        currency = currency,
                         balance = balance.toDoubleOrNull() ?: 0.0,
-                        currency = currency
                     )
                     onSave(account)
                 },
-                enabled = name.isNotEmpty() && balance.isNotEmpty()
+                enabled = name.isNotEmpty() && initialBalance.isNotEmpty()
             ) {
                 Text("Save")
             }

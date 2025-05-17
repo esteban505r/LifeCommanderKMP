@@ -93,7 +93,7 @@ fun TaskItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Left: Due date
+
                 if (task.dueDateTime != null) {
                     Text(
                         text = "Due: ${task.dueDateTime.toLocalDateTime().toResourceStringBasedOnNow().first.localized()}",
@@ -102,7 +102,6 @@ fun TaskItem(
                     )
                 }
 
-                // Right: Scheduled date
                 if (task.scheduledDateTime != null) {
                     Text(
                         text = "Scheduled: ${task.scheduledDateTime.toLocalDateTime().toResourceStringBasedOnNow().first.localized()}",

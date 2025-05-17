@@ -1,9 +1,12 @@
 package com.esteban.ruano.utils
 
-import com.lifecommander.finance.model.Category.Companion.toCategory
+import com.esteban.ruano.lifecommander.models.finance.Category.Companion.toCategory
+import com.esteban.ruano.utils.DateUtils.formatDateTime
 import com.lifecommander.finance.model.Transaction
 import com.lifecommander.finance.model.TransactionType
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.atTime
 
 object TransactionParser {
     private val months = mapOf(
@@ -48,7 +51,7 @@ object TransactionParser {
         val parsedDate = parseSpanishDate(dateStr)
         return Transaction(
             description = description,
-            date = formatDate(parsedDate),
+            date = formatDateTime(parsedDate),
             amount = parseColombianAmount(amountStr),
             type = if (amountStr.trim().startsWith("-")) TransactionType.EXPENSE else TransactionType.INCOME,
             category = determineCategory(description).toCategory(),
@@ -56,7 +59,7 @@ object TransactionParser {
         )
     }
 
-    private fun parseSpanishDate(dateStr: String): LocalDate {
+    private fun parseSpanishDate(dateStr: String): LocalDateTime {
         val regex = """(\d{1,2})\s+de\s+(\w+),\s+(\d{4})""".toRegex()
         val match = regex.find(dateStr.lowercase())
             ?: throw IllegalArgumentException("Invalid date format: $dateStr")
@@ -65,7 +68,7 @@ object TransactionParser {
         val monthNumber = months[month.lowercase()]
             ?: throw IllegalArgumentException("Invalid month: $month")
 
-        return LocalDate(year.toInt(), monthNumber, day.toInt())
+        return LocalDate(year.toInt(), monthNumber, day.toInt()).atTime(0,0)
     }
 
     private fun formatDate(date: LocalDate): String {

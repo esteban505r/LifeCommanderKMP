@@ -1,5 +1,6 @@
 package com.lifecommander.finance.model
 
+import com.esteban.ruano.lifecommander.models.finance.Category
 import kotlinx.datetime.LocalDateTime
 
 interface FinanceActions {

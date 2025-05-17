@@ -2,6 +2,7 @@ package com.esteban.ruano.lifecommander.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.esteban.ruano.lifecommander.models.finance.Category
 import com.lifecommander.finance.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

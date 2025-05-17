@@ -194,12 +194,12 @@ fun NewEditTaskDialog(
 
                                 if (taskToEdit != null) {
                                     onUpdateTask(
-                                        taskToEdit.id!!,
+                                        taskToEdit.id,
                                         taskToEdit.copy(
                                             name = name,
                                             note = notes,
-                                            dueDateTime = dueDate?.toString(),
-                                            scheduledDateTime = scheduledDate?.toString(),
+                                            dueDateTime = dueDate?.formatDefault(),
+                                            scheduledDateTime = scheduledDate?.formatDefault(),
                                             reminders = reminders,
                                             priority = prioritySelected.value
                                         )
@@ -209,8 +209,8 @@ fun NewEditTaskDialog(
                                         name,
                                         notes,
                                         reminders,
-                                        dueDate?.toString(),
-                                        scheduledDate?.toString(),
+                                        dueDate?.formatDefault(),
+                                        scheduledDate?.formatDefault(),
                                         prioritySelected.value
                                     )
                                 }

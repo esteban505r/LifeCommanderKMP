@@ -1,5 +1,6 @@
 package com.esteban.ruano.lifecommander.services.finance
 
+import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.lifecommander.services.habits.appHeaders
 import com.lifecommander.finance.model.*
 import io.ktor.client.*

@@ -10,6 +10,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.esteban.ruano.MR
+import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
@@ -42,7 +43,7 @@ fun TransactionForm(
     var showTimePicker by remember { mutableStateOf(false) }
     var isRecurring by remember { mutableStateOf(initialTransaction?.isRecurring ?: false) }
     var recurrence by remember { mutableStateOf(initialTransaction?.recurrence ?: Recurrence.MONTHLY) }
-    
+
     var categoryExpanded by remember { mutableStateOf(false) }
     var accountExpanded by remember { mutableStateOf(false) }
 
@@ -182,16 +183,15 @@ fun TransactionForm(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = dateTime?.date?.parseDate()?:"Select a date",
+                text = dateTime?.date?.parseDate() ?: "Select a date",
                 style = MaterialTheme.typography.body1
             )
         }
-        if(showDatePicker) {
+        if (showDatePicker) {
             Dialog(
-                onDismissRequest = { showDatePicker = false},
+                onDismissRequest = { showDatePicker = false },
             )
             {
-
                 Surface {
                     CustomDatePicker(
                         selectedDate = dateTime?.date ?: getCurrentDateTime().date,
@@ -212,7 +212,7 @@ fun TransactionForm(
                 style = MaterialTheme.typography.body1
             )
         }
-        if(showTimePicker) {
+        if (showTimePicker) {
             Dialog(
                 onDismissRequest = { showTimePicker = false },
             )
@@ -277,8 +277,8 @@ fun TransactionForm(
             Spacer(modifier = Modifier.width(8.dp))
             Button(
                 onClick = {
-                    if(dateTime == null) {
-                       onCancel()
+                    if (dateTime == null) {
+                        onCancel()
                         return@Button
                     }
                     val transaction = Transaction(

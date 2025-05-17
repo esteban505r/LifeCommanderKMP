@@ -122,7 +122,7 @@ object DateUtils {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
         if (this.date > today.plus(7, DateTimeUnit.DAY)) {
-            return Pair(StringDesc.Raw(this.toString()), LightGray)
+            return Pair(StringDesc.Raw(this.formatDefault()), LightGray)
         }
 
         if (this.date == today) {
@@ -148,7 +148,7 @@ object DateUtils {
         }
 
         if (this.date < today.minus(7, DateTimeUnit.DAY)) {
-            return Pair(StringDesc.Raw(this.toString()), SoftRed)
+            return Pair(StringDesc.Raw(this.formatDefault()), SoftRed)
         }
 
         if (this.date < today && this.date > today.minus(7, DateTimeUnit.DAY)) {
@@ -157,7 +157,7 @@ object DateUtils {
             return Pair(resource, SoftRed)
         }
 
-        return Pair(StringDesc.Raw(this.toString()), SoftRed)
+        return Pair(StringDesc.Raw(this.formatDefault()), SoftRed)
     }
 
     private fun DayOfWeek.toDayStringRes(): StringResource{

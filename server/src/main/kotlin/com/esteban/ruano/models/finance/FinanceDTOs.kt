@@ -19,6 +19,7 @@ data class CreateAccountDTO(
 data class UpdateAccountDTO(
     val name: String? = null,
     val type: AccountType? = null,
+    val initialBalance : Double? = null,
     val currency: String? = null
 )
 
@@ -28,6 +29,7 @@ data class AccountResponseDTO(
     val name: String,
     val type: AccountType,
     val balance: Double,
+    val initialBalance: Double,
     val currency: String,
 )
 

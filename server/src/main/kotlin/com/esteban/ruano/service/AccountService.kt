@@ -23,7 +23,7 @@ class AccountService : BaseService() {
                 insert {
                     it[this.name] = name
                     it[this.type] = type
-                    it[this.balance] = initialBalance.toBigDecimal()
+                    it[this.initialBalance] = initialBalance.toBigDecimal()
                     it[this.currency] = currency
                     it[this.user] = userId
                 }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
@@ -33,16 +33,32 @@ class AccountService : BaseService() {
 
     fun getAccountsByUser(userId: Int): List<AccountResponseDTO> {
         return transaction {
-            Account.find { Accounts.user eq userId }
+            val accounts = Account.find { Accounts.user eq userId }
                 .map { it.toResponseDTO() }
+
+            accounts.map {
+                val balance = Transaction.find {
+                    (Transactions.account eq it.id) and (Transactions.user eq userId).
+                    and (Transactions.status eq Status.ACTIVE)
+                }.sumOf { r -> r.amount.toDouble() }
+
+                it.copy(balance = balance + it.initialBalance)
+            }
+
         }
     }
 
     fun getAccount(accountId: UUID, userId: Int): AccountResponseDTO? {
         return transaction {
-            Account.find { (Accounts.id eq accountId) and (Accounts.user eq userId) }
+            val balance = Transaction.find {
+                (Transactions.account eq accountId) and (Transactions.user eq userId).
+                and (Transactions.status eq Status.ACTIVE)
+            }.sumOf { it.amount.toDouble() }
+
+            val result = Account.find { (Accounts.id eq accountId) and (Accounts.user eq userId) }
                 .firstOrNull()
-                ?.toResponseDTO()
+
+            result?.toResponseDTO()?.copy(balance = balance.toBigDecimal().plus(result.initialBalance).toDouble())
         }
     }
 
@@ -50,6 +66,7 @@ class AccountService : BaseService() {
         accountId: UUID,
         userId: Int,
         name: String? = null,
+        initialBalance: Double? = null,
         type: AccountType? = null,
         currency: String? = null
     ): Boolean {
@@ -57,6 +74,7 @@ class AccountService : BaseService() {
             val account = Account.findById(accountId)
             if (account != null && account.user.id.value == userId) {
                 name?.let { account.name = it }
+                initialBalance?.let { account.initialBalance = it.toBigDecimal() }
                 type?.let { account.type = it }
                 currency?.let { account.currency = it }
                 true
@@ -82,7 +100,7 @@ class AccountService : BaseService() {
         return transaction {
             val account = Account.findById(accountId)
             if (account != null && account.user.id.value == userId) {
-                account.balance = (account.balance.toDouble() + amount).toBigDecimal()
+                account.initialBalance = (account.initialBalance.toDouble() + amount).toBigDecimal()
                 true
             } else {
                 false
@@ -93,7 +111,7 @@ class AccountService : BaseService() {
     fun getTotalBalance(userId: Int): Double {
         return transaction {
             Account.find { Accounts.user eq userId }
-                .sumOf { it.balance.toDouble() }
+                .sumOf { it.initialBalance.toDouble() }
         }
     }
 } 

@@ -60,7 +60,7 @@ fun Route.financeRouting(
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = UUID.fromString(call.parameters["id"]!!)
                 val dto = call.receive<UpdateAccountDTO>()
-                val updated = accountRepository.update(userId, id, dto.name, dto.type, dto.currency)
+                val updated = accountRepository.update(userId, id, dto.name, dto.initialBalance,dto.type, dto.currency)
                 if (updated) {
                     call.respond(HttpStatusCode.OK)
                 } else {

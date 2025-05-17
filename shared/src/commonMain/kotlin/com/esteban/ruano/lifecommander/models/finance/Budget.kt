@@ -1,5 +1,7 @@
 package com.lifecommander.finance.model
 
+import com.esteban.ruano.lifecommander.models.finance.Category
+import com.lifecommander.models.Frequency
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -9,7 +11,7 @@ data class Budget(
     val amount: Double,
     val category: Category,
     val startDate: String,
-    val endDate: String,
+    val frequency: Frequency,
     val isRecurring: Boolean = false,
     val recurrence: Recurrence? = null,
     val rollover: Boolean = false,

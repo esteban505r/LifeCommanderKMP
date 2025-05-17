@@ -6,14 +6,31 @@ import com.esteban.ruano.database.entities.Budget
 import com.esteban.ruano.database.entities.SavingsGoal
 import com.esteban.ruano.models.finance.*
 import com.esteban.ruano.utils.DateUtils.parseDateTime
+import com.lifecommander.finance.model.Transaction as TransactionDomainModel
+import com.lifecommander.finance.model.TransactionType as TransactionTypeDomainModel
+import com.lifecommander.finance.model.Category as CategoryDomainModel
+
 
 fun Account.toResponseDTO(): AccountResponseDTO {
     return AccountResponseDTO(
         id = this.id.value,
         name = this.name,
         type = this.type,
-        balance = this.balance.toDouble(),
-        currency = this.currency
+        initialBalance = this.initialBalance.toDouble(),
+        currency = this.currency,
+        balance = 0.toDouble(),
+    )
+}
+
+fun Transaction.toDomainModel(): TransactionDomainModel {
+    return TransactionDomainModel(
+        id = this.id.value.toString(),
+        amount = this.amount.toDouble(),
+        description = this.description,
+        date = this.date.parseDateTime(),
+        type = TransactionTypeDomainModel.valueOf(this.type.toString()),
+        category = CategoryDomainModel.valueOf(this.category),
+        accountId = this.account.id.value.toString(),
     )
 }
 

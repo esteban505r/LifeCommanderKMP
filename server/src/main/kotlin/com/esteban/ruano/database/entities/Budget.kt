@@ -1,6 +1,7 @@
 package com.esteban.ruano.database.entities
 
 import com.esteban.ruano.database.models.Status
+import com.lifecommander.models.Frequency
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -14,7 +15,7 @@ object Budgets : UUIDTable() {
     val amount = decimal("amount", 10, 2)
     val category = varchar("category", 50)
     val startDate = date("start_date")
-    val endDate = date("end_date")
+    val frequency = enumerationByName( "frequency", 15, Frequency::class).default(Frequency.MONTHLY)
     val user = reference("user_id", Users, ReferenceOption.CASCADE)
     val status = enumerationByName("status", 10, Status::class).default(Status.ACTIVE)
 }
@@ -26,7 +27,6 @@ class Budget(id: EntityID<UUID>) : UUIDEntity(id) {
     var amount by Budgets.amount
     var category by Budgets.category
     var startDate by Budgets.startDate
-    var endDate by Budgets.endDate
     var user by User referencedOn Budgets.user
     var status by Budgets.status
 } 

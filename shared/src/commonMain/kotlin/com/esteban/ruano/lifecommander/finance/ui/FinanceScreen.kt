@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.esteban.ruano.lifecommander.finance.ui.AccountForm
 import com.esteban.ruano.ui.components.TransactionList
 import com.lifecommander.finance.model.*
 import com.lifecommander.finance.ui.components.*
@@ -281,41 +282,31 @@ fun FinanceScreen(
     }
 
     if (showBudgetForm || editingBudget != null) {
-        AlertDialog(
+        Dialog(
             onDismissRequest = {
                 showBudgetForm = false
                 editingBudget = null
             },
-            title = {
-                Text(
-                    if (editingBudget == null) "Add Budget" else "Edit Budget",
-                    color = MaterialTheme.colors.onSurface
-                )
-            },
-            text = {
-                BudgetForm(
-                    initialBudget = editingBudget,
-                    onSave = { budget ->
-                        scope.launch {
-                            if (editingBudget != null) {
-                                actions.updateBudget(budget)
-                            } else {
-                                actions.addBudget(budget)
-                            }
-                            showBudgetForm = false
-                            editingBudget = null
+        ){
+            BudgetForm(
+                initialBudget = editingBudget,
+                onSave = { budget ->
+                    scope.launch {
+                        if (editingBudget != null) {
+                            actions.updateBudget(budget)
+                        } else {
+                            actions.addBudget(budget)
                         }
-                    },
-                    onCancel = {
                         showBudgetForm = false
                         editingBudget = null
                     }
-                )
-            },
-            confirmButton = {},
-            dismissButton = {},
-            backgroundColor = MaterialTheme.colors.surface
-        )
+                },
+                onCancel = {
+                    showBudgetForm = false
+                    editingBudget = null
+                }
+            )
+        }
     }
 
     if (showSavingsGoalForm || editingSavingsGoal != null) {

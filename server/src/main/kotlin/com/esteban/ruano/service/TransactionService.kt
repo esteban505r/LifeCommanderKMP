@@ -1,5 +1,6 @@
 package com.esteban.ruano.service
 
+import com.esteban.ruano.database.converters.toDomainModel
 import com.esteban.ruano.database.converters.toResponseDTO
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
@@ -11,8 +12,13 @@ import com.esteban.ruano.utils.TransactionParser
 import com.lifecommander.finance.model.TransactionImportPreview
 import com.lifecommander.finance.model.TransactionImportPreviewItem
 import kotlinx.datetime.atTime
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.kotlin.datetime.date
+import org.jetbrains.exposed.sql.or
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -139,7 +145,7 @@ class TransactionService : BaseService() {
                         insert {
                             it[this.amount] = transaction.amount.toBigDecimal()
                             it[this.description] = transaction.description
-                            it[this.date] = transaction.date.toLocalDate().atTime(0, 0)
+                            it[this.date] = transaction.date.toLocalDateTime()
                             it[this.type] = TransactionType.valueOf(transaction.type.toString())
                             it[this.category] = transaction.category.toString()
                             it[this.account] = UUID.fromString(transaction.accountId)
@@ -166,21 +172,52 @@ class TransactionService : BaseService() {
         accountId: String
     ): TransactionImportPreview {
         val parsedTransactions = TransactionParser.parseTransactions(text, accountId)
+
+        println("Parsed Transactions:")
+        parsedTransactions.forEach {
+            println("Parsed -> date=${it.date.toLocalDateTime()}, amount=${it.amount.toBigDecimal()}, description='${it.description}'")
+        }
+
         return transaction {
-            val existingTransactions = Transaction.find { 
-                (Transactions.user eq userId) and 
-                (Transactions.account eq UUID.fromString(accountId)) and
-                (Transactions.status eq Status.ACTIVE)
-            }.map { it.toResponseDTO() }
+            val triplesToMatch = parsedTransactions.map {
+                Triple(it.date.toLocalDateTime(), it.amount.toBigDecimal(), it.description)
+            }
+
+            println("\nTriples to match (for query):")
+            triplesToMatch.forEach { println(it) }
+
+            val allTransactions = Transaction.find {
+                (Transactions.user eq userId) and
+                        (Transactions.account eq UUID.fromString(accountId)) and
+                        (Transactions.status eq Status.ACTIVE)
+            }.map { it.toDomainModel() }
+
+            println("\nAll transactions found in DB:")
+            allTransactions.forEach {
+                println("DB -> date=${it.date.toLocalDateTime()}, amount=${it.amount}, description='${it.description}'")
+            }
+
+            val duplicatedTransactions = Transaction.find {
+                (Transactions.user eq userId) and
+                        (Transactions.account eq UUID.fromString(accountId)) and
+                        (Transactions.status eq Status.ACTIVE) and
+                        (Triple(Transactions.date, Transactions.amount, Transactions.description) inList triplesToMatch)
+            }.map { it.toDomainModel() }
+
+            println("\nDuplicated transactions found in DB:")
+            duplicatedTransactions.forEach {
+                println("DB -> date=${it.date.toLocalDateTime()}, amount=${it.amount}, description='${it.description}'")
+            }
 
             val previewItems = parsedTransactions.map { transaction ->
-                val isDuplicate = existingTransactions.any { existing ->
-                    existing.amount == transaction.amount &&
-                    existing.description == transaction.description &&
-                    existing.date == transaction.date &&
-                    existing.type.toString() == transaction.type.toString()
+                val isDuplicate = duplicatedTransactions.find {
+                    it.date.toLocalDateTime().date == transaction.date.toLocalDateTime().date &&
+                    it.amount.toBigDecimal() == transaction.amount.toBigDecimal() &&
+                    it.description == transaction.description
+                } != null
+                if (isDuplicate) {
+                    println("Matched Duplicate: ${transaction.description}")
                 }
-
                 TransactionImportPreviewItem(
                     transaction = transaction,
                     isDuplicate = isDuplicate

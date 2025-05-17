@@ -13,12 +13,11 @@ class AccountRepository(private val service: AccountService) {
 
     fun getById(userId: Int, accountId: UUID): AccountResponseDTO? = service.getAccount(accountId, userId)
 
-    fun update(userId: Int, accountId: UUID, name: String?, type: AccountType?, currency: String?): Boolean =
-        service.updateAccount(accountId, userId, name, type, currency)
+    fun update(userId: Int, accountId: UUID, name: String?, initialBalance:Double?, type: AccountType?, currency: String?): Boolean =
+        service.updateAccount(accountId, userId, name, initialBalance,type, currency)
 
     fun delete(userId: Int, accountId: UUID): Boolean = service.deleteAccount(accountId, userId)
 
-    fun updateBalance(userId: Int, accountId: UUID, amount: Double): Boolean = service.updateBalance(accountId, userId, amount)
 
     fun getTotalBalance(userId: Int): Double = service.getTotalBalance(userId)
 } 

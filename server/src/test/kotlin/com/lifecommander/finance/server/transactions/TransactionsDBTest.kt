@@ -4,7 +4,6 @@ import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.AccountType
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.database.models.TransactionType
-import com.esteban.ruano.models.finance.*
 import com.esteban.ruano.service.TransactionService
 import com.esteban.ruano.utils.DateUtils.formatDateTime
 import kotlinx.datetime.*
@@ -19,7 +18,6 @@ import org.junit.Test
 import java.sql.Connection
 import java.util.UUID
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.DurationUnit
@@ -76,7 +74,7 @@ class TransactionsDBTest {
                 it[id] = UUID.randomUUID()
                 it[name] = "Test Account"
                 it[type] = AccountType.CHECKING
-                it[balance] = 1000.0.toBigDecimal()
+                it[initialBalance] = 1000.0.toBigDecimal()
                 it[currency] = "COP"
                 it[user] = 1
             }
@@ -189,8 +187,18 @@ class TransactionsDBTest {
     fun `should import transactions from text`() {
         val accountId = getTestAccountId()
         val text = """
-            01/01/2024 - $100.00 - Grocery Shopping
-            02/01/2024 - $50.00 - Lunch
+            Compra TECNIPAGOS S A
+            
+            10 de mayo, 2025
+            
+            - ${'$'}13.000,00
+            
+            
+            Compra UBER RIDES
+            
+            10 de mayo, 2025
+            
+            - ${'$'}8.743,00
         """.trimIndent()
         
         val transactionIds = service.importTransactionsFromText(1, text, accountId.toString())
@@ -202,32 +210,42 @@ class TransactionsDBTest {
     fun `should preview transaction import`() {
         val accountId = getTestAccountId()
         val text = """
-Compra TECNIPAGOS S A
-
-10 de mayo, 2025
-
-- ${'$'}13.000,00
-
-
-Compra UBER RIDES
-
-10 de mayo, 2025
-
-- ${'$'}8.743,00
+            Compra TECNIPAGOS S A
+            
+            10 de mayo, 2025
+            
+            - ${'$'}13.000,00
+            
+            
+            Compra UBER RIDES
+            
+            10 de mayo, 2025
+            
+            - ${'$'}8.743,00
         """.trimIndent()
         
         val preview = service.previewTransactionImport(1, text, accountId.toString())
         assertEquals(2, preview.totalTransactions)
         assertEquals(0, preview.duplicateCount)
-        assertEquals(150.0, preview.totalAmount)
+        assertEquals(-21743.0, preview.totalAmount)
     }
 
     @Test
     fun `should handle duplicate transactions during import`() {
         val accountId = getTestAccountId()
         val text = """
-            01/01/2024 - $100.00 - Grocery Shopping
-            02/01/2024 - $50.00 - Lunch
+            Compra TECNIPAGOS S A
+            
+            10 de mayo, 2025
+            
+            - ${'$'}13.000,00
+            
+            
+            Compra UBER RIDES
+            
+            10 de mayo, 2025
+            
+            - ${'$'}8.743,00
         """.trimIndent()
         
         // First import

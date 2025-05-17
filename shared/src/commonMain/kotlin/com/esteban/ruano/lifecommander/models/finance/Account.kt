@@ -8,6 +8,7 @@ data class Account(
     val name: String,
     val type: AccountType,
     val balance: Double,
+    val initialBalance: Double,
     val currency: String = "USD",
     val isArchived: Boolean = false
 )
