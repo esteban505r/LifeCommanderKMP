@@ -8,12 +8,13 @@ import io.ktor.server.routing.*
 import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.models.finance.*
 import com.esteban.ruano.repository.*
-import com.esteban.ruano.database.converters.*
 import com.esteban.ruano.lifecommander.models.ErrorResponse
-import com.esteban.ruano.service.TransactionService
+import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
+import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.finance.model.ImportTransactionsRequest
 import com.lifecommander.finance.model.ImportTransactionsResponse
 import com.lifecommander.finance.model.TransactionImportPreviewRequest
+import com.lifecommander.finance.model.TransactionType
 import kotlinx.datetime.*
 import java.util.*
 
@@ -87,7 +88,33 @@ fun Route.financeRouting(
         route("/transactions") {
             get {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                call.respond(transactionRepository.getAll(userId))
+                val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
+                val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
+                val searchPattern = call.parameters["search"]
+                val categories = call.parameters.getAll("category")
+                val startDate = call.parameters["startDate"]
+                val startDateHour = call.parameters["startDateHour"]
+                val endDate = call.parameters["endDate"]
+                val endDateHour = call.parameters["endDateHour"]
+                val types = call.parameters.getAll("type")?.map { TransactionType.valueOf(it) }
+                val minAmount = call.parameters["minAmount"]?.toDoubleOrNull()
+                val maxAmount = call.parameters["maxAmount"]?.toDoubleOrNull()
+                val accountIds = call.parameters.getAll("accountId")?.map { UUID.fromString(it) }
+
+                val filters = TransactionFilters(
+                    searchPattern = searchPattern,
+                    categories = categories,
+                    startDate = startDate,
+                    startDateHour = startDateHour,
+                    endDate = endDate,
+                    endDateHour = endDateHour,
+                    types = types,
+                    minAmount = minAmount,
+                    maxAmount = maxAmount,
+                    accountIds = accountIds?.map { it.toString() }
+                )
+
+                call.respond(transactionRepository.getAll(userId, limit, offset, filters))
             }
             get("/byAccount/{accountId}") {
                 val accountId = UUID.fromString(call.parameters["accountId"]!!)
@@ -187,6 +214,10 @@ fun Route.financeRouting(
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 call.respond(budgetRepository.getAll(userId))
             }
+            get("/withProgress") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                call.respond(budgetRepository.getAllProgress(userId))
+            }
             get("/byDateRange") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val dto = call.receive<DateRangeQueryDTO>()
@@ -197,7 +228,7 @@ fun Route.financeRouting(
             get("/{id}/progress") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = UUID.fromString(call.parameters["id"]!!)
-                call.respond(ProgressResponseDTO(budgetRepository.getProgress(userId, id)))
+                call.respond(budgetRepository.getProgress(userId, id))
             }
             post {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
@@ -207,8 +238,8 @@ fun Route.financeRouting(
                     dto.name,
                     dto.amount,
                     dto.category,
-                    dto.startDate,
-                    dto.endDate
+                    dto.startDate.toLocalDate(),
+                    dto.endDate?.toLocalDate(),
                 )
                 if (id != null) {
                     call.respond(HttpStatusCode.Created)
@@ -226,8 +257,8 @@ fun Route.financeRouting(
                     dto.name,
                     dto.amount,
                     dto.category,
-                    dto.startDate,
-                    dto.endDate
+                    dto.startDate?.toLocalDate(),
+                    dto.endDate?.toLocalDate()
                 )
                 if (updated) {
                     call.respond(HttpStatusCode.OK)
@@ -256,7 +287,7 @@ fun Route.financeRouting(
             get("/{id}/progress") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = UUID.fromString(call.parameters["id"]!!)
-                call.respond(ProgressResponseDTO(savingsGoalRepository.getProgress(userId, id)))
+                call.respond(savingsGoalRepository.getProgress(userId, id))
             }
             get("/{id}/remaining") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
@@ -270,7 +301,7 @@ fun Route.financeRouting(
                     userId,
                     dto.name,
                     dto.targetAmount,
-                    dto.targetDate
+                    dto.targetDate.toLocalDate()
                 )
                 if (id != null) {
                     call.respond(HttpStatusCode.Created)
@@ -287,7 +318,7 @@ fun Route.financeRouting(
                     id,
                     dto.name,
                     dto.targetAmount,
-                    dto.targetDate
+                    dto.targetDate?.toLocalDate()
                 )
                 if (updated) {
                     call.respond(HttpStatusCode.OK)

@@ -1,5 +1,6 @@
 package com.lifecommander.finance.repository
 
+import com.esteban.ruano.lifecommander.models.finance.Budget
 import com.lifecommander.finance.model.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.*
@@ -99,7 +100,14 @@ class LocalFinanceRepositoryTest {
     @Test
     fun `test addBudget adds budget`() = runBlocking {
         // Given
-        val budget = Budget("1", "Groceries", Category.FOOD, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1)))
+        val budget = Budget(
+            "1",
+            "Groceries",
+            Category.FOOD,
+            500.0,
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))
+        )
 
         // When
         repository.addBudget(budget)
@@ -113,7 +121,14 @@ class LocalFinanceRepositoryTest {
     @Test
     fun `test updateBudget updates budget`() = runBlocking {
         // Given
-        val budget = Budget("1", "Groceries", Category.FOOD, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1)))
+        val budget = Budget(
+            "1",
+            "Groceries",
+            Category.FOOD,
+            500.0,
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))
+        )
         repository.addBudget(budget)
         val updatedBudget = budget.copy(amount = 750.0)
 
@@ -129,7 +144,14 @@ class LocalFinanceRepositoryTest {
     @Test
     fun `test deleteBudget deletes budget`() = runBlocking {
         // Given
-        val budget = Budget("1", "Groceries", Category.FOOD, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1)))
+        val budget = Budget(
+            "1",
+            "Groceries",
+            Category.FOOD,
+            500.0,
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))
+        )
         repository.addBudget(budget)
 
         // When
@@ -204,7 +226,14 @@ class LocalFinanceRepositoryTest {
     @Test
     fun `test calculateBudgetProgress calculates correct progress`() = runBlocking {
         // Given
-        val budget = Budget("1", "Groceries", Category.FOOD, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1)))
+        val budget = Budget(
+            "1",
+            "Groceries",
+            Category.FOOD,
+            500.0,
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))
+        )
         repository.addBudget(budget)
         val transaction = Transaction("1", "Grocery Shopping", 50.0, TransactionType.EXPENSE, Category.FOOD, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), "1")
         repository.addTransaction(transaction)

@@ -1,6 +1,10 @@
 package com.esteban.ruano.lifecommander.services.finance
 
+import com.esteban.ruano.lifecommander.models.finance.Budget
+import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.esteban.ruano.lifecommander.models.finance.Category
+import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
+import com.esteban.ruano.lifecommander.models.finance.TransactionsResponse
 import com.esteban.ruano.lifecommander.services.habits.appHeaders
 import com.lifecommander.finance.model.*
 import io.ktor.client.*
@@ -10,6 +14,9 @@ import io.ktor.http.*
 import kotlinx.datetime.*
 import services.auth.TokenStorage
 
+
+
+
 class FinanceService(
     private val baseUrl: String,
     private val httpClient: HttpClient,
@@ -17,22 +24,35 @@ class FinanceService(
 ) {
     // Transaction endpoints
     suspend fun getTransactions(
-        startDate: LocalDateTime? = null,
-        endDate: LocalDateTime? = null,
-        category: Category? = null,
-        accountId: String? = null
-    ): List<Transaction> {
+        limit: Int = 50,
+        offset: Int = 0,
+        filters: TransactionFilters = TransactionFilters()
+    ): TransactionsResponse {
         val url = buildString {
             append("$baseUrl/finance/transactions")
             val params = mutableListOf<String>()
-            startDate?.let { params.add("startDate=$it") }
-            endDate?.let { params.add("endDate=$it") }
-            category?.let { params.add("category=$it") }
-            accountId?.let { params.add("accountId=$it") }
+            
+            // Add pagination parameters
+            params.add("limit=$limit")
+            params.add("offset=$offset")
+            
+            // Add filter parameters
+            filters.searchPattern?.let { params.add("search=$it") }
+            filters.categories?.forEach { params.add("category=$it") }
+            filters.startDate?.let { params.add("startDate=$it") }
+            filters.startDateHour?.let { params.add("startDateHour=$it") }
+            filters.endDate?.let { params.add("endDate=$it") }
+            filters.endDateHour?.let { params.add("endDateHour=$it") }
+            filters.types?.forEach { params.add("type=$it") }
+            filters.minAmount?.let { params.add("minAmount=$it") }
+            filters.maxAmount?.let { params.add("maxAmount=$it") }
+            filters.accountIds?.forEach { params.add("accountId=$it") }
+            
             if (params.isNotEmpty()) {
                 append("?${params.joinToString("&")}")
             }
         }
+        
         return httpClient.get(url) {
             appHeaders(tokenStorage.getToken())
         }.body()
@@ -110,6 +130,12 @@ class FinanceService(
     // Budget endpoints
     suspend fun getBudgets(): List<Budget> {
         return httpClient.get("$baseUrl/finance/budgets") {
+            appHeaders(tokenStorage.getToken())
+        }.body()
+    }
+
+    suspend fun getBudgetsWithProgress(): List<BudgetProgress> {
+        return httpClient.get("$baseUrl/finance/budgets/withProgress") {
             appHeaders(tokenStorage.getToken())
         }.body()
     }

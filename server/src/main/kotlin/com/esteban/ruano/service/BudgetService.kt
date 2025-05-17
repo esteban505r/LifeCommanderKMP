@@ -3,15 +3,15 @@ package com.esteban.ruano.service
 import com.esteban.ruano.database.converters.toResponseDTO
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
-import com.esteban.ruano.database.models.TransactionType
 import com.esteban.ruano.models.finance.*
-import jdk.internal.vm.vector.VectorSupport.insert
+import com.esteban.ruano.utils.DateUtils.getPeriodEndDate
 import kotlinx.datetime.LocalDate
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import kotlin.math.absoluteValue
 
 class BudgetService : BaseService() {
     fun createBudget(
@@ -20,7 +20,7 @@ class BudgetService : BaseService() {
         amount: Double,
         category: String,
         startDate: LocalDate,
-        endDate: LocalDate
+        endDate: LocalDate? = null
     ): UUID? {
         return transaction {
             Budgets.insertOperation(userId) {
@@ -29,6 +29,7 @@ class BudgetService : BaseService() {
                     it[this.amount] = amount.toBigDecimal()
                     it[this.category] = category
                     it[this.startDate] = startDate
+                    it[this.endDate] = endDate
                     it[this.user] = userId
                 }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
             }
@@ -46,16 +47,35 @@ class BudgetService : BaseService() {
         return transaction {
             Budget.find { 
                 (Budgets.user eq userId) and 
-                (Budgets.startDate lessEq endDate)
+                (Budgets.startDate greaterEq startDate)
+                    .and (Budgets.endDate lessEq endDate)
 
             }.map { it.toResponseDTO() }
         }
     }
 
-    fun getBudgetProgress(budgetId: UUID, userId: Int): Double {
+    fun getAllWithProgress(userId: Int): List<BudgetProgressResponseDTO> {
+        return transaction {
+            Budget.find { Budgets.user eq userId }
+                .map { budget ->
+                    val spent = Transaction.find {
+                        (Transactions.user eq userId) and
+                        (Transactions.category eq budget.category) and
+                        (Transactions.date.date() greaterEq budget.startDate)
+                        (Transactions.date.date() lessEq (budget.endDate?: getPeriodEndDate(budget.startDate, budget.frequency)))
+                    }.sumOf { it.amount.toDouble() }
+                    BudgetProgressResponseDTO(
+                        budget = budget.toResponseDTO(),
+                        spent = spent.absoluteValue
+                    )
+                }
+        }
+    }
+
+    fun getBudgetProgress(budgetId: UUID, userId: Int): BudgetProgressResponseDTO {
         return transaction {
             val budget = Budget.findById(budgetId)
-            if (budget != null && budget.user.id.value == userId) {
+            val spent = if (budget != null && budget.user.id.value == userId) {
                 val spent = Transaction.find { 
                     (Transactions.user eq userId) and 
                     (Transactions.category eq budget.category) and
@@ -65,8 +85,14 @@ class BudgetService : BaseService() {
             } else {
                 0.0
             }
+            budget?.let {
+                BudgetProgressResponseDTO(
+                    budget = it.toResponseDTO(),
+                    spent = spent
+                )
+            } ?: throw Exception("Budget not found")
+            }
         }
-    }
 
     fun updateBudget(
         budgetId: UUID,
@@ -84,6 +110,7 @@ class BudgetService : BaseService() {
                 amount?.let { budget.amount = it.toBigDecimal() }
                 category?.let { budget.category = it }
                 startDate?.let { budget.startDate = it }
+                endDate?.let { budget.endDate = it }
                 true
             } else {
                 false

@@ -265,4 +265,19 @@
     <string name="preview_import">Preview &amp; Import</string>
     <string name="import_transactions">Import Transactions</string>
     <string name="importing">Importing...</string>
+    <string name="search_transactions">Search transactions</string>
+    <string name="filter_transactions">Filter transactions</string>
+    <string name="clear_filters">Clear filters</string>
+    <string name="end_date">End date</string>
+    <string name="min_amount">Min amount</string>
+    <string name="max_amount">Max amount</string>
+    <string name="add_transaction">Add transaction</string>
+    <string name="border">Border</string>
+    <string name="transaction_types">Transaction types</string>
+    <string name="categories">Categories</string>
+    <string name="date_range">Date range</string>
+    <string name="amount_range">Amount range</string>
+    <string name="clear_dates">Clear dates</string>
+    <string name="select_date">Select date</string>
+    <string name="select_time">Select time</string>
 </resources>

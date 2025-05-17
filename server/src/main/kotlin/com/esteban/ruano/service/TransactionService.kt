@@ -4,20 +4,27 @@ import com.esteban.ruano.database.converters.toDomainModel
 import com.esteban.ruano.database.converters.toResponseDTO
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
-import com.esteban.ruano.database.models.TransactionType
+import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.models.finance.*
-import com.esteban.ruano.utils.DateUIUtils.toLocalDate
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUtils.toLocalTime
 import com.esteban.ruano.utils.TransactionParser
 import com.lifecommander.finance.model.TransactionImportPreview
 import com.lifecommander.finance.model.TransactionImportPreviewItem
+import com.lifecommander.finance.model.TransactionType
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.atTime
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import kotlinx.datetime.toLocalDate
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.kotlin.datetime.date
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -47,10 +54,76 @@ class TransactionService : BaseService() {
         }
     }
 
-    fun getTransactionsByUser(userId: Int): List<TransactionResponseDTO> {
+
+    fun getTransactionsByUser(
+        userId: Int,
+        limit: Int = 50,
+        offset: Int = 0,
+        filters: TransactionFilters = TransactionFilters()
+    ): TransactionsResponseDTO {
         return transaction {
-            Transaction.find { Transactions.user eq userId }
-                .map { it.toResponseDTO() }
+            val baseQuery = Transactions.selectAll().where { Transactions.user eq userId }
+
+            val conditions = mutableListOf<Op<Boolean>>()
+
+            filters.searchPattern?.let { pattern ->
+                conditions += Transactions.description like "%$pattern%"
+            }
+            filters.categories?.let { categories ->
+                conditions += Transactions.category inList categories
+            }
+            filters.startDate?.let { start ->
+                val startDateTime = start.toLocalDate().atTime(filters.startDateHour?.toLocalTime()?: LocalTime(0,0))
+                conditions += Transactions.date greaterEq startDateTime
+            }
+            filters.endDate?.let { end ->
+                val endDateTime = end.toLocalDate().atTime(filters.endDateHour?.toLocalTime()?: LocalTime(0,0))
+                conditions += Transactions.date lessEq endDateTime
+            }
+            filters.types?.let { types ->
+                conditions += Transactions.type inList types
+            }
+            filters.minAmount?.let { min ->
+                conditions += Transactions.amount greaterEq min.toBigDecimal()
+            }
+            filters.maxAmount?.let { max ->
+                conditions += Transactions.amount lessEq max.toBigDecimal()
+            }
+            filters.accountIds?.let { accountIds ->
+                conditions += Transactions.account inList accountIds.map { UUID.fromString(it) }
+            }
+
+// Combine with AND, safely handle 0 conditions
+            val combined: Op<Boolean> = conditions.fold(Op.TRUE as Op<Boolean>) { acc, op -> acc and op }
+
+// Apply to query
+            val filteredQuery = baseQuery.andWhere { combined }
+
+            // Get total count before pagination
+            val totalCount = filteredQuery.count()
+
+            // Apply pagination
+            val paginatedResults = filteredQuery
+                .orderBy(Transactions.date to SortOrder.DESC)
+                .limit(limit, offset.toLong())
+
+            val results = paginatedResults.map {
+                TransactionResponseDTO(
+                    id = it[Transactions.id].value,
+                    amount = it[Transactions.amount].toDouble(),
+                    description = it[Transactions.description],
+                    date = it[Transactions.date].formatDefault(),
+                    type = it[Transactions.type],
+                    category = it[Transactions.category],
+                    accountId = it[Transactions.account].value,
+                    status = it[Transactions.status].toString()
+                )
+            }
+
+            TransactionsResponseDTO(
+                transactions = results.toList(),
+                totalCount = totalCount
+            )
         }
     }
 

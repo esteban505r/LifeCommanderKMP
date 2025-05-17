@@ -2,15 +2,14 @@ package com.esteban.ruano.lifecommander.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.esteban.ruano.lifecommander.models.finance.Category
+import com.esteban.ruano.lifecommander.models.finance.Budget
+import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
+import com.esteban.ruano.lifecommander.services.finance.FinanceService
 import com.lifecommander.finance.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDateTime
-import com.esteban.ruano.lifecommander.services.finance.FinanceService
-
 
 class FinanceViewModel(
     private val service: FinanceService
@@ -19,322 +18,24 @@ class FinanceViewModel(
     private val _state = MutableStateFlow(FinanceState())
     val state: StateFlow<FinanceState> = _state.asStateFlow()
 
-    override suspend fun loadData() {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val accounts = service.getAccounts()
-            val budgets = service.getBudgets()
-            val savingsGoals = service.getSavingsGoals()
-            val transactions = service.getTransactions()
-
-            val budgetProgress = budgets.associate { budget ->
-                (budget.id?:"") to service.getBudgetProgress(budget.id?:"")
-            }
-            val savingsGoalProgress = savingsGoals.associate { goal ->
-                (goal.id?:"") to service.getSavingsGoalProgress(goal.id?:"")
-            }
-
-            _state.value = _state.value.copy(
-                accounts = accounts,
-                budgets = budgets,
-                savingsGoals = savingsGoals,
-                transactions = transactions,
-                budgetProgress = budgetProgress,
-                savingsGoalProgress = savingsGoalProgress,
-                isLoading = false
-            )
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun selectAccount(account: Account?) {
-        _state.value = _state.value.copy(selectedAccount = account)
-        if (account != null) {
-            loadTransactionsForAccount(account.id ?: "")
-        }
-    }
-
-    private suspend fun loadTransactionsForAccount(accountId: String) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val transactions = service.getTransactions(accountId = accountId)
-            _state.value = _state.value.copy(
-                transactions = transactions,
-                isLoading = false
-            )
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun addTransaction(transaction: Transaction) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val newTransaction = service.addTransaction(transaction)
-            _state.value = _state.value.copy(
-                transactions = _state.value.transactions + newTransaction,
-                isLoading = false
-            )
-            if (transaction.type == TransactionType.EXPENSE) {
-                updateBudgetProgress(transaction.category)
-            }
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun updateTransaction(transaction: Transaction) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val updatedTransaction = service.updateTransaction(transaction)
-            _state.value = _state.value.copy(
-                transactions = _state.value.transactions.map {
-                    if (it.id == updatedTransaction.id) updatedTransaction else it
-                },
-                isLoading = false
-            )
-            if (transaction.type == TransactionType.EXPENSE) {
-                updateBudgetProgress(transaction.category)
-            }
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun deleteTransaction(id: String) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            service.deleteTransaction(id)
-            val deletedTransaction = _state.value.transactions.find { it.id == id }
-            _state.value = _state.value.copy(
-                transactions = _state.value.transactions.filter { it.id != id },
-                isLoading = false
-            )
-            if (deletedTransaction?.type == TransactionType.EXPENSE) {
-                updateBudgetProgress(deletedTransaction.category)
-            }
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun getTransactions(
-        startDate: LocalDateTime?,
-        endDate: LocalDateTime?,
-        category: Category?,
-        accountId: String?
-    ): List<Transaction> {
-        return service.getTransactions(startDate, endDate, category, accountId)
-    }
-
-    override suspend fun addAccount(account: Account) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val newAccount = service.addAccount(account)
-            _state.value = _state.value.copy(
-                accounts = _state.value.accounts + newAccount,
-                isLoading = false
-            )
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun updateAccount(account: Account) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val updatedAccount = service.updateAccount(account)
-            _state.value = _state.value.copy(
-                accounts = _state.value.accounts.map {
-                    if (it.id == updatedAccount.id) updatedAccount else it
-                },
-                selectedAccount = if (_state.value.selectedAccount?.id == updatedAccount.id) updatedAccount else _state.value.selectedAccount,
-                isLoading = false
-            )
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun deleteAccount(id: String) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            service.deleteAccount(id)
-            _state.value = _state.value.copy(
-                accounts = _state.value.accounts.filter { it.id != id },
-                selectedAccount = if (_state.value.selectedAccount?.id == id) null else _state.value.selectedAccount,
-                isLoading = false
-            )
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun getAccounts(): List<Account> {
-        val response = service.getAccounts()
-        _state.value = _state.value.copy(accounts = response)
-        return response
-    }
-
-    override suspend fun addBudget(budget: Budget) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val newBudget = service.addBudget(budget)
-            val progress = service.getBudgetProgress(newBudget.id ?: "")
-            _state.value = _state.value.copy(
-                budgets = _state.value.budgets + newBudget,
-                budgetProgress = _state.value.budgetProgress + ((newBudget.id?:"") to progress),
-                isLoading = false
-            )
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun updateBudget(budget: Budget) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val updatedBudget = service.updateBudget(budget)
-            val progress = service.getBudgetProgress(updatedBudget.id?:"")
-            _state.value = _state.value.copy(
-                budgets = _state.value.budgets.map {
-                    if (it.id == updatedBudget.id) updatedBudget else it
-                },
-                budgetProgress = _state.value.budgetProgress + ((updatedBudget.id?:"") to progress),
-                isLoading = false
-            )
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun deleteBudget(id: String) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            service.deleteBudget(id)
-            _state.value = _state.value.copy(
-                budgets = _state.value.budgets.filter { it.id != id },
-                budgetProgress = _state.value.budgetProgress - id,
-                isLoading = false
-            )
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun getBudgets(): List<Budget> {
-        return service.getBudgets()
-    }
-
-    override suspend fun getBudgetProgress(budgetId: String): BudgetProgress? {
-        return service.getBudgetProgress(budgetId)
-    }
-
-    override suspend fun addSavingsGoal(goal: SavingsGoal) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val newGoal = service.addSavingsGoal(goal)
-            val progress = service.getSavingsGoalProgress(newGoal.id?: "")
-            _state.value = _state.value.copy(
-                savingsGoals = _state.value.savingsGoals + newGoal,
-                savingsGoalProgress = _state.value.savingsGoalProgress + ((newGoal.id?:"") to progress),
-                isLoading = false
-            )
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun updateSavingsGoal(goal: SavingsGoal) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val updatedGoal = service.updateSavingsGoal(goal)
-            val progress = service.getSavingsGoalProgress(updatedGoal.id?:"")
-            _state.value = _state.value.copy(
-                savingsGoals = _state.value.savingsGoals.map {
-                    if (it.id == updatedGoal.id) updatedGoal else it
-                },
-                savingsGoalProgress = _state.value.savingsGoalProgress + ((updatedGoal.id?:"") to progress),
-                isLoading = false
-            )
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun deleteSavingsGoal(id: String) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            service.deleteSavingsGoal(id)
-            _state.value = _state.value.copy(
-                savingsGoals = _state.value.savingsGoals.filter { it.id != id },
-                savingsGoalProgress = _state.value.savingsGoalProgress - id,
-                isLoading = false
-            )
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
-            )
-        }
-    }
-
-    override suspend fun getSavingsGoals(): List<SavingsGoal> {
-        return service.getSavingsGoals()
-    }
-
-    override suspend fun getSavingsGoalProgress(goalId: String): SavingsGoalProgress? {
-        return service.getSavingsGoalProgress(goalId)
-    }
-
-    fun importTransactions(text: String, accountId: String, skipDuplicates: Boolean = true) {
-        viewModelScope.launch{
+    override fun getTransactions(refresh: Boolean) {
+        viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
-                val transactionIds = service.importTransactions(text, accountId, skipDuplicates)
-                val transactions = service.getTransactions(accountId = accountId)
                 _state.value = _state.value.copy(
-                    transactions = transactions,
+                    isLoading = true,
+                    error = null,
+                    currentPage = if (refresh) 0 else _state.value.currentPage
+                )
+
+                val response = service.getTransactions(
+                    limit = _state.value.pageSize,
+                    offset = _state.value.currentPage * _state.value.pageSize,
+                    filters = _state.value.transactionFilters
+                )
+
+                _state.value = _state.value.copy(
+                    transactions = if (refresh) response.transactions else _state.value.transactions + response.transactions,
+                    totalTransactions = response.totalCount,
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -346,22 +47,323 @@ class FinanceViewModel(
         }
     }
 
-    private suspend fun updateBudgetProgress(category: Category) {
-        try {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val budget = _state.value.budgets.find { it.category == category }
-            if (budget != null) {
-                val progress = service.getBudgetProgress(budget.id?:"")
+    override fun changeTransactionFilters(filters: TransactionFilters) {
+        _state.value = _state.value.copy(
+            transactionFilters = filters,
+            currentPage = 0
+        )
+        getTransactions(refresh = true)
+    }
+
+    fun loadNextPage() {
+        if (_state.value.transactions.size < _state.value.totalTransactions) {
+            getTransactions(refresh = false)
+        }
+    }
+
+    fun updateTransactionFilters(filters: TransactionFilters) {
+        _state.value = _state.value.copy(
+            transactionFilters = filters,
+            currentPage = 0 // Reset to first page when filters change
+        )
+        getTransactions(refresh = true)
+    }
+
+    override fun loadData() {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val accounts = service.getAccounts()
+                val budgets = service.getBudgetsWithProgress()
+                val savingsGoals = service.getSavingsGoals()
+                val transactionsResponse = service.getTransactions(
+                    limit = _state.value.pageSize,
+                    offset = 0,
+                    filters = _state.value.transactionFilters
+                )
+
+                val savingsGoalProgress = savingsGoals.associate { goal ->
+                    (goal.id?:"") to service.getSavingsGoalProgress(goal.id?:"")
+                }
+
                 _state.value = _state.value.copy(
-                    budgetProgress = _state.value.budgetProgress + ((budget.id?:"") to progress),
+                    accounts = accounts,
+                    savingsGoals = savingsGoals,
+                    transactions = transactionsResponse.transactions,
+                    totalTransactions = transactionsResponse.totalCount,
+                    budgets = budgets,
+                    savingsGoalProgress = savingsGoalProgress,
+                    isLoading = false,
+                    currentPage = 0
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
                     isLoading = false
                 )
             }
-        } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                error = e.message,
-                isLoading = false
+        }
+    }
+
+    override fun selectAccount(account: Account?) {
+        _state.value = _state.value.copy(
+            selectedAccount = account,
+            transactionFilters = _state.value.transactionFilters.copy(
+                accountIds = account?.id?.let { listOf(it) }
             )
+        )
+        getTransactions(refresh = true)
+    }
+
+    override fun addTransaction(transaction: Transaction) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val newTransaction = service.addTransaction(transaction)
+                getTransactions(refresh = true)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    override fun updateTransaction(transaction: Transaction) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val updatedTransaction = service.updateTransaction(transaction)
+                getTransactions(refresh = true)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    override fun deleteTransaction(id: String) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                service.deleteTransaction(id)
+                getTransactions(refresh = true)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    override fun addAccount(account: Account) {
+        viewModelScope.launch{
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val newAccount = service.addAccount(account)
+                _state.value = _state.value.copy(
+                    accounts = _state.value.accounts + newAccount,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    override fun updateAccount(account: Account) {
+        viewModelScope.launch{
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val updatedAccount = service.updateAccount(account)
+                _state.value = _state.value.copy(
+                    accounts = _state.value.accounts.map {
+                        if (it.id == updatedAccount.id) updatedAccount else it
+                    },
+                    selectedAccount = if (_state.value.selectedAccount?.id == updatedAccount.id) updatedAccount else _state.value.selectedAccount,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }    }
+
+    override fun deleteAccount(id: String) {
+        viewModelScope.launch{
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                service.deleteAccount(id)
+                _state.value = _state.value.copy(
+                    accounts = _state.value.accounts.filter { it.id != id },
+                    selectedAccount = if (_state.value.selectedAccount?.id == id) null else _state.value.selectedAccount,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }    }
+
+    override fun getAccounts(){
+        viewModelScope.launch{
+            val response = service.getAccounts()
+            _state.value = _state.value.copy(accounts = response)
+        }
+    }
+
+    override fun addBudget(budget: Budget) {
+        viewModelScope.launch{
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val newBudget = service.addBudget(budget)
+                loadData()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }    }
+
+    override fun updateBudget(budget: Budget) {
+        viewModelScope.launch{
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val updatedBudget = service.updateBudget(budget)
+               loadData()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }    }
+
+    override fun deleteBudget(id: String) {
+        viewModelScope.launch{
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                service.deleteBudget(id)
+                _state.value = _state.value.copy(
+                    budgets = _state.value.budgets.filter { it.budget.id != id },
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }    }
+
+    override fun getBudgets(){
+        viewModelScope.launch{ service.getBudgetsWithProgress() }
+    }
+
+    override fun getBudgetProgress(budgetId: String){
+        viewModelScope.launch{ service.getBudgetProgress(budgetId) }
+    }
+
+    override fun addSavingsGoal(goal: SavingsGoal) {
+        viewModelScope.launch{
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val newGoal = service.addSavingsGoal(goal)
+                val progress = service.getSavingsGoalProgress(newGoal.id ?: "")
+                _state.value = _state.value.copy(
+                    savingsGoals = _state.value.savingsGoals + newGoal,
+                    savingsGoalProgress = _state.value.savingsGoalProgress + ((newGoal.id ?: "") to progress),
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }    }
+
+    override fun updateSavingsGoal(goal: SavingsGoal) {
+        viewModelScope.launch{
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val updatedGoal = service.updateSavingsGoal(goal)
+                val progress = service.getSavingsGoalProgress(updatedGoal.id ?: "")
+                _state.value = _state.value.copy(
+                    savingsGoals = _state.value.savingsGoals.map {
+                        if (it.id == updatedGoal.id) updatedGoal else it
+                    },
+                    savingsGoalProgress = _state.value.savingsGoalProgress + ((updatedGoal.id ?: "") to progress),
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }    }
+
+    override fun deleteSavingsGoal(id: String) {
+        viewModelScope.launch{
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                service.deleteSavingsGoal(id)
+                _state.value = _state.value.copy(
+                    savingsGoals = _state.value.savingsGoals.filter { it.id != id },
+                    savingsGoalProgress = _state.value.savingsGoalProgress - id,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }    }
+
+    override fun getSavingsGoals() {
+        viewModelScope.launch{
+            val response = service.getSavingsGoals()
+            _state.value = _state.value.copy(savingsGoals = response)
+        }
+    }
+
+    override fun getSavingsGoalProgress(goalId: String){
+        viewModelScope.launch{
+            val response = service.getSavingsGoalProgress(goalId)
+            _state.value = _state.value.copy(savingsGoalProgress = _state.value.savingsGoalProgress + (goalId to response))
+        }
+    }
+
+    fun importTransactions(text: String, accountId: String, skipDuplicates: Boolean = true) {
+        viewModelScope.launch{
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null, transactionFilters = _state.value.transactionFilters.copy(accountIds = listOf(accountId)))
+                val transactionIds = service.importTransactions(text, accountId, skipDuplicates)
+                val transactions = service.getTransactions()
+                _state.value = _state.value.copy(
+                    transactions = transactions.transactions,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
         }
     }
 
@@ -373,4 +375,65 @@ class FinanceViewModel(
             )
         }
     }
+
+    fun updateSearchPattern(pattern: String) {
+        _state.value = _state.value.copy(
+            transactionFilters = _state.value.transactionFilters.copy(
+                searchPattern = pattern.takeIf { it.isNotBlank() }
+            ),
+            currentPage = 0
+        )
+        getTransactions(refresh = true)
+    }
+
+    fun updateDateRange(startDate: String?, endDate: String?) {
+        _state.value = _state.value.copy(
+            transactionFilters = _state.value.transactionFilters.copy(
+                startDate = startDate,
+                endDate = endDate
+            ),
+            currentPage = 0
+        )
+        getTransactions(refresh = true)
+    }
+
+    fun updateAmountRange(minAmount: Double?, maxAmount: Double?) {
+        _state.value = _state.value.copy(
+            transactionFilters = _state.value.transactionFilters.copy(
+                minAmount = minAmount,
+                maxAmount = maxAmount
+            ),
+            currentPage = 0
+        )
+        getTransactions(refresh = true)
+    }
+
+    fun updateTransactionTypes(types: List<TransactionType>) {
+        _state.value = _state.value.copy(
+            transactionFilters = _state.value.transactionFilters.copy(
+                types = types.takeIf { it.isNotEmpty() }
+            ),
+            currentPage = 0
+        )
+        getTransactions(refresh = true)
+    }
+
+    fun updateCategories(categories: List<String>) {
+        _state.value = _state.value.copy(
+            transactionFilters = _state.value.transactionFilters.copy(
+                categories = categories.takeIf { it.isNotEmpty() }
+            ),
+            currentPage = 0
+        )
+        getTransactions(refresh = true)
+    }
+
+    fun clearFilters() {
+        _state.value = _state.value.copy(
+            transactionFilters = TransactionFilters(),
+            currentPage = 0
+        )
+        getTransactions(refresh = true)
+    }
+
 }

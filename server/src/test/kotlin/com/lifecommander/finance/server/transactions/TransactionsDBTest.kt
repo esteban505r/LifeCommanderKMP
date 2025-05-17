@@ -3,7 +3,6 @@ package com.lifecommander.finance.server.transactions
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.AccountType
 import com.esteban.ruano.database.models.Status
-import com.esteban.ruano.database.models.TransactionType
 import com.esteban.ruano.service.TransactionService
 import com.esteban.ruano.utils.DateUtils.formatDateTime
 import kotlinx.datetime.*

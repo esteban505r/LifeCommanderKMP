@@ -5,6 +5,7 @@ import com.esteban.ruano.database.entities.Transaction
 import com.esteban.ruano.database.entities.Budget
 import com.esteban.ruano.database.entities.SavingsGoal
 import com.esteban.ruano.models.finance.*
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUtils.parseDateTime
 import com.lifecommander.finance.model.Transaction as TransactionDomainModel
 import com.lifecommander.finance.model.TransactionType as TransactionTypeDomainModel
@@ -53,7 +54,9 @@ fun Budget.toResponseDTO(): BudgetResponseDTO {
         name = this.name,
         amount = this.amount.toDouble(),
         category = this.category,
-        startDate = this.startDate,
+        startDate = this.startDate.formatDefault(),
+        endDate = this.endDate?.formatDefault(),
+        frequency = this.frequency.value,
     )
 }
 
@@ -63,6 +66,6 @@ fun SavingsGoal.toResponseDTO(): SavingsGoalResponseDTO {
         name = this.name,
         targetAmount = this.targetAmount.toDouble(),
         currentAmount = this.currentAmount.toDouble(),
-        targetDate = this.targetDate
+        targetDate = this.targetDate.formatDefault()
     )
 } 

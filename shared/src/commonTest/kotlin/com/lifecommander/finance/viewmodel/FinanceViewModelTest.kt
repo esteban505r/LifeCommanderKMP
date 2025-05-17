@@ -1,5 +1,7 @@
 package com.lifecommander.finance.viewmodel
 
+import com.esteban.ruano.lifecommander.models.finance.Budget
+import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.lifecommander.finance.service.FinanceService
 import com.lifecommander.finance.model.*
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +36,14 @@ class FinanceViewModelTest {
             Account("2", "Savings", 5000.0)
         )
         val budgets = listOf(
-            Budget("1", "Groceries", Category.FOOD, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1)))
+            Budget(
+                "1",
+                "Groceries",
+                Category.FOOD,
+                500.0,
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))
+            )
         )
         val savingsGoals = listOf(
             SavingsGoal("1", "New Car", 20000.0, 5000.0, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(years = 1)))
@@ -73,7 +82,14 @@ class FinanceViewModelTest {
     fun `test addTransaction adds transaction and updates budget progress`() = runTest {
         // Given
         val transaction = Transaction("1", "Grocery Shopping", 50.0, TransactionType.EXPENSE, Category.FOOD, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), "1")
-        val budget = Budget("1", "Groceries", Category.FOOD, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1)))
+        val budget = Budget(
+            "1",
+            "Groceries",
+            Category.FOOD,
+            500.0,
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))
+        )
         val budgetProgress = BudgetProgress(budget, 50.0, 450.0, 10.0, false)
 
         // When
@@ -99,7 +115,14 @@ class FinanceViewModelTest {
     @Test
     fun `test addBudget adds budget and loads progress`() = runTest {
         // Given
-        val budget = Budget("1", "Groceries", Category.FOOD, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1)))
+        val budget = Budget(
+            "1",
+            "Groceries",
+            Category.FOOD,
+            500.0,
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))
+        )
         val budgetProgress = BudgetProgress(budget, 0.0, 500.0, 0.0, false)
 
         // When

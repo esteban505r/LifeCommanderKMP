@@ -44,6 +44,16 @@ object HabitUtils {
                 }
             }
 
+            Frequency.BI_WEEKLY -> {
+                if(this.dateTime?.toLocalDateTime()?.dayOfWeek == LocalDateTime.now().dayOfWeek){
+                    this.dateTime?.toLocalDateTime()?.getTime()
+                }
+                else {
+                    this.dateTime?.toLocalDateTime()
+                        ?.toLocalDate()?.dayOfWeek?.value?.toDayOfTheWeekString()
+                }
+            }
+
             Frequency.MONTHLY -> {
                 this.dateTime?.toLocalDateTime()?.toLocalDate()?.month?.value?.toMonthString()
             }

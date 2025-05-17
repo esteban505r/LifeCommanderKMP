@@ -131,6 +131,19 @@ object HabitsUtils {
                 }
             }
 
+            Frequency.BI_WEEKLY -> {
+                if (localDateTime.date.dayOfWeek == now.date.dayOfWeek) {
+                    StringDesc.Resource(MR.strings.today)
+                } else if (localDateTime.date.dayOfWeek.isoDayNumber == now.date.dayOfWeek.isoDayNumber.plus(1)) {
+                    StringDesc.Resource(MR.strings.tomorrow)
+                } else {
+                    StringDesc.ResourceFormatted(
+                        MR.strings.on,
+                        localDateTime.date.dayOfWeek.isoDayNumber.toDayOfTheWeekStringDesc()
+                    )
+                }
+            }
+
             Frequency.MONTHLY -> localDateTime.date.monthNumber.toMonthStringDesc()
             Frequency.YEARLY -> StringDesc.ResourceFormatted(
                 MR.strings.on,

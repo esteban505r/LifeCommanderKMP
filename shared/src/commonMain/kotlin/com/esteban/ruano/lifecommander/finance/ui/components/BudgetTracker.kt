@@ -13,8 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lifecommander.finance.model.Budget
-import com.lifecommander.finance.model.BudgetProgress
+import androidx.compose.ui.window.Dialog
+import com.esteban.ruano.lifecommander.models.finance.Budget
+import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
+import com.esteban.ruano.lifecommander.utils.toCurrencyFormat
 import com.lifecommander.finance.ui.BudgetForm
 
 @Composable
@@ -23,28 +25,16 @@ fun BudgetTracker(
     onAddBudget: (Budget) -> Unit,
     onEditBudget: (Budget) -> Unit,
     onDeleteBudget: (Budget) -> Unit,
-    ChipWrapper: @Composable (content: @Composable () -> Unit) -> Unit
 ) {
-    var showAddDialog by remember { mutableStateOf(false) }
-    var showEditDialog by remember { mutableStateOf<Budget?>(null) }
+
+    var showBudgetFormDialog by remember { mutableStateOf(false) }
+    var editingBudget by remember { mutableStateOf<Budget?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Budgets",
-                    style = MaterialTheme.typography.h6,
-                    color = MaterialTheme.colors.onSurface
-                )
-            }
+            Spacer(modifier = Modifier.height(16.dp))
 
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
@@ -54,7 +44,10 @@ fun BudgetTracker(
                 items(budgets) { budgetProgress ->
                     BudgetProgressItem(
                         budgetProgress = budgetProgress,
-                        onEdit = { showEditDialog = budgetProgress.budget },
+                        onEdit = {
+                            editingBudget = budgetProgress.budget
+                            showBudgetFormDialog = true
+                        },
                         onDelete = { onDeleteBudget(budgetProgress.budget) }
                     )
                 }
@@ -62,7 +55,7 @@ fun BudgetTracker(
         }
 
         FloatingActionButton(
-            onClick = { showAddDialog = true },
+            onClick = { showBudgetFormDialog = true },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
@@ -76,44 +69,28 @@ fun BudgetTracker(
         }
     }
 
-    if (showAddDialog) {
-        AlertDialog(
-            onDismissRequest = { showAddDialog = false },
-            title = { Text("Add Budget") },
-            text = {
+    if (showBudgetFormDialog) {
+        Dialog(
+            onDismissRequest = { showBudgetFormDialog = false }) {
+            Surface {
                 BudgetForm(
+                    initialBudget = editingBudget,
                     onSave = { budget ->
-                        onAddBudget(budget)
-                        showAddDialog = false
+                        if (editingBudget == null) {
+                            onAddBudget(budget)
+                        } else {
+                            onEditBudget(budget)
+                        }
+                        showBudgetFormDialog = false
+                        editingBudget = null
                     },
-                    onCancel = { showAddDialog = false },
-                    ChipWrapper = ChipWrapper
+                    onCancel = { showBudgetFormDialog = false },
                 )
-            },
-            confirmButton = {},
-            dismissButton = {}
-        )
+            }
+        }
     }
 
-    showEditDialog?.let { budget ->
-        AlertDialog(
-            onDismissRequest = { showEditDialog = null },
-            title = { Text("Edit Budget") },
-            text = {
-                BudgetForm(
-                    initialBudget = budget,
-                    onSave = { updatedBudget ->
-                        onEditBudget(updatedBudget)
-                        showEditDialog = null
-                    },
-                    onCancel = { showEditDialog = null },
-                    ChipWrapper = ChipWrapper
-                )
-            },
-            confirmButton = {},
-            dismissButton = {}
-        )
-    }
+
 }
 
 @Composable
@@ -160,7 +137,7 @@ private fun BudgetProgressItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${budgetProgress.spent} / ${budgetProgress.budget.amount}",
+                        text = "${budgetProgress.spent.toCurrencyFormat()} / ${budgetProgress.budget.amount.toCurrencyFormat()}",
                         style = MaterialTheme.typography.h6,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colors.onSurface
@@ -185,7 +162,7 @@ private fun BudgetProgressItem(
             Spacer(modifier = Modifier.height(8.dp))
 
             LinearProgressIndicator(
-                progress = budgetProgress.percentageUsed.toFloat(),
+                progress = budgetProgress.progressPercentage.toFloat(),
                 modifier = Modifier.fillMaxWidth(),
                 color = if (budgetProgress.isOverBudget) {
                     MaterialTheme.colors.error
@@ -202,12 +179,12 @@ private fun BudgetProgressItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Remaining: ${budgetProgress.remaining}",
+                    text = "Remaining: ${budgetProgress.remaining.toCurrencyFormat()}",
                     style = MaterialTheme.typography.body2,
                     color = MaterialTheme.colors.onSurface
                 )
                 Text(
-                    text = "${budgetProgress.percentageUsed.toInt()}%",
+                    text = "${budgetProgress.progressPercentage.toInt()}%",
                     style = MaterialTheme.typography.body2,
                     color = if (budgetProgress.isOverBudget) {
                         MaterialTheme.colors.error

@@ -1,5 +1,7 @@
 package com.lifecommander.finance.viewmodel
 
+import com.esteban.ruano.lifecommander.models.finance.Budget
+import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.lifecommander.finance.model.*
 import com.lifecommander.finance.repository.FinanceRepository
 import io.mockk.*
@@ -97,8 +99,22 @@ class FinanceViewModelTest {
     fun `test loadBudgets loads budgets`() = runTest {
         // Given
         val budgets = listOf(
-            Budget("1", "Groceries", Category.FOOD, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))),
-            Budget("2", "Entertainment", Category.ENTERTAINMENT, 200.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1)))
+            Budget(
+                "1",
+                "Groceries",
+                Category.FOOD,
+                500.0,
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))
+            ),
+            Budget(
+                "2",
+                "Entertainment",
+                Category.ENTERTAINMENT,
+                200.0,
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))
+            )
         )
         coEvery { repository.getBudgets() } returns budgets
 
@@ -113,7 +129,14 @@ class FinanceViewModelTest {
     @Test
     fun `test addBudget adds budget`() = runTest {
         // Given
-        val budget = Budget("1", "Groceries", Category.FOOD, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1)))
+        val budget = Budget(
+            "1",
+            "Groceries",
+            Category.FOOD,
+            500.0,
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))
+        )
         coEvery { repository.addBudget(any()) } just Runs
         coEvery { repository.getBudgets() } returns listOf(budget)
 

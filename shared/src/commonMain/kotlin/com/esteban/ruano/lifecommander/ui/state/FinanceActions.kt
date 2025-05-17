@@ -1,41 +1,44 @@
 package com.lifecommander.finance.model
 
+import com.esteban.ruano.lifecommander.models.finance.Budget
 import com.esteban.ruano.lifecommander.models.finance.Category
+import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import kotlinx.datetime.LocalDateTime
 
 interface FinanceActions {
     // Account actions
-    suspend fun addAccount(account: Account)
-    suspend fun updateAccount(account: Account)
-    suspend fun deleteAccount(id: String)
-    suspend fun selectAccount(account: Account?)
-    suspend fun getAccounts(): List<Account>
+    fun addAccount(account: Account)
+    fun updateAccount(account: Account)
+    fun deleteAccount(id: String)
+    fun selectAccount(account: Account?)
+    fun getAccounts()
     
     // Transaction actions
-    suspend fun addTransaction(transaction: Transaction)
-    suspend fun updateTransaction(transaction: Transaction)
-    suspend fun deleteTransaction(id: String)
-    suspend fun getTransactions(
-        startDate: LocalDateTime? = null,
-        endDate: LocalDateTime? = null,
-        category: Category? = null,
-        accountId: String? = null
-    ): List<Transaction>
+    fun addTransaction(transaction: Transaction)
+    fun updateTransaction(transaction: Transaction)
+    fun deleteTransaction(id: String)
+    fun getTransactions(
+        refresh: Boolean = false,
+    )
+
+    fun changeTransactionFilters(
+        filters: TransactionFilters,
+    )
     
     // Budget actions
-    suspend fun addBudget(budget: Budget)
-    suspend fun updateBudget(budget: Budget)
-    suspend fun deleteBudget(id: String)
-    suspend fun getBudgets(): List<Budget>
-    suspend fun getBudgetProgress(budgetId: String): BudgetProgress?
+    fun addBudget(budget: Budget)
+    fun updateBudget(budget: Budget)
+    fun deleteBudget(id: String)
+    fun getBudgets()
+    fun getBudgetProgress(budgetId: String)
     
     // Savings goal actions
-    suspend fun addSavingsGoal(goal: SavingsGoal)
-    suspend fun updateSavingsGoal(goal: SavingsGoal)
-    suspend fun deleteSavingsGoal(id: String)
-    suspend fun getSavingsGoals(): List<SavingsGoal>
-    suspend fun getSavingsGoalProgress(goalId: String): SavingsGoalProgress?
+    fun addSavingsGoal(goal: SavingsGoal)
+    fun updateSavingsGoal(goal: SavingsGoal)
+    fun deleteSavingsGoal(id: String)
+    fun getSavingsGoals()
+    fun getSavingsGoalProgress(goalId: String)
     
     // Data loading
-    suspend fun loadData()
+    fun loadData()
 } 

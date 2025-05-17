@@ -10,12 +10,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.esteban.ruano.MR
+import com.esteban.ruano.lifecommander.finance.ui.components.FormattedAmountInput
 import com.esteban.ruano.lifecommander.models.finance.Category
+import com.esteban.ruano.lifecommander.ui.components.EnumChipSelector
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUtils.parseDate
 import com.lifecommander.finance.model.*
+import com.lifecommander.models.Frequency
 import com.lifecommander.ui.components.CustomDatePicker
 import com.lifecommander.ui.components.CustomTimePicker
 import dev.icerock.moko.resources.compose.stringResource
@@ -41,8 +44,7 @@ fun TransactionForm(
     }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
-    var isRecurring by remember { mutableStateOf(initialTransaction?.isRecurring ?: false) }
-    var recurrence by remember { mutableStateOf(initialTransaction?.recurrence ?: Recurrence.MONTHLY) }
+    var frequency by remember { mutableStateOf(initialTransaction?.frequency ?: Frequency.MONTHLY) }
 
     var categoryExpanded by remember { mutableStateOf(false) }
     var accountExpanded by remember { mutableStateOf(false) }
@@ -53,22 +55,10 @@ fun TransactionForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        OutlinedTextField(
-            value = amount,
-            onValueChange = {
-                if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
-                    amount = it
-                }
-            },
-            label = { Text(stringResource(MR.strings.amount)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.fillMaxWidth(),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                textColor = MaterialTheme.colors.onSurface,
-                cursorColor = MaterialTheme.colors.primary,
-                focusedBorderColor = MaterialTheme.colors.primary,
-                unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
-            )
+
+        FormattedAmountInput(
+            amount = amount,
+            onAmountChange = { amount = it },
         )
 
         Row(
@@ -228,38 +218,13 @@ fun TransactionForm(
             }
         }
 
-        Row(
+        EnumChipSelector(
+            enumValues = Frequency.entries.toTypedArray(),
+            selectedValue = frequency,
+            onValueSelected = { frequency = it ?: Frequency.MONTHLY },
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(
-                checked = isRecurring,
-                onCheckedChange = { isRecurring = it },
-                colors = CheckboxDefaults.colors(
-                    checkedColor = MaterialTheme.colors.primary,
-                    uncheckedColor = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                )
-            )
-            Text(
-                stringResource(MR.strings.transaction),
-                color = MaterialTheme.colors.onSurface
-            )
-        }
-
-        if (isRecurring) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Recurrence.entries.forEach { recurrenceType ->
-                    FilterChip(
-                        selected = recurrence == recurrenceType,
-                        onClick = { recurrence = recurrenceType },
-                        content = { Text(recurrenceType.name) }
-                    )
-                }
-            }
-        }
+            labelMapper = { it.name.lowercase().replaceFirstChar { c -> c.uppercase() } }
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -289,8 +254,7 @@ fun TransactionForm(
                         accountId = accountId,
                         description = description,
                         date = dateTime!!.formatDefault(),
-                        isRecurring = isRecurring,
-                        recurrence = if (isRecurring) recurrence else null
+                        frequency = frequency,
                     )
                     onSave(transaction)
                 },

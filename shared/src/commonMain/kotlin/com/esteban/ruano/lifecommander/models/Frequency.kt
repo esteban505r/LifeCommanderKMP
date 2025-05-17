@@ -4,6 +4,8 @@ enum class Frequency(val value: String){
     ONE_TIME("one_time"),
     DAILY("daily"),
     WEEKLY("weekly"),
+
+    BI_WEEKLY("bi_weekly"),
     MONTHLY("monthly"),
     YEARLY("yearly");
 

@@ -1,7 +1,7 @@
 package com.esteban.ruano.database.entities
 
 import com.esteban.ruano.database.models.Status
-import com.esteban.ruano.database.models.TransactionType
+import com.lifecommander.finance.model.TransactionType
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

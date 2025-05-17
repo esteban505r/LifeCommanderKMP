@@ -1,5 +1,6 @@
 package com.lifecommander.finance.service
 
+import com.esteban.ruano.lifecommander.models.finance.Budget
 import com.lifecommander.finance.model.*
 import io.ktor.client.*
 import io.ktor.client.engine.*
@@ -68,7 +69,15 @@ class FinanceClientTest {
             route("/api/budgets") {
                 get {
                     val budgets = listOf(
-                        Budget("1", "Groceries", Category.FOOD, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1)))
+                        Budget(
+                            "1",
+                            "Groceries",
+                            Category.FOOD,
+                            500.0,
+                            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+                            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                                .plus(DatePeriod(months = 1))
+                        )
                     )
                     call.respond(budgets)
                 }
@@ -185,7 +194,14 @@ class FinanceClientTest {
     @Test
     fun `test addBudget adds budget`() = runBlocking {
         // Given
-        val budget = Budget("1", "Groceries", Category.FOOD, 500.0, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1)))
+        val budget = Budget(
+            "1",
+            "Groceries",
+            Category.FOOD,
+            500.0,
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).plus(DatePeriod(months = 1))
+        )
 
         // When
         val addedBudget = client.addBudget(budget)

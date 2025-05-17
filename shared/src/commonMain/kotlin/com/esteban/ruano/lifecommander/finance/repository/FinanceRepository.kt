@@ -1,5 +1,7 @@
 package com.lifecommander.finance.repository
 
+import com.esteban.ruano.lifecommander.models.finance.Budget
+import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.esteban.ruano.lifecommander.models.finance.Category
 import com.lifecommander.finance.model.*
 import kotlinx.datetime.LocalDateTime

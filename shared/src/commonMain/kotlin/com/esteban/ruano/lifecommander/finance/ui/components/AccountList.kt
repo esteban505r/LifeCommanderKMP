@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.esteban.ruano.lifecommander.utils.toCurrencyFormat
 import com.esteban.ruano.utils.DateUIUtils.formatCurrency
 import com.lifecommander.finance.model.Account
 @Composable
@@ -94,7 +95,7 @@ private fun AccountItem(
                     color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                 )
                 Text(
-                    text = formatCurrency(account.balance),
+                    text = account.balance.toCurrencyFormat(),
                     style = MaterialTheme.typography.h5,
                     color = if (account.balance >= 0) {
                         MaterialTheme.colors.primary

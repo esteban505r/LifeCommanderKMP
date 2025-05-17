@@ -5,6 +5,7 @@ import com.esteban.ruano.MR
 import com.esteban.ruano.ui.LightGray
 import com.esteban.ruano.ui.SoftRed
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.lifecommander.models.Frequency
 import dev.icerock.moko.resources.StringResource
 import dev.icerock.moko.resources.desc.Raw
 import dev.icerock.moko.resources.desc.Resource
@@ -159,6 +160,18 @@ object DateUtils {
 
         return Pair(StringDesc.Raw(this.formatDefault()), SoftRed)
     }
+
+    fun getPeriodEndDate(startDate: LocalDate, frequency: Frequency): LocalDate{
+        return when (frequency) {
+            Frequency.ONE_TIME -> startDate
+            Frequency.DAILY -> startDate.plus(1, DateTimeUnit.DAY)
+            Frequency.WEEKLY -> startDate.plus(1, DateTimeUnit.WEEK)
+            Frequency.BI_WEEKLY -> startDate.plus(2, DateTimeUnit.WEEK)
+            Frequency.MONTHLY -> startDate.plus(1, DateTimeUnit.MONTH)
+            Frequency.YEARLY -> startDate.plus(1, DateTimeUnit.YEAR)
+        }
+    }
+
 
     private fun DayOfWeek.toDayStringRes(): StringResource{
         return when (this) {

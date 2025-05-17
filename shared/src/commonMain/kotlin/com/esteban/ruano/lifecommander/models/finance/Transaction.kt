@@ -1,6 +1,7 @@
 package com.lifecommander.finance.model
 
 import com.esteban.ruano.lifecommander.models.finance.Category
+import com.lifecommander.models.Frequency
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -12,8 +13,7 @@ data class Transaction(
     val accountId: String,
     val description: String,
     val date: String,
-    val isRecurring: Boolean = false,
-    val recurrence: Recurrence? = null
+    val frequency: Frequency? = null
 )
 
 @Serializable
@@ -24,11 +24,3 @@ enum class TransactionType {
 }
 
 
-
-@Serializable
-enum class Recurrence {
-    DAILY,
-    WEEKLY,
-    MONTHLY,
-    YEARLY
-} 

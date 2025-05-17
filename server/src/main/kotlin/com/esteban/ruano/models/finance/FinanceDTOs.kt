@@ -1,9 +1,7 @@
 package com.esteban.ruano.models.finance
 
 import com.esteban.ruano.database.models.AccountType
-import com.esteban.ruano.database.models.TransactionType
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
+import com.lifecommander.finance.model.TransactionType
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
@@ -52,6 +50,11 @@ data class UpdateTransactionDTO(
     val category: String? = null
 )
 
+data class TransactionsResponseDTO(
+    val transactions: List<TransactionResponseDTO>,
+    val totalCount: Long
+)
+
 @Serializable
 data class TransactionResponseDTO(
     val id: UUID,
@@ -71,8 +74,8 @@ data class CreateBudgetDTO(
     val name: String,
     val amount: Double,
     val category: String,
-    val startDate: LocalDate,
-    val endDate: LocalDate
+    val startDate: String,
+    val endDate: String? = null,
 )
 
 @Serializable
@@ -80,8 +83,8 @@ data class UpdateBudgetDTO(
     val name: String? = null,
     val amount: Double? = null,
     val category: String? = null,
-    val startDate: LocalDate? = null,
-    val endDate: LocalDate? = null
+    val startDate: String? = null,
+    val endDate: String? = null
 )
 
 @Serializable
@@ -90,21 +93,23 @@ data class BudgetResponseDTO(
     val name: String,
     val amount: Double,
     val category: String,
-    val startDate: LocalDate,
+    val frequency: String,
+    val startDate: String,
+    val endDate: String? = null,
 )
 
 @Serializable
 data class CreateSavingsGoalDTO(
     val name: String,
     val targetAmount: Double,
-    val targetDate: LocalDate
+    val targetDate: String
 )
 
 @Serializable
 data class UpdateSavingsGoalDTO(
     val name: String? = null,
     val targetAmount: Double? = null,
-    val targetDate: LocalDate? = null
+    val targetDate: String? = null
 )
 
 @Serializable
@@ -113,7 +118,7 @@ data class SavingsGoalResponseDTO(
     val name: String,
     val targetAmount: Double,
     val currentAmount: Double,
-    val targetDate: LocalDate
+    val targetDate: String
 )
 
 @Serializable
@@ -123,8 +128,8 @@ data class UpdateSavingsGoalProgressDTO(
 
 @Serializable
 data class DateRangeDTO(
-    val startDate: LocalDateTime,
-    val endDate: LocalDateTime
+    val startDate: String,
+    val endDate: String
 )
 
 @Serializable
@@ -134,8 +139,9 @@ data class DateRangeQueryDTO(
 )
 
 @Serializable
-data class ProgressResponseDTO(
-    val progress: Double
+data class BudgetProgressResponseDTO(
+    val budget: BudgetResponseDTO,
+    val spent: Double = 0.0,
 )
 
 @Serializable
@@ -146,4 +152,4 @@ data class RemainingAmountResponseDTO(
 @Serializable
 data class TotalBalanceResponseDTO(
     val totalBalance: Double
-) 
+)
