@@ -5,6 +5,8 @@ import com.esteban.ruano.lifecommander.models.UserSettings
 
 interface TimerRepository {
     suspend fun getTimerLists(token: String): List<TimerList>
+
+    suspend fun getTimerList(token: String, listId: String): TimerList
     
     suspend fun createTimerList(
         token: String,

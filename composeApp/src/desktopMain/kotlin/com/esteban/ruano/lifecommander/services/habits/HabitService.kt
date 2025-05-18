@@ -1,7 +1,7 @@
 package services.habits
 
-import com.esteban.ruano.lifecommander.services.habits.HABITS_ENDPOINT
-import com.esteban.ruano.lifecommander.services.habits.appHeaders
+import com.esteban.ruano.lifecommander.utils.HABITS_ENDPOINT
+import com.esteban.ruano.lifecommander.utils.appHeaders
 import com.lifecommander.models.Habit
 import encodeUrlWithSpaces
 import io.ktor.client.*

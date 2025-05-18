@@ -6,14 +6,14 @@ import com.lifecommander.models.Habit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import services.auth.TokenStorage
+import services.auth.TokenStorageImpl
 import services.habits.HabitService
 import utils.DateUtils.parseDate
 import utils.DateUtils.parseDateTime
 import java.time.LocalDateTime
 
 class HabitsViewModel(
-    private val tokenStorage: TokenStorage,
+    private val tokenStorageImpl: TokenStorageImpl,
     private val habitService: HabitService,
 ) : ViewModel() {
 
@@ -31,7 +31,7 @@ class HabitsViewModel(
             _loading.value = true
             try {
                 val response = habitService.getByDate(
-                    token = tokenStorage.getToken() ?: "",
+                    token = tokenStorageImpl.getToken() ?: "",
                     page = 0,
                     limit = 30,
                     date = LocalDateTime.now().toLocalDate().parseDate()
@@ -51,13 +51,13 @@ class HabitsViewModel(
             try {
                 if (checked) {
                     habitService.completeHabit(
-                        token = tokenStorage.getToken() ?: "",
+                        token = tokenStorageImpl.getToken() ?: "",
                         id = id,
                         dateTime = LocalDateTime.now().parseDateTime()
                     )
                 } else {
                     habitService.unCompleteHabit(
-                        token = tokenStorage.getToken() ?: "",
+                        token = tokenStorageImpl.getToken() ?: "",
                         id = id,
                         dateTime = LocalDateTime.now().parseDateTime()
                     )
@@ -82,7 +82,7 @@ class HabitsViewModel(
             _loading.value = true
             try {
                 habitService.addHabit(
-                    token = tokenStorage.getToken() ?: "",
+                    token = tokenStorageImpl.getToken() ?: "",
                     name = name,
                     note = note,
                     frequency = frequency,
@@ -102,7 +102,7 @@ class HabitsViewModel(
             _loading.value = true
             try {
                 habitService.updateHabit(
-                    token = tokenStorage.getToken() ?: "",
+                    token = tokenStorageImpl.getToken() ?: "",
                     id = id,
                     habit = habit
                 )
@@ -120,7 +120,7 @@ class HabitsViewModel(
             _loading.value = true
             try {
                 habitService.deleteHabit(
-                    token = tokenStorage.getToken() ?: "",
+                    token = tokenStorageImpl.getToken() ?: "",
                     id = id
                 )
                 getHabits()

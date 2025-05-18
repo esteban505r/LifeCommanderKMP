@@ -11,7 +11,8 @@ fun Timer.toDomainModel(): com.esteban.ruano.lifecommander.models.Timer {
         duration = this.duration,
         enabled = this.enabled,
         countsAsPomodoro = this.countsAsPomodoro,
-        order = this.order
+        order = this.order,
+        state = this.state.toString()
     )
 }
 

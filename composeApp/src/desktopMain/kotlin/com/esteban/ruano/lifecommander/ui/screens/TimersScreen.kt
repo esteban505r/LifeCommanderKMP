@@ -13,17 +13,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.models.Timer
 import com.esteban.ruano.lifecommander.models.TimerList
-import com.esteban.ruano.lifecommander.timer.TimerPlaybackManager
+import com.esteban.ruano.lifecommander.timer.TimerNotification
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackState
-import kotlinx.coroutines.flow.collectLatest
+import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
+import com.esteban.ruano.lifecommander.websocket.TimerWebSocketClient
 import kotlinx.coroutines.launch
-import org.koin.compose.viewmodel.koinViewModel
-import ui.composables.TimersDialog
 
 @Composable
 fun TimersScreen(
     timerLists: List<TimerList>,
-    timerPlaybackManager: TimerPlaybackManager,
+    timerPlaybackState: TimerPlaybackState,
+    connectionState: TimerWebSocketClient.ConnectionState,
+    notifications: List<TimerNotification>,
     onAddTimerList: (String, Boolean, Boolean) -> Unit,
     onUpdateTimerList: (String, String, Boolean, Boolean) -> Unit,
     onDeleteTimerList: (String) -> Unit,
@@ -31,23 +32,84 @@ fun TimersScreen(
     onUpdateTimer: (String, String, Int, Boolean, Boolean, Int) -> Unit,
     onDeleteTimer: (String) -> Unit,
     onReorderTimers: (String, List<Timer>) -> Unit,
-    onNavigateToDetail: (TimerList) -> Unit
+    onNavigateToDetail: (TimerList) -> Unit,
+    onReconnectToSocket: () -> Unit,
+    onStartTimer: (TimerList) -> Unit,
+    onPauseTimer: () -> Unit,
+    onResumeTimer: () -> Unit,
+    onStopTimer: () -> Unit
 ) {
     var showAddTimerListDialog by remember { mutableStateOf(false) }
     var showAddTimerDialog by remember { mutableStateOf(false) }
     var selectedTimerList by remember { mutableStateOf<TimerList?>(null) }
-    var timerPlaybackState by remember { mutableStateOf<TimerPlaybackState>(TimerPlaybackState.Stopped) }
     val coroutineScope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        timerPlaybackManager.getTimerFlow().collectLatest { state ->
-            timerPlaybackState = state
-        }
-    }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
+        // Connection Status
+        when (connectionState) {
+            is TimerWebSocketClient.ConnectionState.Connected -> {
+                Text(
+                    text = "Connected to server",
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.primary
+                )
+            }
+            is TimerWebSocketClient.ConnectionState.Disconnected -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Disconnected from server",
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.error
+                    )
+                    Button(
+                        onClick = { coroutineScope.launch { onReconnectToSocket() } },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
+                    ) {
+                        Text("Reconnect")
+                    }
+                }
+            }
+            is TimerWebSocketClient.ConnectionState.Error -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Connection error",
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.error
+                    )
+                    Button(
+                        onClick = { coroutineScope.launch { onReconnectToSocket() } },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
+                    ) {
+                        Text("Reconnect")
+                    }
+
+                }
+            }
+
+            TimerWebSocketClient.ConnectionState.Reconnecting -> {
+                Text(
+                    text = "Reconnecting...",
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.primary
+                )
+            }
+            else -> {
+                // Handle other states if necessary
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -76,26 +138,11 @@ fun TimersScreen(
                 TimerListCard(
                     timerList = timerList,
                     timerPlaybackState = timerPlaybackState,
-                    onPlay = {
-                        coroutineScope.launch {
-                            timerPlaybackManager.startTimerList(timerList)
-                        }
-                    },
-                    onPause = {
-                        coroutineScope.launch {
-                            timerPlaybackManager.pauseTimer()
-                        }
-                    },
-                    onResume = {
-                        coroutineScope.launch {
-                            timerPlaybackManager.resumeTimer()
-                        }
-                    },
-                    onStop = {
-                        coroutineScope.launch {
-                            timerPlaybackManager.stopTimer()
-                        }
-                    },
+                    notifications = notifications.filter { it.listId == timerList.id },
+                    onPlay = { onStartTimer(timerList) },
+                    onPause = onPauseTimer,
+                    onResume = onResumeTimer,
+                    onStop = onStopTimer,
                     onEdit = { selectedTimerList = timerList },
                     onDelete = { onDeleteTimerList(timerList.id) },
                     onViewDetail = { onNavigateToDetail(timerList) }
@@ -115,11 +162,7 @@ fun TimersScreen(
     }
 
     if (showAddTimerDialog) {
-        TimersDialog(
-            show = true,
-            onDismiss = { showAddTimerDialog = false },
-            appViewModel = koinViewModel()
-        )
+        // TODO: Implement add timer dialog
     }
 }
 
@@ -127,6 +170,7 @@ fun TimersScreen(
 private fun TimerListCard(
     timerList: TimerList,
     timerPlaybackState: TimerPlaybackState,
+    notifications: List<TimerNotification>,
     onPlay: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
@@ -147,18 +191,28 @@ private fun TimerListCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = timerList.name,
-                    style = MaterialTheme.typography.h6
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = timerList.name,
+                        style = MaterialTheme.typography.h6
+                    )
+                    if (notifications.isNotEmpty()) {
+                        val latestNotification = notifications.last()
+                        Text(
+                            text = "${latestNotification.type}: ${latestNotification.status}",
+                            style = MaterialTheme.typography.caption,
+                            color = MaterialTheme.colors.primary
+                        )
+                    }
+                }
                 Row {
-                    when (timerPlaybackState) {
-                        is TimerPlaybackState.Running -> {
+                    when (timerPlaybackState.status) {
+                        TimerPlaybackStatus.Running ->  {
                             IconButton(onClick = onPause) {
                                 Icon(Icons.Default.Pause, contentDescription = "Pause")
                             }
                         }
-                        is TimerPlaybackState.Paused -> {
+                        TimerPlaybackStatus.Paused -> {
                             IconButton(onClick = onResume) {
                                 Icon(Icons.Default.PlayArrow, contentDescription = "Resume")
                             }

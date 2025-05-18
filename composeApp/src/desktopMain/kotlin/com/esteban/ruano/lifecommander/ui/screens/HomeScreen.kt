@@ -34,82 +34,36 @@ import ui.viewmodels.*
 fun HomeScreen(
     habitsViewModel: HabitsViewModel = koinViewModel(),
     tasksViewModel: TasksViewModel = koinViewModel(),
-    calendarViewModel: CalendarViewModel = koinViewModel(),
     nightBlockService: NightBlockService = koinInject(),
-    dataStore: DataStore<Preferences> = koinInject(),
-    appPreferences: AppPreferencesService = koinInject(),
-    appViewModel: AppViewModel = koinViewModel(),
     dailyJournalViewModel: DailyJournalViewModel = koinViewModel(),
     onTaskClick: (String) -> Unit,
-    onLogoutClick: () -> Unit,
     onHabitClick: (String) -> Unit,
-    onAddTask: (String, String, List<Reminder>, String?, String?, Int?) -> Unit,
-    onAddHabit: (String, String, String, Frequency) -> Unit,
-    onError: (String) -> Unit,
-    onUpdateTask: (String, Task) -> Unit,
-    onUpdateHabit: (String, Habit) -> Unit
 ) {
     var showTokenDialog by remember { mutableStateOf(false) }
     var showNewTaskDialog by remember { mutableStateOf(false) }
     var showNewHabitDialog by remember { mutableStateOf(false) }
     var showNightBlockDialog by remember { mutableStateOf(false) }
     var showOverrideDialog by remember { mutableStateOf(false) }
-    var showTimerDialog by remember { mutableStateOf(false) }
-    var timerDialogTitle by remember { mutableStateOf("") }
-    var timerDialogMessage by remember { mutableStateOf("") }
-    val showTimersDialog = appViewModel.appState.collectAsState().value.showTimersDialog
-    var expanded by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
 
-    var taskToEdit by remember { mutableStateOf<Task?>(null) }
-    var habitToEdit by remember { mutableStateOf<Habit?>(null) }
-
-    val habits by habitsViewModel.habits.collectAsState()
     val tasks by tasksViewModel.tasks.collectAsState()
     val isNightBlockActive by nightBlockService.isNightBlockActive.collectAsState()
 
     val selectedFilter by tasksViewModel.selectedFilter.collectAsState()
     val tasksLoading by tasksViewModel.loading.collectAsState()
     val habitsLoading by habitsViewModel.loading.collectAsState()
-    val timer by appViewModel.timer.collectAsState()
-    val timers by appViewModel.timers.collectAsState()
-    val paused by appViewModel.paused.collectAsState()
+
+    val habits by habitsViewModel.habits.collectAsState()
+
+    var taskToEdit by remember { mutableStateOf<Task?>(null) }
+    var habitToEdit by remember { mutableStateOf<Habit?>(null) }
 
     var error by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
+    val coroutineScope = rememberCoroutineScope()
+
     val pomodoroCount = dailyJournalViewModel.state.collectAsState().value.pomodoros.size
 
-    // Handle timer events
-    LaunchedEffect(Unit) {
-        appViewModel.timerEvents.collect { event ->
-            when (event) {
-                is TimerEvent.TimerStarted -> {
-                    timerDialogTitle = event.timer.name
-                    timerDialogMessage = "Timer started!"
-                    showTimerDialog = true
-                }
-                is TimerEvent.TimerFinished -> {
-                    timerDialogTitle = event.timer.name
-                    timerDialogMessage = "Time up!"
-                    showTimerDialog = true
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(habits, tasks){
-        calendarViewModel.refresh()
-    }
-
-    LaunchedEffect(Unit){
-        coroutineScope.launch {
-            appViewModel.timerEndingListenerChannel.consumeAsFlow().collect{
-                dailyJournalViewModel.addSamplePomodoro()
-                appViewModel.triggerTimerEndActions()
-            }
-        }
-    }
 
     // Check for Night Block activation every minute
     LaunchedEffect(Unit) {
@@ -137,15 +91,8 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         habitsViewModel.getHabits()
         tasksViewModel.getTasksByFilter()
-        appViewModel.loadTimers()
         dailyJournalViewModel.loadPomodoros()
     }
-
-    TimersDialog(
-        show = showTimersDialog,
-        onDismiss = { appViewModel.hideTimersDialog() },
-        appViewModel = appViewModel,
-    )
 
     TokenDialog(
         show = showTokenDialog,
@@ -355,21 +302,6 @@ fun HomeScreen(
                     onClick = { showOverrideDialog = false }
                 ) {
                     Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (showTimerDialog) {
-        AlertDialog(
-            onDismissRequest = { showTimerDialog = false },
-            title = { Text(timerDialogTitle) },
-            text = { Text(timerDialogMessage) },
-            confirmButton = {
-                Button(
-                    onClick = { showTimerDialog = false }
-                ) {
-                    Text("OK")
                 }
             }
         )

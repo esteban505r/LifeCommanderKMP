@@ -3,92 +3,128 @@ package com.esteban.ruano.lifecommander.timer
 
 import com.esteban.ruano.lifecommander.models.Timer
 import com.esteban.ruano.lifecommander.models.TimerList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlin.time.Duration.Companion.seconds
 
-class TimerPlaybackManager {
-    private var currentTimerList: TimerList? = null
-    private var currentTimerIndex: Int = 0
-    private var isPaused: Boolean = false
-    private var remainingTime: Int = 0
+
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+
+class TimerPlaybackManager(
+) {
+    private val _uiState = MutableStateFlow(TimerPlaybackState())
+    val uiState: StateFlow<TimerPlaybackState> = _uiState.asStateFlow()
+
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+    private var playbackJob: Job? = null
 
     fun startTimerList(timerList: TimerList) {
-        currentTimerList = timerList
-        currentTimerIndex = 0
-        isPaused = false
-        startCurrentTimer()
+        stopTimer() // Cancel any ongoing playback
+
+        val enabledTimers = timerList.timers.filter { it.enabled }
+        if (enabledTimers.isEmpty()) {
+            _uiState.value = TimerPlaybackState(status = TimerPlaybackStatus.Stopped)
+            return
+        }
+
+        println("Starting timer list: ${timerList.name}")
+        println("Enabled timers: ${enabledTimers.size}")
+        println("First timer: ${enabledTimers.first().name}")
+        println("First timer duration: ${enabledTimers.first().duration}")
+        _uiState.value = TimerPlaybackState(
+            timerList = timerList,
+            currentTimerIndex = 0,
+            currentTimer = enabledTimers.first(),
+            remainingTime = enabledTimers.first().duration,
+            status = TimerPlaybackStatus.Running
+        )
+
+        startTicking()
     }
 
     fun pauseTimer() {
-        isPaused = true
+        if (_uiState.value.status == TimerPlaybackStatus.Running) {
+            _uiState.update { it.copy(status = TimerPlaybackStatus.Paused) }
+        }
     }
 
     fun resumeTimer() {
-        isPaused = false
+        if (_uiState.value.status == TimerPlaybackStatus.Paused) {
+            _uiState.update { it.copy(status = TimerPlaybackStatus.Running) }
+            startTicking()
+        }
     }
 
     fun stopTimer() {
-        currentTimerList = null
-        currentTimerIndex = 0
-        isPaused = false
-        remainingTime = 0
+        playbackJob?.cancel()
+        playbackJob = null
+        _uiState.value = TimerPlaybackState()
     }
 
-    private fun startCurrentTimer() {
-        currentTimerList?.let { list ->
-            val enabledTimers = list.timers.filter { it.enabled }
-            if (enabledTimers.isNotEmpty()) {
-                val timer = enabledTimers[currentTimerIndex]
-                remainingTime = timer.duration
-            }
-        }
-    }
+    private fun startTicking() {
+        println("Starting timer ticking")
+        playbackJob?.cancel()
+        playbackJob = scope.launch {
+            val isActive = coroutineContext.isActive
+            println("Coroutine is active: $isActive")
+            while (isActive) {
+                val state = _uiState.value
+                println("Current state: $state")
+                if (state.status != TimerPlaybackStatus.Running) break
 
-    fun getTimerFlow(): Flow<TimerPlaybackState> = flow {
-        while (currentTimerList != null) {
-            if (!isPaused && remainingTime > 0) {
-                emit(TimerPlaybackState.Running(remainingTime))
-                remainingTime--
-                kotlinx.coroutines.delay(1000) // 1 second delay
-            } else if (!isPaused && remainingTime == 0) {
-                emit(TimerPlaybackState.Completed)
-                moveToNextTimer()
-            } else {
-                emit(TimerPlaybackState.Paused(remainingTime))
-                kotlinx.coroutines.delay(100) // Small delay when paused
-            }
-        }
-        emit(TimerPlaybackState.Stopped)
-    }
+                if (state.remainingTime <= 0) {
+                    println("Timer completed: ${state.currentTimer?.name}")
+                    moveToNextTimer()
+                    break
+                }
 
-    private fun moveToNextTimer() {
-        currentTimerList?.let { list ->
-            val enabledTimers = list.timers.filter { it.enabled }
-            if (enabledTimers.isNotEmpty()) {
-                currentTimerIndex = (currentTimerIndex + 1) % enabledTimers.size
-                if (currentTimerIndex == 0 && !list.loopTimers) {
-                    stopTimer()
-                } else {
-                    startCurrentTimer()
+                println("Ticking: ${state.remainingTime} seconds remaining")
+                delay(1000)
+                _uiState.update {
+                    it.copy(
+                        remainingTime = it.remainingTime - 1
+                    )
                 }
             }
         }
     }
 
-    fun getCurrentTimer(): Timer? {
-        return currentTimerList?.let { list ->
-            list.timers.filter { it.enabled }.getOrNull(currentTimerIndex)
+    private fun moveToNextTimer() {
+        val state = _uiState.value
+        val list = state.timerList ?: return
+        val enabledTimers = list.timers.filter { it.enabled }
+        val nextIndex = state.currentTimerIndex + 1
+
+        val shouldStop = nextIndex >= enabledTimers.size && !list.loopTimers
+
+        if (shouldStop || enabledTimers.isEmpty()) {
+            stopTimer()
+        } else {
+            val newIndex = nextIndex % enabledTimers.size
+            val nextTimer = enabledTimers[newIndex]
+
+            _uiState.value = state.copy(
+                currentTimerIndex = newIndex,
+                currentTimer = nextTimer,
+                remainingTime = nextTimer.duration,
+                status = TimerPlaybackStatus.Running
+            )
+
+            startTicking()
         }
     }
-
-    fun getCurrentTimerList(): TimerList? = currentTimerList
 }
 
-sealed class TimerPlaybackState {
-    data class Running(val remainingSeconds: Int) : TimerPlaybackState()
-    data class Paused(val remainingSeconds: Int) : TimerPlaybackState()
-    object Completed : TimerPlaybackState()
-    object Stopped : TimerPlaybackState()
-} 
+data class TimerPlaybackState(
+    val timerList: TimerList? = null,
+    val currentTimerIndex: Int = 0,
+    val currentTimer: Timer? = null,
+    val remainingTime: Int = 0,
+    val status: TimerPlaybackStatus = TimerPlaybackStatus.Stopped
+)
+
+enum class TimerPlaybackStatus {
+    Running,
+    Paused,
+    Completed,
+    Stopped
+}

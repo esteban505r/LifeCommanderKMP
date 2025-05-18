@@ -38,7 +38,7 @@ class AccountService : BaseService() {
 
             accounts.map {
                 val balance = Transaction.find {
-                    (Transactions.account eq it.id) and (Transactions.user eq userId).
+                    (Transactions.account eq UUID.fromString(it.id)) and (Transactions.user eq userId).
                     and (Transactions.status eq Status.ACTIVE)
                 }.sumOf { r -> r.amount.toDouble() }
 

@@ -4,25 +4,47 @@ import io.ktor.server.application.*
 import io.ktor.server.config.yaml.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.websocket.*
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.plugins.*
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import com.esteban.ruano.service.TimerCheckerService
+import com.esteban.ruano.service.TimerService
+import kotlinx.datetime.DateTimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
         .start(wait = true)
 }
 
+@Suppress("unused")
 fun Application.module() {
+    configureWebSockets()
     configureSecurity()
     configureSerialization()
     configureRouting()
     connectToPostgres()
+
+    // Initialize services
+    val timerService = TimerService()
+    val timerCheckerService = TimerCheckerService(timerService)
+
+    // Start background tasks
+    timerCheckerService.start()
 }
 
+fun Application.configureWebSockets() {
+    install(WebSockets) {
+        pingPeriod = 15.seconds
+        timeout = 15.seconds
+        maxFrameSize = Long.MAX_VALUE
+        masking = false
+    }
+}
 
 fun Application.connectToPostgres() {
     val configs = YamlConfig("postgres.yaml")
@@ -61,7 +83,7 @@ fun Application.connectToPostgres() {
             ExercisesWithWorkoutTracks,Users, Habits,
             Tasks, HistoryTracks, HabitTracks, Reminders, Recipes, Posts,
             DailyJournals, Pomodoros, Questions, QuestionAnswers,
-            Transactions, Accounts, Budgets, SavingsGoals,  TimerLists, Timers, UserSettings
+            Transactions, Accounts, Budgets, SavingsGoals,  TimerLists, Timers, UserSettings, DeviceTokens
         )
     }
 

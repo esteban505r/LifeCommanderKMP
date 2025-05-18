@@ -178,21 +178,21 @@ fun ApplicationScope.AppWindow() {
                         if (it.type == KeyEventType.KeyDown) {
                             when {
                                 it.isCtrlPressed && it.key == Key.T -> {
-                                    appViewModel.showTimersDialog()
+                                    //appViewModel.showTimersDialog()
                                     true
                                 }
 
                                 it.isCtrlPressed && it.key == Key.P -> {
-                                    if (appState.timersPaused) {
+                                    /*if (appState.timersPaused) {
                                         appViewModel.playTimer()
                                     } else {
                                         appViewModel.pauseTimer()
-                                    }
+                                    }*/
                                     true
                                 }
 
                                 it.isCtrlPressed && it.key == Key.S -> {
-                                    appViewModel.stopTimer()
+                                    //appViewModel.stopTimer()
                                     true
                                 }
 

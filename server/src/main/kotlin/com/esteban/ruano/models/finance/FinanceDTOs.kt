@@ -3,7 +3,6 @@ package com.esteban.ruano.models.finance
 import com.esteban.ruano.database.models.AccountType
 import com.lifecommander.finance.model.TransactionType
 import kotlinx.serialization.Serializable
-import java.util.UUID
 
 @Serializable
 data class CreateAccountDTO(
@@ -23,7 +22,7 @@ data class UpdateAccountDTO(
 
 @Serializable
 data class AccountResponseDTO(
-    val id: UUID,
+    val id: String,
     val name: String,
     val type: AccountType,
     val balance: Double,
@@ -57,13 +56,13 @@ data class TransactionsResponseDTO(
 
 @Serializable
 data class TransactionResponseDTO(
-    val id: UUID,
+    val id: String,
     val amount: Double,
     val description: String,
     val date: String,
     val type: TransactionType,
     val category: String,
-    val accountId: UUID,
+    val accountId: String,
     val isRecurring: Boolean = false,
     val recurrence: String? = null,
     val status: String = "ACTIVE"
@@ -89,7 +88,7 @@ data class UpdateBudgetDTO(
 
 @Serializable
 data class BudgetResponseDTO(
-    val id: UUID,
+    val id: String,
     val name: String,
     val amount: Double,
     val category: String,
@@ -114,7 +113,7 @@ data class UpdateSavingsGoalDTO(
 
 @Serializable
 data class SavingsGoalResponseDTO(
-    val id: UUID,
+    val id: String,
     val name: String,
     val targetAmount: Double,
     val currentAmount: Double,

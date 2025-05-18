@@ -14,7 +14,7 @@ import com.esteban.ruano.lifecommander.models.finance.Category as CategoryDomain
 
 fun Account.toResponseDTO(): AccountResponseDTO {
     return AccountResponseDTO(
-        id = this.id.value,
+        id = this.id.value.toString().toString(),
         name = this.name,
         type = this.type,
         initialBalance = this.initialBalance.toDouble(),
@@ -25,32 +25,32 @@ fun Account.toResponseDTO(): AccountResponseDTO {
 
 fun Transaction.toDomainModel(): TransactionDomainModel {
     return TransactionDomainModel(
-        id = this.id.value.toString(),
+        id = this.id.value.toString().toString(),
         amount = this.amount.toDouble(),
         description = this.description,
         date = this.date.parseDateTime(),
         type = TransactionTypeDomainModel.valueOf(this.type.toString()),
         category = CategoryDomainModel.valueOf(this.category),
-        accountId = this.account.id.value.toString(),
+        accountId = this.account.id.value.toString().toString(),
     )
 }
 
 fun Transaction.toResponseDTO(): TransactionResponseDTO {
     return TransactionResponseDTO(
-        id = this.id.value,
+        id = this.id.value.toString(),
         amount = this.amount.toDouble(),
         description = this.description,
         date = this.date.parseDateTime(),
         type = this.type,
         category = this.category,
-        accountId = this.account.id.value,
+        accountId = this.account.id.value.toString(),
         status = this.status.toString(),
     )
 }
 
 fun Budget.toResponseDTO(): BudgetResponseDTO {
     return BudgetResponseDTO(
-        id = this.id.value,
+        id = this.id.value.toString(),
         name = this.name,
         amount = this.amount.toDouble(),
         category = this.category,
@@ -62,7 +62,7 @@ fun Budget.toResponseDTO(): BudgetResponseDTO {
 
 fun SavingsGoal.toResponseDTO(): SavingsGoalResponseDTO {
     return SavingsGoalResponseDTO(
-        id = this.id.value,
+        id = this.id.value.toString(),
         name = this.name,
         targetAmount = this.targetAmount.toDouble(),
         currentAmount = this.currentAmount.toDouble(),

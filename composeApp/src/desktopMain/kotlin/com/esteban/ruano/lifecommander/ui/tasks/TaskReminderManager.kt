@@ -3,19 +3,18 @@ package ui.tasks
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import services.auth.TokenStorage
+import services.auth.TokenStorageImpl
 import services.tasks.TaskService
 import ui.models.TaskFilters
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import kotlinx.datetime.toJavaLocalDateTime
-import utils.DateUtils.toLocalDateTime
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class TaskReminderManager(
     private val taskService: TaskService,
     private val coroutineScope: CoroutineScope,
-    private val tokenStorage: TokenStorage,
+    private val tokenStorageImpl: TokenStorageImpl,
     private val onReminder: (String, String) -> Unit
 ) {
     private var isRunning = false
@@ -46,7 +45,7 @@ class TaskReminderManager(
 
     private suspend fun checkTasks() {
         val tasks = taskService.getByDate(
-            token = tokenStorage.getToken()?:"",
+            token = tokenStorageImpl.getToken()?:"",
             page = 0,
             limit = 30,
             date = TaskFilters.TODAY.getDateRangeByFilter().first,

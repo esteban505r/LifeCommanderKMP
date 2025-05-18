@@ -109,13 +109,13 @@ class TransactionService : BaseService() {
 
             val results = paginatedResults.map {
                 TransactionResponseDTO(
-                    id = it[Transactions.id].value,
+                    id = it[Transactions.id].value.toString(),
                     amount = it[Transactions.amount].toDouble(),
                     description = it[Transactions.description],
                     date = it[Transactions.date].formatDefault(),
                     type = it[Transactions.type],
                     category = it[Transactions.category],
-                    accountId = it[Transactions.account].value,
+                    accountId = it[Transactions.account].value.toString(),
                     status = it[Transactions.status].toString()
                 )
             }

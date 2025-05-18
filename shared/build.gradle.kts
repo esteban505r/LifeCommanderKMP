@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.moko.resources)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {

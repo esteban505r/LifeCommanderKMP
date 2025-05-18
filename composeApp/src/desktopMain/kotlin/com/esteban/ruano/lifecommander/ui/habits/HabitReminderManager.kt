@@ -4,13 +4,12 @@ import com.lifecommander.models.Habit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import services.auth.TokenStorage
+import services.auth.TokenStorageImpl
 import services.habits.HabitService
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalTime
 import kotlinx.datetime.toJavaLocalTime
 import utils.DateUtils.parseDate
-import utils.DateUtils.toLocalDateTime
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
@@ -19,7 +18,7 @@ class HabitReminderManager(
     private val habitsService: HabitService,
     private val coroutineScope: CoroutineScope,
     private val onReminder: (String, String) -> Unit,
-    private val tokenStorage: TokenStorage,
+    private val tokenStorageImpl: TokenStorageImpl,
 ) {
     private var isRunning = false
     private val checkIntervalMillis = (1000 * 60 * 30).toLong() // 30 minutes
@@ -49,7 +48,7 @@ class HabitReminderManager(
 
     private suspend fun checkHabits() {
         val habits = habitsService.getByDate(
-            token = tokenStorage.getToken() ?: "",
+            token = tokenStorageImpl.getToken() ?: "",
             page = 0,
             limit = 30,
             date = LocalDate.now().parseDate(),

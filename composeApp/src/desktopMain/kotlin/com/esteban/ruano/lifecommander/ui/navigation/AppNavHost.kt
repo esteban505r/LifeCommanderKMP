@@ -4,16 +4,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import com.esteban.ruano.lifecommander.ui.components.AppLayout
 import com.esteban.ruano.lifecommander.ui.navigation.CalendarScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.SettingsScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimerListDetailDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimersScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.routes.TimerListDetailRoute
 import com.esteban.ruano.lifecommander.ui.screens.FinancialScreenDestination
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -21,8 +21,6 @@ import services.auth.AuthService
 import ui.ui.viewmodels.AuthViewModel
 import ui.screens.AuthScreen
 import com.esteban.ruano.lifecommander.ui.screens.HomeScreen
-import com.esteban.ruano.lifecommander.ui.screens.TimerListDetailScreen
-import com.esteban.ruano.lifecommander.ui.screens.TimersScreen
 import com.esteban.ruano.lifecommander.ui.screens.TransactionImportScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import ui.state.AuthState
@@ -40,7 +38,6 @@ sealed class Screen(val route: String) {
     object Calendar : Screen("calendar")
 
     object Timers : Screen("timers")
-    object TimersDetail : Screen("timers_detail")
 
     object Settings : Screen("settings")
 
@@ -61,6 +58,10 @@ fun AppNavHost(
     startDestination: String = Screen.Auth.route,
 ) {
     val authState by authViewModel.authState.collectAsState()
+
+    LaunchedEffect(Unit){
+        timersViewModel.connectWebSocket()
+    }
     
     LaunchedEffect(authState) {
         when (authState) {
@@ -96,6 +97,7 @@ fun AppNavHost(
             },
             taskViewModel = taskViewModel,
             habitViewModel = habitViewModel,
+            timersViewModel = timersViewModel,
         ) {
             NavHost(
                 navController = navController,
@@ -128,20 +130,8 @@ fun AppNavHost(
                     HomeScreen(
                         onTaskClick = {},
                         onHabitClick = {},
-                        appViewModel = appViewModel,
                         tasksViewModel = taskViewModel,
                         habitsViewModel = habitViewModel,
-                        onLogoutClick = {
-                            authViewModel.logout()
-                            navController.navigate(Screen.Auth.route) {
-                                popUpTo(Screen.Dashboard.route) { inclusive = true }
-                            }
-                        },
-                        onError = {_->},
-                        onAddTask = {_,_,_,_,_,_->},
-                        onAddHabit = {_,_,_,_->},
-                        onUpdateTask = { _, _ -> },
-                        onUpdateHabit = { _, _ -> },
                     )
                 }
 
@@ -167,22 +157,17 @@ fun AppNavHost(
                     TimersScreenDestination(
                         modifier = modifier,
                         timersViewModel = timersViewModel,
-                        timerPlaybackManager = koinInject(),
-                        onNavigateToDetails = { timerId ->
-                            navController.navigate("${Screen.TimersDetail.route}/$timerId")
+                        onNavigateToDetail = { timerListId ->
+                            navController.navigate(TimerListDetailRoute(timerListId))
                         }
                     )
                 }
 
-                composable("${Screen.TimersDetail.route}/{itemId}",
-                    listOf(navArgument("itemId") { type = NavType.StringType } )
-                ) { backStackEntry: NavBackStackEntry ->
-                    val itemId = backStackEntry.arguments
+                composable<TimerListDetailRoute> { backStackEntry: NavBackStackEntry ->
+                    val arguments = backStackEntry.toRoute<TimerListDetailRoute>()
                     TimerListDetailDestination (
                         modifier = modifier,
-                        timersViewModel = timersViewModel,
-                        timerPlaybackManager = koinInject(),
-                        timerListId = "",
+                        timerListId = arguments.timerId,
                         onBack = {
                             navController.navigateUp()
                         }

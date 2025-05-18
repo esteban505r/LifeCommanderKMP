@@ -1,184 +1,190 @@
 package com.esteban.ruano.routing
 
+
+import com.esteban.ruano.lifecommander.models.timers.UpdateUserSettingsRequest
+import com.esteban.ruano.lifecommander.timer.CreateTimerListRequest
+import com.esteban.ruano.lifecommander.timer.CreateTimerRequest
+import com.esteban.ruano.lifecommander.timer.TimerWebSocketClientMessage
+import com.esteban.ruano.lifecommander.timer.TimerWebSocketServerMessage
+import com.esteban.ruano.lifecommander.timer.UpdateTimerRequest
+import com.esteban.ruano.models.users.LoggedUserDTO
+import com.esteban.ruano.service.TimerNotifier
+import com.esteban.ruano.service.TimerService
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import com.esteban.ruano.models.users.LoggedUserDTO
-import com.esteban.ruano.service.TimerService
-import kotlinx.serialization.Serializable
-import java.util.UUID
+import io.ktor.server.websocket.*
+import io.ktor.websocket.*
+import kotlinx.serialization.json.Json
+import java.util.*
 
 fun Route.timerRouting(timerService: TimerService) {
-    route("/timer") {
-        route("/lists") {
+    route("/timers/lists") {
+        get {
+            val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+            val timerLists = timerService.getTimerLists(userId)
+            call.respond(timerLists)
+        }
+
+        post {
+            val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+            val request = call.receive<CreateTimerListRequest>()
+            val timerList = timerService.createTimerList(
+                userId = userId,
+                name = request.name,
+                loopTimers = request.loopTimers,
+                pomodoroGrouped = request.pomodoroGrouped
+            )
+            call.respond(timerList?: HttpStatusCode.InternalServerError)
+        }
+
+        route("/{id}") {
             get {
-                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                call.respond(timerService.getTimerLists(userId))
+                val id = call.parameters["id"]?.let { UUID.fromString(it) }
+                    ?: return@get call.respond(HttpStatusCode.BadRequest)
+                val timerList = timerService.getTimerList(id)
+                    ?: return@get call.respond(HttpStatusCode.NotFound)
+                call.respond(timerList)
             }
 
-            post {
-                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+            put {
+                val id = call.parameters["id"]?.let { UUID.fromString(it) }
+                    ?: return@put call.respond(HttpStatusCode.BadRequest)
                 val request = call.receive<CreateTimerListRequest>()
-                val timerList = timerService.createTimerList(
-                    userId = userId,
+                val timerList = timerService.updateTimerList(
+                    listId = id,
                     name = request.name,
                     loopTimers = request.loopTimers,
                     pomodoroGrouped = request.pomodoroGrouped
-                )
-                if (timerList != null) {
-                    call.respond(HttpStatusCode.Created, timerList)
-                } else {
-                    call.respond(HttpStatusCode.InternalServerError)
-                }
+                ) ?: return@put call.respond(HttpStatusCode.NotFound)
+                call.respond(timerList)
             }
 
-            route("/{id}") {
-                get {
-                    val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                    val id = UUID.fromString(call.parameters["id"]!!)
-                    val timerList = timerService.getTimerList(id)
-                    if (timerList != null) {
-                        call.respond(timerList)
-                    } else {
-                        call.respond(HttpStatusCode.NotFound)
-                    }
-                }
+            delete {
+                val id = call.parameters["id"]?.let { UUID.fromString(it) }
+                    ?: return@delete call.respond(HttpStatusCode.BadRequest)
+                timerService.deleteTimerList(id)
+                call.respond(HttpStatusCode.NoContent)
+            }
+        }
+    }
 
-                patch {
-                    val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                    val id = UUID.fromString(call.parameters["id"]!!)
-                    val request = call.receive<CreateTimerListRequest>()
-                    val timerList = timerService.updateTimerList(
-                        listId = id,
-                        name = request.name,
-                        loopTimers = request.loopTimers,
-                        pomodoroGrouped = request.pomodoroGrouped
-                    )
-                    if (timerList != null) {
-                        call.respond(HttpStatusCode.OK, timerList)
-                    } else {
-                        call.respond(HttpStatusCode.NotFound)
+    route("/timers") {
+        webSocket("/notifications") {
+            val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+            TimerNotifier.registerSession(userId, this)
+            try {
+                for (frame in incoming) {
+                    when (frame) {
+                        is Frame.Text -> {
+                            val message = frame.readText()
+                            val messageObject = Json.decodeFromString<TimerWebSocketClientMessage>(
+                                message
+                            )
+                            println("Received message: $messageObject")
+                            when (messageObject) {
+                                is TimerWebSocketClientMessage.StartTimerList -> {
+                                    val timerListId = messageObject.listId
+                                    val timerList = timerService.getTimerList(UUID.fromString(timerListId))
+                                    if (timerList != null) {
+                                        val timerListResponse = timerService.startTimer(
+                                            listId =  UUID.fromString(timerListId),
+                                        )
+                                        println("Timer list started: $timerListId")
+                                        send(Json.encodeToString(
+                                            TimerWebSocketServerMessage.serializer(),
+                                            TimerWebSocketServerMessage.TimerListStarted(
+                                                timerStartedId = timerListResponse.firstOrNull()?.id.toString(),
+                                                listId = timerListId
+                                            )
+                                        ))
+                                    } else {
+                                        println("Timer list not found: $timerListId")
+                                    }
+                                }
+                            }
+                        }
+                        is Frame.Binary -> {
+                            println("Received binary frame")
+                        }
+                        is Frame.Close -> {
+                            println("WebSocket closed: ${frame.readReason()}")
+                            close(CloseReason(CloseReason.Codes.NORMAL, "Client closed the connection"))
+                        }
+                        else -> {
+                            println("Unsupported frame type")
+                        }
                     }
                 }
-
-                delete {
-                    val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                    val id = UUID.fromString(call.parameters["id"]!!)
-                    val deleted = timerService.deleteTimerList(id)
-                    if (deleted) {
-                        call.respond(HttpStatusCode.OK)
-                    } else {
-                        call.respond(HttpStatusCode.NotFound)
-                    }
-                }
+            }
+            catch (e: Exception) {
+                println("WebSocket error: ${e.message}")
+                close(CloseReason(CloseReason.Codes.INTERNAL_ERROR, "WebSocket error"))
+            }
+            finally {
+                TimerNotifier.unregisterSession(userId, this)
             }
         }
 
-        route("/timers") {
-            post {
-                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                val request = call.receive<CreateTimerRequest>()
-                val timer = timerService.createTimer(
-                    listId = UUID.fromString(request.listId),
+        post {
+            val request = call.receive<CreateTimerRequest>()
+            val timer = timerService.createTimer(
+                listId = UUID.fromString(request.listId),
+                name = request.name,
+                duration = request.duration,
+                enabled = request.enabled,
+                countsAsPomodoro = request.countsAsPomodoro,
+                order = request.order
+            )
+            call.respond(timer?: HttpStatusCode.InternalServerError)
+        }
+
+        route("/{id}") {
+            patch {
+                val id = call.parameters["id"]?.let { UUID.fromString(it) }
+                    ?: return@patch call.respond(HttpStatusCode.BadRequest)
+                val request = call.receive<UpdateTimerRequest>()
+                val timer = timerService.updateTimer(
+                    timerId = id,
                     name = request.name,
                     duration = request.duration,
                     enabled = request.enabled,
                     countsAsPomodoro = request.countsAsPomodoro,
                     order = request.order
-                )
-                if (timer != null) {
-                    call.respond(HttpStatusCode.Created, timer)
-                } else {
-                    call.respond(HttpStatusCode.InternalServerError)
-                }
+                ) ?: return@patch call.respond(HttpStatusCode.NotFound)
+                call.respond(timer)
             }
 
-            route("/{id}") {
-                patch {
-                    val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                    val id = UUID.fromString(call.parameters["id"]!!)
-                    val request = call.receive<CreateTimerRequest>()
-                    val timer = timerService.updateTimer(
-                        timerId = id,
-                        name = request.name,
-                        duration = request.duration,
-                        enabled = request.enabled,
-                        countsAsPomodoro = request.countsAsPomodoro,
-                        order = request.order
-                    )
-                    if (timer != null) {
-                        call.respond(HttpStatusCode.OK, timer)
-                    } else {
-                        call.respond(HttpStatusCode.NotFound)
-                    }
-                }
-
-                delete {
-                    val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                    val id = UUID.fromString(call.parameters["id"]!!)
-                    val deleted = timerService.deleteTimer(id)
-                    if (deleted) {
-                        call.respond(HttpStatusCode.OK)
-                    } else {
-                        call.respond(HttpStatusCode.NotFound)
-                    }
-                }
-            }
-        }
-
-        route("/settings") {
-            get {
-                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                val settings = timerService.getUserSettings(userId)
-                if (settings != null) {
-                    call.respond(settings)
-                } else {
-                    call.respond(HttpStatusCode.NotFound)
-                }
-            }
-
-            patch {
-                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                val request = call.receive<UpdateUserSettingsRequest>()
-                val settings = timerService.updateUserSettings(
-                    userId = userId,
-                    defaultTimerListId = request.defaultTimerListId?.let { UUID.fromString(it) },
-                    dailyPomodoroGoal = request.dailyPomodoroGoal,
-                    notificationsEnabled = request.notificationsEnabled
-                )
-                if (settings != null) {
-                    call.respond(HttpStatusCode.OK, settings)
-                } else {
-                    call.respond(HttpStatusCode.NotFound)
-                }
+            delete {
+                val id = call.parameters["id"]?.let { UUID.fromString(it) }
+                    ?: return@delete call.respond(HttpStatusCode.BadRequest)
+                timerService.deleteTimer(id)
+                call.respond(HttpStatusCode.NoContent)
             }
         }
     }
+
+    route("/settings") {
+        get {
+            val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+            val settings = timerService.getUserSettings(userId)
+            call.respond(settings?: HttpStatusCode.InternalServerError)
+        }
+
+        put {
+            val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+            val request = call.receive<UpdateUserSettingsRequest>()
+            val settings = timerService.updateUserSettings(
+                userId = userId,
+                defaultTimerListId = request.defaultTimerListId?.let { UUID.fromString(it) },
+                dailyPomodoroGoal = request.dailyPomodoroGoal,
+                notificationsEnabled = request.notificationsEnabled
+            )
+            call.respond(settings?: HttpStatusCode.InternalServerError)
+        }
+    }
+
 }
 
-@Serializable
-data class CreateTimerListRequest(
-    val name: String,
-    val loopTimers: Boolean,
-    val pomodoroGrouped: Boolean
-)
-
-@Serializable
-data class CreateTimerRequest(
-    val listId: String,
-    val name: String,
-    val duration: Int,
-    val enabled: Boolean,
-    val countsAsPomodoro: Boolean,
-    val order: Int
-)
-
-@Serializable
-data class UpdateUserSettingsRequest(
-    val defaultTimerListId: String?,
-    val dailyPomodoroGoal: Int,
-    val notificationsEnabled: Boolean
-) 

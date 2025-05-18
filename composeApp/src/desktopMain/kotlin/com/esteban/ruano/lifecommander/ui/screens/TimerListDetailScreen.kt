@@ -12,32 +12,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.models.Timer
 import com.esteban.ruano.lifecommander.models.TimerList
-import com.esteban.ruano.lifecommander.timer.TimerPlaybackManager
+import com.esteban.ruano.lifecommander.timer.TimerNotification
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackState
-import kotlinx.coroutines.flow.collectLatest
+import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
 import kotlinx.coroutines.launch
-import org.koin.compose.viewmodel.koinViewModel
 import ui.composables.TimersDialog
 
 @Composable
 fun TimerListDetailScreen(
     timerList: TimerList,
-    timerPlaybackManager: TimerPlaybackManager,
+    timerPlaybackState: TimerPlaybackState,
+    listNotifications: List<TimerNotification>,
     onBack: () -> Unit,
     onAddTimer: (String, String, Int, Boolean, Boolean, Int) -> Unit,
     onUpdateTimer: (String, String, Int, Boolean, Boolean, Int) -> Unit,
     onDeleteTimer: (String) -> Unit,
-    onReorderTimers: (List<Timer>) -> Unit
+    onReorderTimers: (List<Timer>) -> Unit,
+    onGetTimerNotifications: (String) -> List<TimerNotification>,
+    onStartTimer: (TimerList) -> Unit,
+    onPauseTimer: () -> Unit,
+    onResumeTimer: () -> Unit,
+    onStopTimer: () -> Unit
 ) {
     var showAddTimerDialog by remember { mutableStateOf(false) }
-    var timerPlaybackState by remember { mutableStateOf<TimerPlaybackState>(TimerPlaybackState.Stopped) }
     val coroutineScope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        timerPlaybackManager.getTimerFlow().collectLatest { state ->
-            timerPlaybackState = state
-        }
-    }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp)
@@ -51,45 +49,39 @@ fun TimerListDetailScreen(
             IconButton(onClick = onBack) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
             }
-            Text(
-                text = timerList.name,
-                style = MaterialTheme.typography.h5
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = timerList.name,
+                    style = MaterialTheme.typography.h5
+                )
+                if (listNotifications.isNotEmpty()) {
+                    val latestNotification = listNotifications.last()
+                    Text(
+                        text = "${latestNotification.type}: ${latestNotification.status}",
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.primary
+                    )
+                }
+            }
             Row {
-                when (timerPlaybackState) {
-                    is TimerPlaybackState.Running -> {
-                        IconButton(onClick = {
-                            coroutineScope.launch {
-                                timerPlaybackManager.pauseTimer()
-                            }
-                        }) {
+                when (timerPlaybackState.status) {
+                    TimerPlaybackStatus.Running -> {
+                        IconButton(onClick = onPauseTimer) {
                             Icon(Icons.Default.Pause, contentDescription = "Pause")
                         }
                     }
-                    is TimerPlaybackState.Paused -> {
-                        IconButton(onClick = {
-                            coroutineScope.launch {
-                                timerPlaybackManager.resumeTimer()
-                            }
-                        }) {
+                    TimerPlaybackStatus.Paused -> {
+                        IconButton(onClick = onResumeTimer) {
                             Icon(Icons.Default.PlayArrow, contentDescription = "Resume")
                         }
                     }
                     else -> {
-                        IconButton(onClick = {
-                            coroutineScope.launch {
-                                timerPlaybackManager.startTimerList(timerList)
-                            }
-                        }) {
+                        IconButton(onClick = { onStartTimer(timerList) }) {
                             Icon(Icons.Default.PlayArrow, contentDescription = "Play")
                         }
                     }
                 }
-                IconButton(onClick = {
-                    coroutineScope.launch {
-                        timerPlaybackManager.stopTimer()
-                    }
-                }) {
+                IconButton(onClick = onStopTimer) {
                     Icon(Icons.Default.Stop, contentDescription = "Stop")
                 }
             }
@@ -163,6 +155,7 @@ fun TimerListDetailScreen(
             items(timerList.timers.sortedBy { it.order }) { timer ->
                 TimerItem(
                     timer = timer,
+                    notifications = onGetTimerNotifications(timer.id),
                     onUpdate = { updatedTimer ->
                         onUpdateTimer(
                             updatedTimer.id,
@@ -183,7 +176,30 @@ fun TimerListDetailScreen(
         TimersDialog(
             show = true,
             onDismiss = { showAddTimerDialog = false },
-            appViewModel = koinViewModel()
+            timersList = timerList.timers,
+            onCreate = { timerId, name, duration, enabled, countsAsPomodoro, order ->
+                onAddTimer(
+                    timerList.id,
+                    name,
+                    duration,
+                    enabled,
+                    countsAsPomodoro,
+                    order
+                )
+            },
+            onUpdate = { timerId, name, duration, enabled, countsAsPomodoro, order ->
+                onUpdateTimer(
+                    timerId,
+                    name,
+                    duration,
+                    enabled,
+                    countsAsPomodoro,
+                    order
+                )
+            },
+            onDelete = { timerId ->
+                onDeleteTimer(timerId)
+            },
         )
     }
 }
@@ -191,6 +207,7 @@ fun TimerListDetailScreen(
 @Composable
 private fun TimerItem(
     timer: Timer,
+    notifications: List<TimerNotification>,
     onUpdate: (Timer) -> Unit,
     onDelete: () -> Unit
 ) {
@@ -215,6 +232,14 @@ private fun TimerItem(
                         text = "${timer.duration} seconds",
                         style = MaterialTheme.typography.body2
                     )
+                    if (notifications.isNotEmpty()) {
+                        val latestNotification = notifications.last()
+                        Text(
+                            text = "${latestNotification.type}: ${latestNotification.status}",
+                            style = MaterialTheme.typography.caption,
+                            color = MaterialTheme.colors.primary
+                        )
+                    }
                 }
                 Row {
                     Switch(

@@ -13,6 +13,7 @@ kotlin = "2.2.0-Beta2"
 kotlinx-datetime = "0.6.0"
 kotlin-test = "2.1.20"
 kotlinx-coroutines-test = "1.10.1"
+kotlin-serialization = "2.2.0-RC"
 
 #Calendar
 calendar = "2.6.0-beta02"
@@ -91,7 +92,7 @@ lifecycle-viewmodel-compose = "2.8.2"
 coil3 = "3.0.4"
 coroutines = "1.9.0"
 datastore = "1.1.1"
-koin = "4.1.0-Beta1"
+koin = "4.0.4"
 composenativetray = "0.5.5"
 compose-native-notification = "0.2.0"
 calendar-multiplatform = "2.6.2"
@@ -210,7 +211,6 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-json = { module = "io.ktor:ktor-client-json", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-ktor-serialization-gson-jvm = { module = "io.ktor:ktor-serialization-gson-jvm", version.ref = "ktor" }
 
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation-compose" }
 lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle-viewmodel-compose" }
@@ -239,7 +239,8 @@ ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "kto
 ktor-server-netty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host-jvm", version.ref = "ktor" }
 ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor" }
-
+ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
+ktor-serialization-gson-jvm = { module = "io.ktor:ktor-serialization-gson-jvm", version.ref = "ktor" }
 
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin-server" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin-server" }
@@ -281,3 +282,4 @@ ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 moko-resources = { id = "dev.icerock.mobile.multiplatform-resources"}
+kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-serialization" }

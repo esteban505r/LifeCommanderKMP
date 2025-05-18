@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.*
@@ -13,29 +14,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.esteban.ruano.lifecommander.models.Timer
 import kotlinx.coroutines.launch
 import models.TimeTypes
-import models.TimerModel
-import ui.viewmodels.AppViewModel
 import utils.DateUtils.getTimeSeparated
 import utils.swap
 
 @Composable
 fun TimersDialog(
     show: Boolean,
-    appViewModel: AppViewModel,
+    timersList : List<Timer>,
+    onCreate: (timerId:String, name: String, duration: Int, enabled: Boolean, countsAsPomodoro: Boolean, order: Int) -> Unit,
+    onUpdate: (
+        timerId: String,
+        name: String,
+        duration: Int,
+        enabled: Boolean,
+        countsAsPomodoro: Boolean,
+        order: Int
+    ) -> Unit,
+    onDelete: (timerId: String) -> Unit,
     onDismiss: () -> Unit
 ) {
     if (show) {
         val timerSelected = remember { mutableStateOf<String?>(null) }
-        val isTimersLoopEnabled by appViewModel.isTimersLoopEnabled.collectAsState()
         val state = rememberLazyListState()
-        var timers by remember {
-            mutableStateOf(
-                appViewModel.timers.value
-            )
-        }
         val coroutineScope = rememberCoroutineScope()
+        var timers by remember(timersList) { mutableStateOf(timersList) }
 
         Dialog(
             onDismissRequest = onDismiss
@@ -46,6 +51,16 @@ fun TimersDialog(
                 Column(
                     modifier = Modifier.padding(16.dp),
                 ) {
+                    Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(
+                            text = "Timers",
+                            style = MaterialTheme.typography.h5,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Close")
+                        }
+                    }
                     Row {
                         if (timers.isNotEmpty()) {
                             Box(
@@ -90,8 +105,8 @@ fun TimersDialog(
                             }
                         }
                         if (timerSelected.value != null) {
-                            val timeSeparated =
-                                timers.first { it.id == timerSelected.value!! }.startValue.getTimeSeparated()
+                            val selectedTimer = timers.first { it.id == timerSelected.value!! }
+                            val timeSeparated = selectedTimer.duration.toLong().getTimeSeparated()
                             val hours = timeSeparated[TimeTypes.HOUR] ?: 0L
                             val minutes = timeSeparated[TimeTypes.MINUTE] ?: 0L
                             val seconds = timeSeparated[TimeTypes.SECOND] ?: 0L
@@ -99,7 +114,7 @@ fun TimersDialog(
                             Column(modifier = Modifier.align(Alignment.CenterVertically).weight(1f)) {
                                 OutlinedTextField(
                                     modifier = Modifier.fillMaxWidth(),
-                                    value = timers.first { it.id == timerSelected.value!! }.name,
+                                    value = selectedTimer.name,
                                     onValueChange = { newValue ->
                                         timers = timers.map {
                                             if (it.id == timerSelected.value!!) {
@@ -120,10 +135,7 @@ fun TimersDialog(
                                             val value = temp * 3600 + minutes * 60 + seconds
                                             timers = timers.map { timer ->
                                                 if (timer.id == timerSelected.value!!) {
-                                                    timer.copy(
-                                                        startValue = value,
-                                                        timeRemaining = value
-                                                    )
+                                                    timer.copy(duration = value.toInt())
                                                 } else {
                                                     timer
                                                 }
@@ -140,10 +152,7 @@ fun TimersDialog(
                                             val value = hours * 3600 + temp * 60 + seconds
                                             timers = timers.map { timer ->
                                                 if (timer.id == timerSelected.value!!) {
-                                                    timer.copy(
-                                                        startValue = value,
-                                                        timeRemaining = value
-                                                    )
+                                                    timer.copy(duration = value.toInt())
                                                 } else {
                                                     timer
                                                 }
@@ -160,10 +169,7 @@ fun TimersDialog(
                                             val value = hours * 3600 + minutes * 60 + temp
                                             timers = timers.map { timer ->
                                                 if (timer.id == timerSelected.value!!) {
-                                                    timer.copy(
-                                                        startValue = value,
-                                                        timeRemaining = value
-                                                    )
+                                                    timer.copy(duration = value.toInt())
                                                 } else {
                                                     timer
                                                 }
@@ -179,13 +185,12 @@ fun TimersDialog(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Checkbox(
-                                        checked = timers.firstOrNull { it.id == timerSelected.value }?.showDialog
-                                            ?: false,
+                                        checked = selectedTimer.enabled,
                                         onCheckedChange = { value ->
                                             coroutineScope.launch {
                                                 timers = timers.map {
                                                     if (it.id == timerSelected.value!!) {
-                                                        it.copy(showDialog = value)
+                                                        it.copy(enabled = value)
                                                     } else {
                                                         it
                                                     }
@@ -193,7 +198,7 @@ fun TimersDialog(
                                             }
                                         }
                                     )
-                                    Text("Show dialog")
+                                    Text("Enabled")
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Row(
@@ -202,29 +207,31 @@ fun TimersDialog(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Checkbox(
-                                        checked = timers.firstOrNull { it.id == timerSelected.value }?.isPomodoro
-                                            ?: false,
+                                        checked = selectedTimer.countsAsPomodoro,
                                         onCheckedChange = { value ->
                                             coroutineScope.launch {
                                                 timers = timers.map {
                                                     if (it.id == timerSelected.value!!) {
-                                                        it.copy(isPomodoro = value)
+                                                        it.copy(countsAsPomodoro = value)
                                                     } else {
                                                         it
                                                     }
                                                 }
                                             }
                                         },
-                                        enabled = !timers.any { it.isPomodoro }
+                                        enabled = !timers.any { it.countsAsPomodoro }
                                     )
-                                    Text("Pomodoro Timer")
+                                    Text("Counts as Pomodoro")
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Row {
                                     Button(
                                         onClick = {
-                                            timers = timers.filter { it.id != timerSelected.value!! }
-                                            timerSelected.value = null
+                                            coroutineScope.launch {
+                                                onDelete(selectedTimer.id)
+                                                timers = timers.filter { it.id != timerSelected.value!! }
+                                                timerSelected.value = null
+                                            }
                                         },
                                         colors = ButtonDefaults.buttonColors(
                                             backgroundColor = MaterialTheme.colors.error
@@ -257,80 +264,50 @@ fun TimersDialog(
                                             imageVector = Icons.Default.KeyboardArrowDown,
                                             contentDescription = "Move Down",
                                         )
-                                }
-                            }
-                            }
-                        }
-                        }
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Checkbox(
-                                checked = isTimersLoopEnabled,
-                                onCheckedChange = {
-                                    appViewModel.setTimersLoopEnabled(it)
-                                }
-                            )
-                            Text("Loop Timers")
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Checkbox(
-                                checked = timers.any { it.isPomodoro },
-                                onCheckedChange = { value ->
-                                    coroutineScope.launch {
-                                        if (value) {
-                                            // Set the last timer as a Pomodoro timer
-                                            timers = timers.mapIndexed { index, timer ->
-                                                if (index == timers.size - 1) {
-                                                    timer.copy(isPomodoro = true)
-                                                } else {
-                                                    timer.copy(isPomodoro = false)
-                                                }
-                                            }
-                                        } else {
-                                            // Clear all Pomodoro flags
-                                            timers = timers.map { it.copy(isPomodoro = false) }
-                                        }
                                     }
+                                    Button(onClick = {
+                                        coroutineScope.launch {
+                                            timers.forEachIndexed { index, timer ->
+                                                onUpdate(
+                                                    timer.id,
+                                                    timer.name,
+                                                    timer.duration,
+                                                    timer.enabled,
+                                                    timer.countsAsPomodoro,
+                                                    index
+                                                )
+                                            }
+                                            onDismiss()
+                                        }
+                                    }) {
+                                        Text("Apply")
+                                    }
+
                                 }
-                            )
-                            Text("Last Timer is Pomodoro")
+                            }
                         }
+                    }
+                    Column {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(8.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly,
                         ) {
-                            Button(onClick = {
-                                coroutineScope.launch {
-                                    appViewModel.replaceTimers(timers)
-                                    onDismiss()
-                                }
-                            }) {
-                                Text("Save")
-                            }
                             if (timerSelected.value == null) {
                                 Column(
                                     modifier = Modifier.align(Alignment.CenterVertically)
                                 ) {
                                     Button(
                                         onClick = {
-                                            timers += (
-                                                    TimerModel(
-                                                        name = "New Timer",
-                                                        timeRemaining = 0L,
-                                                        showDialog = true,
-                                                        startValue = 0L,
-                                                        endValue = 0L,
-                                                        step = 1000L
-                                                    )
-                                                    )
+                                            coroutineScope.launch {
+                                                onCreate(
+                                                    "",
+                                                    "New Timer",
+                                                    0,
+                                                    true,
+                                                    false,
+                                                    timers.size
+                                                )
+                                            }
                                         },
                                         colors = ButtonDefaults.buttonColors(
                                             backgroundColor = MaterialTheme.colors.secondary
@@ -346,12 +323,11 @@ fun TimersDialog(
                             }
                         }
                     }
-
-                }
                 }
             }
         }
     }
+}
 
 
 

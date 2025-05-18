@@ -13,17 +13,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import services.NightBlockService
-import ui.components.NightBlockComposable
+import com.esteban.ruano.lifecommander.timer.TimerPlaybackState
+import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
 import com.esteban.ruano.lifecommander.ui.composables.FloatingActionButtons
+import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
+import com.esteban.ruano.utils.DateUtils.formatDefault
+import services.NightBlockService
 import services.tasks.models.Priority
+import ui.components.NightBlockComposable
 import ui.navigation.Screen
 import ui.viewmodels.AppViewModel
 import ui.viewmodels.DailyJournalViewModel
 import ui.viewmodels.HabitsViewModel
 import ui.viewmodels.TasksViewModel
-import utils.DateUtils.parseTime
 import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun AppLayout(
@@ -32,16 +36,19 @@ fun AppLayout(
     habitViewModel: HabitsViewModel,
     dailyJournalViewModel: DailyJournalViewModel,
     nightBlockService: NightBlockService,
+    timersViewModel: TimersViewModel,
     navController: NavController,
     onLogoutClick: () -> Unit,
     content: @Composable () -> Unit
 ) {
-    val timer by appViewModel.timer.collectAsState()
-    val timers by appViewModel.timers.collectAsState()
-    val paused by appViewModel.paused.collectAsState()
     val isNightBlockActive by nightBlockService.isNightBlockActive.collectAsState()
     val pomodoroCount = dailyJournalViewModel.state.collectAsState().value.pomodoros.size
     var showNightBlockDialog by remember { mutableStateOf(false) }
+    var showTimerDialog by remember { mutableStateOf(false) }
+    var timerDialogTitle by remember { mutableStateOf("") }
+    var timerDialogMessage by remember { mutableStateOf("") }
+
+    val timerPlaybackState by timersViewModel.timerPlaybackState.collectAsState()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -73,27 +80,48 @@ fun AppLayout(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(LocalDateTime.now().dayOfWeek.name, style = MaterialTheme.typography.subtitle1)
+                        
+                        if (timerPlaybackState.status == TimerPlaybackStatus.Running) {
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Box(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .border(
+                                        width = 1.dp,
+                                        color = MaterialTheme.colors.onSurface,
+                                        shape = MaterialTheme.shapes.small
+                                    )
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = timerPlaybackState.remainingTime.seconds.formatDefault(),
+                                        style = MaterialTheme.typography.subtitle1,
+                                        color = MaterialTheme.colors.onSurface
+                                    )
+                                }
+                            }
+                        }
                     }
                 },
                 actions = {
-                    if (timer != null) {
-                        Box(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .border(
-                                    width = 1.dp,
-                                    color = Color.White,
-                                    shape = MaterialTheme.shapes.small
-                                )
-                        ) {
-                            Text(
-                                text = "${timer!!.name} - ${timer!!.timeRemaining.parseTime()}",
-                                style = MaterialTheme.typography.h6,
-                                color = Color.White,
-                                modifier = Modifier.padding(vertical = 4.dp, horizontal = 6.dp)
-                            )
+                    if (timerPlaybackState.currentTimer != null) {
+                        if (timerPlaybackState.status == TimerPlaybackStatus.Running) {
+                            IconButton(onClick = { timersViewModel.pauseTimer() }) {
+                                Icon(Icons.Default.Pause, contentDescription = "Pause Timer")
+                            }
+                        } else {
+                            IconButton(onClick = { timersViewModel.resumeTimer() }) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = "Resume Timer")
+                            }
+                        }
+                        IconButton(onClick = { timersViewModel.stopTimer() }) {
+                            Icon(Icons.Default.Stop, contentDescription = "Stop Timer")
                         }
                     }
+                    
                     IconButton(onClick = { showNightBlockDialog = true }) {
                         Icon(
                             imageVector = if (isNightBlockActive) Icons.Default.Nightlight
@@ -102,30 +130,6 @@ fun AppLayout(
                             tint = if (isNightBlockActive) MaterialTheme.colors.error
                             else MaterialTheme.colors.primary
                         )
-                    }
-                    if ((timer == null && timers.isNotEmpty()) || paused) {
-                        IconButton(onClick = { appViewModel.playTimer() }) {
-                            Icon(Icons.Default.PlayCircle, contentDescription = "Timer")
-                        }
-                    }
-                    if (timer != null && !paused) {
-                        IconButton(onClick = { appViewModel.pauseTimer() }) {
-                            Icon(Icons.Default.Pause, contentDescription = "Timer")
-                        }
-                    }
-                    if (timer != null) {
-                        IconButton(onClick = { appViewModel.previousTimer() }) {
-                            Icon(Icons.Default.SkipPrevious, contentDescription = "Previous Timer")
-                        }
-                        IconButton(onClick = { appViewModel.stopTimer() }) {
-                            Icon(Icons.Default.Stop, contentDescription = "Stop Timer")
-                        }
-                        IconButton(onClick = { appViewModel.nextTimer() }) {
-                            Icon(Icons.Default.SkipNext, contentDescription = "Next Timer")
-                        }
-                    }
-                    IconButton(onClick = { appViewModel.showTimersDialog() }) {
-                        Icon(Icons.Default.Timer, contentDescription = "Timers")
                     }
                     IconButton(onClick = { /* TODO: Refresh */ }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Reload")
@@ -285,6 +289,21 @@ fun AppLayout(
                     onClick = { showNightBlockDialog = false }
                 ) {
                     Text("Close")
+                }
+            }
+        )
+    }
+
+    if (showTimerDialog) {
+        AlertDialog(
+            onDismissRequest = { showTimerDialog = false },
+            title = { Text(timerDialogTitle) },
+            text = { Text(timerDialogMessage) },
+            confirmButton = {
+                Button(
+                    onClick = { showTimerDialog = false }
+                ) {
+                    Text("OK")
                 }
             }
         )

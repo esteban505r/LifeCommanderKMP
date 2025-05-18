@@ -7,13 +7,13 @@ import io.ktor.http.*
 import services.auth.models.AuthResponse
 import services.auth.models.LoginRequest
 import services.auth.models.SignUpRequest
-import com.esteban.ruano.lifecommander.services.habits.LOGIN_ENDPOINT
-import com.esteban.ruano.lifecommander.services.habits.SIGNUP_ENDPOINT
+import com.esteban.ruano.lifecommander.utils.LOGIN_ENDPOINT
+import com.esteban.ruano.lifecommander.utils.SIGNUP_ENDPOINT
 import ui.services.auth.AuthRepository
 
 class AuthService(
     private val client: HttpClient,
-    private val tokenStorage: TokenStorage
+    private val tokenStorageImpl: TokenStorageImpl
 ):AuthRepository {
     override suspend fun login(email: String, password: String):AuthResponse {
         val response = client.post(LOGIN_ENDPOINT) {
@@ -23,7 +23,7 @@ class AuthService(
 
         if (response.status == HttpStatusCode.OK) {
             val authResponse = response.body<AuthResponse>()
-            tokenStorage.saveToken(authResponse.token)
+            tokenStorageImpl.saveToken(authResponse.token)
             return authResponse
         } else {
             throw Exception("Invalid email or password")
@@ -44,10 +44,10 @@ class AuthService(
     }
     
     override suspend fun logout() {
-        tokenStorage.clearToken()
+        tokenStorageImpl.clearToken()
     }
     
     override suspend fun isAuthenticated(): Boolean {
-        return tokenStorage.getToken() != null
+        return tokenStorageImpl.getToken() != null
     }
 } 

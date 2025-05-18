@@ -15,14 +15,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.*
-import services.auth.TokenStorage
+import services.auth.TokenStorageImpl
 import services.habits.HabitService
 import services.tasks.TaskService
 
 class CalendarViewModel(
     private val taskService: TaskService,
     private val habitService: HabitService,
-    private val tokenStorage: TokenStorage
+    private val tokenStorageImpl: TokenStorageImpl
 ): ViewModel() {
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
@@ -46,7 +46,7 @@ class CalendarViewModel(
                 isLoading = true
                 error = null
                 
-                val token = tokenStorage.getToken() ?: throw Exception("No token available")
+                val token = tokenStorageImpl.getToken() ?: throw Exception("No token available")
                 val currentMonth = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.yearMonth
                 
                 // Get start and end dates for the month

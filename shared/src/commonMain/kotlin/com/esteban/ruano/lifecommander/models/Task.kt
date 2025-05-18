@@ -1,5 +1,7 @@
 package com.lifecommander.models
 
+import kotlinx.serialization.Serializable
+
 data class Task(
     val id: String,
     val name: String,
@@ -13,6 +15,7 @@ data class Task(
     val updatedAt: String? = null
 )
 
+@Serializable
 data class Reminder(
     val id: String,
     val time: Long,

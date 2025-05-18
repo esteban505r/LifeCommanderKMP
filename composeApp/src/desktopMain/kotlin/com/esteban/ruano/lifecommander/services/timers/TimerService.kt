@@ -6,8 +6,8 @@ import com.esteban.ruano.lifecommander.models.timers.CreateTimerRequest
 import com.esteban.ruano.lifecommander.models.timers.UpdateTimerListRequest
 import com.esteban.ruano.lifecommander.models.timers.UpdateTimerRequest
 import com.esteban.ruano.lifecommander.models.timers.UpdateUserSettingsRequest
-import com.esteban.ruano.lifecommander.services.habits.TIMER_ENDPOINT
-import com.esteban.ruano.lifecommander.services.habits.appHeaders
+import com.esteban.ruano.lifecommander.utils.TIMER_ENDPOINT
+import com.esteban.ruano.lifecommander.utils.appHeaders
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -27,6 +27,21 @@ class TimerService(
                 }.body<List<TimerList>>()
             } catch (e: Exception) {
                 throw TimerServiceException("Failed to fetch timer lists: ${e.message}", e)
+            }
+        }
+    }
+
+    override suspend fun getTimerList(
+        token: String,
+        listId: String
+    ): TimerList {
+        return withContext(Dispatchers.IO) {
+            try {
+                client.get("$TIMER_ENDPOINT/lists/$listId") {
+                    appHeaders(token)
+                }.body()
+            } catch (e: Exception) {
+                throw TimerServiceException("Failed to fetch timer list: ${e.message}", e)
             }
         }
     }
@@ -152,7 +167,7 @@ class TimerService(
     ): TimerList {
         return withContext(Dispatchers.IO) {
             try {
-                val response = client.patch("$TIMER_ENDPOINT/timers/$timerId") {
+                val response = client.patch("$TIMER_ENDPOINT/$timerId") {
                     appHeaders(token)
                     contentType(ContentType.Application.Json)
                     setBody(

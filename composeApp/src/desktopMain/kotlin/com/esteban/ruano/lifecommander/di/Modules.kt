@@ -1,5 +1,6 @@
 package di
 
+import com.esteban.ruano.lifecommander.utils.TokenStorage
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -10,14 +11,20 @@ import org.koin.dsl.module
 import services.AppPreferencesService
 import services.NightBlockService
 import services.auth.AuthService
-import services.auth.TokenStorage
+import services.auth.TokenStorageImpl
 import services.dailyjournal.DailyJournalService
-import com.esteban.ruano.lifecommander.services.habits.BASE_URL
+import com.esteban.ruano.lifecommander.utils.BASE_URL
 import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
 import com.esteban.ruano.lifecommander.services.finance.FinanceService
+import com.esteban.ruano.lifecommander.utils.SOCKETS_HOST
+import com.esteban.ruano.lifecommander.utils.SOCKETS_PATH
+import com.esteban.ruano.lifecommander.utils.SOCKETS_PORT
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackManager
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
+import com.esteban.ruano.lifecommander.websocket.TimerWebSocketClient
+import io.ktor.client.plugins.websocket.WebSockets
+import org.koin.core.qualifier.named
 import services.habits.HabitService
 import services.tasks.TaskService
 import ui.ui.viewmodels.AuthViewModel
@@ -30,7 +37,9 @@ import utils.StatusBarService
 import utils.TimerService
 import utils.createDataStore
 
+
 // Network Module
+val socketQualifier = named("socketHttpClient")
 val networkModule = module {
     single {
         HttpClient(CIO) {
@@ -45,7 +54,19 @@ val networkModule = module {
             }
         }
     }
+    single(socketQualifier) {
+        HttpClient(CIO) {
+            install(ContentNegotiation) {
+                gson {
+                    setPrettyPrinting()
+                }
+            }
+            install(WebSockets)
+        }
+    }
 }
+
+
 
 // Data Store Module
 val dataStoreModule = module {
@@ -54,7 +75,8 @@ val dataStoreModule = module {
 
 // Managers
 val managersModule = module {
-    single { TokenStorage(get()) }
+    single<TokenStorage> { TokenStorageImpl(get()) }
+    single { TokenStorageImpl(get()) }
 }
 
 // Services Module
@@ -68,6 +90,7 @@ val servicesModule = module {
     single { BackgroundServiceManager() }
     single { TimerPlaybackManager() }
     single { StatusBarService() }
+    single { TimerWebSocketClient(get(socketQualifier), SOCKETS_HOST, SOCKETS_PORT, SOCKETS_PATH, get()) }
     single { TimerService(get()) }
     single { com.esteban.ruano.lifecommander.services.timers.TimerService(get()) }
     single { DailyJournalService(BASE_URL, get(), get()) }
@@ -75,14 +98,14 @@ val servicesModule = module {
 
 // ViewModels Module
 val viewModelsModule = module {
-    viewModel { AppViewModel(get(),get(), get(), get(), get(),get()) }
+    viewModel { AppViewModel(get(),get(), get(), get(), get()) }
     viewModel { HabitsViewModel(get(),get()) }
     viewModel { TasksViewModel(get(),get(),get()) }
     viewModel { AuthViewModel(get()) }
     viewModel { DailyJournalViewModel(get(),get()) }
     viewModel { CalendarViewModel(get(),get(),get()) }
     viewModel { FinanceViewModel(get()) }
-    viewModel { TimersViewModel(get(),get()) }
+    viewModel { TimersViewModel(get(),get(), get(),get())}
 }
 
 // Combine all modules

@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import services.auth.TokenStorage
+import services.auth.TokenStorageImpl
 import services.tasks.TaskService
 import services.tasks.sortedByDefault
 import ui.models.TaskFilters
@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class TasksViewModel(
-    private val tokenStorage: TokenStorage,
+    private val tokenStorageImpl: TokenStorageImpl,
     private val taskService: TaskService,
     private val statusBarService: StatusBarService,
 ) : ViewModel() {
@@ -42,7 +42,7 @@ class TasksViewModel(
             _loading.value = true
             try{
                 val response = taskService.getAll(
-                    token = tokenStorage.getToken() ?: "",
+                    token = tokenStorageImpl.getToken() ?: "",
                     page = 0,
                     limit = 30,
                 )
@@ -61,7 +61,7 @@ class TasksViewModel(
             _loading.value = true
             try {
                 val response = taskService.getNoDueDateTasks(
-                    token = tokenStorage.getToken() ?: "",
+                    token = tokenStorageImpl.getToken() ?: "",
                     page = 0,
                     limit = 30
                 )
@@ -82,13 +82,13 @@ class TasksViewModel(
             try {
                 if (checked) {
                     taskService.completeTask(
-                        token = tokenStorage.getToken() ?: "",
+                        token = tokenStorageImpl.getToken() ?: "",
                         id = id,
                         dateTime = LocalDateTime.now().parseDateTime()
                     )
                 } else {
                     taskService.unCompleteTask(
-                        token = tokenStorage.getToken() ?: "",
+                        token = tokenStorageImpl.getToken() ?: "",
                         id = id,
                         dateTime = LocalDateTime.now().parseDateTime()
                     )
@@ -124,7 +124,7 @@ class TasksViewModel(
                 }
                 val dates = _selectedFilter.value.getDateRangeByFilter()
                 val response = taskService.getByDateRange(
-                    token = tokenStorage.getToken() ?: "",
+                    token = tokenStorageImpl.getToken() ?: "",
                     page = 0,
                     limit = 30,
                     startDate = dates.first,
@@ -154,7 +154,7 @@ class TasksViewModel(
             _loading.value = true
             try {
                 taskService.addTask(
-                    token = tokenStorage.getToken() ?: "",
+                    token = tokenStorageImpl.getToken() ?: "",
                     name = name,
                     dueDate = dueDate,
                     scheduledDate = scheduledDate,
@@ -177,7 +177,7 @@ class TasksViewModel(
             _loading.value = true
             try {
                 taskService.updateTask(
-                    token = tokenStorage.getToken() ?: "",
+                    token = tokenStorageImpl.getToken() ?: "",
                     id = id,
                     task = task
                 )
@@ -197,7 +197,7 @@ class TasksViewModel(
             _loading.value = true
             try {
                 taskService.deleteTask(
-                    token = tokenStorage.getToken() ?: "",
+                    token = tokenStorageImpl.getToken() ?: "",
                     id = id
                 )
                 getTasksByFilter()
@@ -241,7 +241,7 @@ class TasksViewModel(
                     
                     // Update the task
                     taskService.updateTask(
-                        token = tokenStorage.getToken() ?: "",
+                        token = tokenStorageImpl.getToken() ?: "",
                         id = task.id,
                         task = updatedTask
                     )
