@@ -1,13 +1,14 @@
 package com.esteban.ruano.service
 
 import com.esteban.ruano.database.converters.toDomainModel
-import com.esteban.ruano.database.converters.toResponseDTO
 import com.esteban.ruano.database.entities.Timer
 import com.esteban.ruano.database.entities.TimerList
 import com.esteban.ruano.database.entities.UserSetting
 import com.esteban.ruano.database.entities.User
 import com.esteban.ruano.database.entities.TimerLists
+import com.esteban.ruano.database.entities.Timers
 import com.esteban.ruano.database.entities.UserSettings
+import org.jetbrains.exposed.dao.id.EntityID
 import com.esteban.ruano.lifecommander.models.Timer as DomainTimer
 import com.esteban.ruano.lifecommander.models.TimerList as DomainTimerList
 import com.esteban.ruano.lifecommander.models.UserSettings as DomainUserSettings
@@ -32,9 +33,19 @@ class TimerService : BaseService() {
 
     fun getTimerLists(userId: Int): List<DomainTimerList> {
         return transaction {
-            TimerList.find { TimerLists.userId eq userId }
-                .map { it.toDomainModel() }
-                .toList()
+            val listEntities = TimerList.find { TimerLists.userId eq userId }.toList()
+
+            val timersByListId: Map<EntityID<UUID>, List<Timer>> =
+                Timer.find { Timers.listId inList listEntities.map { it.id } }
+                    .groupBy { it.list.id }
+
+            listEntities.map { listEntity ->
+                val timersForList = timersByListId[listEntity.id].orEmpty()
+                listEntity.toDomainModel().copy(
+                    timers = timersForList.map { it.toDomainModel() }
+                )
+            }
+
         }
     }
 
@@ -80,7 +91,7 @@ class TimerService : BaseService() {
                     this.duration = duration
                     this.enabled = enabled
                     this.countsAsPomodoro = countsAsPomodoro
-                    this.listId = TimerList[listId]
+                    this.list = TimerList[listId]
                     this.order = order
                 }.toDomainModel()
             } catch (e: Exception) {

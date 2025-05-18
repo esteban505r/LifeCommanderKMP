@@ -1,6 +1,7 @@
 package com.esteban.ruano.lifecommander.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -14,10 +15,15 @@ import org.koin.compose.viewmodel.koinViewModel
 fun TimersScreenDestination(
     modifier: Modifier = Modifier,
     timersViewModel: TimersViewModel = koinViewModel(),
-    timerPlaybackManager: TimerPlaybackManager
+    timerPlaybackManager: TimerPlaybackManager,
+    onNavigateToDetails: (String) -> Unit,
 ) {
     val timerLists by timersViewModel.timerLists.collectAsState()
     val userSettings by timersViewModel.userSettings.collectAsState()
+
+    LaunchedEffect(Unit) {
+        timersViewModel.loadTimerLists()
+    }
 
     TimersScreen(
         timerLists = timerLists,
@@ -47,6 +53,9 @@ fun TimersScreenDestination(
         onAddTimerList = {
             name, loopTimers, pomodoroGrouped ->
             timersViewModel.createTimerList(name, loopTimers, pomodoroGrouped)
+        },
+        onNavigateToDetail = {
+            onNavigateToDetails(it.id)
         }
         )
 } 

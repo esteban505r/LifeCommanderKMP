@@ -23,6 +23,6 @@ class Timer(id: EntityID<UUID>) : UUIDEntity(id) {
     var duration by Timers.duration
     var enabled by Timers.enabled
     var countsAsPomodoro by Timers.countsAsPomodoro
-    var listId by TimerList referencedOn Timers.listId
+    var list by TimerList referencedOn Timers.listId
     var order by Timers.order
 }

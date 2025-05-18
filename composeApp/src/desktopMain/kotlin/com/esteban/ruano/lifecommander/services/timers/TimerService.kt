@@ -6,6 +6,7 @@ import com.esteban.ruano.lifecommander.models.timers.CreateTimerRequest
 import com.esteban.ruano.lifecommander.models.timers.UpdateTimerListRequest
 import com.esteban.ruano.lifecommander.models.timers.UpdateTimerRequest
 import com.esteban.ruano.lifecommander.models.timers.UpdateUserSettingsRequest
+import com.esteban.ruano.lifecommander.services.habits.TIMER_ENDPOINT
 import com.esteban.ruano.lifecommander.services.habits.appHeaders
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -13,8 +14,6 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-const val TIMER_ENDPOINT = "/timer"
 
 class TimerService(
     private val client: HttpClient

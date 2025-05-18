@@ -30,7 +30,8 @@ fun TimersScreen(
     onAddTimer: (String, String, Int, Boolean, Boolean, Int) -> Unit,
     onUpdateTimer: (String, String, Int, Boolean, Boolean, Int) -> Unit,
     onDeleteTimer: (String) -> Unit,
-    onReorderTimers: (String, List<Timer>) -> Unit
+    onReorderTimers: (String, List<Timer>) -> Unit,
+    onNavigateToDetail: (TimerList) -> Unit
 ) {
     var showAddTimerListDialog by remember { mutableStateOf(false) }
     var showAddTimerDialog by remember { mutableStateOf(false) }
@@ -97,21 +98,7 @@ fun TimersScreen(
                     },
                     onEdit = { selectedTimerList = timerList },
                     onDelete = { onDeleteTimerList(timerList.id) },
-                    onAddTimer = { showAddTimerDialog = true },
-                    onUpdateTimer = { timer ->
-                        onUpdateTimer(
-                            timer.id,
-                            timer.name,
-                            timer.duration,
-                            timer.enabled,
-                            timer.countsAsPomodoro,
-                            timer.order
-                        )
-                    },
-                    onDeleteTimer = { onDeleteTimer(it) },
-                    onReorderTimers = { timers ->
-                        onReorderTimers(timerList.id, timers)
-                    }
+                    onViewDetail = { onNavigateToDetail(timerList) }
                 )
             }
         }
@@ -131,7 +118,7 @@ fun TimersScreen(
         TimersDialog(
             show = true,
             onDismiss = { showAddTimerDialog = false },
-            appViewModel = koinViewModel (  )
+            appViewModel = koinViewModel()
         )
     }
 }
@@ -146,13 +133,8 @@ private fun TimerListCard(
     onStop: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onAddTimer: () -> Unit,
-    onUpdateTimer: (Timer) -> Unit,
-    onDeleteTimer: (String) -> Unit,
-    onReorderTimers: (List<Timer>) -> Unit
+    onViewDetail: () -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = 4.dp
@@ -196,55 +178,9 @@ private fun TimerListCard(
                     IconButton(onClick = onDelete) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete")
                     }
-                    IconButton(onClick = { expanded = !expanded }) {
-                        Icon(
-                            if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = if (expanded) "Collapse" else "Expand"
-                        )
+                    IconButton(onClick = onViewDetail) {
+                        Icon(Icons.Default.Info, contentDescription = "View Details")
                     }
-                }
-            }
-
-            if (expanded) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Loop Timers: ${timerList.loopTimers}",
-                        style = MaterialTheme.typography.body2
-                    )
-                    Text(
-                        text = "Pomodoro Grouped: ${timerList.pomodoroGrouped}",
-                        style = MaterialTheme.typography.body2
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(timerList.timers.sortedBy { it.order }) { timer ->
-                        TimerItem(
-                            timer = timer,
-                            onUpdate = onUpdateTimer,
-                            onDelete = { onDeleteTimer(timer.id) }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = onAddTimer,
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Timer")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Add Timer")
                 }
             }
         }

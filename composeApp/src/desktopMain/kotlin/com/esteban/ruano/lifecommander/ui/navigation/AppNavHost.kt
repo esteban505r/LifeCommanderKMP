@@ -2,13 +2,17 @@ package ui.navigation
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.esteban.ruano.lifecommander.ui.components.AppLayout
 import com.esteban.ruano.lifecommander.ui.navigation.CalendarScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.SettingsScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.TimerListDetailDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimersScreenDestination
 import com.esteban.ruano.lifecommander.ui.screens.FinancialScreenDestination
 import org.koin.compose.koinInject
@@ -17,6 +21,7 @@ import services.auth.AuthService
 import ui.ui.viewmodels.AuthViewModel
 import ui.screens.AuthScreen
 import com.esteban.ruano.lifecommander.ui.screens.HomeScreen
+import com.esteban.ruano.lifecommander.ui.screens.TimerListDetailScreen
 import com.esteban.ruano.lifecommander.ui.screens.TimersScreen
 import com.esteban.ruano.lifecommander.ui.screens.TransactionImportScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
@@ -35,6 +40,7 @@ sealed class Screen(val route: String) {
     object Calendar : Screen("calendar")
 
     object Timers : Screen("timers")
+    object TimersDetail : Screen("timers_detail")
 
     object Settings : Screen("settings")
 
@@ -161,7 +167,25 @@ fun AppNavHost(
                     TimersScreenDestination(
                         modifier = modifier,
                         timersViewModel = timersViewModel,
-                        timerPlaybackManager = koinInject()
+                        timerPlaybackManager = koinInject(),
+                        onNavigateToDetails = { timerId ->
+                            navController.navigate("${Screen.TimersDetail.route}/$timerId")
+                        }
+                    )
+                }
+
+                composable("${Screen.TimersDetail.route}/{itemId}",
+                    listOf(navArgument("itemId") { type = NavType.StringType } )
+                ) { backStackEntry: NavBackStackEntry ->
+                    val itemId = backStackEntry.arguments
+                    TimerListDetailDestination (
+                        modifier = modifier,
+                        timersViewModel = timersViewModel,
+                        timerPlaybackManager = koinInject(),
+                        timerListId = "",
+                        onBack = {
+                            navController.navigateUp()
+                        }
                     )
                 }
 
