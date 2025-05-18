@@ -212,6 +212,46 @@ fun AppLayout(
                         else MaterialTheme.colors.onSurface
                     )
                 }
+
+                IconButton(
+                    onClick = { navController.navigate(Screen.Timers.route) },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            color = if (navController.currentDestination?.route == Screen.Settings.route)
+                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                            else Color.Transparent,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Timer,
+                        contentDescription = "Timers",
+                        tint = if (navController.currentDestination?.route == Screen.Settings.route)
+                            MaterialTheme.colors.primary
+                        else MaterialTheme.colors.onSurface
+                    )
+                }
+
+                IconButton(
+                    onClick = { navController.navigate(Screen.Settings.route) },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            color = if (navController.currentDestination?.route == Screen.Settings.route)
+                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                            else Color.Transparent,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = if (navController.currentDestination?.route == Screen.Settings.route)
+                            MaterialTheme.colors.primary
+                        else MaterialTheme.colors.onSurface
+                    )
+                }
             }
 
             // Main content

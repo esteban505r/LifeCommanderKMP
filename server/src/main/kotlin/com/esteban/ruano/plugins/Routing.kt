@@ -46,6 +46,7 @@ fun Application.configureRouting() {
     )
     val nutritionService = NutritionService()
     val blogService = BlogService()
+    val timerService = TimerService()
 
     val workoutRepository = WorkoutRepository(workoutService)
     val taskRepository = TaskRepository(taskService)
@@ -87,6 +88,8 @@ fun Application.configureRouting() {
                 pomodoroRouting(pomodoroRepository)
 
                 dailyJournalRouting(dailyJournalRepository)
+
+                timerRouting(timerService)
 
                 financeRouting(
                     accountRepository = accountRepository,

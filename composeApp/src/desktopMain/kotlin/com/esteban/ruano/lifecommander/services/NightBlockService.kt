@@ -82,6 +82,8 @@ class NightBlockService(
             statusBarService.updateNightBlockStatus(true)
         } else {
             val timeUntilActivation = Duration.between(currentTime, _nightBlockTime.value)
+            _isNightBlockActive.value = false
+            appPreferencesService.saveNightBlockActive(false)
             statusBarService.updateNightBlockStatus(false, formatDuration(timeUntilActivation))
         }
     }

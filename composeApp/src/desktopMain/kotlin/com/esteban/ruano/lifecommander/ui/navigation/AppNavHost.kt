@@ -8,6 +8,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.esteban.ruano.lifecommander.ui.components.AppLayout
 import com.esteban.ruano.lifecommander.ui.navigation.CalendarScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.SettingsScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.TimersScreenDestination
 import com.esteban.ruano.lifecommander.ui.screens.FinancialScreenDestination
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -15,7 +17,9 @@ import services.auth.AuthService
 import ui.ui.viewmodels.AuthViewModel
 import ui.screens.AuthScreen
 import com.esteban.ruano.lifecommander.ui.screens.HomeScreen
+import com.esteban.ruano.lifecommander.ui.screens.TimersScreen
 import com.esteban.ruano.lifecommander.ui.screens.TransactionImportScreen
+import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import ui.state.AuthState
 import ui.viewmodels.AppViewModel
 import ui.viewmodels.DailyJournalViewModel
@@ -29,6 +33,11 @@ sealed class Screen(val route: String) {
     object Finance : Screen("finance")
     object FinanceImporter : Screen("finance_importer")
     object Calendar : Screen("calendar")
+
+    object Timers : Screen("timers")
+
+    object Settings : Screen("settings")
+
 }
 
 @Composable
@@ -42,6 +51,7 @@ fun AppNavHost(
     appViewModel: AppViewModel = koinViewModel(),
     dailyJournalViewModel: DailyJournalViewModel = koinViewModel(),
     nightBlockService: NightBlockService = koinInject(),
+    timersViewModel: TimersViewModel = koinViewModel(),
     startDestination: String = Screen.Auth.route,
 ) {
     val authState by authViewModel.authState.collectAsState()
@@ -144,6 +154,24 @@ fun AppNavHost(
                         onImportComplete = {
                             navController.navigateUp()
                         },
+                    )
+                }
+
+                composable(Screen.Timers.route) {
+                    TimersScreenDestination(
+                        modifier = modifier,
+                        timersViewModel = timersViewModel,
+                        timerPlaybackManager = koinInject()
+                    )
+                }
+
+                composable(Screen.Settings.route) {
+                    SettingsScreenDestination(
+                        modifier = modifier,
+                        timersViewModel = timersViewModel,
+                        onNavigateToTimers = {
+                            navController.navigate(Screen.Timers.route)
+                        }
                     )
                 }
 

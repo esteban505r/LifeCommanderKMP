@@ -118,7 +118,7 @@ fun CalendarComposable(
                 state = state,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(400.dp),
+                    .weight(1f),
                 monthHeader = { month ->
                     val daysOfWeek = month.weekDays.first().map { it.date.dayOfWeek }
                     Row(modifier = Modifier.fillMaxWidth()) {
@@ -149,9 +149,6 @@ fun CalendarComposable(
                 habitDate == selectedDate?.toKotlinLocalDate()
             }
 
-            println("Selected date: $selectedDate")
-            println("Selected date tasks: ${selectedDateTasks.size}")
-            println("Selected date habits: ${selectedDateHabits.size}")
 
             LazyColumn(
                 modifier = Modifier
