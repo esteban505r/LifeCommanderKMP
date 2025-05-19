@@ -38,9 +38,6 @@ import com.esteban.ruano.core_ui.theme.Gray3
 import com.esteban.ruano.core_ui.utils.DateUIUtils.formatTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.habits_domain.model.Habit
-import com.esteban.ruano.habits_presentation.utilities.HabitsUtils.getStringResourceByCurrentHabit
-import com.esteban.ruano.habits_presentation.utilities.HabitsUtils.time
-import com.esteban.ruano.habits_presentation.utilities.HabitsUtils.timeDoingIt
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 
@@ -67,7 +64,7 @@ fun HabitCard(habit: Habit? = null, modifier: Modifier = Modifier, onHabitClick:
             habit?.let{
                 coroutineScope.launch {
                     while (true) {
-                        timeDoing = habit.timeDoingIt()?.formatTime() ?: "00:00"
+                        //timeDoing = habit.timeDoingIt()?.formatTime() ?: "00:00"
                         kotlinx.coroutines.delay(1000)
                     }
                 }
@@ -93,7 +90,7 @@ fun HabitCard(habit: Habit? = null, modifier: Modifier = Modifier, onHabitClick:
             ) {
                 Text(
                     habit?.let{
-                        getStringResourceByCurrentHabit(context,habit, timeDoing)
+                        "getStringResourceByCurrentHabit(context,habit, timeDoing)"
                     } ?: stringResource(R.string.enjoy_your_free_time),
                     textAlign = TextAlign.Center
                 )

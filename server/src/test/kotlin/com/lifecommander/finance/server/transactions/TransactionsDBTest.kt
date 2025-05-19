@@ -5,6 +5,7 @@ import com.esteban.ruano.database.models.AccountType
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.service.TransactionService
 import com.esteban.ruano.utils.DateUtils.formatDateTime
+import com.lifecommander.finance.model.TransactionType
 import kotlinx.datetime.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -109,8 +110,8 @@ class TransactionsDBTest {
         createTestTransaction(accountId)
         
         val transactions = service.getTransactionsByUser(1)
-        assertTrue(transactions.isNotEmpty())
-        assertEquals(1, transactions.size)
+        assertTrue(transactions.transactions.isNotEmpty())
+        assertEquals(1, transactions.transactions.size)
     }
 
     @Test

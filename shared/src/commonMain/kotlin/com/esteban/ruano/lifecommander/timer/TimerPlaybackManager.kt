@@ -20,21 +20,21 @@ class TimerPlaybackManager(
     fun startTimerList(timerList: TimerList) {
         stopTimer() // Cancel any ongoing playback
 
-        val enabledTimers = timerList.timers.filter { it.enabled }
-        if (enabledTimers.isEmpty()) {
+        val enabledTimers = timerList.timers?.filter { it.enabled }
+        if (enabledTimers?.isEmpty() == true) {
             _uiState.value = TimerPlaybackState(status = TimerPlaybackStatus.Stopped)
             return
         }
 
         println("Starting timer list: ${timerList.name}")
-        println("Enabled timers: ${enabledTimers.size}")
-        println("First timer: ${enabledTimers.first().name}")
-        println("First timer duration: ${enabledTimers.first().duration}")
+        println("Enabled timers: ${enabledTimers?.size}")
+        println("First timer: ${enabledTimers?.first()?.name}")
+        println("First timer duration: ${enabledTimers?.first()?.duration}")
         _uiState.value = TimerPlaybackState(
             timerList = timerList,
             currentTimerIndex = 0,
-            currentTimer = enabledTimers.first(),
-            remainingTime = enabledTimers.first().duration,
+            currentTimer = enabledTimers?.first(),
+            remainingTime = enabledTimers?.first()?.duration ?:0,
             status = TimerPlaybackStatus.Running
         )
 
@@ -91,21 +91,21 @@ class TimerPlaybackManager(
     private fun moveToNextTimer() {
         val state = _uiState.value
         val list = state.timerList ?: return
-        val enabledTimers = list.timers.filter { it.enabled }
+        val enabledTimers = list.timers?.filter { it.enabled }
         val nextIndex = state.currentTimerIndex + 1
 
-        val shouldStop = nextIndex >= enabledTimers.size && !list.loopTimers
+        val shouldStop = nextIndex >= (enabledTimers?.size?:0) && !list.loopTimers
 
-        if (shouldStop || enabledTimers.isEmpty()) {
+        if (shouldStop || enabledTimers?.isEmpty() == true) {
             stopTimer()
         } else {
-            val newIndex = nextIndex % enabledTimers.size
-            val nextTimer = enabledTimers[newIndex]
+            val newIndex = nextIndex % (enabledTimers?.size?:0)
+            val nextTimer = enabledTimers?.get(newIndex)
 
             _uiState.value = state.copy(
                 currentTimerIndex = newIndex,
                 currentTimer = nextTimer,
-                remainingTime = nextTimer.duration,
+                remainingTime = nextTimer?.duration?:0,
                 status = TimerPlaybackStatus.Running
             )
 

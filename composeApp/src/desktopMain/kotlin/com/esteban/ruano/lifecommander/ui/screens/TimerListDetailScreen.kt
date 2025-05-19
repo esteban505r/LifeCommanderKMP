@@ -152,7 +152,7 @@ fun TimerListDetailScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(timerList.timers.sortedBy { it.order }) { timer ->
+            items(timerList.timers?.sortedBy { it.order } ?: emptyList()) { timer ->
                 TimerItem(
                     timer = timer,
                     notifications = onGetTimerNotifications(timer.id),
@@ -176,7 +176,7 @@ fun TimerListDetailScreen(
         TimersDialog(
             show = true,
             onDismiss = { showAddTimerDialog = false },
-            timersList = timerList.timers,
+            timersList = timerList.timers?.sortedBy { it.order } ?: emptyList(),
             onCreate = { timerId, name, duration, enabled, countsAsPomodoro, order ->
                 onAddTimer(
                     timerList.id,

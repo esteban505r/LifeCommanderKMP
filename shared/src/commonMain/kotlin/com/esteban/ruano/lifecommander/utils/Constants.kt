@@ -4,8 +4,8 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 
 //const val BASE_URL = "http://64.23.239.161:8080/api/v1"
-//const val BASE_URL = "http://ec2-3-91-21-254.compute-1.amazonaws.com:8080/api/v1"
-const val BASE_URL = "http://localhost:8080/api/v1"
+const val BASE_URL = "http://ec2-3-91-21-254.compute-1.amazonaws.com:8080/api/v1"
+//const val BASE_URL = "http://localhost:8080/api/v1"
 const val SOCKETS_HOST = "localhost"
 const val SOCKETS_PORT = 8080
 const val SOCKETS_PATH = "/api/v1"

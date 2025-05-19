@@ -54,8 +54,6 @@ import com.esteban.ruano.habits_presentation.ui.composables.HabitReminderItem
 import com.esteban.ruano.habits_presentation.ui.intent.HabitIntent
 import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.state.HabitDetailState
 import com.esteban.ruano.habits_presentation.ui.utils.FrequencyUtils
-import com.esteban.ruano.habits_presentation.utilities.HabitsUtils.date
-import com.esteban.ruano.habits_presentation.utilities.HabitsUtils.time
 import kotlinx.coroutines.launch
 
 @Composable
