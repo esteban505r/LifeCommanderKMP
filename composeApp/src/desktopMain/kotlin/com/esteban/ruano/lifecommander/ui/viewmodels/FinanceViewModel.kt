@@ -269,7 +269,10 @@ class FinanceViewModel(
         }    }
 
     override fun getBudgets(){
-        viewModelScope.launch{ service.getBudgetsWithProgress() }
+        viewModelScope.launch{
+            val budgets = service.getBudgetsWithProgress()
+            _state.value = _state.value.copy(budgets = budgets)
+        }
     }
 
     override fun getBudgetProgress(budgetId: String){

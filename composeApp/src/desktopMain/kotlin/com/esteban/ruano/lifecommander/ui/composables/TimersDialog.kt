@@ -24,11 +24,11 @@ import utils.swap
 fun TimersDialog(
     show: Boolean,
     timersList : List<Timer>,
-    onCreate: (timerId:String, name: String, duration: Int, enabled: Boolean, countsAsPomodoro: Boolean, order: Int) -> Unit,
+    onCreate: (timerId:String, name: String, duration: Long, enabled: Boolean, countsAsPomodoro: Boolean, order: Int) -> Unit,
     onUpdate: (
         timerId: String,
         name: String,
-        duration: Int,
+        duration: Long,
         enabled: Boolean,
         countsAsPomodoro: Boolean,
         order: Int
@@ -135,7 +135,7 @@ fun TimersDialog(
                                             val value = temp * 3600 + minutes * 60 + seconds
                                             timers = timers.map { timer ->
                                                 if (timer.id == timerSelected.value!!) {
-                                                    timer.copy(duration = value.toInt())
+                                                    timer.copy(duration = value)
                                                 } else {
                                                     timer
                                                 }
@@ -149,10 +149,10 @@ fun TimersDialog(
                                         value = minutes.toString(),
                                         onValueChange = {
                                             val temp = it.toLongOrNull() ?: minutes
-                                            val value = hours * 3600 + temp * 60 + seconds
+                                            val value = (hours * 3600 + temp * 60 + seconds) * 1000
                                             timers = timers.map { timer ->
                                                 if (timer.id == timerSelected.value!!) {
-                                                    timer.copy(duration = value.toInt())
+                                                    timer.copy(duration = value)
                                                 } else {
                                                     timer
                                                 }
@@ -166,10 +166,10 @@ fun TimersDialog(
                                         value = seconds.toString(),
                                         onValueChange = {
                                             val temp = it.toLongOrNull() ?: seconds
-                                            val value = hours * 3600 + minutes * 60 + temp
+                                            val value = (hours * 3600 + minutes * 60 + temp) * 1000
                                             timers = timers.map { timer ->
                                                 if (timer.id == timerSelected.value!!) {
-                                                    timer.copy(duration = value.toInt())
+                                                    timer.copy(duration = value)
                                                 } else {
                                                     timer
                                                 }

@@ -97,14 +97,75 @@ object TransactionParser {
 
     private fun determineCategory(description: String): String {
         return when {
-            description.contains("UBER", ignoreCase = true) -> "TRANSPORTATION"
-            description.contains("PRIME VIDEO", ignoreCase = true) -> "ENTERTAINMENT"
-            description.contains("TECNIPAGOS", ignoreCase = true) -> "SERVICES"
-            description.contains("Cajero Automatico", ignoreCase = true) -> "ATM"
+            // Transport
+            description.contains("UBER", ignoreCase = true) ||
+                    description.contains("TRIP", ignoreCase = true) -> "TRANSPORTATION"
+
+            // Subscriptions / Entertainment
+            description.contains("PRIME VIDEO", ignoreCase = true) ||
+                    description.contains("YouTubePrem", ignoreCase = true) ||
+                    description.contains("Google One", ignoreCase = true) -> "BILLS"
+
+            // Bills & Utilities
+            description.contains("EMPRESA DE TELECOMUNICACION", ignoreCase = true) ||
+                    description.contains("EMPRESA DE ACUEDUCTO", ignoreCase = true) ||
+                    description.contains("COMUNICACION CELULAR", ignoreCase = true) -> "BILLS"
+
+            // Food & Dining
+            description.contains("HAMBURGUESAS", ignoreCase = true) ||
+                    description.contains("RESTA", ignoreCase = true) ||
+                    description.contains("BURRITO", ignoreCase = true) ||
+                    description.contains("CAFE", ignoreCase = true) ||
+                    description.contains("TRATTORIA", ignoreCase = true) ||
+                    description.contains("FRUTIMAX", ignoreCase = true) ||
+                    description.contains("RAPPI", ignoreCase = true) -> "ENJOYMENT"
+
+            // Grocery & Essentials
+            description.contains("CARULLA", ignoreCase = true) ||
+                    description.contains("MERKA", ignoreCase = true) ||
+                    description.contains("TIENDA D1", ignoreCase = true) ||
+                    description.contains("DOLLARCITY", ignoreCase = true) -> "GROCERIES"
+
+            // Books & Learning
+            description.contains("LIBROS", ignoreCase = true) ||
+                    description.contains("EDICIONES", ignoreCase = true) ||
+                    description.contains("PANAMERICANA", ignoreCase = true) -> "EDUCATION"
+
+            // Transfers and deposits
+            description.contains("Abono", ignoreCase = true) ||
+                    description.contains("Traslado", ignoreCase = true) ||
+                    description.contains("Pago de No", ignoreCase = true) ||
+                    description.contains("Reversion", ignoreCase = true) -> "TRANSFER"
+
+            // Refunds
             description.contains("Devolucion", ignoreCase = true) -> "REFUND"
-            description.contains("Abono", ignoreCase = true) -> "TRANSFER"
+
+            // ATM
+            description.contains("Cajero Automatico", ignoreCase = true) -> "ATM"
+
+            // Financial / Bank Operations
+            description.contains("BANCOLOMBIA", ignoreCase = true) -> "BANK"
+
+            // Loan payments or charges
+            description.contains("Load", ignoreCase = true) ||
+                    description.contains("Compensar", ignoreCase = true) -> "DEBT"
+
+            // Shopping
+            description.contains("SOTHEN", ignoreCase = true) ||
+                    description.contains("BEDAHE", ignoreCase = true) ||
+                    description.contains("DOLLARCITY", ignoreCase = true) ||
+                    description.contains("Validda", ignoreCase = true) -> "SHOPPING"
+
+            // Services
+            description.contains("TECNIPAGOS", ignoreCase = true) ||
+                    description.contains("PAGOS", ignoreCase = true) -> "SERVICES"
+
+            // Gaming
+            description.contains("Riot Games", ignoreCase = true) -> "ENJOYMENT"
+
             else -> "OTHER"
         }
     }
+
 
 } 

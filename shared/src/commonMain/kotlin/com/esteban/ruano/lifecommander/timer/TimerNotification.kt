@@ -8,5 +8,5 @@ data class TimerNotification(
     val timerId: String,
     val listId: String,
     val status: String,
-    val remainingTime: Int? = null
+    val remainingTime: Long? = null
 )

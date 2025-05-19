@@ -3,6 +3,7 @@ package com.esteban.ruano.models.habits
 import kotlinx.serialization.Serializable
 import com.esteban.ruano.models.reminders.ReminderDTO
 
+@Serializable
 data class HabitDTO(
     val id: String,
     val name: String,

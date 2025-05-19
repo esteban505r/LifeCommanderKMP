@@ -15,8 +15,10 @@ import com.esteban.ruano.lifecommander.models.TimerList
 import com.esteban.ruano.lifecommander.timer.TimerNotification
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackState
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
+import com.esteban.ruano.utils.DateUtils.formatDefault
 import kotlinx.coroutines.launch
 import ui.composables.TimersDialog
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun TimerListDetailScreen(
@@ -24,8 +26,8 @@ fun TimerListDetailScreen(
     timerPlaybackState: TimerPlaybackState,
     listNotifications: List<TimerNotification>,
     onBack: () -> Unit,
-    onAddTimer: (String, String, Int, Boolean, Boolean, Int) -> Unit,
-    onUpdateTimer: (String, String, Int, Boolean, Boolean, Int) -> Unit,
+    onAddTimer: (String, String, Long, Boolean, Boolean, Int) -> Unit,
+    onUpdateTimer: (String, String, Long, Boolean, Boolean, Int) -> Unit,
     onDeleteTimer: (String) -> Unit,
     onReorderTimers: (List<Timer>) -> Unit,
     onGetTimerNotifications: (String) -> List<TimerNotification>,
@@ -229,7 +231,7 @@ private fun TimerItem(
                         style = MaterialTheme.typography.subtitle1
                     )
                     Text(
-                        text = "${timer.duration} seconds",
+                        text = timer.duration.milliseconds.formatDefault(),
                         style = MaterialTheme.typography.body2
                     )
                     if (notifications.isNotEmpty()) {

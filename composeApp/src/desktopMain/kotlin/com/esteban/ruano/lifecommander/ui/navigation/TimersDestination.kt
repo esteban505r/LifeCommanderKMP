@@ -57,7 +57,7 @@ fun TimersScreenDestination(
             onNavigateToDetail(timerList.id)
         },
         onStartTimer = { timerList ->
-            timersViewModel.sendStartTimerListSignal(timerList)
+            timersViewModel.startTimer(timerList)
         },
         onPauseTimer = {
             timersViewModel.pauseTimer()

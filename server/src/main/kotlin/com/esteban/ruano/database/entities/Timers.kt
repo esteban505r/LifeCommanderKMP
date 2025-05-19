@@ -11,7 +11,7 @@ import java.util.UUID
 
 object Timers : UUIDTable() {
     val name = varchar("name", 255)
-    val duration = integer("duration") // in seconds
+    val duration = long("duration") // in seconds
     val enabled = bool("enabled").default(true)
     val countsAsPomodoro = bool("counts_as_pomodoro").default(false)
     val state = enumerationByName("state", 50, TimerState::class).default(TimerState.STOPPED)

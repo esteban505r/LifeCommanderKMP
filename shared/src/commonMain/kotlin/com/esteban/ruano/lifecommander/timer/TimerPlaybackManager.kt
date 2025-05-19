@@ -3,10 +3,12 @@ package com.esteban.ruano.lifecommander.timer
 
 import com.esteban.ruano.lifecommander.models.Timer
 import com.esteban.ruano.lifecommander.models.TimerList
+import com.esteban.ruano.lifecommander.models.timers.TimerState
 
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.datetime.Clock
 
 class TimerPlaybackManager(
 ) {
@@ -17,8 +19,8 @@ class TimerPlaybackManager(
 
     private var playbackJob: Job? = null
 
-    fun startTimerList(timerList: TimerList) {
-        stopTimer() // Cancel any ongoing playback
+    fun startTimerList(timerList: TimerList, onEachTimerFinished: (Timer) -> Unit) {
+        stopTimer()
 
         val enabledTimers = timerList.timers?.filter { it.enabled }
         if (enabledTimers?.isEmpty() == true) {
@@ -34,11 +36,11 @@ class TimerPlaybackManager(
             timerList = timerList,
             currentTimerIndex = 0,
             currentTimer = enabledTimers?.first(),
-            remainingTime = enabledTimers?.first()?.duration ?:0,
+            remainingMillis = enabledTimers?.first()?.duration ?: 0,
             status = TimerPlaybackStatus.Running
         )
 
-        startTicking()
+        startTicking(onEachTimerFinished)
     }
 
     fun pauseTimer() {
@@ -47,10 +49,14 @@ class TimerPlaybackManager(
         }
     }
 
-    fun resumeTimer() {
+    fun resumeTimer(
+        onEachTimerFinished: (Timer) -> Unit = {}
+    ) {
         if (_uiState.value.status == TimerPlaybackStatus.Paused) {
             _uiState.update { it.copy(status = TimerPlaybackStatus.Running) }
-            startTicking()
+            startTicking(
+                onEachTimerFinished = onEachTimerFinished
+            )
         }
     }
 
@@ -60,56 +66,94 @@ class TimerPlaybackManager(
         _uiState.value = TimerPlaybackState()
     }
 
-    private fun startTicking() {
-        println("Starting timer ticking")
+    private fun startTicking(onEachTimerFinished: (Timer) -> Unit = {}) {
         playbackJob?.cancel()
         playbackJob = scope.launch {
-            val isActive = coroutineContext.isActive
-            println("Coroutine is active: $isActive")
+            val startInstant = Clock.System.now().toEpochMilliseconds()
+            var lastTimestamp = startInstant
+
             while (isActive) {
+                delay(16)
+
                 val state = _uiState.value
-                println("Current state: $state")
                 if (state.status != TimerPlaybackStatus.Running) break
 
-                if (state.remainingTime <= 0) {
+                val now = Clock.System.now().toEpochMilliseconds()
+                val elapsed = now - lastTimestamp
+                lastTimestamp = now
+
+                val newRemaining = _uiState.value.remainingMillis - elapsed
+                println("Remaining time: $newRemaining")
+
+                if (newRemaining <= 0) {
                     println("Timer completed: ${state.currentTimer?.name}")
-                    moveToNextTimer()
+                    onEachTimerFinished(state.currentTimer ?: return@launch)
+                    moveToNextTimer(onEachTimerFinished)
                     break
                 }
 
-                println("Ticking: ${state.remainingTime} seconds remaining")
-                delay(1000)
-                _uiState.update {
-                    it.copy(
-                        remainingTime = it.remainingTime - 1
-                    )
-                }
+                _uiState.update { it.copy(remainingMillis = newRemaining) }
             }
         }
     }
 
-    private fun moveToNextTimer() {
+    private fun moveToNextTimer(
+        onEachTimerFinished: (Timer) -> Unit = {}
+    ) {
         val state = _uiState.value
         val list = state.timerList ?: return
         val enabledTimers = list.timers?.filter { it.enabled }
         val nextIndex = state.currentTimerIndex + 1
 
-        val shouldStop = nextIndex >= (enabledTimers?.size?:0) && !list.loopTimers
+        val shouldStop = nextIndex >= (enabledTimers?.size ?: 0) && !list.loopTimers
 
         if (shouldStop || enabledTimers?.isEmpty() == true) {
             stopTimer()
         } else {
-            val newIndex = nextIndex % (enabledTimers?.size?:0)
+            val newIndex = nextIndex % (enabledTimers?.size ?: 0)
             val nextTimer = enabledTimers?.get(newIndex)
 
             _uiState.value = state.copy(
                 currentTimerIndex = newIndex,
                 currentTimer = nextTimer,
-                remainingTime = nextTimer?.duration?:0,
+                remainingMillis = nextTimer?.duration ?: 0,
                 status = TimerPlaybackStatus.Running
             )
 
-            startTicking()
+            startTicking(
+                onEachTimerFinished
+            )
+        }
+    }
+
+    fun overridePlaybackState(
+        timerList: TimerList,
+        timer: Timer,
+        timerIndex: Int,
+        timeRemaining: Long,
+        onEachTimerFinished: (Timer) -> Unit = {}
+    ) {
+        playbackJob?.cancel()
+
+        val status = when (timer.state) {
+            TimerState.RUNNING.toString() -> TimerPlaybackStatus.Running
+            TimerState.PAUSED.toString() -> TimerPlaybackStatus.Paused
+            TimerState.COMPLETED.toString() -> TimerPlaybackStatus.Stopped
+            else -> TimerPlaybackStatus.Stopped
+        }
+
+        _uiState.value = TimerPlaybackState(
+            timerList = timerList,
+            currentTimerIndex = timerIndex,
+            currentTimer = timer,
+            remainingMillis = timeRemaining,
+            status = status
+        )
+
+        if (status == TimerPlaybackStatus.Running) {
+            startTicking(
+                onEachTimerFinished = onEachTimerFinished
+            )
         }
     }
 }
@@ -118,7 +162,7 @@ data class TimerPlaybackState(
     val timerList: TimerList? = null,
     val currentTimerIndex: Int = 0,
     val currentTimer: Timer? = null,
-    val remainingTime: Int = 0,
+    val remainingMillis: Long = 0L,
     val status: TimerPlaybackStatus = TimerPlaybackStatus.Stopped
 )
 

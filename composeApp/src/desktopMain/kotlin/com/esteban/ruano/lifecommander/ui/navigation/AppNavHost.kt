@@ -58,14 +58,11 @@ fun AppNavHost(
     startDestination: String = Screen.Auth.route,
 ) {
     val authState by authViewModel.authState.collectAsState()
-
-    LaunchedEffect(Unit){
-        timersViewModel.connectWebSocket()
-    }
     
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Authenticated -> {
+                timersViewModel.connectWebSocket()
                 if (navController.currentDestination?.route == Screen.Auth.route) {
                     navController.navigate(Screen.Dashboard.route) {
                         popUpTo(Screen.Auth.route) { inclusive = true }

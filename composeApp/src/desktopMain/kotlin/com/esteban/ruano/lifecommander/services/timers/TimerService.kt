@@ -124,14 +124,14 @@ class TimerService(
         token: String,
         listId: String,
         name: String,
-        duration: Int,
+        duration: Long,
         enabled: Boolean,
         countsAsPomodoro: Boolean,
         order: Int
     ): TimerList {
         return withContext(Dispatchers.IO) {
             try {
-                val response = client.post("$TIMER_ENDPOINT/timers") {
+                val response = client.post(TIMER_ENDPOINT) {
                     appHeaders(token)
                     contentType(ContentType.Application.Json)
                     setBody(
@@ -160,7 +160,7 @@ class TimerService(
         timerId: String?,
         timerlistId: String?,
         name: String?,
-        duration: Int?,
+        duration: Long?,
         enabled: Boolean?,
         countsAsPomodoro: Boolean?,
         order: Int?
@@ -194,7 +194,7 @@ class TimerService(
     override suspend fun deleteTimer(token: String, timerId: String) {
         withContext(Dispatchers.IO) {
             try {
-                val response = client.delete("$TIMER_ENDPOINT/timers/$timerId") {
+                val response = client.delete("$TIMER_ENDPOINT/$timerId") {
                     appHeaders(token)
                 }
                 if (response.status != HttpStatusCode.OK) {

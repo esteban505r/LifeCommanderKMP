@@ -12,6 +12,7 @@ import dev.icerock.moko.resources.desc.Resource
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.datetime.*
+import kotlin.math.ceil
 import kotlin.time.Duration
 
 object DateUtils {
@@ -188,7 +189,7 @@ object DateUtils {
 
 
     fun Duration.formatDefault(): String {
-        val totalSeconds = this.inWholeSeconds
+        val totalSeconds = ceil(this.inWholeMilliseconds / 1000.0).toLong()
         val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
         val seconds = totalSeconds % 60

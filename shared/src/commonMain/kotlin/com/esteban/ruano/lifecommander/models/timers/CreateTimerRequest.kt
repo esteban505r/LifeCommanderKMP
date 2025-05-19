@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class CreateTimerRequest(
     val name: String,
     val timerListId: String,
-    val duration: Int,
+    val duration: Long,
     val enabled: Boolean,
     val countsAsPomodoro: Boolean,
     val order: Int

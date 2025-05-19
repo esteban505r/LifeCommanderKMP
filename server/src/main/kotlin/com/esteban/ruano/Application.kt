@@ -34,7 +34,7 @@ fun Application.module() {
     val timerCheckerService = TimerCheckerService(timerService)
 
     // Start background tasks
-    timerCheckerService.start()
+//    timerCheckerService.start()
 }
 
 fun Application.configureWebSockets() {

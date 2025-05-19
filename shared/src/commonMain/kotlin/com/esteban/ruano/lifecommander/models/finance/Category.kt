@@ -9,48 +9,63 @@ enum class Category {
     INVESTMENT,
     FREELANCE,
     GIFT,
-    
-    // Expense categories
-    FOOD,
+
     TRANSPORTATION,
+    ENTERTAINMENT,
+    BILLS,
+    FOOD,
+    GROCERIES,
+    EDUCATION,
+    TRANSFER,
+    REFUND,
+    ATM,
+    BANK,
+    DEBT,
+    SHOPPING,
+    SERVICES,
+    OTHER,
+
+    ENJOYMENT,
+    SAVINGS,
+    BUSINESS,
+
     HOUSING,
     UTILITIES,
-    ENTERTAINMENT,
-    SHOPPING,
-    HEALTH,
-    EDUCATION,
-    TRAVEL,
-    OTHER;
 
-    companion object{
+    HEALTH,
+
+    TRAVEL;
+
+    companion object {
         fun String.toCategory(): Category {
-            return when (this) {
-                "INCOME" -> SALARY
-                "EXPENSE" -> FOOD
-                "HOUSING" -> HOUSING
-                "HEALTH" -> HEALTH
-                "EDUCATION" -> EDUCATION
-                "TRAVEL" -> TRAVEL
-                "SHOPPING" -> SHOPPING
-                "INVESTMENT" -> INVESTMENT
-                "FREELANCE" -> FREELANCE
-                "GIFT" -> GIFT
-                "OTHER" -> OTHER
-                "TRANSPORT" -> TRANSPORTATION
-                "UTILITIES" -> UTILITIES
-                "RENT" -> HOUSING
-                "RESTAURANT" -> FOOD
-                "GROCERIES" -> FOOD
-                "CLOTHING" -> SHOPPING
-                "MEDICAL" -> HEALTH
-                "SALARY" -> SALARY
-                "FOOD" -> FOOD
-                "TRANSPORTATION" -> TRANSPORTATION
-                "ENTERTAINMENT" -> ENTERTAINMENT
-                "SERVICES" -> UTILITIES
-                "ATM" -> TRANSPORTATION
-                "REFUND" -> OTHER
-                "TRANSFER" -> OTHER
+            return when (this.uppercase()) {
+                // Income
+                "INCOME", "SALARY"        -> SALARY
+                "FREELANCE"               -> FREELANCE
+                "GIFT"                    -> GIFT
+                "INVESTMENT"              -> INVESTMENT
+
+                // Expenses
+                "FOOD", "RESTAURANT"      -> FOOD
+                "GROCERIES"               -> GROCERIES
+                "SHOPPING", "CLOTHING"    -> SHOPPING
+                "TRANSPORT", "TRANSPORTATION" -> TRANSPORTATION
+                "HEALTH", "MEDICAL"       -> HEALTH
+                "EDUCATION"               -> EDUCATION
+                "TRAVEL"                  -> TRAVEL
+                "ENTERTAINMENT"           -> ENTERTAINMENT
+                "BILLS"                   -> BILLS
+                "UTILITIES", "SERVICES"   -> UTILITIES
+                "HOUSING", "RENT"         -> HOUSING
+                "DEBT", "LOAN"            -> DEBT
+                "ATM"                     -> ATM
+                "BANK"                    -> BANK
+                "REFUND"                  -> REFUND
+                "TRANSFER"                -> TRANSFER
+                "SAVINGS"                 -> SAVINGS
+                "ENJOYMENT"               -> ENJOYMENT
+                "BUSINESS"                -> BUSINESS
+
                 else -> OTHER
             }
         }

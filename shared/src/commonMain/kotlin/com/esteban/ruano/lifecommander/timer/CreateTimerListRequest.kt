@@ -13,7 +13,7 @@ data class CreateTimerListRequest(
 data class CreateTimerRequest(
     val listId: String,
     val name: String,
-    val duration: Int,
+    val duration: Long,
     val enabled: Boolean,
     val countsAsPomodoro: Boolean,
     val order: Int
@@ -22,7 +22,7 @@ data class CreateTimerRequest(
 @Serializable
 data class UpdateTimerRequest(
     val name: String? = null,
-    val duration: Int? = null,
+    val duration: Long? = null,
     val enabled: Boolean? = null,
     val countsAsPomodoro: Boolean? = null,
     val order: Int? = null

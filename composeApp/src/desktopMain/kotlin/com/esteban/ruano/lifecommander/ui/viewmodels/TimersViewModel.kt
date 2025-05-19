@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.esteban.ruano.lifecommander.models.Timer
 import com.esteban.ruano.lifecommander.models.TimerList
 import com.esteban.ruano.lifecommander.models.UserSettings
 import com.esteban.ruano.lifecommander.services.timers.TimerService
@@ -42,11 +43,9 @@ class TimersViewModel(
     private val _listNotifications = MutableStateFlow<List<TimerNotification>>(emptyList())
     val listNotifications: StateFlow<List<TimerNotification>> = _listNotifications.asStateFlow()
 
-    private val _connectionState = MutableStateFlow<TimerWebSocketClient.ConnectionState>(TimerWebSocketClient.ConnectionState.Disconnected)
+    private val _connectionState =
+        MutableStateFlow<TimerWebSocketClient.ConnectionState>(TimerWebSocketClient.ConnectionState.Disconnected)
     val connectionState: StateFlow<TimerWebSocketClient.ConnectionState> = _connectionState.asStateFlow()
-
-    private val _waitingForServer = MutableStateFlow<String?>(null)
-    val waitingForServer: StateFlow<String?> = _waitingForServer.asStateFlow()
 
     var isLoading by mutableStateOf(false)
         private set
@@ -69,33 +68,113 @@ class TimersViewModel(
         viewModelScope.launch {
             webSocketClient.incomingEvents.collectLatest { event ->
                 try {
+                    if(event == "heartbeat"){
+                        println("Heartbeat received")
+                        return@collectLatest
+                    }
                     println("Converting msg to TimerWebSocketServerMessage")
                     val msg = Json.decodeFromString<TimerWebSocketServerMessage>(event)
                     println("Converted msg to TimerWebSocketServerMessage: $msg")
-                    when (msg) {
-                        is TimerWebSocketServerMessage.TimerListStarted -> {
-                            if (_waitingForServer.value == msg.listId) {
-                                println("Timer list started: ${msg.listId}")
-                                val timerList = getTimerListByID(msg.listId)
-                                if (timerList != null) {
-                                    println("Starting timer list: $timerList")
-                                    startTimerList(timerList)
-                                    _waitingForServer.value = null
-                                } else {
-                                    error = "Timer list not found for id ${msg.listId}"
-                                }
-                            }
-                        }
 
-                        is TimerWebSocketServerMessage.TimerListCompleted -> TODO()
-                        is TimerWebSocketServerMessage.TimerListPaused -> TODO()
-                        is TimerWebSocketServerMessage.TimerListResumed -> TODO()
-                        is TimerWebSocketServerMessage.TimerListStopped -> TODO()
+                    when (msg) {
+                        is TimerWebSocketServerMessage.TimerUpdate -> {
+                            println("Timer update received: ${msg.timer.name} - ${msg.remainingTime}s")
+                            refreshTimerListFromServer(msg.timer, msg.remainingTime, msg.listId)
+                        }
                     }
                 } catch (e: Exception) {
-                    // Ignore or log parse errors
+                    println("Error parsing WebSocket event: ${e.message}")
+                    e.printStackTrace()
                 }
             }
+        }
+    }
+
+    fun refreshTimerListFromServer(timer: Timer, secondsRemaining: Long, listId: String) {
+        println("[Client] Received update for listId=$listId, timer=${timer.name}")
+
+        viewModelScope.launch {
+            val updatedList = getTimerListByID(listId)
+
+            if (updatedList == null) {
+                println("[Client] Timer list not found for ID: $listId")
+                error = "Unable to refresh timer list"
+                return@launch
+            }
+
+            val timerIndex = updatedList.timers?.indexOfFirst { it.id == timer.id } ?: -1
+
+            if (timerIndex == -1) {
+                println("[Client] Timer ${timer.id} not found in list. Maybe out of sync?")
+                error = "Timer not found in list"
+                return@launch
+            }
+
+            println("[Client] Starting playback at timer index $timerIndex with $secondsRemaining seconds")
+
+            timerPlaybackManager.overridePlaybackState(
+                timerList = updatedList,
+                timer = timer,
+                timerIndex = timerIndex,
+                timeRemaining = secondsRemaining,
+                onEachTimerFinished = {
+                    println("[Client] Timer finished: ${it.name}")
+                    sendTimerUpdate(updatedList.id, it, 0)
+                }
+            )
+        }
+    }
+
+    private fun sendTimerUpdate(listId: String, timer: Timer, secondsRemaining: Long) {
+        webSocketClient.sendMessage(
+            Json.encodeToString(
+                TimerWebSocketClientMessage.serializer(),
+                TimerWebSocketClientMessage.TimerUpdate(
+                    listId = listId,
+                    timer = timer,
+                    remainingSeconds = secondsRemaining.toLong()
+                )
+            )
+        )
+    }
+
+    fun startTimer(timerList: TimerList) {
+        viewModelScope.launch {
+            timerPlaybackManager.startTimerList(timerList) { timer ->
+                sendTimerUpdate(timerList.id, timer, 0)
+            }
+            if (timerList.timers.isNullOrEmpty()) return@launch
+            sendTimerUpdate(timerList.id, timerList.timers!!.first(),
+                timerList.timers?.firstOrNull()?.duration ?: 0)
+        }
+    }
+
+    fun pauseTimer() {
+        viewModelScope.launch {
+            val currentList = timerPlaybackManager.uiState.value.timerList ?: return@launch
+            val currentTimer = timerPlaybackManager.uiState.value.currentTimer ?: return@launch
+            timerPlaybackManager.pauseTimer()
+            sendTimerUpdate(currentList.id, currentTimer,
+                timerPlaybackManager.uiState.value.remainingMillis)
+        }
+    }
+
+    fun resumeTimer() {
+        viewModelScope.launch {
+            val currentList = timerPlaybackManager.uiState.value.timerList ?: return@launch
+            val currentTimer = timerPlaybackManager.uiState.value.currentTimer ?: return@launch
+            timerPlaybackManager.resumeTimer()
+            sendTimerUpdate(currentList.id, currentTimer,
+                timerPlaybackManager.uiState.value.remainingMillis)
+        }
+    }
+
+    fun stopTimer() {
+        viewModelScope.launch {
+            val currentList = timerPlaybackManager.uiState.value.timerList ?: return@launch
+            val currentTimer = timerPlaybackManager.uiState.value.currentTimer ?: return@launch
+            timerPlaybackManager.stopTimer()
+            sendTimerUpdate(currentList.id, currentTimer, 0)
         }
     }
 
@@ -178,7 +257,7 @@ class TimersViewModel(
     fun createTimer(
         listId: String,
         name: String,
-        duration: Int,
+        duration: Long,
         enabled: Boolean,
         countsAsPomodoro: Boolean,
         order: Int,
@@ -209,7 +288,7 @@ class TimersViewModel(
     fun updateTimer(
         timerId: String,
         name: String,
-        duration: Int,
+        duration: Long,
         enabled: Boolean,
         countsAsPomodoro: Boolean,
         order: Int,
@@ -279,7 +358,6 @@ class TimersViewModel(
         }
     }
 
-
     fun loadTimerListByID(listId: String) {
         viewModelScope.launch {
             isLoading = true
@@ -298,11 +376,11 @@ class TimersViewModel(
         }
     }
 
-
     suspend fun getTimerListByID(listId: String): TimerList? {
         return timerService.getTimerList(
             token = tokenStorageImpl.getToken() ?: "",
-            listId)
+            listId
+        )
     }
 
     fun loadTimerLists() {
@@ -336,43 +414,6 @@ class TimersViewModel(
             } finally {
                 isLoading = false
             }
-        }
-    }
-
-    fun sendStartTimerListSignal(timerList: TimerList) {
-        _waitingForServer.value = timerList.id
-        webSocketClient.sendMessage(
-            Json.encodeToString(
-                TimerWebSocketClientMessage.serializer(
-                ),
-                TimerWebSocketClientMessage.StartTimerList(
-                    listId = timerList.id
-                )
-            )
-        )
-    }
-
-    fun startTimerList(timerList: TimerList) {
-        viewModelScope.launch {
-            timerPlaybackManager.startTimerList(timerList)
-        }
-    }
-
-    fun pauseTimer() {
-        viewModelScope.launch {
-            timerPlaybackManager.pauseTimer()
-        }
-    }
-
-    fun resumeTimer() {
-        viewModelScope.launch {
-            timerPlaybackManager.resumeTimer()
-        }
-    }
-
-    fun stopTimer() {
-        viewModelScope.launch {
-            timerPlaybackManager.stopTimer()
         }
     }
 

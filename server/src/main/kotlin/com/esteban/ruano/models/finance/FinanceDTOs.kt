@@ -48,7 +48,7 @@ data class UpdateTransactionDTO(
     val type: TransactionType? = null,
     val category: String? = null
 )
-
+@Serializable
 data class TransactionsResponseDTO(
     val transactions: List<TransactionResponseDTO>,
     val totalCount: Long

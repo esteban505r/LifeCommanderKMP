@@ -238,6 +238,9 @@ fun FinanceScreen(
 
                 2 -> BudgetTracker(
                     budgets = state.budgets,
+                    onLoadBudgets = {
+                        actions.getBudgets()
+                    },
                     onAddBudget = {
                         actions.addBudget(it)
                     },

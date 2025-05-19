@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class Timer(
     val id: String,
     val name: String,
-    val duration: Int,
+    val duration: Long,
     val state: String,
     val enabled: Boolean,
     val remainingSeconds: Long = 0,

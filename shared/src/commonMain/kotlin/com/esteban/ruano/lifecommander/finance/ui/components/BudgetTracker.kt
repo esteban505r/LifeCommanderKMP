@@ -22,22 +22,28 @@ import com.lifecommander.finance.ui.BudgetForm
 @Composable
 fun BudgetTracker(
     budgets: List<BudgetProgress>,
+    onLoadBudgets: () -> Unit,
     onAddBudget: (Budget) -> Unit,
     onEditBudget: (Budget) -> Unit,
     onDeleteBudget: (Budget) -> Unit,
 ) {
 
+    LaunchedEffect(Unit){
+
+    }
+
     var showBudgetFormDialog by remember { mutableStateOf(false) }
     var editingBudget by remember { mutableStateOf<Budget?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().padding(
+        horizontal = 16.dp,
+        vertical = 24.dp
+    )) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
             LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 64.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -54,8 +60,28 @@ fun BudgetTracker(
             }
         }
 
+        Card (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .padding(end = 64.dp)
+                .align(Alignment.BottomCenter),
+            backgroundColor = MaterialTheme.colors.surface,
+            elevation = 4.dp
+        ) {
+            Text(
+                text = "Total Budgeted: ${budgets.sumOf { it.budget.amount }.toCurrencyFormat()}",
+                style = MaterialTheme.typography.h5,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+
         FloatingActionButton(
-            onClick = { showBudgetFormDialog = true },
+            onClick = {
+                editingBudget = null
+                showBudgetFormDialog = true
+                      },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
@@ -79,7 +105,7 @@ fun BudgetTracker(
                         if (editingBudget == null) {
                             onAddBudget(budget)
                         } else {
-                            onEditBudget(budget)
+                            onEditBudget(budget.copy(id = editingBudget!!.id))
                         }
                         showBudgetFormDialog = false
                         editingBudget = null

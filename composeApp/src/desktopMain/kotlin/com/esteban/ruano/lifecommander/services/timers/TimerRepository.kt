@@ -29,7 +29,7 @@ interface TimerRepository {
         token: String,
         listId: String,
         name: String,
-        duration: Int,
+        duration: Long,
         enabled: Boolean,
         countsAsPomodoro: Boolean,
         order: Int
@@ -40,7 +40,7 @@ interface TimerRepository {
         timerId: String?= null,
         name: String? = null,
         timerListId: String? = null,
-        duration: Int? = null,
+        duration: Long? = null,
         enabled: Boolean? = null,
         countsAsPomodoro: Boolean? = null,
         order: Int? = null

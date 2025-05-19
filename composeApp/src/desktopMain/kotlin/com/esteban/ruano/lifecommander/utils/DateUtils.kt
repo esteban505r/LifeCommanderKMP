@@ -67,11 +67,18 @@ object DateUtils {
         return "${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}"
     }
 
+    //From millis
     fun Long.getTimeSeparated(): Map<TimeTypes,Long> {
-        val hours = this / 3600
-        val minutes = (this % 3600) / 60
-        val seconds = this % 60
-        return mapOf(TimeTypes.HOUR to hours, TimeTypes.MINUTE to minutes, TimeTypes.SECOND to seconds)
+        val seconds = this / 1000
+        val minutes = seconds / 60
+        val hours = minutes / 60
+        val days = hours / 24
+
+        return mapOf(
+            TimeTypes.HOUR to hours % 24,
+            TimeTypes.MINUTE to minutes % 60,
+            TimeTypes.SECOND to seconds % 60
+        )
     }
 
     fun Duration.format(): String {

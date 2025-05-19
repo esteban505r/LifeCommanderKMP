@@ -15,10 +15,7 @@ fun Application.configureSerialization() {
             classDiscriminator = "type"
             serializersModule = SerializersModule {
                 polymorphic(TimerWebSocketClientMessage::class) {
-                    subclass(
-                        TimerWebSocketClientMessage.StartTimerList::class,
-                        TimerWebSocketClientMessage.StartTimerList.serializer()
-                    )
+
                 }
             }
         })

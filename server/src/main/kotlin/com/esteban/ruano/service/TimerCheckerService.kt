@@ -1,9 +1,6 @@
 package com.esteban.ruano.service
 
-import com.esteban.ruano.database.converters.toDomainModel
-import com.esteban.ruano.database.entities.Timer
-import com.esteban.ruano.database.entities.Timers
-import com.esteban.ruano.lifecommander.models.timers.TimerState
+import com.esteban.ruano.lifecommander.models.timers.CompletedTimerInfo
 import com.esteban.ruano.lifecommander.timer.TimerWebSocketServerMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,11 +9,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.*
 import kotlinx.datetime.toLocalDateTime
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.transactions.transaction
-import kotlin.time.Duration.Companion.seconds
+import java.util.UUID
 
 
 class TimerCheckerService(
@@ -28,7 +22,7 @@ class TimerCheckerService(
         scope.launch {
             while (true) {
                 try {
-                    checkCompletedTimers()
+                    checkTimers()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -37,93 +31,64 @@ class TimerCheckerService(
         }
     }
 
-    private suspend fun checkCompletedTimers() {
+    private suspend fun checkTimers() {
         val now = Clock.System.now()
         val currentTime = now.toLocalDateTime(TimeZone.UTC)
+        val timezone = TimeZone.UTC
 
-        // Fetch completed timers inside transaction, but keep it short
-        val completedTimers = transaction {
-            Timer.find {
-                (Timers.state eq TimerState.RUNNING) and
-                        (Timers.startTime.isNotNull()) // Exposed needs this in SQL
-            }
-                .limit(1000)
-                .filter { timer ->
-                    val timezone = TimeZone.UTC
-                    val endTime = timer.startTime!!
-                        .toInstant(timezone)
-                        .plus(timer.duration.seconds)
-                        .toLocalDateTime(timezone)
-                    endTime <= currentTime
-                }
-                .toList()
-        }
+        // Fetch completed timers and needed metadata
+        val completedTimers: List<CompletedTimerInfo> = timerService.checkCompletedTimers(
+            timezone,
+            currentTime
+        )
 
         if (completedTimers.isEmpty()) {
-            println("No completed timers found.")
+            println("[Timers] No timers completed at $now")
             return
         }
 
-        println("Found ${completedTimers.size} completed timers.")
+        println("[Timers] Processing ${completedTimers.size} completed timers")
 
-        // Process each timer outside transaction
-        completedTimers.forEach { timer ->
+        for (info in completedTimers) {
             try {
-                val startInstant = timer.startTime!!.toInstant(TimeZone.UTC)
-                val remainingSeconds = maxOf(0, timer.duration - (now - startInstant).inWholeSeconds)
-
-                // Update state inside transaction
-                transaction {
-                    timer.state = TimerState.COMPLETED
-                }
-
-                // Build domain model
-                val domainTimer = timer.toDomainModel().copy(
-                    remainingSeconds = remainingSeconds,
-                )
-
-                TimerNotifier.broadcastUpdate(
-                    TimerWebSocketServerMessage.TimerListCompleted(
-                        listId = timer.list.id.toString(),
-                    ), timer.list.userId.id.value
-                )
-
                 CoroutineScope(Dispatchers.Default).launch {
                     timerService.sendPushNotificationToUser(
-                        userId = timer.list.userId.id.value,
+                        userId = info.userId,
                         title = "Timer Completed",
-                        body = "Your timer '${timer.name}' has completed.",
+                        body = "Your timer '${info.name}' has completed.",
                         data = mapOf(
                             "type" to "TIMER_COMPLETED",
-                            "timerId" to timer.id.value.toString()
+                            "timerId" to info.domainTimer.id,
+                            "listId" to info.listId.toString()
                         )
                     )
                 }
 
-                val nexTimer = timerService.getNextTimerToStart(
-                    timer.list.id.value,
-                    timer
-                )
-
-                timerService.startTimer(
-                    listId = timer.list.id.value,
-                    timerId = nexTimer?.id?.value,
-                )
-
-                if (nexTimer != null) {
-                    TimerNotifier.broadcastUpdate(
-                        TimerWebSocketServerMessage.TimerListStarted(
-                            listId = timer.list.id.toString(),
-                            timerStartedId = nexTimer.id.value.toString(),
-                        ), timer.list.userId.id.value
-                    )
+                val nextTimer = timerService.getNextTimerToStart(UUID.fromString(info.listId), info.domainTimer)
+                val updatedTimer = nextTimer?.let {
+                    timerService.startTimer(
+                        userId = info.userId,
+                        listId = UUID.fromString(info.listId),
+                        timerId = it.id.value
+                    ).firstOrNull()
                 }
 
+                TimerNotifier.broadcastUpdate(
+                    TimerWebSocketServerMessage.TimerUpdate(
+                        timer = updatedTimer ?: info.domainTimer,
+                        listId = info.listId,
+                        remainingTime = updatedTimer?.duration ?: info.domainTimer.duration,
+                    ),
+                    info.userId
+                )
 
-                println("Processed completed timer: ${timer.id}")
+                println("[Timers] Timer update broadcasted for list ${info.listId}")
+
             } catch (e: Exception) {
-                println("Error processing completed timer: ${timer.id}, error: ${e.stackTraceToString()}")
+                println("[Timers] Error processing timer ${info.domainTimer.id}: ${e.message}")
+                e.printStackTrace()
             }
         }
     }
+
 } 

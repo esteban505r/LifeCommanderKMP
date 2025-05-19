@@ -54,7 +54,7 @@ fun TimerListDetailDestination(
                 timersViewModel.getTimerNotifications(timerId)
             },
             onStartTimer = { timerList ->
-                timersViewModel.startTimerList(timerList)
+                timersViewModel.startTimer(timerList)
             },
             onPauseTimer = {
                 timersViewModel.pauseTimer()

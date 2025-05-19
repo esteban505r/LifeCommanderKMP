@@ -1,11 +1,13 @@
 package com.esteban.ruano.lifecommander.timer
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 sealed class TimerWebSocketClientMessage {
     @Serializable
-    @SerialName("StartTimerList")
-    data class StartTimerList(val listId: String) : TimerWebSocketClientMessage()
+    data class TimerUpdate(
+        val listId: String,
+        val timer: com.esteban.ruano.lifecommander.models.Timer,
+        val remainingSeconds: Long,
+    ) : TimerWebSocketClientMessage()
 }

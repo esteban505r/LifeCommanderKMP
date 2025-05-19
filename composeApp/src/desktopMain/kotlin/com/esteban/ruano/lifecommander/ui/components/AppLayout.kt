@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.esteban.ruano.lifecommander.timer.TimerPlaybackState
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
 import com.esteban.ruano.lifecommander.ui.composables.FloatingActionButtons
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
@@ -27,6 +26,7 @@ import ui.viewmodels.DailyJournalViewModel
 import ui.viewmodels.HabitsViewModel
 import ui.viewmodels.TasksViewModel
 import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -81,7 +81,7 @@ fun AppLayout(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(LocalDateTime.now().dayOfWeek.name, style = MaterialTheme.typography.subtitle1)
                         
-                        if (timerPlaybackState.status == TimerPlaybackStatus.Running) {
+                        if (timerPlaybackState.status != TimerPlaybackStatus.Stopped) {
                             Spacer(modifier = Modifier.width(16.dp))
                             Box(
                                 modifier = Modifier
@@ -97,7 +97,7 @@ fun AppLayout(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
                                     Text(
-                                        text = timerPlaybackState.remainingTime.seconds.formatDefault(),
+                                        text = "${timerPlaybackState.currentTimer?.name} ${timerPlaybackState.remainingMillis.milliseconds.formatDefault()}",
                                         style = MaterialTheme.typography.subtitle1,
                                         color = MaterialTheme.colors.onSurface
                                     )
