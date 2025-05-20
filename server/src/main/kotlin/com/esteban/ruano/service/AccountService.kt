@@ -2,7 +2,6 @@ package com.esteban.ruano.service
 
 import com.esteban.ruano.database.converters.toResponseDTO
 import com.esteban.ruano.database.entities.*
-import com.esteban.ruano.database.models.AccountType
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.finance.*
 import org.jetbrains.exposed.sql.and
@@ -14,7 +13,7 @@ class AccountService : BaseService() {
     fun createAccount(
         userId: Int,
         name: String,
-        type: AccountType,
+        type: com.lifecommander.finance.model.AccountType,
         initialBalance: Double,
         currency: String = "USD"
     ): UUID? {
@@ -67,7 +66,7 @@ class AccountService : BaseService() {
         userId: Int,
         name: String? = null,
         initialBalance: Double? = null,
-        type: AccountType? = null,
+        type: com.lifecommander.finance.model.AccountType? = null,
         currency: String? = null
     ): Boolean {
         return transaction {

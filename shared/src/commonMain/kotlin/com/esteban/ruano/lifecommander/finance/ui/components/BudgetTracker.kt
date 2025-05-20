@@ -1,24 +1,27 @@
-package com.lifecommander.finance.ui.components
+package com.esteban.ruano.lifecommander.finance.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.esteban.ruano.lifecommander.models.finance.Budget
-import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
+import com.esteban.ruano.lifecommander.models.finance.*
+import com.esteban.ruano.lifecommander.ui.components.EnumChipSelector
+import com.esteban.ruano.lifecommander.ui.components.ExpandableFilterSection
+import com.esteban.ruano.lifecommander.ui.components.FilterSidePanel
 import com.esteban.ruano.lifecommander.utils.toCurrencyFormat
 import com.lifecommander.finance.ui.BudgetForm
+import com.lifecommander.ui.components.CustomDatePicker
+import kotlinx.datetime.*
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun BudgetTracker(
     budgets: List<BudgetProgress>,
@@ -26,24 +29,50 @@ fun BudgetTracker(
     onAddBudget: (Budget) -> Unit,
     onEditBudget: (Budget) -> Unit,
     onDeleteBudget: (Budget) -> Unit,
+    onBudgetClick: (Budget) -> Unit,
+    onShowFilters: (Boolean) -> Unit,
+    filters: BudgetFilters = BudgetFilters()
 ) {
-
-    LaunchedEffect(Unit){
-
-    }
-
     var showBudgetFormDialog by remember { mutableStateOf(false) }
     var editingBudget by remember { mutableStateOf<Budget?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize().padding(
-        horizontal = 16.dp,
-        vertical = 24.dp
-    )) {
+    // Panel principal
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 24.dp)
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Budgets",
+                    style = MaterialTheme.typography.h5,
+                    fontWeight = FontWeight.Bold
+                )
+                Button(
+                    onClick = { onShowFilters(true) },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = if (filters != BudgetFilters()) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
+                        contentColor = if (filters != BudgetFilters()) MaterialTheme.colors.onPrimary else MaterialTheme.colors.primary
+                    )
+                ) {
+                    Icon(Icons.Default.FilterList, contentDescription = "Filters")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Filters")
+                }
+            }
+
             LazyColumn(
-                modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 64.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(bottom = 64.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -54,13 +83,14 @@ fun BudgetTracker(
                             editingBudget = budgetProgress.budget
                             showBudgetFormDialog = true
                         },
-                        onDelete = { onDeleteBudget(budgetProgress.budget) }
+                        onDelete = { onDeleteBudget(budgetProgress.budget) },
+                        onBudgetClick = onBudgetClick
                     )
                 }
             }
         }
 
-        Card (
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
@@ -81,52 +111,49 @@ fun BudgetTracker(
             onClick = {
                 editingBudget = null
                 showBudgetFormDialog = true
-                      },
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
             backgroundColor = MaterialTheme.colors.primary
         ) {
-            Icon(
-                Icons.Default.Add,
-                contentDescription = "Add Budget",
-                tint = MaterialTheme.colors.onPrimary
-            )
+            Icon(Icons.Default.Add, contentDescription = "Add Budget", tint = MaterialTheme.colors.onPrimary)
         }
     }
 
     if (showBudgetFormDialog) {
-        Dialog(
-            onDismissRequest = { showBudgetFormDialog = false }) {
+        Dialog(onDismissRequest = { showBudgetFormDialog = false }) {
             Surface {
                 BudgetForm(
                     initialBudget = editingBudget,
-                    onSave = { budget ->
-                        if (editingBudget == null) {
-                            onAddBudget(budget)
-                        } else {
-                            onEditBudget(budget.copy(id = editingBudget!!.id))
-                        }
+                    onSave = {
+                        if (editingBudget == null) onAddBudget(it)
+                        else onEditBudget(it.copy(id = editingBudget!!.id))
                         showBudgetFormDialog = false
                         editingBudget = null
                     },
-                    onCancel = { showBudgetFormDialog = false },
+                    onCancel = { showBudgetFormDialog = false }
                 )
             }
         }
     }
 
-
 }
 
+
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun BudgetProgressItem(
     budgetProgress: BudgetProgress,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onBudgetClick: (Budget) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        onClick = {
+            onBudgetClick(budgetProgress.budget)
+        },
         backgroundColor = if (budgetProgress.isOverBudget) {
             MaterialTheme.colors.error.copy(alpha = 0.1f)
         } else {
@@ -221,4 +248,4 @@ private fun BudgetProgressItem(
             }
         }
     }
-} 
+}

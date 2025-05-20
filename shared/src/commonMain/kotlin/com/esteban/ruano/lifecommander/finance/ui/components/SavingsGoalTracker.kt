@@ -16,7 +16,7 @@ import com.lifecommander.finance.model.SavingsGoalProgress
 
 @Composable
 fun SavingsGoalTracker(
-    goals: List<SavingsGoalProgress>,
+    goals: List<SavingsGoalProgress> = emptyList(),
     onAddGoal: () -> Unit,
     onEditGoal: (SavingsGoal) -> Unit,
     onDeleteGoal: (SavingsGoal) -> Unit,

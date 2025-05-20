@@ -3,12 +3,13 @@ package com.esteban.ruano.utils
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import com.esteban.ruano.database.entities.HabitTrack
-import com.esteban.ruano.database.models.Frequency
 import com.esteban.ruano.models.habits.HabitDTO
+import com.lifecommander.models.Frequency
 
 object HabitUtils {
     fun isDone(habit: HabitDTO, tracking: HabitTrack?, date: LocalDate): Boolean {
         return when (habit.frequency) {
+
             Frequency.DAILY.value -> {
                 !(tracking == null || tracking.doneDateTime.date != date)
             }

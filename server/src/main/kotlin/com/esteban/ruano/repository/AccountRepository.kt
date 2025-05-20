@@ -1,12 +1,12 @@
 package com.esteban.ruano.repository
 
-import com.esteban.ruano.database.models.AccountType
 import com.esteban.ruano.models.finance.AccountResponseDTO
 import com.esteban.ruano.service.AccountService
+import com.lifecommander.finance.model.AccountType
 import java.util.UUID
 
 class AccountRepository(private val service: AccountService) {
-    fun create(userId: Int, name: String, type: AccountType, initialBalance: Double, currency: String = "USD"): UUID? =
+    fun create(userId: Int, name: String, type: com.lifecommander.finance.model.AccountType, initialBalance: Double, currency: String = "USD"): UUID? =
         service.createAccount(userId, name, type, initialBalance, currency)
 
     fun getAll(userId: Int): List<AccountResponseDTO> = service.getAccountsByUser(userId)

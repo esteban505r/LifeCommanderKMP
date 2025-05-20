@@ -1,6 +1,7 @@
 package com.esteban.ruano.lifecommander.services.finance
 
 import com.esteban.ruano.lifecommander.models.finance.Budget
+import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
@@ -133,8 +134,28 @@ class FinanceService(
         }.body()
     }
 
-    suspend fun getBudgetsWithProgress(): List<BudgetProgress> {
-        return httpClient.get("$baseUrl/finance/budgets/withProgress") {
+    suspend fun getBudgetsWithProgress(
+        filters: BudgetFilters = BudgetFilters()
+    ): List<BudgetProgress> {
+        val url = buildString {
+            append("$baseUrl/finance/budgets/withProgress")
+            val params = mutableListOf<String>()
+            
+            // Add filter parameters
+            filters.searchPattern?.let { params.add("search=$it") }
+            filters.categories?.forEach { params.add("category=$it") }
+            filters.startDate?.let { params.add("startDate=$it") }
+            filters.endDate?.let { params.add("endDate=$it") }
+            filters.minAmount?.let { params.add("minAmount=$it") }
+            filters.maxAmount?.let { params.add("maxAmount=$it") }
+            filters.isOverBudget?.let { params.add("isOverBudget=$it") }
+            
+            if (params.isNotEmpty()) {
+                append("?${params.joinToString("&")}")
+            }
+        }
+        
+        return httpClient.get(url) {
             appHeaders(tokenStorageImpl.getToken())
         }.body()
     }
@@ -240,6 +261,18 @@ class FinanceService(
         }
         
         return response.body()
+    }
+
+    suspend fun getBudgetTransactions(budgetId: String): List<Transaction> {
+        val response = httpClient.get("$baseUrl/finance/budgets/$budgetId/transactions") {
+            appHeaders(tokenStorageImpl.getToken())
+        }
+
+        if (response.status == HttpStatusCode.OK) {
+            return response.body<List<Transaction>>()
+        } else {
+            throw Exception("Failed to fetch budget transactions: ${response.status}")
+        }
     }
 }
 

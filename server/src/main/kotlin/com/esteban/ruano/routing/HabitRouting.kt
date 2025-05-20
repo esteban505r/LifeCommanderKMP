@@ -4,12 +4,12 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import com.esteban.ruano.database.models.Frequency
 import com.esteban.ruano.models.habits.CreateHabitDTO
 import com.esteban.ruano.models.habits.UpdateHabitDTO
 import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.repository.HabitRepository
 import com.esteban.ruano.utils.Validator
+import com.lifecommander.models.Frequency
 import java.util.*
 
 fun Route.habitsRouting(

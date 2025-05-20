@@ -1,7 +1,7 @@
 package com.esteban.ruano.database.entities
 
-import com.esteban.ruano.database.models.Frequency
 import com.esteban.ruano.database.models.Status
+import com.lifecommander.models.Frequency
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.UUIDEntity

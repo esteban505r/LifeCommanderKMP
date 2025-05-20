@@ -9,6 +9,7 @@ import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.models.finance.*
 import com.esteban.ruano.repository.*
 import com.esteban.ruano.lifecommander.models.ErrorResponse
+import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.finance.model.ImportTransactionsRequest
@@ -216,7 +217,24 @@ fun Route.financeRouting(
             }
             get("/withProgress") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                call.respond(budgetRepository.getAllProgress(userId))
+                val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
+                val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
+                val searchPattern = call.parameters["search"]
+                val categories = call.parameters.getAll("category")
+                val startDate = call.parameters["startDate"]
+                val endDate = call.parameters["endDate"]
+                val minAmount = call.parameters["minAmount"]?.toDoubleOrNull()
+                val maxAmount = call.parameters["maxAmount"]?.toDoubleOrNull()
+
+                val filters = BudgetFilters(
+                    searchPattern = searchPattern,
+                    categories = categories,
+                    startDate = startDate,
+                    endDate = endDate,
+                    minAmount = minAmount,
+                    maxAmount = maxAmount,
+                )
+                call.respond(budgetRepository.getAllProgress(userId, limit,offset, filters))
             }
             get("/byDateRange") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
@@ -275,6 +293,12 @@ fun Route.financeRouting(
                 } else {
                     call.respond(HttpStatusCode.InternalServerError)
                 }
+            }
+
+            get("/{id}/transactions") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val id = UUID.fromString(call.parameters["id"]!!)
+                call.respond(budgetRepository.getBudgetTransactions(userId, id))
             }
         }
 

@@ -13,6 +13,7 @@ fun FinancialScreenDestination(
     modifier: Modifier = Modifier,
     financialViewModel: FinanceViewModel = koinViewModel(),
     onOpenImporter: () -> Unit = {},
+    onOpenBudgetTransactions: (String) -> Unit = {},
 ) {
     val state by financialViewModel.state.collectAsState()
 
@@ -21,5 +22,6 @@ fun FinancialScreenDestination(
         state = state,
         actions = financialViewModel,
         onOpenImporter = onOpenImporter,
+        onOpenBudgetTransactions = onOpenBudgetTransactions,
     )
 } 

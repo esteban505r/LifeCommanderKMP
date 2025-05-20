@@ -13,7 +13,9 @@ import com.esteban.ruano.lifecommander.ui.navigation.CalendarScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.SettingsScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimerListDetailDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimersScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.routes.BudgetTransactionsRoute
 import com.esteban.ruano.lifecommander.ui.navigation.routes.TimerListDetailRoute
+import com.esteban.ruano.lifecommander.ui.screens.BudgetTransactionsScreen
 import com.esteban.ruano.lifecommander.ui.screens.FinancialScreenDestination
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -36,11 +38,11 @@ sealed class Screen(val route: String) {
     object Finance : Screen("finance")
     object FinanceImporter : Screen("finance_importer")
     object Calendar : Screen("calendar")
-
     object Timers : Screen("timers")
-
     object Settings : Screen("settings")
-
+    object BudgetTransactions : Screen("budget_transactions/{budgetId}") {
+        fun createRoute(budgetId: String) = "budget_transactions/$budgetId"
+    }
 }
 
 @Composable
@@ -139,6 +141,11 @@ fun AppNavHost(
                         onOpenImporter = {
                             navController.navigate(Screen.FinanceImporter.route)
                         },
+                        onOpenBudgetTransactions = { budgetId ->
+                            navController.navigate(BudgetTransactionsRoute(
+                                budgetId
+                            ))
+                        }
                     )
                 }
 
@@ -147,6 +154,17 @@ fun AppNavHost(
                         onImportComplete = {
                             navController.navigateUp()
                         },
+                    )
+                }
+
+                composable<BudgetTransactionsRoute>(
+                ) { backStackEntry ->
+                    val args = backStackEntry.toRoute<BudgetTransactionsRoute>()
+                    BudgetTransactionsScreen(
+                        budgetId = args.budgetId,
+                        onBack = {
+                            navController.navigateUp()
+                        }
                     )
                 }
 

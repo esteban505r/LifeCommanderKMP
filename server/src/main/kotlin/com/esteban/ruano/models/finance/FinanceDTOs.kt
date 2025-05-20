@@ -1,6 +1,6 @@
 package com.esteban.ruano.models.finance
 
-import com.esteban.ruano.database.models.AccountType
+import com.lifecommander.finance.model.AccountType
 import com.lifecommander.finance.model.TransactionType
 import kotlinx.serialization.Serializable
 
@@ -24,7 +24,7 @@ data class UpdateAccountDTO(
 data class AccountResponseDTO(
     val id: String,
     val name: String,
-    val type: AccountType,
+    val type: com.lifecommander.finance.model.AccountType,
     val balance: Double,
     val initialBalance: Double,
     val currency: String,

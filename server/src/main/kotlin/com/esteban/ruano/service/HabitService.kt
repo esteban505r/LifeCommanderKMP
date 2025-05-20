@@ -9,7 +9,6 @@ import com.esteban.ruano.database.entities.Habit
 import com.esteban.ruano.database.entities.HabitTrack
 import com.esteban.ruano.database.entities.HabitTracks
 import com.esteban.ruano.database.entities.Habits
-import com.esteban.ruano.database.models.Frequency
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.habits.CreateHabitDTO
 import com.esteban.ruano.models.habits.HabitDTO
@@ -18,6 +17,7 @@ import com.esteban.ruano.models.reminders.UpdateReminderDTO
 import com.esteban.ruano.utils.HabitUtils
 import com.esteban.ruano.utils.parseDate
 import com.esteban.ruano.utils.parseDateTime
+import com.lifecommander.models.Frequency
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq

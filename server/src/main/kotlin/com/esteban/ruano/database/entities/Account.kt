@@ -1,6 +1,5 @@
 package com.esteban.ruano.database.entities
 
-import com.esteban.ruano.database.models.AccountType
 import com.esteban.ruano.database.models.Status
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -11,7 +10,7 @@ import java.util.UUID
 
 object Accounts : UUIDTable() {
     val name = varchar("name", 50)
-    val type = enumerationByName("type", 20, AccountType::class)
+    val type = enumerationByName("type", 20, com.lifecommander.finance.model.AccountType::class)
     val initialBalance = decimal("balance", 10, 2)
     val currency = varchar("currency", 3).default("USD")
     val user = reference("user_id", Users, ReferenceOption.CASCADE)

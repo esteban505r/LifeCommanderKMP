@@ -3,6 +3,8 @@ package com.esteban.ruano.lifecommander.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.esteban.ruano.lifecommander.models.finance.Budget
+import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
+import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.lifecommander.services.finance.FinanceService
 import com.lifecommander.finance.model.*
@@ -83,7 +85,7 @@ class FinanceViewModel(
                 )
 
                 val savingsGoalProgress = savingsGoals.associate { goal ->
-                    (goal.id?:"") to service.getSavingsGoalProgress(goal.id?:"")
+                    (goal.id?:"") to service.getSavingsGoalProgress(goal.id?:"").percentageComplete
                 }
 
                 _state.value = _state.value.copy(
@@ -103,6 +105,14 @@ class FinanceViewModel(
                 )
             }
         }
+    }
+
+    override fun changeBudgetFilters(filters: BudgetFilters) {
+        _state.value = _state.value.copy(
+            budgetFilters = filters,
+            currentPage = 0
+        )
+        getBudgets()
     }
 
     override fun selectAccount(account: Account?) {
@@ -268,10 +278,28 @@ class FinanceViewModel(
             }
         }    }
 
-    override fun getBudgets(){
-        viewModelScope.launch{
-            val budgets = service.getBudgetsWithProgress()
-            _state.value = _state.value.copy(budgets = budgets)
+    fun updateBudgetFilters(filters: BudgetFilters) {
+        _state.value = _state.value.copy(
+            budgetFilters = filters
+        )
+        getBudgets()
+    }
+
+    override fun getBudgets() {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val budgets = service.getBudgetsWithProgress(filters = _state.value.budgetFilters)
+                _state.value = _state.value.copy(
+                    budgets = budgets,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
         }
     }
 
@@ -287,7 +315,7 @@ class FinanceViewModel(
                 val progress = service.getSavingsGoalProgress(newGoal.id ?: "")
                 _state.value = _state.value.copy(
                     savingsGoals = _state.value.savingsGoals + newGoal,
-                    savingsGoalProgress = _state.value.savingsGoalProgress + ((newGoal.id ?: "") to progress),
+                    savingsGoalProgress = _state.value.savingsGoalProgress + ((newGoal.id ?: "") to progress.percentageComplete),
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -308,7 +336,7 @@ class FinanceViewModel(
                     savingsGoals = _state.value.savingsGoals.map {
                         if (it.id == updatedGoal.id) updatedGoal else it
                     },
-                    savingsGoalProgress = _state.value.savingsGoalProgress + ((updatedGoal.id ?: "") to progress),
+                    savingsGoalProgress = _state.value.savingsGoalProgress + ((updatedGoal.id ?: "") to progress.percentageComplete),
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -347,7 +375,7 @@ class FinanceViewModel(
     override fun getSavingsGoalProgress(goalId: String){
         viewModelScope.launch{
             val response = service.getSavingsGoalProgress(goalId)
-            _state.value = _state.value.copy(savingsGoalProgress = _state.value.savingsGoalProgress + (goalId to response))
+            _state.value = _state.value.copy(savingsGoalProgress = _state.value.savingsGoalProgress + (goalId to response.percentageComplete))
         }
     }
 
@@ -437,6 +465,24 @@ class FinanceViewModel(
             currentPage = 0
         )
         getTransactions(refresh = true)
+    }
+
+    fun getBudgetTransactions(budgetId: String) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val transactions = service.getBudgetTransactions(budgetId)
+                _state.value = _state.value.copy(
+                    budgetTransactions = transactions,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
     }
 
 }

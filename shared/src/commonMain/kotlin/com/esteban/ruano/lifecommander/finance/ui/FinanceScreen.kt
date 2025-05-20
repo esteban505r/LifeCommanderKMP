@@ -1,5 +1,6 @@
 package com.lifecommander.finance.ui
 
+import BudgetScreenWrapper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -11,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.esteban.ruano.lifecommander.finance.ui.AccountForm
-import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
+import com.esteban.ruano.lifecommander.finance.ui.components.BudgetTracker
 import com.esteban.ruano.ui.components.TransactionList
 import com.lifecommander.finance.model.*
 import com.lifecommander.finance.ui.components.*
@@ -22,7 +23,8 @@ fun FinanceScreen(
     state: FinanceState,
     actions: FinanceActions,
     onOpenImporter: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenBudgetTransactions: (String) -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var showTransactionForm by remember { mutableStateOf(false) }
@@ -236,22 +238,30 @@ fun FinanceScreen(
                     currentFilters = state.transactionFilters,
                 )
 
-                2 -> BudgetTracker(
-                    budgets = state.budgets,
-                    onLoadBudgets = {
-                        actions.getBudgets()
-                    },
-                    onAddBudget = {
-                        actions.addBudget(it)
-                    },
-                    onEditBudget = {
-                        actions.updateBudget(it)
-                    },
-                    onDeleteBudget = { scope.launch { it.id?.let { id -> actions.deleteBudget(id) } } },
-                )
+                2 -> {
+                    BudgetScreenWrapper(
+                        budgets = state.budgets,
+                        onLoadBudgets = {
+                            actions.getBudgets()
+                        },
+                        onAddBudget = {
+                            actions.addBudget(it)
+                        },
+                        onEditBudget = {
+                            actions.updateBudget(it)
+                        },
+                        onDeleteBudget = { scope.launch { it.id?.let { id -> actions.deleteBudget(id) } } },
+                        onBudgetClick = { budget ->
+                            onOpenBudgetTransactions(budget.id ?: "")
+                        },
+                        onFiltersChange = {
+                            actions.changeBudgetFilters(it)
+                        },
+                    )
+                }
 
                 3 -> SavingsGoalTracker(
-                    goals = state.savingsGoals.map { state.savingsGoalProgress[it.id] ?: SavingsGoalProgress(it) },
+                  //  goals = state.savingsGoals.map { state.savingsGoalProgress[it.id] ?: SavingsGoalProgress(it) },
                     onAddGoal = { showSavingsGoalForm = true },
                     onEditGoal = { editingSavingsGoal = it },
                     onDeleteGoal = { scope.launch { it.id?.let { id -> actions.deleteSavingsGoal(id) } } }

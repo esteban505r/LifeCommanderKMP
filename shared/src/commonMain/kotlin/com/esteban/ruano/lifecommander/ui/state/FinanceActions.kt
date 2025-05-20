@@ -1,6 +1,7 @@
 package com.lifecommander.finance.model
 
 import com.esteban.ruano.lifecommander.models.finance.Budget
+import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import kotlinx.datetime.LocalDateTime
@@ -41,4 +42,5 @@ interface FinanceActions {
     
     // Data loading
     fun loadData()
+    fun changeBudgetFilters(filters: BudgetFilters)
 } 

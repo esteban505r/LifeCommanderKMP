@@ -1,0 +1,216 @@
+package com.lifecommander.finance.server
+
+import com.esteban.ruano.database.entities.Accounts
+import com.esteban.ruano.database.entities.Budgets
+import com.esteban.ruano.database.entities.Transactions
+import com.esteban.ruano.database.entities.Users
+import com.esteban.ruano.service.BudgetService
+import com.esteban.ruano.service.TransactionService
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUtils.formatDateTime
+import com.lifecommander.finance.model.AccountType
+import com.lifecommander.finance.model.TransactionType
+import com.lifecommander.models.Frequency
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.deleteAll
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.Before
+import java.sql.Connection
+import java.util.UUID
+import kotlin.collections.get
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.days
+
+class BudgetDBTest{
+    private lateinit var service: BudgetService
+    private lateinit var transactionService : TransactionService
+
+    @Before
+    fun setup() {
+        service = BudgetService()
+        transactionService = TransactionService()
+
+        Database.connect(
+            url = "jdbc:postgresql://localhost:5432/testdb",
+            driver = "org.postgresql.Driver",
+            user = "testuser",
+            password = "testpassword"
+        )
+        TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+
+        transaction {
+            // Crear las tablas necesarias
+            SchemaUtils.createMissingTablesAndColumns(
+                Users,
+                Accounts,
+                Transactions,
+                Budgets
+            )
+        }
+
+        transaction {
+            // Limpiar todas las tablas
+            Transactions.deleteAll()
+            Budgets.deleteAll()
+            Accounts.deleteAll()
+            Users.deleteAll()
+        }
+
+        // Crear usuario de prueba
+        transaction {
+            Users.insert {
+                it[id] = 1
+                it[name] = "Test User"
+                it[email] = "test@test.com"
+                it[password] = "password"
+            }
+        }
+
+        // Crear cuenta asociada al usuario
+        transaction {
+            Accounts.insert {
+                it[id] = getTestAccountUUID()
+                it[name] = "Test Account"
+                it[type] = AccountType.CHECKING
+                it[initialBalance] = 1000.0.toBigDecimal()
+                it[currency] = "COP"
+                it[user] = 1
+            }
+        }
+    }
+
+    private fun getTestAccountUUID(): UUID {
+        return UUID.fromString("00000000-0000-0000-0000-000000000001")
+    }
+
+    fun getTestAccountId(): UUID {
+        return transaction {
+            Accounts.selectAll().first()[Accounts.id].value
+        }
+    }
+
+
+
+    @Test
+    fun `should return budget progress with spent amount`() {
+        val userId = 1
+        val accountId = getTestAccountId()
+        val timeZone = TimeZone.currentSystemDefault()
+        val today = Clock.System.now().toLocalDateTime(timeZone).date
+
+
+        val nowInstant = Clock.System.now()
+        val startInstant = nowInstant.minus(1.days)
+        val endInstant = nowInstant.plus(5.days)
+
+        val startDate = startInstant.toLocalDateTime(timeZone).date
+        val endDate = endInstant.toLocalDateTime(timeZone).date
+
+        transaction {
+            Budgets.insert {
+                it[id] = UUID.randomUUID()
+                it[user] = 1
+                it[name] = "Test Budget"
+                it[category] = "FOOD"
+                it[amount] = 500.0.toBigDecimal()
+                it[this.startDate] = startDate
+                it[this.endDate] = endDate
+                it[frequency] = com.lifecommander.models.Frequency.WEEKLY
+            }
+        }
+
+
+
+        // Crear una transacción que esté dentro del rango del presupuesto
+        transactionService.createTransaction(
+            userId = userId,
+            amount = 100.0,
+            description = "Groceries",
+            date = today.atTime(12, 0).formatDefault(),
+            type = TransactionType.EXPENSE,
+            category = "FOOD",
+            accountId = accountId
+        )
+
+        // Ejecutar el método y validar
+        val results = service.getAllWithProgress(userId)
+        assertEquals(1, results.size)
+
+        val progress = results[0]
+        assertEquals("FOOD", progress.budget.category)
+        assertEquals(100.0, progress.spent, 0.001)
+    }
+
+    @Test
+    fun `should only include transactions in current period for monthly budget`() {
+        val userId = 1
+        val accountId = getTestAccountId()
+        val timeZone = TimeZone.currentSystemDefault()
+
+        val now = Clock.System.now()
+        val today = now.toLocalDateTime(timeZone).date
+
+        // Definir fechas de presupuesto mensual actual
+        val startDate = LocalDate(today.year, today.month, 1)
+        val endDate = startDate.plus(DatePeriod(months = 1)).minus(DatePeriod(days = 1))
+
+        // Insertar presupuesto mensual
+        transaction {
+            Budgets.insert {
+                it[id] = UUID.randomUUID()
+                it[user] = userId
+                it[name] = "Monthly Budget"
+                it[category] = "FOOD"
+                it[amount] = 500.0.toBigDecimal()
+                it[this.startDate] = startDate
+                it[this.endDate] = endDate
+                it[frequency] = Frequency.MONTHLY
+            }
+        }
+
+        // Transacción del mes actual (debe contar)
+        transactionService.createTransaction(
+            userId = userId,
+            amount = 100.0,
+            description = "Current month",
+            date = today.atTime(10, 0).formatDefault(),
+            type = TransactionType.EXPENSE,
+            category = "FOOD",
+            accountId = accountId
+        )
+
+        // Transacción del mes anterior (NO debe contar)
+        val lastMonthDate = today.minus(DatePeriod(months = 1)).atTime(10, 0).formatDefault()
+        transactionService.createTransaction(
+            userId = userId,
+            amount = 200.0,
+            description = "Last month",
+            date = lastMonthDate,
+            type = TransactionType.EXPENSE,
+            category = "FOOD",
+            accountId = accountId
+        )
+
+        // Obtener progreso del presupuesto
+        val result = service.getAllWithProgress(userId)
+        assertEquals(1, result.size)
+
+        val progress = result[0]
+        assertEquals("FOOD", progress.budget.category)
+        assertEquals(100.0, progress.spent, 0.001) // Solo cuenta la transacción actual
+    }
+
+}
