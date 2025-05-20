@@ -30,4 +30,5 @@ class TransactionRepository(private val service: TransactionService) {
     fun importPreview(userId: Int, text: String,accountId: String): TransactionImportPreview {
         return service.previewTransactionImport(userId, text, accountId)
     }
+
 } 

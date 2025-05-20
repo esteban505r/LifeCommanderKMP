@@ -4,9 +4,11 @@ import com.esteban.ruano.database.entities.Account
 import com.esteban.ruano.database.entities.Transaction
 import com.esteban.ruano.database.entities.Budget
 import com.esteban.ruano.database.entities.SavingsGoal
+import com.esteban.ruano.lifecommander.models.finance.Category.Companion.toCategory
 import com.esteban.ruano.models.finance.*
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUtils.parseDateTime
+import com.lifecommander.models.Frequency
 import com.lifecommander.finance.model.Transaction as TransactionDomainModel
 import com.lifecommander.finance.model.TransactionType as TransactionTypeDomainModel
 import com.esteban.ruano.lifecommander.models.finance.Category as CategoryDomainModel
@@ -45,6 +47,18 @@ fun Transaction.toResponseDTO(): TransactionResponseDTO {
         category = this.category,
         accountId = this.account.id.value.toString(),
         status = this.status.toString(),
+    )
+}
+
+fun Budget.toDomainModel(): com.esteban.ruano.lifecommander.models.finance.Budget {
+    return com.esteban.ruano.lifecommander.models.finance.Budget(
+        id = this.id.value.toString(),
+        name = this.name,
+        amount = this.amount.toDouble(),
+        category = this.category.toCategory(),
+        startDate = this.startDate.formatDefault(),
+        endDate = this.endDate?.formatDefault(),
+        frequency = Frequency.valueOf(this.frequency.toString()),
     )
 }
 

@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.esteban.ruano.lifecommander.ui.navigation.CategoryKeywordMapperDestination
 import com.esteban.ruano.lifecommander.ui.components.AppLayout
 import com.esteban.ruano.lifecommander.ui.navigation.CalendarScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.SettingsScreenDestination
@@ -40,6 +41,7 @@ sealed class Screen(val route: String) {
     object Calendar : Screen("calendar")
     object Timers : Screen("timers")
     object Settings : Screen("settings")
+    object CategoryKeywordMapper : Screen("category_keyword_mapper")
     object BudgetTransactions : Screen("budget_transactions/{budgetId}") {
         fun createRoute(budgetId: String) = "budget_transactions/$budgetId"
     }
@@ -145,6 +147,9 @@ fun AppNavHost(
                             navController.navigate(BudgetTransactionsRoute(
                                 budgetId
                             ))
+                        },
+                        onOpenCategoryKeywordMapper = {
+                            navController.navigate(Screen.CategoryKeywordMapper.route)
                         }
                     )
                 }
@@ -207,6 +212,14 @@ fun AppNavHost(
                         },
                         onHabitClick = { id ->
                             // TODO: Navigate to habit details
+                        }
+                    )
+                }
+
+                composable(Screen.CategoryKeywordMapper.route) {
+                    CategoryKeywordMapperDestination (
+                        onNavigateBack = {
+                            navController.navigateUp()
                         }
                     )
                 }

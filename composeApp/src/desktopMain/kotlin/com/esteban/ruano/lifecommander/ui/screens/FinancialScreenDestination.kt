@@ -14,6 +14,7 @@ fun FinancialScreenDestination(
     financialViewModel: FinanceViewModel = koinViewModel(),
     onOpenImporter: () -> Unit = {},
     onOpenBudgetTransactions: (String) -> Unit = {},
+    onOpenCategoryKeywordMapper: () -> Unit = {},
 ) {
     val state by financialViewModel.state.collectAsState()
 
@@ -23,5 +24,6 @@ fun FinancialScreenDestination(
         actions = financialViewModel,
         onOpenImporter = onOpenImporter,
         onOpenBudgetTransactions = onOpenBudgetTransactions,
+        onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
     )
 } 

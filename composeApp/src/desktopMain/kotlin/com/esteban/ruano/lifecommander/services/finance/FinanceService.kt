@@ -135,17 +135,18 @@ class FinanceService(
     }
 
     suspend fun getBudgetsWithProgress(
-        filters: BudgetFilters = BudgetFilters()
+        filters: BudgetFilters = BudgetFilters(),
+        referenceDate: String,
     ): List<BudgetProgress> {
         val url = buildString {
             append("$baseUrl/finance/budgets/withProgress")
             val params = mutableListOf<String>()
+
+            params.add("referenceDate=${referenceDate}")
             
             // Add filter parameters
             filters.searchPattern?.let { params.add("search=$it") }
             filters.categories?.forEach { params.add("category=$it") }
-            filters.startDate?.let { params.add("startDate=$it") }
-            filters.endDate?.let { params.add("endDate=$it") }
             filters.minAmount?.let { params.add("minAmount=$it") }
             filters.maxAmount?.let { params.add("maxAmount=$it") }
             filters.isOverBudget?.let { params.add("isOverBudget=$it") }

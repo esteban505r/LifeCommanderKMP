@@ -7,11 +7,14 @@ import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.lifecommander.services.finance.FinanceService
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.lifecommander.finance.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 class FinanceViewModel(
     private val service: FinanceService
@@ -76,7 +79,9 @@ class FinanceViewModel(
             try {
                 _state.value = _state.value.copy(isLoading = true, error = null)
                 val accounts = service.getAccounts()
-                val budgets = service.getBudgetsWithProgress()
+                val budgets = service.getBudgetsWithProgress(
+                    referenceDate = getCurrentDateTime().date.formatDefault()
+                )
                 val savingsGoals = service.getSavingsGoals()
                 val transactionsResponse = service.getTransactions(
                     limit = _state.value.pageSize,
@@ -111,6 +116,13 @@ class FinanceViewModel(
         _state.value = _state.value.copy(
             budgetFilters = filters,
             currentPage = 0
+        )
+        getBudgets()
+    }
+
+    override fun changeBudgetBaseDate(date: LocalDate) {
+        _state.value = _state.value.copy(
+            budgetBaseDate = date.formatDefault()
         )
         getBudgets()
     }
@@ -289,7 +301,10 @@ class FinanceViewModel(
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(isLoading = true, error = null)
-                val budgets = service.getBudgetsWithProgress(filters = _state.value.budgetFilters)
+                val budgets = service.getBudgetsWithProgress(
+                    filters = _state.value.budgetFilters,
+                    referenceDate = _state.value.budgetBaseDate
+                )
                 _state.value = _state.value.copy(
                     budgets = budgets,
                     isLoading = false

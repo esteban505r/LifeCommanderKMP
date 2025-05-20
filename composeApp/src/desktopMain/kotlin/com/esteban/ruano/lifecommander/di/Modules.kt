@@ -1,5 +1,6 @@
 package di
 
+import com.esteban.ruano.lifecommander.services.finance.CategoryKeywordService
 import com.esteban.ruano.lifecommander.utils.TokenStorage
 import io.ktor.client.*
 import io.ktor.client.engine.*
@@ -21,6 +22,7 @@ import com.esteban.ruano.lifecommander.utils.SOCKETS_HOST
 import com.esteban.ruano.lifecommander.utils.SOCKETS_PATH
 import com.esteban.ruano.lifecommander.utils.SOCKETS_PORT
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackManager
+import com.esteban.ruano.lifecommander.ui.viewmodels.CategoryKeywordMapperViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import com.esteban.ruano.lifecommander.websocket.TimerWebSocketClient
 import io.ktor.client.plugins.websocket.WebSockets
@@ -94,6 +96,7 @@ val servicesModule = module {
     single { TimerService(get()) }
     single { com.esteban.ruano.lifecommander.services.timers.TimerService(get()) }
     single { DailyJournalService(BASE_URL, get(), get()) }
+    single { CategoryKeywordService(BASE_URL, get(),get()) }
 }
 
 // ViewModels Module
@@ -106,6 +109,7 @@ val viewModelsModule = module {
     viewModel { CalendarViewModel(get(),get(),get()) }
     viewModel { FinanceViewModel(get()) }
     viewModel { TimersViewModel(get(),get(), get(),get())}
+    viewModel { CategoryKeywordMapperViewModel(get()) }
 }
 
 // Combine all modules

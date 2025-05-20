@@ -11,26 +11,50 @@ import kotlinx.datetime.LocalDate
 import java.util.*
 
 class BudgetRepository(private val service: BudgetService) {
-    fun create(userId: Int, name: String, amount: Double, category: String, startDate: LocalDate, endDate: LocalDate? = null): UUID? =
+    fun create(
+        userId: Int,
+        name: String,
+        amount: Double,
+        category: String,
+        startDate: LocalDate,
+        endDate: LocalDate? = null
+    ): UUID? =
         service.createBudget(userId, name, amount, category, startDate, endDate)
 
     fun getAll(userId: Int): List<BudgetResponseDTO> = service.getBudgetsByUser(userId)
 
-    fun getAllProgress(userId: Int, limit: Int = 10, offset:Int,filters: BudgetFilters = BudgetFilters()): List<BudgetProgressResponseDTO> {
-        return service.getAllWithProgress(userId,limit,offset,filters)
+    fun getAllProgress(
+        userId: Int, limit: Int = 10, offset: Int,
+        filters: BudgetFilters = BudgetFilters(),
+        referenceDate: LocalDate
+    ): List<BudgetProgressResponseDTO> {
+        return service.getAllWithProgress(userId, limit, offset, filters, referenceDate)
     }
 
     fun getBudgetTransactions(userId: Int, budgetId: UUID): List<TransactionResponseDTO> {
-        return service.getBudgetTransactions( userId,budgetId)
+        return service.getBudgetTransactions(userId, budgetId)
     }
 
     fun getByDateRange(userId: Int, startDate: LocalDate, endDate: LocalDate): List<BudgetResponseDTO> =
         service.getBudgetsByDateRange(userId, startDate, endDate)
 
-    fun update(userId: Int, budgetId: UUID, name: String?, amount: Double?, category: String?, startDate: LocalDate?, endDate: LocalDate?): Boolean =
+    fun update(
+        userId: Int,
+        budgetId: UUID,
+        name: String?,
+        amount: Double?,
+        category: String?,
+        startDate: LocalDate?,
+        endDate: LocalDate?
+    ): Boolean =
         service.updateBudget(budgetId, userId, name, amount, category, startDate, endDate)
 
     fun delete(userId: Int, budgetId: UUID): Boolean = service.deleteBudget(budgetId, userId)
 
-    fun getProgress(userId: Int, budgetId: UUID): BudgetProgressResponseDTO = service.getBudgetProgress(budgetId, userId)
+    fun getProgress(userId: Int, budgetId: UUID): BudgetProgressResponseDTO =
+        service.getBudgetProgress(budgetId, userId)
+
+    fun getUnbudgetedTransactions(userId: Int) : List<TransactionResponseDTO> {
+        return service.getUnbudgetedTransactions(userId)
+    }
 }

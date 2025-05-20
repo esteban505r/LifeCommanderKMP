@@ -27,8 +27,10 @@ import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.lifecommander.ui.components.EnumChipSelector
 import com.esteban.ruano.lifecommander.ui.components.ExpandableFilterSection
 import com.esteban.ruano.lifecommander.ui.components.FilterSidePanel
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.lifecommander.ui.components.CustomDatePicker
 import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDate
 import kotlinx.datetime.toLocalDateTime
@@ -44,11 +46,13 @@ fun BudgetScreenWrapper(
     onDeleteBudget: (Budget) -> Unit,
     onBudgetClick: (Budget) -> Unit,
     onFiltersChange: (BudgetFilters) -> Unit,
-    filters: BudgetFilters = BudgetFilters()
+    onChangeBaseDate: (LocalDate) -> Unit,
+    baseDate: LocalDate?,
+    filters: BudgetFilters = BudgetFilters(),
+    onOpenCategoryKeywordMapper: () -> Unit,
 ) {
     var showFilters by remember { mutableStateOf(false) }
     var selectedCategories by remember { mutableStateOf(filters.categories ?: emptyList()) }
-    var showEndDatePicker by remember { mutableStateOf(false) }
 
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -56,31 +60,13 @@ fun BudgetScreenWrapper(
         Dialog(onDismissRequest = { showDatePicker = false }) {
             Surface {
                 CustomDatePicker(
-                    selectedDate = filters.startDate?.toLocalDate()
-                        ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+                    selectedDate = baseDate?:getCurrentDateTime().date,
                     onDateSelected = {
-                        onFiltersChange(filters.copy(startDate = it.toString()))
+                        onChangeBaseDate(it)
                         showDatePicker = false
                     },
                     modifier = Modifier.fillMaxWidth(),
                     onDismiss = { showDatePicker = false }
-                )
-            }
-        }
-    }
-
-    if (showEndDatePicker) {
-        Dialog(onDismissRequest = { showEndDatePicker = false }) {
-            Surface {
-                CustomDatePicker(
-                    selectedDate = filters.endDate?.toLocalDate()
-                        ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
-                    onDateSelected = {
-                        onFiltersChange(filters.copy(endDate = it.toString()))
-                        showEndDatePicker = false
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    onDismiss = { showEndDatePicker = false }
                 )
             }
         }
@@ -95,6 +81,12 @@ fun BudgetScreenWrapper(
             onDeleteBudget = onDeleteBudget,
             onBudgetClick = onBudgetClick,
             onShowFilters = { showFilters = it },
+            onFiltersChange = { filters ->
+                onFiltersChange(filters)
+            },
+            baseDate = baseDate ?: getCurrentDateTime().date,
+            onToggleDatePicker = { showDatePicker = it },
+            onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper
         )
 
         FilterSidePanel(
@@ -109,13 +101,6 @@ fun BudgetScreenWrapper(
                     .padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                OutlinedTextField(
-                    value = filters.searchPattern ?: "",
-                    onValueChange = { onFiltersChange(filters.copy(searchPattern = it.takeIf { it.isNotBlank() })) },
-                    label = { Text("Search Budget Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
                 ExpandableFilterSection(
                     title = "Categories",
                     summary = selectedCategories.joinToString(", ").ifEmpty { null }) {
@@ -129,40 +114,6 @@ fun BudgetScreenWrapper(
                         multiSelect = true,
                         labelMapper = { it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() } }
                     )
-                }
-
-                ExpandableFilterSection(title = "Amount Range") {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = filters.minAmount?.toString() ?: "",
-                            onValueChange = { onFiltersChange(filters.copy(minAmount = it.toDoubleOrNull())) },
-                            label = { Text("Min Amount") },
-                            modifier = Modifier.weight(1f)
-                        )
-                        OutlinedTextField(
-                            value = filters.maxAmount?.toString() ?: "",
-                            onValueChange = { onFiltersChange(filters.copy(maxAmount = it.toDoubleOrNull())) },
-                            label = { Text("Max Amount") },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                ExpandableFilterSection(title = "Date Range") {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
-                            onClick = { showDatePicker = true },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(filters.startDate ?: "Start Date")
-                        }
-                        OutlinedButton(
-                            onClick = { showEndDatePicker = true },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(filters.endDate ?: "End Date")
-                        }
-                    }
                 }
 
                 FilterChip(

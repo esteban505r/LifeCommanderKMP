@@ -12,13 +12,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.esteban.ruano.MR
 import com.esteban.ruano.lifecommander.models.finance.*
 import com.esteban.ruano.lifecommander.ui.components.EnumChipSelector
 import com.esteban.ruano.lifecommander.ui.components.ExpandableFilterSection
 import com.esteban.ruano.lifecommander.ui.components.FilterSidePanel
 import com.esteban.ruano.lifecommander.utils.toCurrencyFormat
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import com.esteban.ruano.utils.DateUtils.parseDate
 import com.lifecommander.finance.ui.BudgetForm
 import com.lifecommander.ui.components.CustomDatePicker
+import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.datetime.*
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -31,22 +36,102 @@ fun BudgetTracker(
     onDeleteBudget: (Budget) -> Unit,
     onBudgetClick: (Budget) -> Unit,
     onShowFilters: (Boolean) -> Unit,
-    filters: BudgetFilters = BudgetFilters()
+    onOpenCategoryKeywordMapper: () -> Unit,
+    baseDate: LocalDate,
+    filters: BudgetFilters = BudgetFilters(),
+    onFiltersChange: (BudgetFilters) -> Unit,
+    onToggleDatePicker: (Boolean) -> Unit,
 ) {
     var showBudgetFormDialog by remember { mutableStateOf(false) }
     var editingBudget by remember { mutableStateOf<Budget?>(null) }
+    var searchPattern by remember { mutableStateOf(filters.searchPattern) }
+
+
 
     // Panel principal
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 24.dp)
         ) {
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = 4.dp,
+                color = MaterialTheme.colors.surface
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    // Search and Filter Controls Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Search Bar
+                        OutlinedTextField(
+                            value = searchPattern ?: "",
+                            onValueChange = {
+                                searchPattern = it
+                                onFiltersChange(filters.copy(searchPattern = it.takeIf { it.isNotBlank() }))
+                            },
+                            modifier = Modifier.weight(1f),
+                            placeholder = { Text(stringResource(MR.strings.search_transactions)) },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                            singleLine = true,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                backgroundColor = MaterialTheme.colors.surface
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        OutlinedButton(
+                            onClick = { onToggleDatePicker(true) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = baseDate.formatDefault(),
+                                style = MaterialTheme.typography.body1,
+                                color = MaterialTheme.colors.onSurface
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        Button(
+                            onClick = { onShowFilters(true) },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = if (filters != BudgetFilters()) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
+                                contentColor = if (filters != BudgetFilters()) MaterialTheme.colors.onPrimary else MaterialTheme.colors.primary
+                            )
+                        ) {
+                            Icon(Icons.Default.FilterList, contentDescription = "Filters")
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Filters")
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        Button(
+                            onClick = onOpenCategoryKeywordMapper,
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = MaterialTheme.colors.primary
+                            )
+                        ) {
+                            Icon(Icons.Default.Category, contentDescription = "Category Keywords")
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Category Keywords")
+                        }
+                    }
+                }
+            }
+            
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -55,17 +140,6 @@ fun BudgetTracker(
                     style = MaterialTheme.typography.h5,
                     fontWeight = FontWeight.Bold
                 )
-                Button(
-                    onClick = { onShowFilters(true) },
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = if (filters != BudgetFilters()) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
-                        contentColor = if (filters != BudgetFilters()) MaterialTheme.colors.onPrimary else MaterialTheme.colors.primary
-                    )
-                ) {
-                    Icon(Icons.Default.FilterList, contentDescription = "Filters")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Filters")
-                }
             }
 
             LazyColumn(
@@ -215,7 +289,7 @@ private fun BudgetProgressItem(
             Spacer(modifier = Modifier.height(8.dp))
 
             LinearProgressIndicator(
-                progress = budgetProgress.progressPercentage.toFloat(),
+                progress = budgetProgress.progressPercentage.toFloat()/100,
                 modifier = Modifier.fillMaxWidth(),
                 color = if (budgetProgress.isOverBudget) {
                     MaterialTheme.colors.error

@@ -3,6 +3,8 @@ package com.lifecommander.finance.model
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import kotlinx.serialization.Serializable
 
 data class FinanceState(
@@ -19,6 +21,7 @@ data class FinanceState(
     val pageSize: Int = 50,
     val transactionFilters: TransactionFilters = TransactionFilters(),
     val budgetFilters: BudgetFilters = BudgetFilters(),
+    val budgetBaseDate: String = getCurrentDateTime().date.formatDefault(),
     val importPreview: TransactionImportPreview? = null,
     val budgetTransactions: List<Transaction> = emptyList()
 )

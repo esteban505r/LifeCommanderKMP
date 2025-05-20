@@ -62,6 +62,7 @@ fun Application.configureRouting() {
     val budgetRepository = BudgetRepository(BudgetService())
     val transactionRepository = TransactionRepository(TransactionService())
     val savingsGoalRepository = SavingsGoalRepository(SavingsGoalService())
+    val categoryKeywordRepository = CategoryKeywordRepository(CategoryKeywordService())
 
     routing {
         get("/") {
@@ -96,6 +97,7 @@ fun Application.configureRouting() {
                     transactionRepository = transactionRepository,
                     budgetRepository = budgetRepository,
                     savingsGoalRepository = savingsGoalRepository,
+                    categoryKeywordRepository = categoryKeywordRepository
                 )
             }
 

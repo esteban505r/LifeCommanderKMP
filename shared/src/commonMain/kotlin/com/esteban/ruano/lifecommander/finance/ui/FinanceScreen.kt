@@ -13,7 +13,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.esteban.ruano.lifecommander.finance.ui.AccountForm
 import com.esteban.ruano.lifecommander.finance.ui.components.BudgetTracker
+import com.esteban.ruano.lifecommander.finance.ui.components.TransactionListWrapper
 import com.esteban.ruano.ui.components.TransactionList
+import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.finance.model.*
 import com.lifecommander.finance.ui.components.*
 import kotlinx.coroutines.launch
@@ -24,7 +26,8 @@ fun FinanceScreen(
     actions: FinanceActions,
     onOpenImporter: () -> Unit,
     modifier: Modifier = Modifier,
-    onOpenBudgetTransactions: (String) -> Unit = {}
+    onOpenBudgetTransactions: (String) -> Unit = {},
+    onOpenCategoryKeywordMapper: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var showTransactionForm by remember { mutableStateOf(false) }
@@ -218,7 +221,7 @@ fun FinanceScreen(
                     onDeleteAccount = { scope.launch { it.id?.let { id -> actions.deleteAccount(id) } } }
                 )
 
-                1 -> TransactionList(
+                1 -> TransactionListWrapper(
                     transactions = state.transactions,
                     onTransactionClick = { /* Handle transaction click */ },
                     onEdit = { editingTransaction = it },
@@ -256,6 +259,13 @@ fun FinanceScreen(
                         },
                         onFiltersChange = {
                             actions.changeBudgetFilters(it)
+                        },
+                        onChangeBaseDate = {
+                            actions.changeBudgetBaseDate(it)
+                        },
+                        baseDate = state.budgetBaseDate?.toLocalDate(),
+                        onOpenCategoryKeywordMapper = {
+                            onOpenCategoryKeywordMapper()
                         },
                     )
                 }

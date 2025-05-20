@@ -10,6 +10,7 @@ import com.esteban.ruano.models.finance.*
 import com.esteban.ruano.repository.*
 import com.esteban.ruano.lifecommander.models.ErrorResponse
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
+import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.finance.model.ImportTransactionsRequest
@@ -24,6 +25,7 @@ fun Route.financeRouting(
     transactionRepository: TransactionRepository,
     budgetRepository: BudgetRepository,
     savingsGoalRepository: SavingsGoalRepository,
+    categoryKeywordRepository: CategoryKeywordRepository,
 ) {
     route("/finance") {
         // Account routes
@@ -221,20 +223,22 @@ fun Route.financeRouting(
                 val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
                 val searchPattern = call.parameters["search"]
                 val categories = call.parameters.getAll("category")
-                val startDate = call.parameters["startDate"]
-                val endDate = call.parameters["endDate"]
+                val referenceDate = call.parameters["referenceDate"]?.toLocalDate()
                 val minAmount = call.parameters["minAmount"]?.toDoubleOrNull()
                 val maxAmount = call.parameters["maxAmount"]?.toDoubleOrNull()
+
+                if(referenceDate == null) {
+                    call.respond(HttpStatusCode.BadRequest, ErrorResponse("Missing referenceDate parameter"))
+                    return@get
+                }
 
                 val filters = BudgetFilters(
                     searchPattern = searchPattern,
                     categories = categories,
-                    startDate = startDate,
-                    endDate = endDate,
                     minAmount = minAmount,
                     maxAmount = maxAmount,
                 )
-                call.respond(budgetRepository.getAllProgress(userId, limit,offset, filters))
+                call.respond(budgetRepository.getAllProgress(userId, limit,offset, filters,referenceDate))
             }
             get("/byDateRange") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
@@ -295,9 +299,15 @@ fun Route.financeRouting(
                 }
             }
 
+            get("unbudgeted/transactions") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                call.respond(budgetRepository.getUnbudgetedTransactions(userId))
+            }
+
             get("/{id}/transactions") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = UUID.fromString(call.parameters["id"]!!)
+
                 call.respond(budgetRepository.getBudgetTransactions(userId, id))
             }
         }
@@ -366,6 +376,83 @@ fun Route.financeRouting(
                 val dto = call.receive<UpdateSavingsGoalProgressDTO>()
                 val updated = savingsGoalRepository.updateProgress(userId, id, dto.amount)
                 if (updated) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+        }
+
+        // Category Keywords routes
+        route("/category-keywords") {
+            get {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                call.respond(categoryKeywordRepository.getKeywordsByUser(userId))
+            }
+
+            get("/by-category/{category}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val category = try {
+                    Category.valueOf(call.parameters["category"]!!)
+                } catch (e: IllegalArgumentException) {
+                    call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid category"))
+                    return@get
+                }
+                call.respond(categoryKeywordRepository.getKeywordsByCategory(userId, category))
+            }
+
+            post {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val dto = call.receive<CreateCategoryKeywordDTO>()
+                val id = categoryKeywordRepository.addKeyword(
+                    userId,
+                    dto.category,
+                    dto.keyword
+                )
+                if (id != null) {
+                    call.respond(HttpStatusCode.Created)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+
+            patch("/{id}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val id = UUID.fromString(call.parameters["id"]!!)
+                val dto = call.receive<UpdateCategoryKeywordDTO>()
+                val updated = categoryKeywordRepository.updateKeyword(
+                    userId,
+                    id,
+                    dto.keyword
+                )
+                if (updated) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+
+            delete("/{id}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val id = UUID.fromString(call.parameters["id"]!!)
+                val deleted = categoryKeywordRepository.deleteKeyword(userId, id)
+                if (deleted) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+
+            delete("/by-category/{category}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val category = try {
+                    Category.valueOf(call.parameters["category"]!!)
+                } catch (e: IllegalArgumentException) {
+                    call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid category"))
+                    return@delete
+                }
+                val deleted = categoryKeywordRepository.deleteAllKeywordsForCategory(userId, category)
+                if (deleted) {
                     call.respond(HttpStatusCode.OK)
                 } else {
                     call.respond(HttpStatusCode.InternalServerError)

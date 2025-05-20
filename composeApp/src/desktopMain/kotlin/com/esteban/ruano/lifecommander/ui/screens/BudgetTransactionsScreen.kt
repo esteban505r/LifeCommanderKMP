@@ -15,9 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
-import com.esteban.ruano.utils.DateUIUtils.formatCurrency
-import com.lifecommander.finance.model.Transaction
 import org.koin.compose.viewmodel.koinViewModel
+import com.esteban.ruano.lifecommander.ui.components.TransactionItem
 
 @Composable
 fun BudgetTransactionsScreen(
@@ -78,47 +77,14 @@ fun BudgetTransactionsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(budgetTransactions) { transaction ->
-                    TransactionItem(transaction = transaction)
+                    TransactionItem(
+                        transaction = transaction,
+                        onTransactionClick = { /* Handle transaction click */ },
+                        onEdit = { /* Handle edit */ },
+                        onDelete = { /* Handle delete */ }
+                    )
                 }
             }
         }
     }
 }
-
-@Composable
-private fun TransactionItem(
-    transaction: Transaction,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = 2.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = transaction.description,
-                    style = MaterialTheme.typography.subtitle1
-                )
-                Text(
-                    text = formatCurrency(transaction.amount),
-                    style = MaterialTheme.typography.subtitle1,
-                    color = if (transaction.amount < 0) Color.Red else Color.Green
-                )
-            }
-            Text(
-                text = transaction.date,
-                style = MaterialTheme.typography.body2,
-                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-            )
-        }
-    }
-} 

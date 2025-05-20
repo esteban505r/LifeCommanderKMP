@@ -43,37 +43,43 @@ fun FilterSidePanel(
             enter = slideInHorizontally(initialOffsetX = { screenWidth }),
             exit = slideOutHorizontally(targetOffsetX = { screenWidth })
         ) {
-            Surface(
+            Box(
                 Modifier
-                    .fillMaxHeight()
-                    .width(400.dp)
-                    .align(Alignment.CenterEnd)
+                    .fillMaxSize()
                     .zIndex(2f),
-                elevation = 8.dp
+                contentAlignment = Alignment.CenterEnd
             ) {
-                Column(Modifier.fillMaxSize().padding(16.dp)) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Filters", style = MaterialTheme.typography.h6)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            if (hasActiveFilters) {
-                                TextButton(onClick = onClearFilters) { Text("Clear All") }
-                            }
-                            IconButton(onClick = onDismiss) {
-                                Icon(Icons.Default.Close, contentDescription = "Close Filters")
+                Surface(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(400.dp),
+                    elevation = 8.dp
+                ) {
+                    Column(Modifier.fillMaxSize().padding(16.dp)) {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Filters", style = MaterialTheme.typography.h6)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                if (hasActiveFilters) {
+                                    TextButton(onClick = onClearFilters) { Text("Clear All") }
+                                }
+                                IconButton(onClick = onDismiss) {
+                                    Icon(Icons.Default.Close, contentDescription = "Close Filters")
+                                }
                             }
                         }
-                    }
-                    Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                        content()
+                        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                            content()
+                        }
                     }
                 }
             }
         }
     }
 }
+

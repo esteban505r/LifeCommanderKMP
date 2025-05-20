@@ -213,4 +213,63 @@ class BudgetDBTest{
         assertEquals(100.0, progress.spent, 0.001) // Solo cuenta la transacción actual
     }
 
+    @Test
+    fun `should include unbudgeted transactions in response`() {
+        val userId = 1
+        val accountId = getTestAccountId()
+        val timeZone = TimeZone.currentSystemDefault()
+        val today = Clock.System.now().toLocalDateTime(timeZone).date
+
+        val startDate = today.minus(DatePeriod(days = 1))
+        val endDate = today.plus(DatePeriod(days = 5))
+
+        // Insertar un presupuesto para categoría "FOOD"
+        transaction {
+            Budgets.insert {
+                it[id] = UUID.randomUUID()
+                it[user] = userId
+                it[name] = "Food Budget"
+                it[category] = "FOOD"
+                it[amount] = 500.0.toBigDecimal()
+                it[this.startDate] = startDate
+                it[this.endDate] = endDate
+                it[frequency] = Frequency.WEEKLY
+            }
+        }
+
+        // Transacción presupuestada (FOOD)
+        transactionService.createTransaction(
+            userId = userId,
+            amount = 100.0,
+            description = "Groceries",
+            date = today.atTime(12, 0).formatDefault(),
+            type = TransactionType.EXPENSE,
+            category = "FOOD",
+            accountId = accountId
+        )
+
+        // Transacción sin presupuesto (TRANSPORTATION)
+        transactionService.createTransaction(
+            userId = userId,
+            amount = 50.0,
+            description = "Bus ticket",
+            date = today.atTime(14, 0).formatDefault(),
+            type = TransactionType.EXPENSE,
+            category = "TRANSPORTATION", // <- No presupuestada
+            accountId = accountId
+        )
+
+        // Ejecutar método
+        val results = service.getAllWithProgress(userId)
+
+        // Debería haber 2 resultados: 1 presupuestado, 1 unbudgeted
+        assertEquals(2, results.size)
+
+        // Verificar categoría unbudgeted
+        val unbudgeted = results.find { it.budget.id == "unbudgeted" }
+        assertEquals(50.0, unbudgeted?.spent ?: 0.0, 0.001)
+        assertEquals("UNBUDGETED", unbudgeted?.budget?.category)
+    }
+
+
 }

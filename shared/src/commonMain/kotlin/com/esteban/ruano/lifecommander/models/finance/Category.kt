@@ -4,7 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class Category {
-    // Income categories
+
+    UNBUDGETED,
+
     SALARY,
     INVESTMENT,
     FREELANCE,
