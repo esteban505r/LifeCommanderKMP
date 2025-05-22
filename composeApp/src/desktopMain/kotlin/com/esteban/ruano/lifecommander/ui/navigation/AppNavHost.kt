@@ -11,6 +11,7 @@ import androidx.navigation.toRoute
 import com.esteban.ruano.lifecommander.ui.navigation.CategoryKeywordMapperDestination
 import com.esteban.ruano.lifecommander.ui.components.AppLayout
 import com.esteban.ruano.lifecommander.ui.navigation.CalendarScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.PomodorosScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.SettingsScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimerListDetailDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimersScreenDestination
@@ -43,6 +44,7 @@ sealed class Screen(val route: String) {
     object Timers : Screen("timers")
     object Settings : Screen("settings")
     object CategoryKeywordMapper : Screen("category_keyword_mapper")
+    object Pomodoros : Screen("pomodoros")
     object BudgetTransactions : Screen("budget_transactions/{budgetId}") {
         fun createRoute(budgetId: String) = "budget_transactions/$budgetId"
     }
@@ -68,6 +70,7 @@ fun AppNavHost(
         when (authState) {
             is AuthState.Authenticated -> {
                 timersViewModel.connectWebSocket()
+                timersViewModel.loadPomodoros()
                 if (navController.currentDestination?.route == Screen.Auth.route) {
                     navController.navigate(Screen.Dashboard.route) {
                         popUpTo(Screen.Auth.route) { inclusive = true }
@@ -192,6 +195,7 @@ fun AppNavHost(
                     val arguments = backStackEntry.toRoute<TimerListDetailRoute>()
                     TimerListDetailDestination (
                         modifier = modifier,
+                        timersViewModel = timersViewModel,
                         timerListId = arguments.timerId,
                         onBack = {
                             navController.navigateUp()
@@ -224,6 +228,16 @@ fun AppNavHost(
                 composable(Screen.CategoryKeywordMapper.route) {
                     CategoryKeywordMapperDestination (
                         onNavigateBack = {
+                            navController.navigateUp()
+                        }
+                    )
+                }
+
+                composable(Screen.Pomodoros.route) {
+                    PomodorosScreenDestination(
+                        modifier = modifier,
+                        timersViewModel = timersViewModel,
+                        onBack = {
                             navController.navigateUp()
                         }
                     )

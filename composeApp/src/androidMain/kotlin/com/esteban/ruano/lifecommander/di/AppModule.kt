@@ -15,7 +15,7 @@ import com.esteban.ruano.core.di.TasksAlarmReceiverClass
 import com.esteban.ruano.core.helpers.NetworkHelper
 import com.esteban.ruano.core.helpers.NetworkHelperImpl
 import com.esteban.ruano.core.interfaces.OperationListener
-import com.esteban.ruano.core.utils.Constants
+import com.esteban.ruano.core.utils.AppConstants
 import com.esteban.ruano.core_data.local.HistoryTrackDao
 import com.esteban.ruano.core_data.models.Local
 import com.esteban.ruano.core_data.models.Remote
@@ -150,7 +150,7 @@ class AppModule {
     @Singleton
     fun provideSyncApi(client: OkHttpClient): SyncApi {
         return Retrofit.Builder()
-            .baseUrl(Constants.BASE_URL)
+            .baseUrl(AppConstants.BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()

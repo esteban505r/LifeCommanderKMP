@@ -46,7 +46,7 @@ fun Route.pomodoroRouting(pomodoroRepository: PomodoroRepository) {
             val pomodoro = call.receive<CreatePomodoroDTO>()
             val userId = call.authentication.principal<LoggedUserDTO>()!!.id
 
-            if (!Validator.isValidDateTimeFormat(pomodoro.startDateTime) || !Validator.isValidDateTimeFormat(pomodoro.endDateTime)) {
+            if (!Validator.isValidDateTimeWithSecondsFormat(pomodoro.startDateTime) || !Validator.isValidDateTimeWithSecondsFormat(pomodoro.endDateTime)) {
                 call.respond(HttpStatusCode.BadRequest, "Invalid datetime format")
                 return@post
             }

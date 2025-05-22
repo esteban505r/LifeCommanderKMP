@@ -56,32 +56,4 @@ class DailyJournalService(
         }
         return response.body()
     }
-
-    suspend fun getPomodoros(
-        startDate: String? = null,
-        endDate: String? = null,
-        limit: Int = 30,
-    ): List<PomodoroResponse> {
-        val response = httpClient.get("$baseUrl/pomodoros") {
-            header("Authorization", "Bearer ${tokenStorageImpl.getToken()}")
-            parameter("startDate", startDate)
-            parameter("endDate", endDate)
-            parameter("limit", limit)
-        }
-        return response.body()
-    }
-
-    suspend fun removePomodoro(id: String): HttpResponse {
-        return httpClient.delete("$baseUrl/pomodoros/$id") {
-            header("Authorization", "Bearer ${tokenStorageImpl.getToken()}")
-        }
-    }
-
-    suspend fun createPomodoro(pomodoro: CreatePomodoroRequest): Any {
-        return httpClient.post("$baseUrl/pomodoros") {
-            header("Authorization", "Bearer ${tokenStorageImpl.getToken()}")
-            contentType(ContentType.Application.Json)
-            setBody(pomodoro)
-        }.body()
-    }
 }

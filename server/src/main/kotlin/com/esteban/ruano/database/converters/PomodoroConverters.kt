@@ -5,12 +5,13 @@ import com.esteban.ruano.database.entities.Pomodoro
 import com.esteban.ruano.models.pomodoros.CreatePomodoroDTO
 import com.esteban.ruano.models.pomodoros.PomodoroDTO
 import com.esteban.ruano.models.pomodoros.UpdatePomodoroDTO
+import com.esteban.ruano.utils.DateUIUtils.formatWithSeconds
 
 fun Pomodoro.toDTO(): PomodoroDTO {
     return PomodoroDTO(
         id = this.id.toString(),
-        startDateTime = formatDateTime(this.startDateTime),
-        endDateTime = formatDateTime(this.endDateTime),
+        startDateTime = this.startDateTime.formatWithSeconds(),
+        endDateTime = this.endDateTime.formatWithSeconds(),
     )
 }
 

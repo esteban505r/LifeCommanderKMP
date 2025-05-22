@@ -2,7 +2,7 @@ package com.esteban.ruano.workout_data.di
 
 import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.helpers.NetworkHelper
-import com.esteban.ruano.core.utils.Constants
+import com.esteban.ruano.core.utils.AppConstants
 import com.esteban.ruano.core_data.models.Local
 import com.esteban.ruano.core_data.models.Remote
 import com.esteban.ruano.workout_data.datasources.WorkoutDataSource
@@ -29,7 +29,7 @@ object WorkoutDataModule {
     @Singleton
     fun provideTaskApi(client: OkHttpClient): WorkoutApi {
         return Retrofit.Builder()
-            .baseUrl(Constants.BASE_URL)
+            .baseUrl(AppConstants.BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()

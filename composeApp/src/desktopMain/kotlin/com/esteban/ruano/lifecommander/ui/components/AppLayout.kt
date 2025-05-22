@@ -42,7 +42,7 @@ fun AppLayout(
     content: @Composable () -> Unit
 ) {
     val isNightBlockActive by nightBlockService.isNightBlockActive.collectAsState()
-    val pomodoroCount = dailyJournalViewModel.state.collectAsState().value.pomodoros.size
+    val pomodoroCount = timersViewModel.pomodoros.collectAsState().value.size
     var showNightBlockDialog by remember { mutableStateOf(false) }
     var showTimerDialog by remember { mutableStateOf(false) }
     var timerDialogTitle by remember { mutableStateOf("") }
@@ -252,6 +252,26 @@ fun AppLayout(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Settings",
                         tint = if (navController.currentDestination?.route == Screen.Settings.route)
+                            MaterialTheme.colors.primary
+                        else MaterialTheme.colors.onSurface
+                    )
+                }
+
+                IconButton(
+                    onClick = { navController.navigate(Screen.Pomodoros.route) },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            color = if (navController.currentDestination?.route == Screen.Pomodoros.route)
+                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                            else Color.Transparent,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LockClock,
+                        contentDescription = "Pomodoros",
+                        tint = if (navController.currentDestination?.route == Screen.Pomodoros.route)
                             MaterialTheme.colors.primary
                         else MaterialTheme.colors.onSurface
                     )

@@ -20,6 +20,11 @@ class TimerPlaybackManager(
     private var playbackJob: Job? = null
 
     fun startTimerList(timerList: TimerList, onEachTimerFinished: (Timer) -> Unit) {
+        if(timerList.timers.isNullOrEmpty()) {
+            println("Timer list is empty")
+            return
+        }
+
         stopTimer()
 
         val enabledTimers = timerList.timers?.filter { it.enabled }

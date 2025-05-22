@@ -2,7 +2,7 @@ package com.esteban.ruano.habits_data.di
 
 import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.helpers.NetworkHelper
-import com.esteban.ruano.core.utils.Constants
+import com.esteban.ruano.core.utils.AppConstants
 import com.esteban.ruano.core_data.local.HistoryTrackDao
 import com.esteban.ruano.core_data.models.Local
 import com.esteban.ruano.core_data.models.Remote
@@ -33,7 +33,7 @@ object HabitsDataModule {
     @Singleton
     fun provideTaskApi(client: OkHttpClient): HabitsApi {
         return Retrofit.Builder()
-            .baseUrl(Constants.BASE_URL)
+            .baseUrl(AppConstants.BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()

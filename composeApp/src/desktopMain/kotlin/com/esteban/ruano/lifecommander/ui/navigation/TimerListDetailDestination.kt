@@ -16,8 +16,7 @@ fun TimerListDetailDestination(
     timersViewModel: TimersViewModel = koinViewModel(),
     onBack: () -> Unit
 ) {
-    val timerLists by timersViewModel.timerLists.collectAsState()
-    val timerList = timerLists.find { it.id == timerListId }
+    val timerList by timersViewModel.timerDetailList.collectAsState()
     val timerPlaybackState by timersViewModel.timerPlaybackState.collectAsState()
     val listNotifications by timersViewModel.listNotifications.collectAsState()
 
@@ -64,6 +63,14 @@ fun TimerListDetailDestination(
             },
             onStopTimer = {
                 timersViewModel.stopTimer()
+            },
+            onUpdateListSettings = {
+                timersViewModel.updateTimerList(
+                    listId = it.id,
+                    name = it.name,
+                    loopTimers = it.loopTimers,
+                    pomodoroGrouped = it.pomodoroGrouped,
+                )
             }
         )
     }

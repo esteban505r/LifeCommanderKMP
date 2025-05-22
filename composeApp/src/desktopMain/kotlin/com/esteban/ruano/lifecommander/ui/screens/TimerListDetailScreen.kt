@@ -34,7 +34,8 @@ fun TimerListDetailScreen(
     onStartTimer: (TimerList) -> Unit,
     onPauseTimer: () -> Unit,
     onResumeTimer: () -> Unit,
-    onStopTimer: () -> Unit
+    onStopTimer: () -> Unit,
+    onUpdateListSettings: (TimerList) -> Unit
 ) {
     var showAddTimerDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -89,87 +90,145 @@ fun TimerListDetailScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Timer List Properties
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = 2.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Loop Timers",
-                        style = MaterialTheme.typography.subtitle1
-                    )
-                    Switch(
-                        checked = timerList.loopTimers,
-                        onCheckedChange = { /* TODO: Implement loop timers toggle */ }
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Pomodoro Grouped",
-                        style = MaterialTheme.typography.subtitle1
-                    )
-                    Switch(
-                        checked = timerList.pomodoroGrouped,
-                        onCheckedChange = { /* TODO: Implement pomodoro grouped toggle */ }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Timers List
+        // Main Content
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "Timers",
-                style = MaterialTheme.typography.h6
-            )
-            Button(onClick = { showAddTimerDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Timer")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Add Timer")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(timerList.timers?.sortedBy { it.order } ?: emptyList()) { timer ->
-                TimerItem(
-                    timer = timer,
-                    notifications = onGetTimerNotifications(timer.id),
-                    onUpdate = { updatedTimer ->
-                        onUpdateTimer(
-                            updatedTimer.id,
-                            updatedTimer.name,
-                            updatedTimer.duration,
-                            updatedTimer.enabled,
-                            updatedTimer.countsAsPomodoro,
-                            updatedTimer.order
+            // Settings Section
+            Card(
+                modifier = Modifier
+                    .width(300.dp)
+                    .fillMaxHeight(),
+                elevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Settings",
+                        style = MaterialTheme.typography.h6,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    
+                    // Loop Timers Setting
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(2f),
+                        ) {
+                            Text(
+                                text = "Loop Timers",
+                                style = MaterialTheme.typography.subtitle1
+                            )
+                            Text(
+                                text = "Repeat the entire timer list when finished",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                        Switch(
+                            modifier = Modifier.weight(1f),
+                            checked = timerList.loopTimers,
+                            onCheckedChange = { 
+                                onUpdateListSettings(timerList.copy(loopTimers = it))
+                            }
                         )
-                    },
-                    onDelete = { onDeleteTimer(timer.id) }
-                )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Pomodoro Grouped Setting
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(2f),
+                        )
+                        {
+                            Text(
+                                text = "Pomodoro Grouped",
+                                style = MaterialTheme.typography.subtitle1
+                            )
+                            Text(
+                                text = "Group pomodoro timers together",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                        Switch(
+                            modifier = Modifier.weight(1f),
+                            checked = timerList.pomodoroGrouped,
+                            onCheckedChange = { 
+                                onUpdateListSettings(timerList.copy(pomodoroGrouped = it))
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Timers List Section
+            Card(
+                modifier = Modifier.weight(1f),
+                elevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Timers",
+                            style = MaterialTheme.typography.h6
+                        )
+                        Button(
+                            onClick = { showAddTimerDialog = true },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = MaterialTheme.colors.primary
+                            )
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Add Timer")
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Add Timer")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(timerList.timers?.sortedBy { it.order } ?: emptyList()) { timer ->
+                            TimerItem(
+                                timer = timer,
+                                timerListCountAsPomodoro = timerList.pomodoroGrouped,
+                                notifications = onGetTimerNotifications(timer.id),
+                                onUpdate = { updatedTimer ->
+                                    onUpdateTimer(
+                                        updatedTimer.id,
+                                        updatedTimer.name,
+                                        updatedTimer.duration,
+                                        updatedTimer.enabled,
+                                        updatedTimer.countsAsPomodoro,
+                                        updatedTimer.order
+                                    )
+                                },
+                                onDelete = { onDeleteTimer(timer.id) }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -209,6 +268,7 @@ fun TimerListDetailScreen(
 @Composable
 private fun TimerItem(
     timer: Timer,
+    timerListCountAsPomodoro: Boolean,
     notifications: List<TimerNotification>,
     onUpdate: (Timer) -> Unit,
     onDelete: () -> Unit
@@ -243,15 +303,37 @@ private fun TimerItem(
                         )
                     }
                 }
-                Row {
-                    Switch(
-                        checked = timer.enabled,
-                        onCheckedChange = { onUpdate(timer.copy(enabled = it)) }
-                    )
-                    Switch(
-                        checked = timer.countsAsPomodoro,
-                        onCheckedChange = { onUpdate(timer.copy(countsAsPomodoro = it)) }
-                    )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Enabled Switch with Tooltip
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Switch(
+                            checked = timer.enabled,
+                            onCheckedChange = { onUpdate(timer.copy(enabled = it)) }
+                        )
+                        Text(
+                            text = "Enabled",
+                            style = MaterialTheme.typography.caption,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+
+                    // Pomodoro Switch with Tooltip
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Switch(
+                            checked = timer.countsAsPomodoro,
+                            enabled = !timerListCountAsPomodoro,
+                            onCheckedChange = { onUpdate(timer.copy(countsAsPomodoro = it)) }
+                        )
+                        Text(
+                            text = "Pomodoro",
+                            style = MaterialTheme.typography.caption,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+
                     IconButton(onClick = onDelete) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete Timer")
                     }

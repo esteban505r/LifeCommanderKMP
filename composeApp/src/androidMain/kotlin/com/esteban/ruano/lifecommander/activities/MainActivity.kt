@@ -25,7 +25,7 @@ import com.esteban.ruano.core.data.preferences.dataStore
 import com.esteban.ruano.core.di.TasksNotificationHelper
 import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.helpers.NotificationsHelper
-import com.esteban.ruano.core.utils.Constants.EMPTY_STRING
+import com.esteban.ruano.core.utils.AppConstants.EMPTY_STRING
 import com.esteban.ruano.core.utils.PermissionManager
 import com.esteban.ruano.core_ui.theme.LifeCommanderTheme
 import com.esteban.ruano.core_ui.utils.LocalMainIntent

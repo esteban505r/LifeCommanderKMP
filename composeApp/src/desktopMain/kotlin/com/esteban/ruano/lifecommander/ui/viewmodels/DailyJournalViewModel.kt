@@ -24,7 +24,6 @@ data class DailyJournalState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isCompleted: Boolean = false,
-    val pomodoros : List<PomodoroResponse> = emptyList(),
 )
 
 class DailyJournalViewModel(
@@ -110,71 +109,6 @@ class DailyJournalViewModel(
         }
     }
 
-    fun loadPomodoros() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            try {
-                val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                val result = dailyJournalService.getPomodoros(
-                    startDate = LocalDate.now().format(formatter),
-                    endDate = LocalDate.now().format(formatter),
-                    limit = 30
-                )
-                _state.value = _state.value.copy(
-                    pomodoros = result,
-                    isLoading = false
-                )
-                statusBarService.updatePomodoroCount(result.size)
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    error = e.message,
-                    isLoading = false
-                )
-            }
-        }
-    }
-
-    fun addSamplePomodoro(){
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            try {
-                val pomodoro = CreatePomodoroRequest(
-                    startDateTime = LocalDateTime.now().parseDateTime(),
-                    endDateTime = LocalDateTime.now().parseDateTime(),
-                )
-                dailyJournalService.createPomodoro(pomodoro)
-                loadPomodoros()
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    error = e.message,
-                    isLoading = false
-                )
-            }
-        }
-    }
-
-    fun removeLastPomodoro() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            try {
-                if (state.value.pomodoros.isNotEmpty()) {
-                    val lastPomodoro = state.value.pomodoros.last()
-                    dailyJournalService.removePomodoro(lastPomodoro.id)
-                    loadPomodoros()
-                } else {
-                    _state.value = _state.value.copy(
-                        error = "No pomodoros to remove",
-                        isLoading = false
-                    )
-                }
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    error = e.message,
-                    isLoading = false
-                )
-            }
-        }
-    }
 
     fun addAnswer(questionId: String, answer: String) {
         val currentAnswers = _state.value.questionAnswers.toMutableList()

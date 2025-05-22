@@ -40,76 +40,88 @@ fun TimersScreen(
     onStopTimer: () -> Unit
 ) {
     var showAddTimerListDialog by remember { mutableStateOf(false) }
-    var showAddTimerDialog by remember { mutableStateOf(false) }
-    var selectedTimerList by remember { mutableStateOf<TimerList?>(null) }
+    var showEditTimerListDialog by remember { mutableStateOf<TimerList?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
-        // Connection Status
-        when (connectionState) {
-            is TimerWebSocketClient.ConnectionState.Connected -> {
-                Text(
-                    text = "Connected to server",
-                    style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.colors.primary
-                )
+        // Connection Status Bar
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = 4.dp,
+            color = when (connectionState) {
+                is TimerWebSocketClient.ConnectionState.Connected -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                is TimerWebSocketClient.ConnectionState.Disconnected,
+                is TimerWebSocketClient.ConnectionState.Error -> MaterialTheme.colors.error.copy(alpha = 0.1f)
+                TimerWebSocketClient.ConnectionState.Reconnecting -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                else -> MaterialTheme.colors.surface
             }
-            is TimerWebSocketClient.ConnectionState.Disconnected -> {
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = "Disconnected from server",
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.colors.error
+                    Icon(
+                        imageVector = when (connectionState) {
+                            is TimerWebSocketClient.ConnectionState.Connected -> Icons.Default.CloudDone
+                            is TimerWebSocketClient.ConnectionState.Disconnected -> Icons.Default.CloudOff
+                            is TimerWebSocketClient.ConnectionState.Error -> Icons.Default.Error
+                            TimerWebSocketClient.ConnectionState.Reconnecting -> Icons.Default.CloudSync
+                            else -> Icons.Default.CloudOff
+                        },
+                        contentDescription = null,
+                        tint = when (connectionState) {
+                            is TimerWebSocketClient.ConnectionState.Connected -> MaterialTheme.colors.primary
+                            is TimerWebSocketClient.ConnectionState.Disconnected,
+                            is TimerWebSocketClient.ConnectionState.Error -> MaterialTheme.colors.error
+                            TimerWebSocketClient.ConnectionState.Reconnecting -> MaterialTheme.colors.primary
+                            else -> MaterialTheme.colors.onSurface
+                        }
                     )
+                    Text(
+                        text = when (connectionState) {
+                            is TimerWebSocketClient.ConnectionState.Connected -> "Connected to server"
+                            is TimerWebSocketClient.ConnectionState.Disconnected -> "Disconnected from server"
+                            is TimerWebSocketClient.ConnectionState.Error -> "Connection error"
+                            TimerWebSocketClient.ConnectionState.Reconnecting -> "Reconnecting..."
+                            else -> "Disconnected"
+                        },
+                        style = MaterialTheme.typography.caption,
+                        color = when (connectionState) {
+                            is TimerWebSocketClient.ConnectionState.Connected -> MaterialTheme.colors.primary
+                            is TimerWebSocketClient.ConnectionState.Disconnected,
+                            is TimerWebSocketClient.ConnectionState.Error -> MaterialTheme.colors.error
+                            TimerWebSocketClient.ConnectionState.Reconnecting -> MaterialTheme.colors.primary
+                            else -> MaterialTheme.colors.onSurface
+                        }
+                    )
+                }
+                if (connectionState !is TimerWebSocketClient.ConnectionState.Connected) {
                     Button(
                         onClick = { coroutineScope.launch { onReconnectToSocket() } },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = MaterialTheme.colors.primary
+                        )
                     ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text("Reconnect")
                     }
                 }
-            }
-            is TimerWebSocketClient.ConnectionState.Error -> {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Connection error",
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.colors.error
-                    )
-                    Button(
-                        onClick = { coroutineScope.launch { onReconnectToSocket() } },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
-                    ) {
-                        Text("Reconnect")
-                    }
-
-                }
-            }
-
-            TimerWebSocketClient.ConnectionState.Reconnecting -> {
-                Text(
-                    text = "Reconnecting...",
-                    style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.colors.primary
-                )
-            }
-            else -> {
-                // Handle other states if necessary
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
+        // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -120,7 +132,10 @@ fun TimersScreen(
                 style = MaterialTheme.typography.h5
             )
             Button(
-                onClick = { showAddTimerListDialog = true }
+                onClick = { showAddTimerListDialog = true },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = MaterialTheme.colors.primary
+                )
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Timer List")
                 Spacer(modifier = Modifier.width(8.dp))
@@ -130,9 +145,10 @@ fun TimersScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Timer Lists Grid
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(timerLists) { timerList ->
                 TimerListCard(
@@ -143,7 +159,7 @@ fun TimersScreen(
                     onPause = onPauseTimer,
                     onResume = onResumeTimer,
                     onStop = onStopTimer,
-                    onEdit = { selectedTimerList = timerList },
+                    onEdit = { showEditTimerListDialog = timerList },
                     onDelete = { onDeleteTimerList(timerList.id) },
                     onViewDetail = { onNavigateToDetail(timerList) }
                 )
@@ -151,6 +167,7 @@ fun TimersScreen(
         }
     }
 
+    // Add Timer List Dialog
     if (showAddTimerListDialog) {
         AddTimerListDialog(
             onDismiss = { showAddTimerListDialog = false },
@@ -161,11 +178,20 @@ fun TimersScreen(
         )
     }
 
-    if (showAddTimerDialog) {
-        // TODO: Implement add timer dialog
+    // Edit Timer List Dialog
+    showEditTimerListDialog?.let { timerList ->
+        EditTimerListDialog(
+            timerList = timerList,
+            onDismiss = { showEditTimerListDialog = null },
+            onUpdate = { name, loopTimers, pomodoroGrouped ->
+                onUpdateTimerList(timerList.id, name, loopTimers, pomodoroGrouped)
+                showEditTimerListDialog = null
+            }
+        )
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun TimerListCard(
     timerList: TimerList,
@@ -196,6 +222,43 @@ private fun TimerListCard(
                         text = timerList.name,
                         style = MaterialTheme.typography.h6
                     )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (timerList.loopTimers) {
+                            Chip(
+                                onClick = { },
+                                colors = ChipDefaults.chipColors(
+                                    backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Default.Repeat,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Loop", style = MaterialTheme.typography.caption)
+                            }
+                        }
+                        if (timerList.pomodoroGrouped) {
+                            Chip(
+                                onClick = { },
+                                colors = ChipDefaults.chipColors(
+                                    backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Default.Timer,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Pomodoro", style = MaterialTheme.typography.caption)
+                            }
+                        }
+                    }
                     if (notifications.isNotEmpty()) {
                         val latestNotification = notifications.last()
                         Text(
@@ -205,74 +268,74 @@ private fun TimerListCard(
                         )
                     }
                 }
-                Row {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     when (timerPlaybackState.status) {
-                        TimerPlaybackStatus.Running ->  {
-                            IconButton(onClick = onPause) {
+                        TimerPlaybackStatus.Running -> {
+                            IconButton(
+                                onClick = onPause,
+                                modifier = Modifier.background(
+                                    color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                ),
+                            ) {
                                 Icon(Icons.Default.Pause, contentDescription = "Pause")
                             }
                         }
                         TimerPlaybackStatus.Paused -> {
-                            IconButton(onClick = onResume) {
+                            IconButton(
+                                onClick = onResume,
+                                modifier = Modifier.background(
+                                    color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                ),
+                            ) {
                                 Icon(Icons.Default.PlayArrow, contentDescription = "Resume")
                             }
                         }
                         else -> {
-                            IconButton(onClick = onPlay) {
+                            IconButton(
+                                onClick = onPlay,
+                                modifier = Modifier.background(
+                                    color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                ),
+                            ) {
                                 Icon(Icons.Default.PlayArrow, contentDescription = "Play")
                             }
                         }
                     }
-                    IconButton(onClick = onStop) {
+                    IconButton(
+                        onClick = onStop,
+                        modifier = Modifier.background(
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                        ),
+                    ) {
                         Icon(Icons.Default.Stop, contentDescription = "Stop")
                     }
-                    IconButton(onClick = onEdit) {
+                    IconButton(
+                        onClick = onEdit,
+                        modifier = Modifier.background(
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                        ),
+                    ) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit")
                     }
-                    IconButton(onClick = onDelete) {
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.background(
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                        ),
+                    ) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete")
                     }
-                    IconButton(onClick = onViewDetail) {
+                    IconButton(
+                        onClick = onViewDetail,
+                        modifier = Modifier.background(
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                        ),
+                    ) {
                         Icon(Icons.Default.Info, contentDescription = "View Details")
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TimerItem(
-    timer: Timer,
-    onUpdate: (Timer) -> Unit,
-    onDelete: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = timer.name,
-                style = MaterialTheme.typography.subtitle1
-            )
-            Text(
-                text = "${timer.duration} seconds",
-                style = MaterialTheme.typography.body2
-            )
-        }
-        Row {
-            Switch(
-                checked = timer.enabled,
-                onCheckedChange = { onUpdate(timer.copy(enabled = it)) }
-            )
-            Switch(
-                checked = timer.countsAsPomodoro,
-                onCheckedChange = { onUpdate(timer.copy(countsAsPomodoro = it)) }
-            )
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete Timer")
             }
         }
     }
@@ -291,40 +354,156 @@ private fun AddTimerListDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add Timer List") },
         text = {
-            Column {
+            Column(
+                modifier = Modifier.padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Name") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Checkbox(
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Loop Timers",
+                            style = MaterialTheme.typography.subtitle1
+                        )
+                        Text(
+                            text = "Repeat the entire timer list when finished",
+                            style = MaterialTheme.typography.caption,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    Switch(
                         checked = loopTimers,
                         onCheckedChange = { loopTimers = it }
                     )
-                    Text("Loop Timers")
                 }
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Checkbox(
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Pomodoro Grouped",
+                            style = MaterialTheme.typography.subtitle1
+                        )
+                        Text(
+                            text = "Group pomodoro timers together",
+                            style = MaterialTheme.typography.caption,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    Switch(
                         checked = pomodoroGrouped,
                         onCheckedChange = { pomodoroGrouped = it }
                     )
-                    Text("Pomodoro Grouped")
                 }
             }
         },
         confirmButton = {
             Button(
                 onClick = { onAdd(name, loopTimers, pomodoroGrouped) },
-                enabled = name.isNotBlank()
+                enabled = name.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = MaterialTheme.colors.primary
+                )
             ) {
                 Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun EditTimerListDialog(
+    timerList: TimerList,
+    onDismiss: () -> Unit,
+    onUpdate: (String, Boolean, Boolean) -> Unit
+) {
+    var name by remember { mutableStateOf(timerList.name) }
+    var loopTimers by remember { mutableStateOf(timerList.loopTimers) }
+    var pomodoroGrouped by remember { mutableStateOf(timerList.pomodoroGrouped) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Timer List") },
+        text = {
+            Column(
+                modifier = Modifier.padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Loop Timers",
+                            style = MaterialTheme.typography.subtitle1
+                        )
+                        Text(
+                            text = "Repeat the entire timer list when finished",
+                            style = MaterialTheme.typography.caption,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    Switch(
+                        checked = loopTimers,
+                        onCheckedChange = { loopTimers = it }
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Pomodoro Grouped",
+                            style = MaterialTheme.typography.subtitle1
+                        )
+                        Text(
+                            text = "Group pomodoro timers together",
+                            style = MaterialTheme.typography.caption,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    Switch(
+                        checked = pomodoroGrouped,
+                        onCheckedChange = { pomodoroGrouped = it }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onUpdate(name, loopTimers, pomodoroGrouped) },
+                enabled = name.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = MaterialTheme.colors.primary
+                )
+            ) {
+                Text("Update")
             }
         },
         dismissButton = {

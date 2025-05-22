@@ -62,8 +62,6 @@ fun HomeScreen(
 
     val coroutineScope = rememberCoroutineScope()
 
-    val pomodoroCount = dailyJournalViewModel.state.collectAsState().value.pomodoros.size
-
 
     // Check for Night Block activation every minute
     LaunchedEffect(Unit) {
@@ -91,7 +89,6 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         habitsViewModel.getHabits()
         tasksViewModel.getTasksByFilter()
-        dailyJournalViewModel.loadPomodoros()
     }
 
     TokenDialog(

@@ -1,8 +1,6 @@
 package com.esteban.ruano.habits_presentation.ui.screens.viewmodel.state
 
-import com.esteban.ruano.core.domain.model.LifeCommanderException
-import com.esteban.ruano.core.utils.Constants.EMPTY_STRING
-import com.esteban.ruano.core_ui.view_model.UserIntent
+import com.esteban.ruano.core.utils.AppConstants.EMPTY_STRING
 import com.esteban.ruano.core_ui.view_model.ViewState
 import com.esteban.ruano.habits_domain.model.Habit
 

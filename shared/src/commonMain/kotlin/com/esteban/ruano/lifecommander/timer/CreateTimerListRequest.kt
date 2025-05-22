@@ -11,7 +11,7 @@ data class CreateTimerListRequest(
 
 @Serializable
 data class CreateTimerRequest(
-    val listId: String,
+    val timerListId: String,
     val name: String,
     val duration: Long,
     val enabled: Boolean,

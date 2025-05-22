@@ -38,6 +38,13 @@ object DateUIUtils {
         return "$date $time"
     }
 
+    fun LocalDateTime.formatWithSeconds(): String {
+        val date = date.formatDefault()
+        val time = formatToTimeString()
+        val seconds = second.toString().padStart(2, '0')
+        return "$date $time:$seconds"
+    }
+
     fun LocalTime.formatDefault(): String {
         val hourStr = hour.toString().padStart(2, '0')
         val minuteStr = minute.toString().padStart(2, '0')
@@ -79,6 +86,13 @@ object DateUIUtils {
         val date = datePart.toLocalDate()
         val (hour, minute) = timeToIntPair(timePart)
         return date.atTime(hour, minute)
+    }
+
+    fun String.toLocalDateTimeWithSeconds(): LocalDateTime {
+        val (datePart, timePart) = split(" ")
+        val date = datePart.toLocalDate()
+        val (hour, minute, second) = timePart.split(":").map { it.toInt() }
+        return date.atTime(hour, minute, second)
     }
 
     fun LocalDateTime.toLocalTime(): LocalTime {
@@ -151,5 +165,23 @@ object DateUIUtils {
         }
     }
 
+    fun calculateDuration(startDateTime: String, endDateTime: String): String {
+        val start = startDateTime.toLocalDateTimeWithSeconds()
+        val end = endDateTime.toLocalDateTimeWithSeconds()
+
+        val timezone = TimeZone.UTC
+        val startInstant = start.toInstant(timezone)
+        val endInstant = end.toInstant(timezone)
+
+        val baseDuration = (endInstant - startInstant)
+        val duration = if (baseDuration.inWholeMinutes <= 0) baseDuration.inWholeSeconds else baseDuration.inWholeMinutes
+        val suffix = if (baseDuration.inWholeMinutes <= 0) "s" else "m"
+
+        return if (duration > 0) {
+            "${duration.toString().padStart(2, '0')}$suffix"
+        } else {
+            "00$suffix"
+        }
+    }
 
 }

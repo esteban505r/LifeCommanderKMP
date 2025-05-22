@@ -9,6 +9,7 @@ import com.esteban.ruano.models.pomodoros.CreatePomodoroDTO
 import com.esteban.ruano.models.pomodoros.PomodoroDTO
 import com.esteban.ruano.models.pomodoros.UpdatePomodoroDTO
 import com.esteban.ruano.utils.parseDateTime
+import com.esteban.ruano.utils.parseDateTimeWithSeconds
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -20,8 +21,8 @@ class PomodoroService : BaseService() {
         return transaction {
             val id = Pomodoros.insertOperation(userId) {
                 insert {
-                    it[startDateTime] = parseDateTime(pomodoro.startDateTime)
-                    it[endDateTime] = parseDateTime(pomodoro.endDateTime)
+                    it[startDateTime] = parseDateTimeWithSeconds(pomodoro.startDateTime)
+                    it[endDateTime] = parseDateTimeWithSeconds(pomodoro.endDateTime)
                     it[user] = userId
                 }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
             }

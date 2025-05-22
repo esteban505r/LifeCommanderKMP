@@ -19,6 +19,14 @@ fun parseDateTime(dateString: String): LocalDateTime {
     return LocalDateTime.parse(formattedDate)
 }
 
+fun parseDateTimeWithSeconds(dateString: String): LocalDateTime {
+    val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
+    val outputFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+    val date = java.time.LocalDateTime.parse(dateString, inputFormatter)
+    val formattedDate = date.format(outputFormatter)
+    return LocalDateTime.parse(formattedDate)
+}
+
 fun formatDate(date: LocalDate): String {
     val inputFormatter = DateTimeFormatter.ISO_LOCAL_DATE
     val outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")

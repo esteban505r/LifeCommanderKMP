@@ -24,7 +24,7 @@ fun Route.timerRouting(timerService: TimerService) {
         post {
             val request = call.receive<CreateTimerRequest>()
             val timer = timerService.createTimer(
-                listId = UUID.fromString(request.listId),
+                listId = UUID.fromString(request.timerListId),
                 name = request.name,
                 duration = request.duration,
                 enabled = request.enabled,
@@ -87,16 +87,16 @@ fun Route.timerRouting(timerService: TimerService) {
                     call.respond(timerList)
                 }
 
-                put {
+                patch {
                     val id = call.parameters["id"]?.let { UUID.fromString(it) }
-                        ?: return@put call.respond(HttpStatusCode.BadRequest)
+                        ?: return@patch call.respond(HttpStatusCode.BadRequest)
                     val request = call.receive<CreateTimerListRequest>()
                     val timerList = timerService.updateTimerList(
                         listId = id,
                         name = request.name,
                         loopTimers = request.loopTimers,
                         pomodoroGrouped = request.pomodoroGrouped
-                    ) ?: return@put call.respond(HttpStatusCode.NotFound)
+                    ) ?: return@patch call.respond(HttpStatusCode.NotFound)
                     call.respond(timerList)
                 }
 

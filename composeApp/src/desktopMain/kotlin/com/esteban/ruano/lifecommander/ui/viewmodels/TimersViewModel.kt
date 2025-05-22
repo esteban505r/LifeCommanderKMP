@@ -9,28 +9,43 @@ import com.esteban.ruano.lifecommander.models.Timer
 import com.esteban.ruano.lifecommander.models.TimerList
 import com.esteban.ruano.lifecommander.models.UserSettings
 import com.esteban.ruano.lifecommander.services.timers.TimerService
-import com.esteban.ruano.lifecommander.timer.TimerNotification
-import com.esteban.ruano.lifecommander.timer.TimerPlaybackManager
-import com.esteban.ruano.lifecommander.timer.TimerPlaybackState
-import com.esteban.ruano.lifecommander.timer.TimerWebSocketClientMessage
-import com.esteban.ruano.lifecommander.timer.TimerWebSocketServerMessage
+import com.esteban.ruano.lifecommander.timer.*
 import com.esteban.ruano.lifecommander.websocket.TimerWebSocketClient
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.formatWithSeconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import services.auth.TokenStorageImpl
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
+import services.auth.TokenStorageImpl
+import services.dailyjournal.PomodoroService
+import services.dailyjournal.models.PomodoroResponse
+import ui.services.dailyjournal.models.CreatePomodoroRequest
+import utils.DateUtils.parseDateTime
+import utils.StatusBarService
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import kotlin.time.Duration.Companion.seconds
 
 class TimersViewModel(
     private val tokenStorageImpl: TokenStorageImpl,
     private val timerService: TimerService,
     private val timerPlaybackManager: TimerPlaybackManager,
-    private val webSocketClient: TimerWebSocketClient
+    private val webSocketClient: TimerWebSocketClient,
+    private val pomodoroService: PomodoroService,
+    private val statusBarService: StatusBarService
 ) : ViewModel() {
     private val _timerLists = MutableStateFlow<List<TimerList>>(emptyList())
     val timerLists: StateFlow<List<TimerList>> = _timerLists.asStateFlow()
+
+    private val _timerDetailList = MutableStateFlow<TimerList?>(null)
+    val timerDetailList: StateFlow<TimerList?> = _timerDetailList.asStateFlow()
 
     private val _userSettings = MutableStateFlow<UserSettings?>(null)
     val userSettings: StateFlow<UserSettings?> = _userSettings.asStateFlow()
@@ -42,6 +57,9 @@ class TimersViewModel(
 
     private val _listNotifications = MutableStateFlow<List<TimerNotification>>(emptyList())
     val listNotifications: StateFlow<List<TimerNotification>> = _listNotifications.asStateFlow()
+
+    private val _pomodoros = MutableStateFlow<List<PomodoroResponse>>(emptyList())
+    val pomodoros: StateFlow<List<PomodoroResponse>> = _pomodoros.asStateFlow()
 
     private val _connectionState =
         MutableStateFlow<TimerWebSocketClient.ConnectionState>(TimerWebSocketClient.ConnectionState.Disconnected)
@@ -140,9 +158,10 @@ class TimersViewModel(
 
     fun startTimer(timerList: TimerList) {
         viewModelScope.launch {
-            timerPlaybackManager.startTimerList(timerList) { timer ->
+            timerPlaybackManager.startTimerList(timerList, onEachTimerFinished = { timer ->
                 sendTimerUpdate(timerList.id, timer, 0)
-            }
+                handleTimerCompletion(timerList, timer)
+            })
             if (timerList.timers.isNullOrEmpty()) return@launch
             sendTimerUpdate(timerList.id, timerList.timers!!.first(),
                 timerList.timers?.firstOrNull()?.duration ?: 0)
@@ -163,7 +182,10 @@ class TimersViewModel(
         viewModelScope.launch {
             val currentList = timerPlaybackManager.uiState.value.timerList ?: return@launch
             val currentTimer = timerPlaybackManager.uiState.value.currentTimer ?: return@launch
-            timerPlaybackManager.resumeTimer()
+            timerPlaybackManager.resumeTimer(onEachTimerFinished = { timer ->
+                sendTimerUpdate(currentList.id, timer, 0)
+                handleTimerCompletion(currentList, timer)
+            })
             sendTimerUpdate(currentList.id, currentTimer,
                 timerPlaybackManager.uiState.value.remainingMillis)
         }
@@ -366,7 +388,7 @@ class TimersViewModel(
                     token = tokenStorageImpl.getToken() ?: "",
                     listId = listId
                 )
-                _timerLists.value = listOf(response)
+                _timerDetailList.value = response
             } catch (e: Exception) {
                 error = e.message
                 e.printStackTrace()
@@ -408,6 +430,118 @@ class TimersViewModel(
                     token = tokenStorageImpl.getToken() ?: ""
                 )
                 _userSettings.value = response
+            } catch (e: Exception) {
+                error = e.message
+                e.printStackTrace()
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    private fun handleTimerCompletion(timerList: TimerList, completedTimer: Timer) {
+        viewModelScope.launch {
+            try {
+                // Get all enabled timers
+                val enabledTimers = timerList.timers?.filter { it.enabled } ?: emptyList()
+                
+                // Check if this is the last timer in the list
+                val isLastTimer = enabledTimers.lastOrNull()?.id == completedTimer.id
+                
+                // Determine if we should create a pomodoro
+                val shouldCreatePomodoro = when {
+                    // If list is pomodoro grouped, only create on last timer
+                    timerList.pomodoroGrouped -> isLastTimer
+                    // If list is not pomodoro grouped, create for each pomodoro timer
+                    else -> completedTimer.countsAsPomodoro
+                }
+
+                if (shouldCreatePomodoro) {
+                    val now = Clock.System.now()
+                    val past = now - 5.seconds
+                    val endDate = now.toLocalDateTime(TimeZone.currentSystemDefault())
+                    val startDate = past.toLocalDateTime(TimeZone.currentSystemDefault())
+                    
+                    pomodoroService.createPomodoro(
+                        CreatePomodoroRequest(
+                            startDateTime = startDate.formatWithSeconds(),
+                            endDateTime = endDate.formatWithSeconds()
+                        )
+                    )
+                    loadPomodoros()
+                }
+            } catch (e: Exception) {
+                error = "Failed to create pomodoro: ${e.message}"
+                e.printStackTrace()
+            }
+        }
+    }
+
+
+    fun loadPomodoros() {
+        viewModelScope.launch {
+            try {
+                val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                val result = pomodoroService.getPomodoros(
+                    startDate = LocalDate.now().format(formatter),
+                    endDate = LocalDate.now().format(formatter),
+                    limit = 30
+                )
+                _pomodoros.value = result
+                statusBarService.updatePomodoroCount(result.size)
+            } catch (e: Exception) {
+                error = e.message
+                e.printStackTrace()
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun addSamplePomodoro(){
+        viewModelScope.launch {
+            try {
+                val pomodoro = CreatePomodoroRequest(
+                    startDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).formatWithSeconds(),
+                    endDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).formatWithSeconds()
+                )
+                pomodoroService.createPomodoro(pomodoro)
+                loadPomodoros()
+            } catch (e: Exception) {
+                error = e.message
+                e.printStackTrace()
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun removeLastPomodoro() {
+        viewModelScope.launch {
+            isLoading = true
+            try {
+                if (_pomodoros.value.isNotEmpty()) {
+                    val lastPomodoro = _pomodoros.value.last()
+                    pomodoroService.removePomodoro(lastPomodoro.id)
+                    loadPomodoros()
+                } else {
+                    error = "No pomodoros to remove"
+                }
+            } catch (e: Exception) {
+                error = e.message
+                e.printStackTrace()
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun removePomodoro(pomodoroId: String) {
+        viewModelScope.launch {
+            isLoading = true
+            try {
+                pomodoroService.removePomodoro(pomodoroId)
+                loadPomodoros()
             } catch (e: Exception) {
                 error = e.message
                 e.printStackTrace()
