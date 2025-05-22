@@ -130,7 +130,7 @@ fun FinanceScreen(
                     onClick = {
                         selectedTab = 1
                         coroutineScope.launch {
-                            actions.getTransactions()
+                            actions.getTransactions( true)
                         }
                     },
                     text = {

@@ -1,6 +1,7 @@
 package com.esteban.ruano.utils
 
 import com.esteban.ruano.database.entities.Transactions
+import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.lifecommander.models.finance.SortOrder as ModelSortOrder
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
@@ -89,6 +90,7 @@ fun RoutingCall.gatherTransactionFilters(): TransactionFilters{
 fun buildTransactionFilters(userId: Int, filters: TransactionFilters): Op<Boolean> {
     val conditions = mutableListOf<Op<Boolean>>()
     conditions += Transactions.user eq userId
+    conditions += Transactions.status eq Status.ACTIVE
 
     filters.searchPattern?.let { pattern ->
         conditions += Transactions.description like "%$pattern%"

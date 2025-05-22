@@ -12,6 +12,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.atTime
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
+import kotlin.math.absoluteValue
 import kotlin.text.iterator
 
 object TransactionParser {
@@ -65,7 +66,7 @@ object TransactionParser {
         return Transaction(
             description = description,
             date = DateUtils.formatDateTime(parsedDate),
-            amount = parseColombianAmount(amountStr),
+            amount = parseColombianAmount(amountStr).absoluteValue,
             type = if (amountStr.trim().startsWith("-")) TransactionType.EXPENSE else TransactionType.INCOME,
             category = determineCategory(userId, description).toCategory(),
             accountId = accountId

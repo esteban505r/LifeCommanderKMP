@@ -105,7 +105,7 @@ class TransactionService : BaseService() {
 
     fun getTransactionsByAccount(accountId: UUID): List<TransactionResponseDTO> {
         return transaction {
-            Transaction.find { Transactions.account eq accountId }
+            Transaction.find { Transactions.account eq accountId and (Transactions.status eq Status.ACTIVE) }
                 .map { it.toResponseDTO() }
         }
     }
@@ -115,14 +115,17 @@ class TransactionService : BaseService() {
             Transaction.find { 
                 (Transactions.user eq userId) and 
                 (Transactions.date greaterEq startDate.toLocalDateTime()) and
-                (Transactions.date lessEq endDate.toLocalDateTime())
+                (Transactions.date lessEq endDate.toLocalDateTime()) and
+                (Transactions.status eq Status.ACTIVE)
             }.map { it.toResponseDTO() }
         }
     }
 
     fun getTransaction(transactionId: UUID, userId: Int): TransactionResponseDTO? {
         return transaction {
-            Transaction.find { (Transactions.id eq transactionId) and (Transactions.user eq userId) }
+            Transaction.find {
+                (Transactions.id eq transactionId) and (Transactions.user eq userId) and (Transactions.status eq Status.ACTIVE)
+            }
                 .firstOrNull()
                 ?.toResponseDTO()
         }
@@ -156,7 +159,7 @@ class TransactionService : BaseService() {
         return transaction {
             val transaction = Transaction.findById(transactionId)
             if (transaction != null && transaction.user.id.value == userId) {
-                transaction.status = Status.INACTIVE
+                transaction.status = Status.DELETED
                 true
             } else {
                 false

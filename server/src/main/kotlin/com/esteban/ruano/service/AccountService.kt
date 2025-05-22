@@ -4,6 +4,7 @@ import com.esteban.ruano.database.converters.toResponseDTO
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.finance.*
+import com.lifecommander.finance.model.TransactionType
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -39,7 +40,11 @@ class AccountService : BaseService() {
                 val balance = Transaction.find {
                     (Transactions.account eq UUID.fromString(it.id)) and (Transactions.user eq userId).
                     and (Transactions.status eq Status.ACTIVE)
-                }.sumOf { r -> r.amount.toDouble() }
+                }.sumOf { r -> 
+                    val value = r.amount.toDouble()
+                    val valueConverted = if(r.type == TransactionType.EXPENSE) -value else value
+                    valueConverted
+                }
 
                 it.copy(balance = balance + it.initialBalance)
             }

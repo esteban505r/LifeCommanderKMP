@@ -121,7 +121,8 @@ class BudgetService : BaseService() {
                     (Transactions.user eq userId) and
                             (Transactions.category.lowerCase() eq budget.category.lowercase()) and
                             (Transactions.date.date() greaterEq periodStart) and
-                            (Transactions.date.date() lessEq periodEnd)
+                            (Transactions.date.date() lessEq periodEnd) and
+                            (Transactions.type eq TransactionType.EXPENSE)
                 }.sumOf { it.amount.toDouble() }
 
                 BudgetProgressResponseDTO(
@@ -191,7 +192,7 @@ class BudgetService : BaseService() {
                 val spent = Transaction.find {
                     (Transactions.user eq userId) and
                             (Transactions.category eq budget.category) and
-                            (Transactions.date.date() greaterEq budget.startDate)
+                            (Transactions.date.date() greaterEq budget.startDate) and (Transactions.type eq TransactionType.EXPENSE)
                 }.sumOf { it.amount.toDouble() }
                 spent / budget.amount.toDouble()
             } else {
