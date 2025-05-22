@@ -58,11 +58,11 @@ class CategoryKeywordMapperViewModel(
         }
     }
 
-    fun removeKeyword(category: Category, keyword: String) {
+    fun removeKeyword(keywordId: String) {
         _state.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             try {
-                service.removeKeyword(category, keyword)
+                service.removeKeyword(keywordId)
                 loadCategoryKeywords()
             } catch (e: Exception) {
                 _state.update { 

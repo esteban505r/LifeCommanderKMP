@@ -23,5 +23,4 @@ data class FinanceState(
     val budgetFilters: BudgetFilters = BudgetFilters(),
     val budgetBaseDate: String = getCurrentDateTime().date.formatDefault(),
     val importPreview: TransactionImportPreview? = null,
-    val budgetTransactions: List<Transaction> = emptyList()
 )

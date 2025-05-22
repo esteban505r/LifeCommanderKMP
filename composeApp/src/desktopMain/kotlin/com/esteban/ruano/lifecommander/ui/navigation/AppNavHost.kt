@@ -25,6 +25,7 @@ import ui.ui.viewmodels.AuthViewModel
 import ui.screens.AuthScreen
 import com.esteban.ruano.lifecommander.ui.screens.HomeScreen
 import com.esteban.ruano.lifecommander.ui.screens.TransactionImportScreen
+import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import ui.state.AuthState
 import ui.viewmodels.AppViewModel
@@ -165,11 +166,15 @@ fun AppNavHost(
                 composable<BudgetTransactionsRoute>(
                 ) { backStackEntry ->
                     val args = backStackEntry.toRoute<BudgetTransactionsRoute>()
+                    val viewModel = koinViewModel<FinanceViewModel>()
+
                     BudgetTransactionsScreen(
                         budgetId = args.budgetId,
                         onBack = {
                             navController.navigateUp()
-                        }
+                        },
+                        financeActions = viewModel,
+                        state = viewModel.state.collectAsState().value,
                     )
                 }
 

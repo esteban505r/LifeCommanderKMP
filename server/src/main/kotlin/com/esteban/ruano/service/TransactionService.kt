@@ -10,6 +10,9 @@ import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUtils.toLocalTime
 import com.esteban.ruano.utils.TransactionParser
+import com.esteban.ruano.utils.absAmount
+import com.esteban.ruano.utils.addSortOrder
+import com.esteban.ruano.utils.buildTransactionFilters
 import com.lifecommander.finance.model.TransactionImportPreview
 import com.lifecommander.finance.model.TransactionImportPreviewItem
 import com.lifecommander.finance.model.TransactionType
@@ -57,54 +60,27 @@ class TransactionService : BaseService() {
 
     fun getTransactionsByUser(
         userId: Int,
-        limit: Int = 50,
+        limit: Int = 50,// Get total count before pagination
         offset: Int = 0,
         filters: TransactionFilters = TransactionFilters()
     ): TransactionsResponseDTO {
         return transaction {
-            val baseQuery = Transactions.selectAll().where { Transactions.user eq userId }
-
-            val conditions = mutableListOf<Op<Boolean>>()
-
-            filters.searchPattern?.let { pattern ->
-                conditions += Transactions.description like "%$pattern%"
-            }
-            filters.categories?.let { categories ->
-                conditions += Transactions.category inList categories
-            }
-            filters.startDate?.let { start ->
-                val startDateTime = start.toLocalDate().atTime(filters.startDateHour?.toLocalTime()?: LocalTime(0,0))
-                conditions += Transactions.date greaterEq startDateTime
-            }
-            filters.endDate?.let { end ->
-                val endDateTime = end.toLocalDate().atTime(filters.endDateHour?.toLocalTime()?: LocalTime(0,0))
-                conditions += Transactions.date lessEq endDateTime
-            }
-            filters.types?.let { types ->
-                conditions += Transactions.type inList types
-            }
-            filters.minAmount?.let { min ->
-                conditions += Transactions.amount greaterEq min.toBigDecimal()
-            }
-            filters.maxAmount?.let { max ->
-                conditions += Transactions.amount lessEq max.toBigDecimal()
-            }
-            filters.accountIds?.let { accountIds ->
-                conditions += Transactions.account inList accountIds.map { UUID.fromString(it) }
+            val baseQuery = Transactions.selectAll().where{
+                buildTransactionFilters(
+                    userId = userId,
+                    filters = filters,
+                )
             }
 
-// Combine with AND, safely handle 0 conditions
-            val combined: Op<Boolean> = conditions.fold(Op.TRUE as Op<Boolean>) { acc, op -> acc and op }
-
-// Apply to query
-            val filteredQuery = baseQuery.andWhere { combined }
-
-            // Get total count before pagination
-            val totalCount = filteredQuery.count()
+            val totalCount = baseQuery.count()
 
             // Apply pagination
-            val paginatedResults = filteredQuery
-                .orderBy(Transactions.date to SortOrder.DESC)
+            val paginatedResults = baseQuery
+                .addSortOrder(
+                    filters.amountSortOrder,
+                    absAmount,
+                    defaultSortOrder = Transactions.date to SortOrder.DESC
+                )
                 .limit(limit, offset.toLong())
 
             val results = paginatedResults.map {
@@ -235,7 +211,7 @@ class TransactionService : BaseService() {
         accountId: String,
         skipDuplicates: Boolean = true
     ): List<UUID> {
-        val transactions = TransactionParser.parseTransactions(text, accountId)
+        val transactions = TransactionParser.parseTransactions(userId,text, accountId)
         return importTransactions(userId, transactions, skipDuplicates)
     }
 
@@ -244,7 +220,7 @@ class TransactionService : BaseService() {
         text: String,
         accountId: String
     ): TransactionImportPreview {
-        val parsedTransactions = TransactionParser.parseTransactions(text, accountId)
+        val parsedTransactions = TransactionParser.parseTransactions(userId,text, accountId)
 
         println("Parsed Transactions:")
         parsedTransactions.forEach {

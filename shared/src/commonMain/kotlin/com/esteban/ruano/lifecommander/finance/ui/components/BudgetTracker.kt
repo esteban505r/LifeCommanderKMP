@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.esteban.ruano.MR
@@ -37,6 +38,8 @@ fun BudgetTracker(
     onBudgetClick: (Budget) -> Unit,
     onShowFilters: (Boolean) -> Unit,
     onOpenCategoryKeywordMapper: () -> Unit,
+    onCategorizeUnbudgeted: () -> Unit,
+    onCategorizeAll: () -> Unit,
     baseDate: LocalDate,
     filters: BudgetFilters = BudgetFilters(),
     onFiltersChange: (BudgetFilters) -> Unit,
@@ -46,120 +49,166 @@ fun BudgetTracker(
     var editingBudget by remember { mutableStateOf<Budget?>(null) }
     var searchPattern by remember { mutableStateOf(filters.searchPattern) }
 
-
-
     // Panel principal
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            // Main content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 4.dp,
+                    color = MaterialTheme.colors.surface
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        // Search and Filter Controls Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Search Bar
+                            OutlinedTextField(
+                                value = searchPattern ?: "",
+                                onValueChange = {
+                                    searchPattern = it
+                                    onFiltersChange(filters.copy(searchPattern = it.takeIf { it.isNotBlank() }))
+                                },
+                                modifier = Modifier.weight(1f),
+                                placeholder = { Text(stringResource(MR.strings.search_transactions)) },
+                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                                singleLine = true,
+                                colors = TextFieldDefaults.outlinedTextFieldColors(
+                                    backgroundColor = MaterialTheme.colors.surface
+                                )
+                            )
 
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            OutlinedButton(
+                                onClick = { onToggleDatePicker(true) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = baseDate.formatDefault(),
+                                    style = MaterialTheme.typography.body1,
+                                    color = MaterialTheme.colors.onSurface
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Button(
+                                onClick = { onShowFilters(true) },
+                                colors = ButtonDefaults.buttonColors(
+                                    backgroundColor = if (filters != BudgetFilters()) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
+                                    contentColor = if (filters != BudgetFilters()) MaterialTheme.colors.onPrimary else MaterialTheme.colors.primary
+                                )
+                            ) {
+                                Icon(Icons.Default.FilterList, contentDescription = "Filters")
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Filters")
+                            }
+                        }
+                    }
+                }
+                
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Budgets",
+                        style = MaterialTheme.typography.h5,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(bottom = 64.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(budgets) { budgetProgress ->
+                        BudgetProgressItem(
+                            budgetProgress = budgetProgress,
+                            onEdit = {
+                                editingBudget = budgetProgress.budget
+                                showBudgetFormDialog = true
+                            },
+                            onDelete = { onDeleteBudget(budgetProgress.budget) },
+                            onBudgetClick = onBudgetClick
+                        )
+                    }
+                }
+            }
+
+            // Right sidebar
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .width(240.dp)
+                    .fillMaxHeight(),
                 elevation = 4.dp,
                 color = MaterialTheme.colors.surface
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Search and Filter Controls Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Search Bar
-                        OutlinedTextField(
-                            value = searchPattern ?: "",
-                            onValueChange = {
-                                searchPattern = it
-                                onFiltersChange(filters.copy(searchPattern = it.takeIf { it.isNotBlank() }))
-                            },
-                            modifier = Modifier.weight(1f),
-                            placeholder = { Text(stringResource(MR.strings.search_transactions)) },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                            singleLine = true,
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                backgroundColor = MaterialTheme.colors.surface
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        OutlinedButton(
-                            onClick = { onToggleDatePicker(true) },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                text = baseDate.formatDefault(),
-                                style = MaterialTheme.typography.body1,
-                                color = MaterialTheme.colors.onSurface
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Button(
-                            onClick = { onShowFilters(true) },
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = if (filters != BudgetFilters()) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
-                                contentColor = if (filters != BudgetFilters()) MaterialTheme.colors.onPrimary else MaterialTheme.colors.primary
-                            )
-                        ) {
-                            Icon(Icons.Default.FilterList, contentDescription = "Filters")
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Filters")
-                        }
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Button(
-                            onClick = onOpenCategoryKeywordMapper,
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = MaterialTheme.colors.primary
-                            )
-                        ) {
-                            Icon(Icons.Default.Category, contentDescription = "Category Keywords")
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Category Keywords")
-                        }
-                    }
-                }
-            }
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Budgets",
-                    style = MaterialTheme.typography.h5,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(bottom = 64.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(budgets) { budgetProgress ->
-                    BudgetProgressItem(
-                        budgetProgress = budgetProgress,
-                        onEdit = {
-                            editingBudget = budgetProgress.budget
-                            showBudgetFormDialog = true
-                        },
-                        onDelete = { onDeleteBudget(budgetProgress.budget) },
-                        onBudgetClick = onBudgetClick
+                    Text(
+                        text = "Transaction Tools",
+                        style = MaterialTheme.typography.h6,
+                        fontWeight = FontWeight.Bold
                     )
+
+                    Button(
+                        onClick = onOpenCategoryKeywordMapper,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = MaterialTheme.colors.primary
+                        )
+                    ) {
+                        Icon(Icons.Default.Category, contentDescription = "Category Keywords")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Category Keywords")
+                    }
+
+                    Button(
+                        onClick = onCategorizeUnbudgeted,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = MaterialTheme.colors.primary
+                        )
+                    ) {
+                        Icon(Icons.Default.AutoFixHigh, contentDescription = "Categorize Unbudgeted")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Categorize Unbudgeted")
+                    }
+
+                    Button(
+                        onClick = onCategorizeAll,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = MaterialTheme.colors.primary
+                        )
+                    ) {
+                        Icon(Icons.Default.AutoFixNormal, contentDescription = "Categorize All")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Categorize All")
+                    }
                 }
             }
         }
@@ -168,17 +217,29 @@ fun BudgetTracker(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-                .padding(end = 64.dp)
+                .padding(end = 250.dp)
                 .align(Alignment.BottomCenter),
             backgroundColor = MaterialTheme.colors.surface,
             elevation = 4.dp
         ) {
-            Text(
-                text = "Total Budgeted: ${budgets.sumOf { it.budget.amount }.toCurrencyFormat()}",
-                style = MaterialTheme.typography.h5,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ){
+                Text(
+                    text = "Total Budgeted: ${budgets.sumOf { it.budget.amount }.toCurrencyFormat()}",
+                    style = MaterialTheme.typography.h5,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).weight(1f)
+                )
+                Text(
+                    text = "Total Spent: ${budgets.sumOf { it.spent }.toCurrencyFormat()}",
+                    style = MaterialTheme.typography.h5,
+                    textAlign = TextAlign.End,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).weight(1f)
+                )
+            }
         }
 
         FloatingActionButton(
@@ -211,7 +272,6 @@ fun BudgetTracker(
             }
         }
     }
-
 }
 
 

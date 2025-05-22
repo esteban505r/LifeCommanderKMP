@@ -7,6 +7,7 @@ import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.lifecommander.models.finance.TransactionsResponse
 import com.esteban.ruano.lifecommander.utils.appHeaders
+import com.esteban.ruano.lifecommander.utils.buildParametersString
 import com.lifecommander.finance.model.*
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -37,19 +38,14 @@ class FinanceService(
             params.add("offset=$offset")
             
             // Add filter parameters
-            filters.searchPattern?.let { params.add("search=$it") }
-            filters.categories?.forEach { params.add("category=$it") }
-            filters.startDate?.let { params.add("startDate=$it") }
-            filters.startDateHour?.let { params.add("startDateHour=$it") }
-            filters.endDate?.let { params.add("endDate=$it") }
-            filters.endDateHour?.let { params.add("endDateHour=$it") }
-            filters.types?.forEach { params.add("type=$it") }
-            filters.minAmount?.let { params.add("minAmount=$it") }
-            filters.maxAmount?.let { params.add("maxAmount=$it") }
-            filters.accountIds?.forEach { params.add("accountId=$it") }
+           val filterParams = filters.buildParametersString()
             
             if (params.isNotEmpty()) {
                 append("?${params.joinToString("&")}")
+            }
+
+            if (filterParams != null) {
+                append("&$filterParams")
             }
         }
         
@@ -264,8 +260,23 @@ class FinanceService(
         return response.body()
     }
 
-    suspend fun getBudgetTransactions(budgetId: String): List<Transaction> {
-        val response = httpClient.get("$baseUrl/finance/budgets/$budgetId/transactions") {
+    suspend fun getBudgetTransactions(budgetId: String,referenceDate: String,filters: TransactionFilters = TransactionFilters()): List<Transaction> {
+        val url = buildString {
+            append("$baseUrl/finance/budgets/$budgetId/transactions")
+            val params = mutableListOf<String>()
+
+            // Add filter parameters
+            params.add("referenceDate=${referenceDate}")
+            val filterParams = filters.buildParametersString()
+
+            if (params.isNotEmpty()) {
+                append("?${params.joinToString("&")}")
+            }
+            if (filterParams != null) {
+                append("&$filterParams")
+            }
+        }
+        val response = httpClient.get(url) {
             appHeaders(tokenStorageImpl.getToken())
         }
 
@@ -273,6 +284,48 @@ class FinanceService(
             return response.body<List<Transaction>>()
         } else {
             throw Exception("Failed to fetch budget transactions: ${response.status}")
+        }
+    }
+
+    suspend fun categorizeUnbudgeted(referenceDate: String): Int {
+        val url = buildString {
+            append("$baseUrl/finance/budgets/unbudgeted/categorize")
+            val params = mutableListOf<String>()
+            params.add("referenceDate=${referenceDate}")
+            if (params.isNotEmpty()) {
+                append("?${params.joinToString("&")}")
+            }
+        }
+        
+        val response = httpClient.post(url) {
+            appHeaders(tokenStorageImpl.getToken())
+        }
+
+        if (response.status == HttpStatusCode.OK) {
+            return response.body<Map<String, Int>>()["categorizedCount"] ?: 0
+        } else {
+            throw Exception("Failed to categorize unbudgeted transactions: ${response.status}")
+        }
+    }
+
+    suspend fun categorizeAllTransactions(referenceDate: String): Int {
+        val url = buildString {
+            append("$baseUrl/finance/budgets/transactions/categorize")
+            val params = mutableListOf<String>()
+            params.add("referenceDate=${referenceDate}")
+            if (params.isNotEmpty()) {
+                append("?${params.joinToString("&")}")
+            }
+        }
+        
+        val response = httpClient.post(url) {
+            appHeaders(tokenStorageImpl.getToken())
+        }
+
+        if (response.status == HttpStatusCode.OK) {
+            return response.body<Map<String, Int>>()["categorizedCount"] ?: 0
+        } else {
+            throw Exception("Failed to categorize transactions: ${response.status}")
         }
     }
 }

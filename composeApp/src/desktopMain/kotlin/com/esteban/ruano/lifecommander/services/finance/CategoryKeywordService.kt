@@ -26,25 +26,21 @@ class CategoryKeywordService(
         }.body()
     }
 
-    suspend fun addKeyword(category: Category, keyword: String): CategoryKeyword {
-        return httpClient.post("$baseUrl/finance/category-keywords") {
+    suspend fun addKeyword(category: Category, keyword: String){
+        httpClient.post("$baseUrl/finance/category-keywords") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
             setBody(mapOf(
                 "category" to category,
                 "keyword" to keyword
             ))
-        }.body()
+        }
     }
 
-    suspend fun removeKeyword(category: Category, keyword: String) {
-        httpClient.delete("$baseUrl/finance/category-keywords") {
+    suspend fun removeKeyword(keywordId: String) {
+        httpClient.delete("$baseUrl/finance/category-keywords/$keywordId") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
-            setBody(mapOf(
-                "category" to category,
-                "keyword" to keyword
-            ))
         }
     }
 

@@ -26,8 +26,8 @@ fun CategoryKeywordMapperDestination(
         onAddKeyword = { category, keyword ->
             viewModel.addKeyword(category, keyword)
         },
-        onRemoveKeyword = { category, keyword ->
-            viewModel.removeKeyword(category, keyword)
+        onRemoveKeyword = { keywordId ->
+            viewModel.removeKeyword(keywordId)
         },
         onDeleteMapping = { mapping ->
             viewModel.deleteMapping(mapping)

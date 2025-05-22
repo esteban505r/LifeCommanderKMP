@@ -3,6 +3,7 @@ package com.esteban.ruano.repository
 import com.esteban.ruano.service.BudgetService
 import com.esteban.ruano.database.entities.Budget
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
+import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.models.finance.BudgetProgressResponseDTO
 import com.esteban.ruano.models.finance.BudgetResponseDTO
 import com.esteban.ruano.models.finance.TransactionResponseDTO
@@ -31,8 +32,8 @@ class BudgetRepository(private val service: BudgetService) {
         return service.getAllWithProgress(userId, limit, offset, filters, referenceDate)
     }
 
-    fun getBudgetTransactions(userId: Int, budgetId: UUID): List<TransactionResponseDTO> {
-        return service.getBudgetTransactions(userId, budgetId)
+    fun getBudgetTransactions(userId: Int, budgetId: UUID, filters: TransactionFilters): List<TransactionResponseDTO> {
+        return service.getBudgetTransactions(userId, budgetId,filters)
     }
 
     fun getByDateRange(userId: Int, startDate: LocalDate, endDate: LocalDate): List<BudgetResponseDTO> =
@@ -54,7 +55,15 @@ class BudgetRepository(private val service: BudgetService) {
     fun getProgress(userId: Int, budgetId: UUID): BudgetProgressResponseDTO =
         service.getBudgetProgress(budgetId, userId)
 
-    fun getUnbudgetedTransactions(userId: Int) : List<TransactionResponseDTO> {
-        return service.getUnbudgetedTransactions(userId)
+    fun getUnbudgetedTransactions(userId: Int,referenceDate: LocalDate, filters: TransactionFilters): List<TransactionResponseDTO> {
+        return service.getUnbudgetedTransactions(userId,referenceDate,filters)
+    }
+
+    fun categorizeUnbudgetedTransactions(userId: Int, referenceDate: LocalDate) : Int{
+        return service.categorizeUnbudgetedTransactions(userId,referenceDate)
+    }
+
+    fun categorizeAllTransactions(userId: Int, referenceDate: LocalDate): Int {
+        return service.categorizeAllTransactions(userId,referenceDate)
     }
 }

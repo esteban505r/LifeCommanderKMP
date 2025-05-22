@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 fun CategoryKeywordMapperScreen(
     categoryKeywords: List<CategoryKeyword>,
     onAddKeyword: (Category, String) -> Unit,
-    onRemoveKeyword: (Category, String) -> Unit,
+    onRemoveKeyword: (String) -> Unit,
     onDeleteMapping: (CategoryKeyword) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier

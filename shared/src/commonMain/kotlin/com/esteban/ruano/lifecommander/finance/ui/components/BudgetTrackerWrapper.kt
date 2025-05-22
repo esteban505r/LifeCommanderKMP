@@ -50,6 +50,8 @@ fun BudgetScreenWrapper(
     baseDate: LocalDate?,
     filters: BudgetFilters = BudgetFilters(),
     onOpenCategoryKeywordMapper: () -> Unit,
+    onCategorizeUnbudgeted: () -> Unit,
+    onCategorizeAll: () -> Unit,
 ) {
     var showFilters by remember { mutableStateOf(false) }
     var selectedCategories by remember { mutableStateOf(filters.categories ?: emptyList()) }
@@ -86,7 +88,9 @@ fun BudgetScreenWrapper(
             },
             baseDate = baseDate ?: getCurrentDateTime().date,
             onToggleDatePicker = { showDatePicker = it },
-            onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper
+            onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
+            onCategorizeUnbudgeted = onCategorizeUnbudgeted,
+            onCategorizeAll = onCategorizeAll,
         )
 
         FilterSidePanel(

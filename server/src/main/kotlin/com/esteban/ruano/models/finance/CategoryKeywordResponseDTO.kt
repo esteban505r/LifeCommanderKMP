@@ -8,5 +8,5 @@ import java.util.*
 @Serializable
 data class CategoryKeywordResponseDTO(
     val category: String,
-    val keywords: List<String>,
+    val keywords: List<KeywordResponseDTO>,
 )

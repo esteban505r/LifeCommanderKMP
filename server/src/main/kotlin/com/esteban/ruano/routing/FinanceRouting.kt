@@ -13,6 +13,7 @@ import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
+import com.esteban.ruano.utils.gatherTransactionFilters
 import com.lifecommander.finance.model.ImportTransactionsRequest
 import com.lifecommander.finance.model.ImportTransactionsResponse
 import com.lifecommander.finance.model.TransactionImportPreviewRequest
@@ -93,30 +94,7 @@ fun Route.financeRouting(
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
                 val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
-                val searchPattern = call.parameters["search"]
-                val categories = call.parameters.getAll("category")
-                val startDate = call.parameters["startDate"]
-                val startDateHour = call.parameters["startDateHour"]
-                val endDate = call.parameters["endDate"]
-                val endDateHour = call.parameters["endDateHour"]
-                val types = call.parameters.getAll("type")?.map { TransactionType.valueOf(it) }
-                val minAmount = call.parameters["minAmount"]?.toDoubleOrNull()
-                val maxAmount = call.parameters["maxAmount"]?.toDoubleOrNull()
-                val accountIds = call.parameters.getAll("accountId")?.map { UUID.fromString(it) }
-
-                val filters = TransactionFilters(
-                    searchPattern = searchPattern,
-                    categories = categories,
-                    startDate = startDate,
-                    startDateHour = startDateHour,
-                    endDate = endDate,
-                    endDateHour = endDateHour,
-                    types = types,
-                    minAmount = minAmount,
-                    maxAmount = maxAmount,
-                    accountIds = accountIds?.map { it.toString() }
-                )
-
+                val filters = call.gatherTransactionFilters()
                 call.respond(transactionRepository.getAll(userId, limit, offset, filters))
             }
             get("/byAccount/{accountId}") {
@@ -301,14 +279,36 @@ fun Route.financeRouting(
 
             get("unbudgeted/transactions") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                call.respond(budgetRepository.getUnbudgetedTransactions(userId))
+                val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
+                val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
+                val filters = call.gatherTransactionFilters()
+                val referenceDate = call.parameters["referenceDate"]?.toLocalDate()
+                call.respond(budgetRepository.getUnbudgetedTransactions(userId,referenceDate!!, filters))
+            }
+
+            post("unbudgeted/categorize") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val referenceDate = call.parameters["referenceDate"]?.toLocalDate()
+                    ?: Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+                
+                val categorizedCount = budgetRepository.categorizeUnbudgetedTransactions(userId, referenceDate)
+                call.respond(mapOf("categorizedCount" to categorizedCount))
+            }
+
+            post("transactions/categorize") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val referenceDate = call.parameters["referenceDate"]?.toLocalDate()
+                    ?: Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+                
+                val categorizedCount = budgetRepository.categorizeAllTransactions(userId, referenceDate)
+                call.respond(mapOf("categorizedCount" to categorizedCount))
             }
 
             get("/{id}/transactions") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = UUID.fromString(call.parameters["id"]!!)
-
-                call.respond(budgetRepository.getBudgetTransactions(userId, id))
+                val filters = call.gatherTransactionFilters()
+                call.respond(budgetRepository.getBudgetTransactions(userId, id, filters))
             }
         }
 

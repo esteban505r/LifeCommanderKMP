@@ -111,30 +111,22 @@ class BudgetDBTest{
         val timeZone = TimeZone.currentSystemDefault()
         val today = Clock.System.now().toLocalDateTime(timeZone).date
 
-
-        val nowInstant = Clock.System.now()
-        val startInstant = nowInstant.minus(1.days)
-        val endInstant = nowInstant.plus(5.days)
-
-        val startDate = startInstant.toLocalDateTime(timeZone).date
-        val endDate = endInstant.toLocalDateTime(timeZone).date
+        val startDate = today.minus(DatePeriod(days = 1))
+        val endDate = today.plus(DatePeriod(days = 5))
 
         transaction {
             Budgets.insert {
                 it[id] = UUID.randomUUID()
-                it[user] = 1
+                it[user] = userId
                 it[name] = "Test Budget"
                 it[category] = "FOOD"
                 it[amount] = 500.0.toBigDecimal()
                 it[this.startDate] = startDate
                 it[this.endDate] = endDate
-                it[frequency] = com.lifecommander.models.Frequency.WEEKLY
+                it[frequency] = Frequency.WEEKLY
             }
         }
 
-
-
-        // Crear una transacción que esté dentro del rango del presupuesto
         transactionService.createTransaction(
             userId = userId,
             amount = 100.0,
@@ -145,8 +137,7 @@ class BudgetDBTest{
             accountId = accountId
         )
 
-        // Ejecutar el método y validar
-        val results = service.getAllWithProgress(userId)
+        val results = service.getAllWithProgress(userId, referenceDate = today)
         assertEquals(1, results.size)
 
         val progress = results[0]
@@ -159,15 +150,11 @@ class BudgetDBTest{
         val userId = 1
         val accountId = getTestAccountId()
         val timeZone = TimeZone.currentSystemDefault()
+        val today = Clock.System.now().toLocalDateTime(timeZone).date
 
-        val now = Clock.System.now()
-        val today = now.toLocalDateTime(timeZone).date
-
-        // Definir fechas de presupuesto mensual actual
         val startDate = LocalDate(today.year, today.month, 1)
         val endDate = startDate.plus(DatePeriod(months = 1)).minus(DatePeriod(days = 1))
 
-        // Insertar presupuesto mensual
         transaction {
             Budgets.insert {
                 it[id] = UUID.randomUUID()
@@ -181,7 +168,6 @@ class BudgetDBTest{
             }
         }
 
-        // Transacción del mes actual (debe contar)
         transactionService.createTransaction(
             userId = userId,
             amount = 100.0,
@@ -192,7 +178,6 @@ class BudgetDBTest{
             accountId = accountId
         )
 
-        // Transacción del mes anterior (NO debe contar)
         val lastMonthDate = today.minus(DatePeriod(months = 1)).atTime(10, 0).formatDefault()
         transactionService.createTransaction(
             userId = userId,
@@ -204,13 +189,12 @@ class BudgetDBTest{
             accountId = accountId
         )
 
-        // Obtener progreso del presupuesto
-        val result = service.getAllWithProgress(userId)
+        val result = service.getAllWithProgress(userId, referenceDate = today)
         assertEquals(1, result.size)
 
         val progress = result[0]
         assertEquals("FOOD", progress.budget.category)
-        assertEquals(100.0, progress.spent, 0.001) // Solo cuenta la transacción actual
+        assertEquals(100.0, progress.spent, 0.001)
     }
 
     @Test
@@ -223,7 +207,6 @@ class BudgetDBTest{
         val startDate = today.minus(DatePeriod(days = 1))
         val endDate = today.plus(DatePeriod(days = 5))
 
-        // Insertar un presupuesto para categoría "FOOD"
         transaction {
             Budgets.insert {
                 it[id] = UUID.randomUUID()
@@ -237,7 +220,6 @@ class BudgetDBTest{
             }
         }
 
-        // Transacción presupuestada (FOOD)
         transactionService.createTransaction(
             userId = userId,
             amount = 100.0,
@@ -248,28 +230,21 @@ class BudgetDBTest{
             accountId = accountId
         )
 
-        // Transacción sin presupuesto (TRANSPORTATION)
         transactionService.createTransaction(
             userId = userId,
             amount = 50.0,
             description = "Bus ticket",
             date = today.atTime(14, 0).formatDefault(),
             type = TransactionType.EXPENSE,
-            category = "TRANSPORTATION", // <- No presupuestada
+            category = "TRANSPORTATION",
             accountId = accountId
         )
 
-        // Ejecutar método
-        val results = service.getAllWithProgress(userId)
-
-        // Debería haber 2 resultados: 1 presupuestado, 1 unbudgeted
+        val results = service.getAllWithProgress(userId, referenceDate = today)
         assertEquals(2, results.size)
 
-        // Verificar categoría unbudgeted
         val unbudgeted = results.find { it.budget.id == "unbudgeted" }
         assertEquals(50.0, unbudgeted?.spent ?: 0.0, 0.001)
         assertEquals("UNBUDGETED", unbudgeted?.budget?.category)
     }
-
-
 }

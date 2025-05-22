@@ -5,6 +5,11 @@ import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.models.Frequency
 import kotlinx.datetime.*
 
+fun getCurrentPeriodForUnbudgeted(referenceDate: LocalDate): Pair<LocalDate, LocalDate> {
+    val start = LocalDate(referenceDate.year, referenceDate.month, 1)
+    val end = start.plus(DatePeriod(months = 1)).minus(DatePeriod(days = 1))
+    return Pair(start, end)
+}
 fun getCurrentPeriod(budget: Budget, referenceDate: LocalDate): Pair<LocalDate, LocalDate> {
     val startDate = budget.startDate.toLocalDate()
     val frequency = budget.frequency

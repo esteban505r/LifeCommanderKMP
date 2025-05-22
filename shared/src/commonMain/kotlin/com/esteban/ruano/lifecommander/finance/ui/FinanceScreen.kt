@@ -235,7 +235,9 @@ fun FinanceScreen(
                     },
                     onFiltersChange = {
                         scope.launch {
-                            actions.changeTransactionFilters(it)
+                            actions.changeTransactionFilters(it, onSuccess = {
+                                actions.getTransactions(refresh = true)
+                            })
                         }
                     },
                     currentFilters = state.transactionFilters,
@@ -267,6 +269,12 @@ fun FinanceScreen(
                         onOpenCategoryKeywordMapper = {
                             onOpenCategoryKeywordMapper()
                         },
+                        onCategorizeUnbudgeted = {
+                            actions.categorizeUnbudgeted()
+                        },
+                        onCategorizeAll = {
+                            actions.categorizeAll()
+                        }
                     )
                 }
 

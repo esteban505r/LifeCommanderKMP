@@ -52,12 +52,12 @@ class FinanceViewModel(
         }
     }
 
-    override fun changeTransactionFilters(filters: TransactionFilters) {
+    override fun changeTransactionFilters(filters: TransactionFilters, onSuccess: () -> Unit) {
         _state.value = _state.value.copy(
             transactionFilters = filters,
             currentPage = 0
         )
-        getTransactions(refresh = true)
+        onSuccess.invoke()
     }
 
     fun loadNextPage() {
@@ -125,6 +125,40 @@ class FinanceViewModel(
             budgetBaseDate = date.formatDefault()
         )
         getBudgets()
+    }
+
+    override fun categorizeAll() {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                service.categorizeAllTransactions(
+                    referenceDate = getCurrentDateTime().date.formatDefault()
+                )
+                getBudgets()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    override fun categorizeUnbudgeted() {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                service.categorizeUnbudgeted(
+                    referenceDate = getCurrentDateTime().date.formatDefault()
+                )
+                getBudgets()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
     }
 
     override fun selectAccount(account: Account?) {
@@ -482,13 +516,13 @@ class FinanceViewModel(
         getTransactions(refresh = true)
     }
 
-    fun getBudgetTransactions(budgetId: String) {
+    override fun getBudgetTransactions(budgetId: String) {
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(isLoading = true, error = null)
-                val transactions = service.getBudgetTransactions(budgetId)
+                val transactions = service.getBudgetTransactions(budgetId, referenceDate = getCurrentDateTime().date.formatDefault(), filters = _state.value.transactionFilters)
                 _state.value = _state.value.copy(
-                    budgetTransactions = transactions,
+                    transactions = transactions,
                     isLoading = false
                 )
             } catch (e: Exception) {

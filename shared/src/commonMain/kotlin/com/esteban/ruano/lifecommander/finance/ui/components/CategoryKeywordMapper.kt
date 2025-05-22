@@ -21,7 +21,7 @@ import com.esteban.ruano.lifecommander.ui.components.EnumChipSelector
 fun CategoryKeywordMapper(
     categoryKeywords: List<CategoryKeyword>,
     onAddKeyword: (Category, String) -> Unit,
-    onRemoveKeyword: (Category, String) -> Unit,
+    onRemoveKeyword: (String) -> Unit,
     onDeleteMapping: (CategoryKeyword) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -165,7 +165,7 @@ fun CategoryKeywordMapper(
 private fun CategoryKeywordCard(
     mapping: CategoryKeyword,
     onAddKeyword: (Category, String) -> Unit,
-    onRemoveKeyword: (Category, String) -> Unit,
+    onRemoveKeyword: (String) -> Unit,
     onDeleteMapping: (CategoryKeyword) -> Unit
 ) {
     var showAddKeyword by remember { mutableStateOf(false) }
@@ -213,7 +213,7 @@ private fun CategoryKeywordCard(
                         onClick = { },
                         leadingIcon = {
                             IconButton(
-                                onClick = { onRemoveKeyword(mapping.category, keyword) }
+                                onClick = { onRemoveKeyword(keyword.id?:"") }
                             ) {
                                 Icon(
                                     Icons.Default.Close,
@@ -223,7 +223,7 @@ private fun CategoryKeywordCard(
                             }
                         }
                     ) {
-                        Text(keyword)
+                        Text(keyword.keyword)
                     }
                 }
 

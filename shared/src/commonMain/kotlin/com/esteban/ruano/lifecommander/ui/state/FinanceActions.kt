@@ -25,6 +25,7 @@ interface FinanceActions {
 
     fun changeTransactionFilters(
         filters: TransactionFilters,
+        onSuccess: () -> Unit,
     )
     
     // Budget actions
@@ -45,4 +46,7 @@ interface FinanceActions {
     fun loadData()
     fun changeBudgetFilters(filters: BudgetFilters)
     fun changeBudgetBaseDate(date: LocalDate)
-} 
+    fun categorizeUnbudgeted()
+    fun categorizeAll()
+    fun getBudgetTransactions(budgetId: String)
+}

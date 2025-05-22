@@ -1,16 +1,14 @@
 package com.esteban.ruano.service
 
-import com.esteban.ruano.database.converters.toDomainModel
 import com.esteban.ruano.database.converters.toResponseDTO
 import com.esteban.ruano.database.entities.CategoryKeyword
 import com.esteban.ruano.database.entities.CategoryKeywords
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.models.finance.CategoryKeywordResponseDTO
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import com.esteban.ruano.models.finance.KeywordResponseDTO
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -36,7 +34,12 @@ class CategoryKeywordService : BaseService() {
                 .map { (category, keywords) ->
                     CategoryKeywordResponseDTO(
                         category = category.name,
-                        keywords = keywords.map { it.keyword }
+                        keywords = keywords.map {
+                            KeywordResponseDTO(
+                                id = it.id.value.toString(),
+                                keyword = it.keyword
+                            )
+                        }
                     )
                 }
         }

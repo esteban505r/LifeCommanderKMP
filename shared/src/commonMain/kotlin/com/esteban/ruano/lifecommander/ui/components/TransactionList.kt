@@ -32,6 +32,7 @@ import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUtils.parseDate
 import com.lifecommander.ui.components.CustomDatePicker
 import com.lifecommander.ui.components.CustomTimePicker
+import com.esteban.ruano.lifecommander.models.finance.SortOrder
 
 @Composable
 fun TransactionList(
@@ -93,6 +94,32 @@ fun TransactionList(
                     )
 
                     Spacer(modifier = Modifier.width(16.dp))
+
+                    // Amount Sort Button
+                    IconButton(
+                        onClick = {
+                            val newSortOrder = when (currentFilters.amountSortOrder) {
+                                SortOrder.NONE -> SortOrder.ASCENDING
+                                SortOrder.ASCENDING -> SortOrder.DESCENDING
+                                SortOrder.DESCENDING -> SortOrder.NONE
+                            }
+                            onFiltersChange(currentFilters.copy(amountSortOrder = newSortOrder))
+                        },
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = when (currentFilters.amountSortOrder) {
+                                SortOrder.ASCENDING -> Icons.Default.ArrowUpward
+                                SortOrder.DESCENDING -> Icons.Default.ArrowDownward
+                                SortOrder.NONE -> Icons.Default.Sort
+                            },
+                            contentDescription = "Sort by amount",
+                            tint = when (currentFilters.amountSortOrder) {
+                                SortOrder.NONE -> MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                else -> MaterialTheme.colors.primary
+                            }
+                        )
+                    }
 
                     // Filter Toggle Button
                     Button(

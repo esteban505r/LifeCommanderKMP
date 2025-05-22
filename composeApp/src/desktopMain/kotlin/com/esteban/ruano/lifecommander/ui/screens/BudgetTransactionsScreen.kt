@@ -1,36 +1,83 @@
 package com.esteban.ruano.lifecommander.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
-import org.koin.compose.viewmodel.koinViewModel
-import com.esteban.ruano.lifecommander.ui.components.TransactionItem
+import com.esteban.ruano.lifecommander.finance.ui.components.TransactionListWrapper
+import com.lifecommander.finance.model.FinanceActions
+import com.lifecommander.finance.model.FinanceState
+import com.lifecommander.finance.model.Transaction
+import com.lifecommander.finance.ui.TransactionForm
+import kotlinx.coroutines.launch
 
 @Composable
 fun BudgetTransactionsScreen(
     budgetId: String,
     onBack: () -> Unit,
-    financeViewModel: FinanceViewModel = koinViewModel(),
-    modifier: Modifier = Modifier
+    financeActions: FinanceActions,
+    modifier: Modifier = Modifier,
+    state: FinanceState
 ) {
-    val budgetTransactions = financeViewModel.state.collectAsState().value.budgetTransactions
-    val isLoading = financeViewModel.state.collectAsState().value.isLoading
-    val error = financeViewModel.state.collectAsState().value.error
+    var editingTransaction by remember { mutableStateOf<Transaction?>(null) }
+    val error = state.error
+    val scope = rememberCoroutineScope()
+    var showTransactionForm by remember { mutableStateOf(false) }
 
     LaunchedEffect(budgetId) {
-        financeViewModel.getBudgetTransactions(budgetId)
+        financeActions.getBudgetTransactions(budgetId)
+    }
+
+    if (showTransactionForm || editingTransaction != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showTransactionForm = false
+                editingTransaction = null
+            },
+            title = {
+                Text(
+                    if (editingTransaction == null) "New Transaction" else "Edit Transaction",
+                    color = MaterialTheme.colors.onSurface
+                )
+            },
+            text = {
+                TransactionForm(
+                    accounts = state.accounts,
+                    initialTransaction = editingTransaction,
+                    onSave = { transaction ->
+                        scope.launch {
+                            if (editingTransaction != null) {
+                                financeActions.updateTransaction(transaction)
+                            } else {
+                                financeActions.addTransaction(transaction)
+                            }
+                            showTransactionForm = false
+                            editingTransaction = null
+                        }
+                    },
+                    onCancel = {
+                        showTransactionForm = false
+                        editingTransaction = null
+                    }
+                )
+            },
+            confirmButton = {},
+            dismissButton = {},
+            backgroundColor = MaterialTheme.colors.surface
+        )
     }
 
     Column(
@@ -57,34 +104,27 @@ fun BudgetTransactionsScreen(
             )
         }
 
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else if (error != null) {
-            Text(
-                text = error!!,
-                color = Color.Red,
-                style = MaterialTheme.typography.body1,
-                modifier = Modifier.padding(16.dp)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(budgetTransactions) { transaction ->
-                    TransactionItem(
-                        transaction = transaction,
-                        onTransactionClick = { /* Handle transaction click */ },
-                        onEdit = { /* Handle edit */ },
-                        onDelete = { /* Handle delete */ }
-                    )
+        TransactionListWrapper(
+            transactions = state.transactions,
+            onTransactionClick = { /* Handle transaction click */ },
+            onEdit = { editingTransaction = it },
+            onAddTransaction = { showTransactionForm = true },
+            onDelete = { scope.launch { it.id?.let { id -> financeActions.deleteTransaction(id) } } },
+            totalCount = state.totalTransactions,
+            onLoadMore = {
+                scope.launch {
+                    financeActions.getTransactions(refresh = false)
                 }
-            }
-        }
+            },
+            onFiltersChange = {
+                scope.launch {
+                    financeActions.changeTransactionFilters(it, onSuccess = {
+                        financeActions.getBudgetTransactions(budgetId)
+                    })
+                }
+            },
+            currentFilters = state.transactionFilters,
+        )
+
     }
 }
