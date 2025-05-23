@@ -1,5 +1,6 @@
 package ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -37,18 +38,20 @@ import kotlinx.datetime.toKotlinLocalDate
 
 @Composable
 fun CalendarComposable(
-    tasks : List<Task>,
-    habits : List<Habit>,
-    transactions : List<Transaction>,
+    tasks: List<Task>,
+    habits: List<Habit>,
+    transactions: List<Transaction>,
     isLoading: Boolean,
-    onRefresh: (startDate:LocalDate,endDate:LocalDate) -> Unit,
+    onRefresh: (startDate: LocalDate, endDate: LocalDate) -> Unit,
     error: String?,
     onTaskClick: (String) -> Unit,
     onHabitClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-
-    println("CalendarComposable: ${tasks.size} tasks, ${habits.size} habits, isLoading=$isLoading, error=$error")
+    var showTasks by remember { mutableStateOf(true) }
+    var showHabits by remember { mutableStateOf(true) }
+    var showTransactions by remember { mutableStateOf(true) }
+    var showFutureTransactions by remember { mutableStateOf(false) }
 
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(12) }
@@ -65,13 +68,60 @@ fun CalendarComposable(
     )
 
     LaunchedEffect(state.firstVisibleMonth.yearMonth) {
-       onRefresh(
-           LocalDate.of(state.firstVisibleMonth.yearMonth.year, state.firstVisibleMonth.yearMonth.monthNumber, 1),
-          LocalDate.of(state.firstVisibleMonth.yearMonth.year, state.firstVisibleMonth.yearMonth.monthNumber, state.firstVisibleMonth.yearMonth.lengthOfMonth())
-       )
+        onRefresh(
+            LocalDate.of(state.firstVisibleMonth.yearMonth.year, state.firstVisibleMonth.yearMonth.monthNumber, 1),
+            LocalDate.of(state.firstVisibleMonth.yearMonth.year, state.firstVisibleMonth.yearMonth.monthNumber, state.firstVisibleMonth.yearMonth.lengthOfMonth())
+        )
     }
 
     Column(modifier = modifier) {
+        // Filter options
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            elevation = 2.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text(
+                    text = "Show Items",
+                    style = MaterialTheme.typography.subtitle1,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    FilterChip(
+                        selected = showTasks,
+                        onClick = { showTasks = !showTasks },
+                        label = "Tasks",
+                        icon = Icons.Default.CheckCircle
+                    )
+                    FilterChip(
+                        selected = showHabits,
+                        onClick = { showHabits = !showHabits },
+                        label = "Habits",
+                        icon = Icons.Default.Star
+                    )
+                    FilterChip(
+                        selected = showTransactions,
+                        onClick = { showTransactions = !showTransactions },
+                        label = "Transactions",
+                        icon = Icons.Default.Paid
+                    )
+                    FilterChip(
+                        selected = showFutureTransactions,
+                        onClick = { showFutureTransactions = !showFutureTransactions },
+                        label = "Future Transactions",
+                        icon = Icons.Default.Schedule
+                    )
+                }
+            }
+        }
+
         // Month navigation
         Row(
             modifier = Modifier
@@ -80,7 +130,7 @@ fun CalendarComposable(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { 
+            IconButton(onClick = {
                 coroutineScope.launch {
                     state.scrollToMonth(state.firstVisibleMonth.yearMonth.minusMonths(1))
                 }
@@ -91,7 +141,7 @@ fun CalendarComposable(
                 text = state.firstVisibleMonth.yearMonth.toString(),
                 style = MaterialTheme.typography.h6
             )
-            IconButton(onClick = { 
+            IconButton(onClick = {
                 coroutineScope.launch {
                     state.scrollToMonth(state.firstVisibleMonth.yearMonth.plusMonths(1))
                 }
@@ -139,24 +189,46 @@ fun CalendarComposable(
                     }
                 },
                 dayContent = { day ->
-                    Day(day, tasks, habits, transactions, selectedDate == day.date.toJavaLocalDate()) { selectedDate = it }
+                    Day(
+                        day,
+                        if (showTasks) tasks else emptyList(),
+                        if (showHabits) habits else emptyList(),
+                        if (showTransactions) {
+                            if (showFutureTransactions) transactions
+                            else transactions.filter { it.date.toLocalDateTime().date <= getCurrentDateTime().date }
+                        } else emptyList(),
+                        selectedDate == day.date.toJavaLocalDate()
+                    ) { selectedDate = it }
                 }
             )
 
             // Selected date details
-            val selectedDateTasks = tasks.filter { task ->
-                val taskDate = task.dueDateTime?.toLocalDateTime()?.date 
-                    ?: task.scheduledDateTime?.toLocalDateTime()?.date
-                taskDate == selectedDate?.toKotlinLocalDate()
-            }
-            val selectedDateHabits = habits.filter { habit ->
-                val habitDate = habit.dateTime?.toLocalDateTime()?.date
-                habitDate == selectedDate?.toKotlinLocalDate()
-            }
-            val selectedDateTransactions = transactions.filter { transaction ->
-                println("Transaction date: ${transaction.date} vs selected date: ${selectedDate?.toKotlinLocalDate()}")
-                transaction.date.toLocalDateTime().date == selectedDate?.toKotlinLocalDate()
-            }
+            val selectedDateTasks = if (showTasks) {
+                tasks.filter { task ->
+                    val taskDate = task.dueDateTime?.toLocalDateTime()?.date
+                        ?: task.scheduledDateTime?.toLocalDateTime()?.date
+                    taskDate == selectedDate?.toKotlinLocalDate()
+                }
+            } else emptyList()
+
+            val selectedDateHabits = if (showHabits) {
+                habits.filter { habit ->
+                    val habitDate = habit.dateTime?.toLocalDateTime()?.date
+                    habitDate == selectedDate?.toKotlinLocalDate()
+                }
+            } else emptyList()
+
+            val selectedDateTransactions = if (showTransactions) {
+                transactions.filter { transaction ->
+                    val transactionDate = transaction.date.toLocalDateTime().date
+                    if (showFutureTransactions) {
+                        transactionDate == selectedDate?.toKotlinLocalDate()
+                    } else {
+                        transactionDate == selectedDate?.toKotlinLocalDate() && 
+                        transactionDate <= getCurrentDateTime().date
+                    }
+                }
+            } else emptyList()
 
             LazyColumn(
                 modifier = Modifier
@@ -223,6 +295,41 @@ fun CalendarComposable(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun FilterChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Surface(
+        modifier = Modifier
+            .padding(4.dp)
+            .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.small,
+        color = if (selected) MaterialTheme.colors.primary.copy(alpha = 0.1f) else MaterialTheme.colors.surface,
+        border = BorderStroke(1.dp, if (selected) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface.copy(alpha = 0.12f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = if (selected) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.body2,
+                color = if (selected) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
+            )
         }
     }
 }
