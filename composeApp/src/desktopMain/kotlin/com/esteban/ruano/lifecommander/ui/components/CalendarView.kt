@@ -324,17 +324,36 @@ private fun Day(
                             Icon(
                                 imageVector = Icons.Default.Star,
                                 contentDescription = "Habits",
-                                modifier = Modifier.size(8.dp),
+                                modifier = Modifier.size(16.dp),
                                 tint = MaterialTheme.colors.secondary
                             )
                         }
                         if (dayTransactions.isNotEmpty()) {
-                            Icon(
-                                imageVector = Icons.Default.AttachMoney,
-                                contentDescription = "Transactions",
-                                modifier = Modifier.size(8.dp),
-                                tint = MaterialTheme.colors.secondaryVariant
-                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(1.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(start = 2.dp)
+                            ){
+                                Icon(
+                                    imageVector = Icons.Default.Paid,
+                                    contentDescription = "Transactions",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colors.secondaryVariant
+                                )
+                                Text(
+                                    text =
+                                        if (dayTransactions.size < 4) {
+                                            dayTransactions.joinToString("\n") {
+                                                it.description
+                                            }
+                                        } else {
+                                            "${dayTransactions.size} transactions"
+                                        }
+                                    ,
+                                    style = MaterialTheme.typography.caption,
+                                    color = MaterialTheme.colors.secondaryVariant
+                                )
+                            }
                         }
                     }
                 }
@@ -439,7 +458,7 @@ private fun TransactionItem(transaction: Transaction) {
                     style = MaterialTheme.typography.body1
                 )
                 Text(
-                    text = transaction.date.toLocalDateTime().formatDefault(),
+                    text = transaction.date.toLocalDate().formatDefault(),
                     style = MaterialTheme.typography.caption,
                     color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                 )

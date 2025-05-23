@@ -44,7 +44,7 @@ fun ScheduledTransactionForm(
     }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
-    var frequency by remember { mutableStateOf(initialTransaction?.frequency ?: Frequency.MONTHLY.value) }
+    var frequency by remember { mutableStateOf(initialTransaction?.frequency ?: Frequency.MONTHLY.value.uppercase()) }
     var interval by remember { mutableStateOf(initialTransaction?.interval?.toString() ?: "1") }
     var applyAutomatically by remember { mutableStateOf(initialTransaction?.applyAutomatically ?: false) }
 
@@ -226,8 +226,8 @@ fun ScheduledTransactionForm(
             // Frequency Selector
             EnumChipSelector(
                 enumValues = Frequency.entries.toTypedArray(),
-                selectedValue = Frequency.valueOf(frequency),
-                onValueSelected = { frequency = it?.value ?: Frequency.MONTHLY.value },
+                selectedValue = Frequency.valueOf(frequency.uppercase()),
+                onValueSelected = { frequency = it?.value?.uppercase() ?: Frequency.MONTHLY.value.uppercase() },
                 modifier = Modifier.weight(1f),
                 labelMapper = { it.name.lowercase().replaceFirstChar { c -> c.uppercase() } }
             )
