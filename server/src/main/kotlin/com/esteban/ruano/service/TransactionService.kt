@@ -81,7 +81,7 @@ class TransactionService() : BaseService() {
                         id = it[Transactions.id].value.toString(),
                         amount = it[Transactions.amount].toDouble(),
                         description = it[Transactions.description],
-                        date = it[Transactions.date].formatDefault(), // you can adapt to use kotlinx datetime if needed
+                        date = it[Transactions.date].formatDefault(),
                         type = it[Transactions.type],
                         category = it[Transactions.category],
                         accountId = it[Transactions.account].value.toString(),
@@ -106,7 +106,7 @@ class TransactionService() : BaseService() {
                         id = "scheduled-${scheduled.id.value}-$date",
                         amount = scheduled.amount.toDouble(),
                         description = "[Planned] ${scheduled.description}",
-                        date = date.formatDefault(), // implement `.formatDefault()` for kotlinx.datetime.LocalDate
+                        date = date.atTime(0,0).formatDefault(),
                         type = scheduled.type,
                         category = scheduled.category,
                         accountId = scheduled.account.id.value.toString(),
@@ -143,7 +143,7 @@ class TransactionService() : BaseService() {
             return getForecastedTransactions(
                 userId = userId,
                 fromDate = filters.startDate?.toLocalDate() ?: scheduledBaseDate,
-                toDate = filters.endDate?.toLocalDate() ?: scheduledBaseDate.plus(DatePeriod(months = 30)),
+                toDate = filters.endDate?.toLocalDate() ?: scheduledBaseDate.plus(DatePeriod(days = 30)),
                 offset = offset,
                 limit = limit,
                 sortOrder = filters.amountSortOrder.toSortOrder() ?: SortOrder.DESC

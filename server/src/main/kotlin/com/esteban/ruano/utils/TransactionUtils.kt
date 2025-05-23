@@ -70,11 +70,21 @@ fun generateOccurrencesBetween(
     val result = mutableListOf<LocalDate>()
     var current = startDate
 
+    //Debugging
+    println("Start Date: $startDate")
+    println("Frequency: $frequency")
+    println("Interval: $interval")
+    println("From: $from")
+    println("To: $to")
+    println("Current: $current")
+
     while (current < from) {
+        println("Current: $current")
         current = advance(current, frequency, interval)
     }
 
     while (current <= to) {
+        println("Adding current: $current")
         result += current
         current = advance(current, frequency, interval)
     }

@@ -5,6 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
+import kotlinx.datetime.toKotlinLocalDate
 import org.koin.compose.viewmodel.koinViewModel
 import ui.components.CalendarComposable
 
@@ -25,7 +26,10 @@ fun CalendarScreen(
         tasks = tasks,
         habits = habits,
         transactions = transactions,
-        onRefresh = { calendarViewModel.refresh() },
+        onRefresh = { startDate, endDate -> calendarViewModel.refresh(
+            startDate = startDate.toKotlinLocalDate(),
+            endDate = endDate.toKotlinLocalDate()
+        ) },
         isLoading = calendarViewModel.isLoading,
         error = calendarViewModel.error,
     )

@@ -41,7 +41,7 @@ fun CalendarComposable(
     habits : List<Habit>,
     transactions : List<Transaction>,
     isLoading: Boolean,
-    onRefresh: () -> Unit,
+    onRefresh: (startDate:LocalDate,endDate:LocalDate) -> Unit,
     error: String?,
     onTaskClick: (String) -> Unit,
     onHabitClick: (String) -> Unit,
@@ -65,7 +65,10 @@ fun CalendarComposable(
     )
 
     LaunchedEffect(state.firstVisibleMonth.yearMonth) {
-       onRefresh()
+       onRefresh(
+           LocalDate.of(state.firstVisibleMonth.yearMonth.year, state.firstVisibleMonth.yearMonth.monthNumber, 1),
+          LocalDate.of(state.firstVisibleMonth.yearMonth.year, state.firstVisibleMonth.yearMonth.monthNumber, state.firstVisibleMonth.yearMonth.lengthOfMonth())
+       )
     }
 
     Column(modifier = modifier) {
@@ -151,7 +154,8 @@ fun CalendarComposable(
                 habitDate == selectedDate?.toKotlinLocalDate()
             }
             val selectedDateTransactions = transactions.filter { transaction ->
-                transaction.date.toLocalDate() == selectedDate?.toKotlinLocalDate()
+                println("Transaction date: ${transaction.date} vs selected date: ${selectedDate?.toKotlinLocalDate()}")
+                transaction.date.toLocalDateTime().date == selectedDate?.toKotlinLocalDate()
             }
 
             LazyColumn(
@@ -249,7 +253,7 @@ private fun Day(
     }
 
     val dayTransactions = transactions.filter { transaction ->
-        transaction.date.toLocalDate() == kotlinDate
+        transaction.date.toLocalDateTime().date == kotlinDate
     }
 
     println("Day $kotlinDate: ${dayTasks.size} tasks, ${dayHabits.size} habits, ${dayTransactions.size} transactions")
@@ -458,7 +462,7 @@ private fun TransactionItem(transaction: Transaction) {
                     style = MaterialTheme.typography.body1
                 )
                 Text(
-                    text = transaction.date.toLocalDate().formatDefault(),
+                    text = transaction.date.toLocalDateTime().formatDefault(),
                     style = MaterialTheme.typography.caption,
                     color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                 )

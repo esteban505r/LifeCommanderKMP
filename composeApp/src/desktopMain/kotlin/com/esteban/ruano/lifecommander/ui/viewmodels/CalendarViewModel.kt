@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.lifecommander.services.finance.FinanceService
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.kizitonwose.calendar.core.atStartOfMonth
@@ -46,7 +47,10 @@ class CalendarViewModel(
         loadData()
     }
 
-    fun loadData() {
+    fun loadData(
+        startDate: LocalDate? = null,
+        endDate: LocalDate? = null
+    ) {
         viewModelScope.launch {
             try {
                 isLoading = true
@@ -54,20 +58,20 @@ class CalendarViewModel(
                 
                 val token = tokenStorageImpl.getToken() ?: throw Exception("No token available")
                 val currentMonth = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.yearMonth
-                
+
                 // Get start and end dates for the month
-                val startDate = currentMonth.atStartOfMonth()
-                val endDate = startDate.plus(DatePeriod(months = 1)).minus(1, DateTimeUnit.DAY)
-                
-                println("Loading data for month: ${startDate.year}-${startDate.monthNumber.toString().padStart(2, '0')}")
+                val startDateTemp =  startDate?:currentMonth.atStartOfMonth()
+                val endDateTemp = endDate?:startDateTemp.plus(DatePeriod(months = 1)).minus(1, DateTimeUnit.DAY)
+
+                println("Loading data for month: ${startDateTemp.year}-${startDateTemp.monthNumber.toString().padStart(2, '0')}")
                 
                 // Load tasks for the entire month
                 val tasks = taskService.getByDateRange(
                     token = token,
                     page = 0,
                     limit = 100,
-                    startDate = startDate.formatDefault(),
-                    endDate = endDate.formatDefault()
+                    startDate = startDateTemp.formatDefault(),
+                    endDate = endDateTemp.formatDefault()
                 )
                 println("Loaded ${tasks.size} tasks")
                 _tasks.value = tasks
@@ -78,14 +82,18 @@ class CalendarViewModel(
                     page = 0,
                     limit = 100,
                     excludeDaily = true,
-                    startDate = startDate.formatDefault(),
-                    endDate = endDate.formatDefault()
+                    startDate = startDateTemp.formatDefault(),
+                    endDate = endDateTemp.formatDefault()
                 )
                 println("Loaded ${habits.size} habits")
                 _habits.value = habits
 
                 val transactions = financeService.getTransactions(
-                  withFutureTransactions = true
+                  withFutureTransactions = true,
+                    filters = TransactionFilters(
+                        startDate = startDateTemp.formatDefault(),
+                        endDate = endDateTemp.formatDefault()
+                    )
                 )
                 _transactions.value = transactions.transactions
             } catch (e: Exception) {
@@ -97,7 +105,10 @@ class CalendarViewModel(
         }
     }
 
-    fun refresh() {
-        loadData()
+    fun refresh(
+        startDate: LocalDate? = null,
+        endDate: LocalDate? = null
+    ) {
+        loadData(startDate, endDate)
     }
 } 
