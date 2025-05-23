@@ -14,6 +14,7 @@ import androidx.compose.ui.window.Dialog
 import com.esteban.ruano.lifecommander.finance.ui.AccountForm
 import com.esteban.ruano.lifecommander.finance.ui.components.BudgetTracker
 import com.esteban.ruano.lifecommander.finance.ui.components.TransactionListWrapper
+import com.esteban.ruano.lifecommander.finance.ui.components.ScheduledTransactionListWrapper
 import com.esteban.ruano.ui.components.TransactionList
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.finance.model.*
@@ -31,11 +32,13 @@ fun FinanceScreen(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var showTransactionForm by remember { mutableStateOf(false) }
+    var showScheduledTransactionForm by remember { mutableStateOf(false) }
     var showSavingsGoalForm by remember { mutableStateOf(false) }
     var showAccountForm by remember { mutableStateOf(false) }
     var editingAccount by remember { mutableStateOf<Account?>(null) }
     var editingSavingsGoal by remember { mutableStateOf<SavingsGoal?>(null) }
     var editingTransaction by remember { mutableStateOf<Transaction?>(null) }
+    var editingScheduledTransaction by remember { mutableStateOf<ScheduledTransaction?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     val scope = rememberCoroutineScope()
@@ -130,7 +133,7 @@ fun FinanceScreen(
                     onClick = {
                         selectedTab = 1
                         coroutineScope.launch {
-                            actions.getTransactions( true)
+                            actions.getTransactions(true)
                         }
                     },
                     text = {
@@ -158,12 +161,12 @@ fun FinanceScreen(
                     onClick = {
                         selectedTab = 2
                         coroutineScope.launch {
-                            actions.getBudgets()
+                            actions.getScheduledTransactions(true)
                         }
                     },
                     text = {
                         Text(
-                            "Budgets",
+                            "Scheduled",
                             color = if (selectedTab == 2) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
                                 alpha = 0.6f
                             )
@@ -171,7 +174,7 @@ fun FinanceScreen(
                     },
                     icon = {
                         Icon(
-                            Icons.Default.PieChart,
+                            Icons.Default.Schedule,
                             contentDescription = null,
                             tint = if (selectedTab == 2) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
                                 alpha = 0.6f
@@ -186,13 +189,41 @@ fun FinanceScreen(
                     onClick = {
                         selectedTab = 3
                         coroutineScope.launch {
+                            actions.getBudgets()
+                        }
+                    },
+                    text = {
+                        Text(
+                            "Budgets",
+                            color = if (selectedTab == 3) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
+                                alpha = 0.6f
+                            )
+                        )
+                    },
+                    icon = {
+                        Icon(
+                            Icons.Default.PieChart,
+                            contentDescription = null,
+                            tint = if (selectedTab == 3) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
+                                alpha = 0.6f
+                            )
+                        )
+                    },
+                    selectedContentColor = MaterialTheme.colors.onPrimary,
+                    unselectedContentColor = MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                )
+                Tab(
+                    selected = selectedTab == 4,
+                    onClick = {
+                        selectedTab = 4
+                        coroutineScope.launch {
                             actions.getSavingsGoals()
                         }
                     },
                     text = {
                         Text(
                             "Savings",
-                            color = if (selectedTab == 3) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
+                            color = if (selectedTab == 4) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
                                 alpha = 0.6f
                             )
                         )
@@ -201,7 +232,7 @@ fun FinanceScreen(
                         Icon(
                             Icons.Default.Savings,
                             contentDescription = null,
-                            tint = if (selectedTab == 3) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
+                            tint = if (selectedTab == 4) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
                                 alpha = 0.6f
                             )
                         )
@@ -243,7 +274,29 @@ fun FinanceScreen(
                     currentFilters = state.transactionFilters,
                 )
 
-                2 -> {
+                2 -> ScheduledTransactionListWrapper(
+                    transactions = state.scheduledTransactions,
+                    onTransactionClick = { /* Handle scheduled transaction click */ },
+                    onEdit = { editingScheduledTransaction = it },
+                    onAddTransaction = { showScheduledTransactionForm = true },
+                    onDelete = { scope.launch { it.id?.let { id -> actions.deleteScheduledTransaction(id) } } },
+                    totalCount = state.totalScheduledTransactions,
+                    onLoadMore = {
+                        scope.launch {
+                            actions.getScheduledTransactions(refresh = false)
+                        }
+                    },
+                    onFiltersChange = {
+                        scope.launch {
+                            actions.changeTransactionFilters(it, onSuccess = {
+                                actions.getScheduledTransactions(refresh = true)
+                            })
+                        }
+                    },
+                    currentFilters = state.transactionFilters,
+                )
+
+                3 -> {
                     BudgetScreenWrapper(
                         budgets = state.budgets,
                         onLoadBudgets = {
@@ -278,8 +331,7 @@ fun FinanceScreen(
                     )
                 }
 
-                3 -> SavingsGoalTracker(
-                  //  goals = state.savingsGoals.map { state.savingsGoalProgress[it.id] ?: SavingsGoalProgress(it) },
+                4 -> SavingsGoalTracker(
                     onAddGoal = { showSavingsGoalForm = true },
                     onEditGoal = { editingSavingsGoal = it },
                     onDeleteGoal = { scope.launch { it.id?.let { id -> actions.deleteSavingsGoal(id) } } }
@@ -287,7 +339,6 @@ fun FinanceScreen(
             }
         }
     }
-
 
     if (showTransactionForm || editingTransaction != null) {
         AlertDialog(
@@ -319,6 +370,46 @@ fun FinanceScreen(
                     onCancel = {
                         showTransactionForm = false
                         editingTransaction = null
+                    }
+                )
+            },
+            confirmButton = {},
+            dismissButton = {},
+            backgroundColor = MaterialTheme.colors.surface
+        )
+    }
+
+    if (showScheduledTransactionForm || editingScheduledTransaction != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showScheduledTransactionForm = false
+                editingScheduledTransaction = null
+            },
+            title = {
+                Text(
+                    if (editingScheduledTransaction == null) "New Scheduled Transaction" else "Edit Scheduled Transaction",
+                    color = MaterialTheme.colors.onSurface
+                )
+            },
+            text = {
+                ScheduledTransactionForm(
+                    accounts = state.accounts,
+                    initialTransaction = editingScheduledTransaction,
+                    onSave = { transaction ->
+                        scope.launch {
+                            val scheduledTransaction = transaction
+                            if (editingScheduledTransaction != null) {
+                                actions.updateScheduledTransaction(scheduledTransaction)
+                            } else {
+                                actions.addScheduledTransaction(scheduledTransaction)
+                            }
+                            showScheduledTransactionForm = false
+                            editingScheduledTransaction = null
+                        }
+                    },
+                    onCancel = {
+                        showScheduledTransactionForm = false
+                        editingScheduledTransaction = null
                     }
                 )
             },

@@ -11,6 +11,7 @@ object Users : IntIdTable() {
     val email = varchar("email", 255)
     val password = varchar("password", 255)
     val status = enumerationByName("status", 10, Status::class).default(Status.ACTIVE)
+    val timeZone = varchar("time_zone", 50).default("UTC")
 }
 
 class User(id: EntityID<Int>) : IntEntity(id) {

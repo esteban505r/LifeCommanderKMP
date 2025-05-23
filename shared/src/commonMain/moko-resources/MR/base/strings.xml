@@ -281,4 +281,6 @@
     <string name="select_date">Select date</string>
     <string name="select_time">Select time</string>
     <string name="filters">Filters</string>
+
+    <string name="add_scheduled_transaction">Add scheduled transaction</string>
 </resources>

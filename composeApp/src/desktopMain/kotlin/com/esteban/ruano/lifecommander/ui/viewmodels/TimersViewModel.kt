@@ -9,9 +9,12 @@ import com.esteban.ruano.lifecommander.models.Timer
 import com.esteban.ruano.lifecommander.models.TimerList
 import com.esteban.ruano.lifecommander.models.UserSettings
 import com.esteban.ruano.lifecommander.services.timers.TimerService
-import com.esteban.ruano.lifecommander.timer.*
+import com.esteban.ruano.lifecommander.timer.TimerNotification
+import com.esteban.ruano.lifecommander.timer.TimerPlaybackManager
+import com.esteban.ruano.lifecommander.timer.TimerPlaybackState
+import com.esteban.ruano.lifecommander.timer.TimerWebSocketClientMessage
+import com.esteban.ruano.lifecommander.timer.TimerWebSocketServerMessage
 import com.esteban.ruano.lifecommander.websocket.TimerWebSocketClient
-import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.formatWithSeconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,15 +24,13 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import kotlinx.serialization.json.Json
 import services.auth.TokenStorageImpl
+import kotlinx.serialization.json.Json
 import services.dailyjournal.PomodoroService
 import services.dailyjournal.models.PomodoroResponse
 import ui.services.dailyjournal.models.CreatePomodoroRequest
-import utils.DateUtils.parseDateTime
 import utils.StatusBarService
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.seconds
 
@@ -444,10 +445,10 @@ class TimersViewModel(
             try {
                 // Get all enabled timers
                 val enabledTimers = timerList.timers?.filter { it.enabled } ?: emptyList()
-                
+
                 // Check if this is the last timer in the list
                 val isLastTimer = enabledTimers.lastOrNull()?.id == completedTimer.id
-                
+
                 // Determine if we should create a pomodoro
                 val shouldCreatePomodoro = when {
                     // If list is pomodoro grouped, only create on last timer
@@ -461,7 +462,7 @@ class TimersViewModel(
                     val past = now - 5.seconds
                     val endDate = now.toLocalDateTime(TimeZone.currentSystemDefault())
                     val startDate = past.toLocalDateTime(TimeZone.currentSystemDefault())
-                    
+
                     pomodoroService.createPomodoro(
                         CreatePomodoroRequest(
                             startDateTime = startDate.formatWithSeconds(),

@@ -4,10 +4,13 @@ import com.esteban.ruano.lifecommander.models.finance.Budget
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.esteban.ruano.lifecommander.models.finance.Category
+import com.esteban.ruano.lifecommander.models.finance.ScheduledTransactionsResponse
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.lifecommander.models.finance.TransactionsResponse
 import com.esteban.ruano.lifecommander.utils.appHeaders
 import com.esteban.ruano.lifecommander.utils.buildParametersString
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.lifecommander.finance.model.*
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -23,17 +26,20 @@ class FinanceService(
     private val httpClient: HttpClient,
     private val tokenStorageImpl: TokenStorageImpl
 ) {
-    // Transaction endpoints
     suspend fun getTransactions(
         limit: Int = 50,
         offset: Int = 0,
+        withFutureTransactions: Boolean = false,
         filters: TransactionFilters = TransactionFilters()
     ): TransactionsResponse {
         val url = buildString {
             append("$baseUrl/finance/transactions")
             val params = mutableListOf<String>()
-            
-            // Add pagination parameters
+
+            if(withFutureTransactions) {
+                params.add("scheduledBaseDate=${getCurrentDateTime().date.formatDefault()}")
+            }
+
             params.add("limit=$limit")
             params.add("offset=$offset")
             
@@ -327,6 +333,71 @@ class FinanceService(
         } else {
             throw Exception("Failed to categorize transactions: ${response.status}")
         }
+    }
+
+    // Scheduled Transactions endpoints
+    suspend fun getScheduledTransactions(
+        limit: Int = 50,
+        offset: Int = 0,
+        filters: TransactionFilters = TransactionFilters()
+    ): ScheduledTransactionsResponse {
+        val url = buildString {
+            append("$baseUrl/finance/scheduled-transactions")
+            val params = mutableListOf<String>()
+            
+            // Add pagination parameters
+            params.add("limit=$limit")
+            params.add("offset=$offset")
+            
+            // Add filter parameters
+            val filterParams = filters.buildParametersString()
+            
+            if (params.isNotEmpty()) {
+                append("?${params.joinToString("&")}")
+            }
+
+            if (filterParams != null) {
+                append("&$filterParams")
+            }
+        }
+        
+        return httpClient.get(url) {
+            appHeaders(tokenStorageImpl.getToken())
+        }.body()
+    }
+
+    suspend fun getScheduledTransaction(id: String): ScheduledTransaction {
+        return httpClient.get("$baseUrl/finance/scheduled-transactions/$id") {
+            appHeaders(tokenStorageImpl.getToken())
+        }.body()
+    }
+
+    suspend fun addScheduledTransaction(transaction: ScheduledTransaction): ScheduledTransaction {
+        return httpClient.post("$baseUrl/finance/scheduled-transactions") {
+            contentType(ContentType.Application.Json)
+            appHeaders(tokenStorageImpl.getToken())
+            setBody(transaction)
+        }.body()
+    }
+
+    suspend fun updateScheduledTransaction(transaction: ScheduledTransaction): ScheduledTransaction {
+        return httpClient.patch("$baseUrl/finance/scheduled-transactions/${transaction.id}") {
+            contentType(ContentType.Application.Json)
+            appHeaders(tokenStorageImpl.getToken())
+            setBody(transaction)
+        }.body()
+    }
+
+    suspend fun deleteScheduledTransaction(id: String) {
+        httpClient.delete("$baseUrl/finance/scheduled-transactions/$id") {
+            appHeaders(tokenStorageImpl.getToken())
+        }
+    }
+
+    suspend fun getScheduledTransactionsByAccount(accountId: String): List<ScheduledTransaction> {
+        return httpClient.get("$baseUrl/finance/scheduled-transactions/byAccount/$accountId") {
+            appHeaders(tokenStorageImpl.getToken())
+        }.body()
     }
 }
 

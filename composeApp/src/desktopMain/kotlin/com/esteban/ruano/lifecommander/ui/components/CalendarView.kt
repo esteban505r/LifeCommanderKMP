@@ -24,6 +24,8 @@ import kotlinx.datetime.toJavaLocalDate
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalDate
+import com.lifecommander.finance.model.Transaction
 import com.lifecommander.models.Task
 import org.koin.compose.viewmodel.koinViewModel
 import java.time.LocalDate
@@ -35,15 +37,16 @@ import kotlinx.datetime.toKotlinLocalDate
 
 @Composable
 fun CalendarComposable(
-    viewModel: CalendarViewModel = koinViewModel(),
+    tasks : List<Task>,
+    habits : List<Habit>,
+    transactions : List<Transaction>,
+    isLoading: Boolean,
+    onRefresh: () -> Unit,
+    error: String?,
     onTaskClick: (String) -> Unit,
     onHabitClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val tasks by viewModel.tasks.collectAsState()
-    val habits by viewModel.habits.collectAsState()
-    val isLoading = viewModel.isLoading
-    val error = viewModel.error
 
     println("CalendarComposable: ${tasks.size} tasks, ${habits.size} habits, isLoading=$isLoading, error=$error")
 
@@ -61,9 +64,8 @@ fun CalendarComposable(
         firstDayOfWeek = firstDayOfWeek
     )
 
-    // Refresh data when the visible month changes
     LaunchedEffect(state.firstVisibleMonth.yearMonth) {
-        viewModel.refresh()
+       onRefresh()
     }
 
     Column(modifier = modifier) {
@@ -134,7 +136,7 @@ fun CalendarComposable(
                     }
                 },
                 dayContent = { day ->
-                    Day(day, tasks, habits, selectedDate == day.date.toJavaLocalDate()) { selectedDate = it }
+                    Day(day, tasks, habits, transactions, selectedDate == day.date.toJavaLocalDate()) { selectedDate = it }
                 }
             )
 
@@ -148,7 +150,9 @@ fun CalendarComposable(
                 val habitDate = habit.dateTime?.toLocalDateTime()?.date
                 habitDate == selectedDate?.toKotlinLocalDate()
             }
-
+            val selectedDateTransactions = transactions.filter { transaction ->
+                transaction.date.toLocalDate() == selectedDate?.toKotlinLocalDate()
+            }
 
             LazyColumn(
                 modifier = Modifier
@@ -191,7 +195,20 @@ fun CalendarComposable(
                     }
                 }
 
-                if (selectedDate != null && selectedDateTasks.isEmpty() && selectedDateHabits.isEmpty()) {
+                if (selectedDateTransactions.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Transactions",
+                            style = MaterialTheme.typography.subtitle1,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                    items(selectedDateTransactions.size) { index ->
+                        TransactionItem(selectedDateTransactions[index])
+                    }
+                }
+
+                if (selectedDate != null && selectedDateTasks.isEmpty() && selectedDateHabits.isEmpty() && selectedDateTransactions.isEmpty()) {
                     item {
                         Text(
                             text = "No items scheduled for this day",
@@ -211,6 +228,7 @@ private fun Day(
     day: CalendarDay,
     tasks: List<Task>,
     habits: List<Habit>,
+    transactions: List<Transaction>,
     isSelected: Boolean,
     onDateSelected: (LocalDate) -> Unit
 ) {
@@ -230,7 +248,11 @@ private fun Day(
         habitDate == kotlinDate
     }
 
-    println("Day $kotlinDate: ${dayTasks.size} tasks, ${dayHabits.size} habits")
+    val dayTransactions = transactions.filter { transaction ->
+        transaction.date.toLocalDate() == kotlinDate
+    }
+
+    println("Day $kotlinDate: ${dayTasks.size} tasks, ${dayHabits.size} habits, ${dayTransactions.size} transactions")
 
     Box(
         modifier = Modifier
@@ -246,6 +268,7 @@ private fun Day(
                             dayTasks.isNotEmpty() && dayHabits.isNotEmpty() -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
                             dayTasks.isNotEmpty() -> MaterialTheme.colors.primary.copy(alpha = 0.05f)
                             dayHabits.isNotEmpty() -> MaterialTheme.colors.secondary.copy(alpha = 0.05f)
+                            dayTransactions.isNotEmpty() -> MaterialTheme.colors.secondaryVariant.copy(alpha = 0.05f)
                             else -> Color.Transparent
                         }
                     }
@@ -285,7 +308,7 @@ private fun Day(
                     )
                 }
                 // Show indicators for additional items
-                if (dayTasks.size > 1 || dayHabits.isNotEmpty()) {
+                if (dayTasks.size > 1 || dayHabits.isNotEmpty() || dayTransactions.isNotEmpty()) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(1.dp),
                         modifier = Modifier.padding(top = 1.dp)
@@ -303,6 +326,14 @@ private fun Day(
                                 contentDescription = "Habits",
                                 modifier = Modifier.size(8.dp),
                                 tint = MaterialTheme.colors.secondary
+                            )
+                        }
+                        if (dayTransactions.isNotEmpty()) {
+                            Icon(
+                                imageVector = Icons.Default.AttachMoney,
+                                contentDescription = "Transactions",
+                                modifier = Modifier.size(8.dp),
+                                tint = MaterialTheme.colors.secondaryVariant
                             )
                         }
                     }
@@ -384,6 +415,43 @@ private fun HabitItem(habit: Habit, onHabitClick: (String) -> Unit) {
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TransactionItem(transaction: Transaction) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        elevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = transaction.description ?: "",
+                    style = MaterialTheme.typography.body1
+                )
+                Text(
+                    text = transaction.date.toLocalDateTime().formatDefault(),
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                )
+            }
+            Text(
+                text = "$${transaction.amount}",
+                style = MaterialTheme.typography.body1,
+                color = if (transaction.amount >= 0) 
+                    MaterialTheme.colors.primary 
+                else 
+                    MaterialTheme.colors.error
+            )
         }
     }
 } 

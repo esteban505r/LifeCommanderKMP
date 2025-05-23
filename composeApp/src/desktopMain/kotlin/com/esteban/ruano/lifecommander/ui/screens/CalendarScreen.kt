@@ -15,11 +15,18 @@ fun CalendarScreen(
     onTaskClick: (String) -> Unit,
     onHabitClick: (String) -> Unit
 ) {
+    val tasks by calendarViewModel.tasks.collectAsState()
+    val habits by calendarViewModel.habits.collectAsState()
+    val transactions by calendarViewModel.transactions.collectAsState()
 
     CalendarComposable(
         onTaskClick = onTaskClick,
         onHabitClick = onHabitClick,
-        viewModel = calendarViewModel,
-        modifier = modifier
+        tasks = tasks,
+        habits = habits,
+        transactions = transactions,
+        onRefresh = { calendarViewModel.refresh() },
+        isLoading = calendarViewModel.isLoading,
+        error = calendarViewModel.error,
     )
 } 

@@ -5,9 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.esteban.ruano.lifecommander.services.finance.FinanceService
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.kizitonwose.calendar.core.atStartOfMonth
 import com.kizitonwose.calendar.core.yearMonth
+import com.lifecommander.finance.model.Transaction
 import com.lifecommander.models.Habit
 import com.lifecommander.models.Task
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,13 +24,17 @@ import services.tasks.TaskService
 class CalendarViewModel(
     private val taskService: TaskService,
     private val habitService: HabitService,
-    private val tokenStorageImpl: TokenStorageImpl
+    private val tokenStorageImpl: TokenStorageImpl,
+    private val financeService: FinanceService
 ): ViewModel() {
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
 
     private val _habits = MutableStateFlow<List<Habit>>(emptyList())
     val habits: StateFlow<List<Habit>> = _habits.asStateFlow()
+
+    private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
+    val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
 
     var isLoading by mutableStateOf(false)
         private set
@@ -77,6 +83,11 @@ class CalendarViewModel(
                 )
                 println("Loaded ${habits.size} habits")
                 _habits.value = habits
+
+                val transactions = financeService.getTransactions(
+                  withFutureTransactions = true
+                )
+                _transactions.value = transactions.transactions
             } catch (e: Exception) {
                 error = "Failed to load data"
                 e.printStackTrace()

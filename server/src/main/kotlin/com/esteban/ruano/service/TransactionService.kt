@@ -4,35 +4,38 @@ import com.esteban.ruano.database.converters.toDomainModel
 import com.esteban.ruano.database.converters.toResponseDTO
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
+import com.esteban.ruano.lifecommander.models.finance.ScheduledTransactionFilters
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.models.finance.*
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUtils.toLocalTime
 import com.esteban.ruano.utils.TransactionParser
 import com.esteban.ruano.utils.absAmount
 import com.esteban.ruano.utils.addSortOrder
 import com.esteban.ruano.utils.buildTransactionFilters
+import com.esteban.ruano.utils.generateOccurrencesBetween
+import com.esteban.ruano.utils.toScheduledTransactionFilters
+import com.esteban.ruano.utils.toSortOrder
 import com.lifecommander.finance.model.TransactionImportPreview
 import com.lifecommander.finance.model.TransactionImportPreviewItem
 import com.lifecommander.finance.model.TransactionType
-import kotlinx.datetime.LocalTime
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.atTime
-import kotlinx.datetime.toLocalDate
-import org.jetbrains.exposed.sql.Op
+import kotlinx.datetime.plus
 import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.kotlin.datetime.date
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-class TransactionService : BaseService() {
+class TransactionService() : BaseService() {
     fun createTransaction(
         userId: Int,
         amount: Double,
@@ -58,23 +61,102 @@ class TransactionService : BaseService() {
     }
 
 
+    fun getForecastedTransactions(
+        userId: Int,
+        fromDate: LocalDate,
+        toDate: LocalDate,
+        offset: Int,
+        limit: Int,
+        sortOrder: SortOrder = SortOrder.DESC
+    ): TransactionsResponseDTO {
+        val committed = transaction {
+            Transactions.selectAll().where{
+                (Transactions.user eq userId) and
+                        (Transactions.status eq Status.ACTIVE) and
+                        (Transactions.date.date() greaterEq fromDate) and
+                        (Transactions.date.date() lessEq toDate)
+            }
+                .map {
+                    TransactionResponseDTO(
+                        id = it[Transactions.id].value.toString(),
+                        amount = it[Transactions.amount].toDouble(),
+                        description = it[Transactions.description],
+                        date = it[Transactions.date].formatDefault(), // you can adapt to use kotlinx datetime if needed
+                        type = it[Transactions.type],
+                        category = it[Transactions.category],
+                        accountId = it[Transactions.account].value.toString(),
+                        status = it[Transactions.status].toString()
+                    )
+                }
+        }
+
+        val scheduled = transaction {
+            ScheduledTransaction.find {
+                (ScheduledTransactions.user eq userId) and
+                        (ScheduledTransactions.status eq Status.ACTIVE)
+            }.flatMap { scheduled ->
+                generateOccurrencesBetween(
+                    startDate = scheduled.startDate.date,
+                    frequency = scheduled.frequency,
+                    interval = scheduled.interval,
+                    from = fromDate,
+                    to = toDate
+                ).map { date ->
+                    TransactionResponseDTO(
+                        id = "scheduled-${scheduled.id.value}-$date",
+                        amount = scheduled.amount.toDouble(),
+                        description = "[Planned] ${scheduled.description}",
+                        date = date.formatDefault(), // implement `.formatDefault()` for kotlinx.datetime.LocalDate
+                        type = scheduled.type,
+                        category = scheduled.category,
+                        accountId = scheduled.account.id.value.toString(),
+                        status = "PLANNED"
+                    )
+                }
+            }
+        }
+
+        val all = if (sortOrder == SortOrder.ASC) {
+            (committed + scheduled).sortedBy { it.date }
+        } else {
+            (committed + scheduled).sortedByDescending { it.date }
+        }
+
+        val paginated = all.drop(offset).take(limit)
+
+        return TransactionsResponseDTO(
+            transactions = paginated,
+            totalCount = all.size.toLong()
+        )
+    }
+
+
+
     fun getTransactionsByUser(
         userId: Int,
-        limit: Int = 50,// Get total count before pagination
+        limit: Int = 50,
         offset: Int = 0,
-        filters: TransactionFilters = TransactionFilters()
+        filters: TransactionFilters = TransactionFilters(),
+        scheduledBaseDate: LocalDate? = null
     ): TransactionsResponseDTO {
+        if (scheduledBaseDate != null) {
+            return getForecastedTransactions(
+                userId = userId,
+                fromDate = filters.startDate?.toLocalDate() ?: scheduledBaseDate,
+                toDate = filters.endDate?.toLocalDate() ?: scheduledBaseDate.plus(DatePeriod(months = 30)),
+                offset = offset,
+                limit = limit,
+                sortOrder = filters.amountSortOrder.toSortOrder() ?: SortOrder.DESC
+            )
+        }
+
         return transaction {
-            val baseQuery = Transactions.selectAll().where{
-                buildTransactionFilters(
-                    userId = userId,
-                    filters = filters,
-                )
+            val baseQuery = Transactions.selectAll().where {
+                buildTransactionFilters(userId = userId, filters = filters)
             }
 
             val totalCount = baseQuery.count()
 
-            // Apply pagination
             val paginatedResults = baseQuery
                 .addSortOrder(
                     filters.amountSortOrder,
@@ -103,6 +185,42 @@ class TransactionService : BaseService() {
         }
     }
 
+    fun expandScheduledTransactions(
+        userId: Int,
+        fromDate: LocalDate,
+        toDate: LocalDate
+    ): List<TransactionResponseDTO> = transaction {
+        ScheduledTransaction.find {
+            (ScheduledTransactions.user eq userId) and
+                    (ScheduledTransactions.status eq Status.ACTIVE)
+        }.flatMap { scheduled ->
+            val frequency = scheduled.frequency
+            val interval = scheduled.interval
+            val startDate = scheduled.startDate
+
+            val occurrenceDates = generateOccurrencesBetween(
+                startDate = startDate.date,
+                frequency = frequency,
+                interval = interval,
+                from = fromDate,
+                to = toDate
+            )
+
+            occurrenceDates.map { date ->
+                TransactionResponseDTO(
+                    id = "scheduled-${scheduled.id.value}-$date",
+                    amount = scheduled.amount.toDouble(),
+                    description = "[Planned] ${scheduled.description}",
+                    date = date.atTime(0,0).formatDefault(),
+                    type = scheduled.type,
+                    category = scheduled.category,
+                    accountId = scheduled.account.id.value.toString(),
+                    status = "PLANNED"
+                )
+            }
+        }
+    }
+
     fun getTransactionsByAccount(accountId: UUID): List<TransactionResponseDTO> {
         return transaction {
             Transaction.find { Transactions.account eq accountId and (Transactions.status eq Status.ACTIVE) }
@@ -110,16 +228,6 @@ class TransactionService : BaseService() {
         }
     }
 
-    fun getTransactionsByDateRange(userId: Int, startDate: String, endDate: String): List<TransactionResponseDTO> {
-        return transaction {
-            Transaction.find { 
-                (Transactions.user eq userId) and 
-                (Transactions.date greaterEq startDate.toLocalDateTime()) and
-                (Transactions.date lessEq endDate.toLocalDateTime()) and
-                (Transactions.status eq Status.ACTIVE)
-            }.map { it.toResponseDTO() }
-        }
-    }
 
     fun getTransaction(transactionId: UUID, userId: Int): TransactionResponseDTO? {
         return transaction {

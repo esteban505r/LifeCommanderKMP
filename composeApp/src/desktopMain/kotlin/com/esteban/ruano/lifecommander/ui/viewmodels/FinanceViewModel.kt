@@ -534,4 +534,79 @@ class FinanceViewModel(
         }
     }
 
+    override fun getScheduledTransactions(refresh: Boolean) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(
+                    isLoading = true,
+                    error = null,
+                    currentPage = if (refresh) 0 else _state.value.currentPage
+                )
+
+                val response = service.getScheduledTransactions(
+                    limit = _state.value.pageSize,
+                    offset = _state.value.currentPage * _state.value.pageSize,
+                    filters = _state.value.transactionFilters
+                )
+
+                _state.value = _state.value.copy(
+                    scheduledTransactions = response.transactions,
+                    totalScheduledTransactions = response.totalCount,
+                    isLoading = false
+                )
+
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    override fun addScheduledTransaction(transaction: ScheduledTransaction) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val newTransaction = service.addScheduledTransaction(transaction)
+                getScheduledTransactions(refresh = true)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    override fun updateScheduledTransaction(transaction: ScheduledTransaction) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                val updatedTransaction = service.updateScheduledTransaction(transaction)
+                getScheduledTransactions(refresh = true)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    override fun deleteScheduledTransaction(id: String) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                service.deleteScheduledTransaction(id)
+                getScheduledTransactions(refresh = true)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
 }

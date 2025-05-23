@@ -11,13 +11,12 @@ import com.esteban.ruano.repository.*
 import com.esteban.ruano.lifecommander.models.ErrorResponse
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.Category
-import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
+import com.esteban.ruano.utils.gatherScheduledTransactionFilters
 import com.esteban.ruano.utils.gatherTransactionFilters
 import com.lifecommander.finance.model.ImportTransactionsRequest
 import com.lifecommander.finance.model.ImportTransactionsResponse
 import com.lifecommander.finance.model.TransactionImportPreviewRequest
-import com.lifecommander.finance.model.TransactionType
 import kotlinx.datetime.*
 import java.util.*
 
@@ -27,9 +26,9 @@ fun Route.financeRouting(
     budgetRepository: BudgetRepository,
     savingsGoalRepository: SavingsGoalRepository,
     categoryKeywordRepository: CategoryKeywordRepository,
+    scheduledTransactionRepository: ScheduledTransactionRepository,
 ) {
     route("/finance") {
-        // Account routes
         route("/accounts") {
             get {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
@@ -94,19 +93,13 @@ fun Route.financeRouting(
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
                 val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
+                val scheduledBaseDate = call.parameters["scheduledBaseDate"]?.toLocalDate()
                 val filters = call.gatherTransactionFilters()
-                call.respond(transactionRepository.getAll(userId, limit, offset, filters))
+                call.respond(transactionRepository.getAll(userId, limit, offset, filters,scheduledBaseDate))
             }
             get("/byAccount/{accountId}") {
                 val accountId = UUID.fromString(call.parameters["accountId"]!!)
                 call.respond(transactionRepository.getByAccount(accountId))
-            }
-            get("/byDateRange") {
-                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                val dto = call.receive<DateRangeQueryDTO>()
-                val startDate = dto.startDate
-                val endDate = dto.endDate
-                call.respond(transactionRepository.getByDateRange(userId, startDate, endDate))
             }
             post {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
@@ -452,6 +445,83 @@ fun Route.financeRouting(
                     return@delete
                 }
                 val deleted = categoryKeywordRepository.deleteAllKeywordsForCategory(userId, category)
+                if (deleted) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+        }
+
+        route("/scheduled-transactions") {
+            get {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
+                val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
+                val filters = call.gatherScheduledTransactionFilters()
+                call.respond(scheduledTransactionRepository.getAll(userId, limit, offset, filters))
+            }
+            get("/{id}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val id = UUID.fromString(call.parameters["id"]!!)
+                val scheduledTransaction = scheduledTransactionRepository.getById(id, userId)
+                if (scheduledTransaction == null) {
+                    call.respond(HttpStatusCode.NotFound)
+                    return@get
+                }
+                call.respond(scheduledTransaction)
+            }
+            get("/byAccount/{accountId}") {
+                val accountId = UUID.fromString(call.parameters["accountId"]!!)
+                call.respond(scheduledTransactionRepository.getByAccount(accountId))
+            }
+            post {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val dto = call.receive<CreateScheduledTransactionDTO>()
+                val id = scheduledTransactionRepository.create(
+                    userId = userId,
+                    description = dto.description,
+                    amount = dto.amount,
+                    startDate = dto.startDate,
+                    frequency = dto.frequency,
+                    interval = dto.interval,
+                    type = dto.type,
+                    category = dto.category,
+                    accountId = UUID.fromString(dto.accountId),
+                    applyAutomatically = dto.applyAutomatically
+                )
+                if (id != null) {
+                    call.respond(HttpStatusCode.Created)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+            patch("/{id}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val id = UUID.fromString(call.parameters["id"]!!)
+                val dto = call.receive<UpdateScheduledTransactionDTO>()
+                val updated = scheduledTransactionRepository.update(
+                    id = id,
+                    userId = userId,
+                    description = dto.description,
+                    amount = dto.amount,
+                    startDate = dto.startDate,
+                    frequency = dto.frequency,
+                    interval = dto.interval,
+                    type = dto.type,
+                    category = dto.category,
+                    applyAutomatically = dto.applyAutomatically
+                )
+                if (updated) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+            delete("/{id}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val id = UUID.fromString(call.parameters["id"]!!)
+                val deleted = scheduledTransactionRepository.delete( userId,id)
                 if (deleted) {
                     call.respond(HttpStatusCode.OK)
                 } else {

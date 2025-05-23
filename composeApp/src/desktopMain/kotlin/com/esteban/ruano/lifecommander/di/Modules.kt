@@ -108,9 +108,9 @@ val viewModelsModule = module {
     viewModel { TasksViewModel(get(),get(),get()) }
     viewModel { AuthViewModel(get()) }
     viewModel { DailyJournalViewModel(get(),get()) }
-    viewModel { CalendarViewModel(get(),get(),get()) }
+    viewModel { CalendarViewModel(get(),get(),get(),get()) }
     viewModel { FinanceViewModel(get()) }
-    viewModel { TimersViewModel(get(),get(), get(),get(),get(), get())}
+    viewModel { TimersViewModel(get(),get(), get(),get(),get(),get())}
     viewModel { CategoryKeywordMapperViewModel(get()) }
 }
 

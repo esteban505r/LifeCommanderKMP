@@ -1,14 +1,21 @@
 package com.esteban.ruano.utils
 
+import com.esteban.ruano.database.entities.ScheduledTransactions
 import com.esteban.ruano.database.entities.Transactions
 import com.esteban.ruano.database.models.Status
+import com.esteban.ruano.lifecommander.models.finance.ScheduledTransactionFilters
 import com.esteban.ruano.lifecommander.models.finance.SortOrder as ModelSortOrder
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.lifecommander.finance.model.TransactionType
+import com.lifecommander.models.Frequency
 import io.ktor.server.routing.RoutingCall
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.CustomFunction
 import org.jetbrains.exposed.sql.DecimalColumnType
@@ -52,6 +59,50 @@ fun ModelSortOrder.toSortOrder(): SortOrder? {
         else -> null
     }
 }
+
+fun generateOccurrencesBetween(
+    startDate: LocalDate,
+    frequency: Frequency,
+    interval: Int,
+    from: LocalDate,
+    to: LocalDate
+): List<LocalDate> {
+    val result = mutableListOf<LocalDate>()
+    var current = startDate
+
+    while (current < from) {
+        current = advance(current, frequency, interval)
+    }
+
+    while (current <= to) {
+        result += current
+        current = advance(current, frequency, interval)
+    }
+
+    return result
+}
+
+fun advance(base: LocalDate, frequency: Frequency, interval: Int): LocalDate = when (frequency) {
+    Frequency.DAILY -> base.plus(DatePeriod(days = interval))
+    Frequency.WEEKLY -> base.plus(DatePeriod(days = interval * 7))
+    Frequency.MONTHLY -> base.plus(DatePeriod(months = interval))
+    Frequency.YEARLY -> base.plus(DatePeriod(years = interval))
+    Frequency.ONE_TIME -> base
+    Frequency.BI_WEEKLY -> base.plus(DatePeriod(days = interval * 14))
+}
+
+fun TransactionFilters.toScheduledTransactionFilters(): ScheduledTransactionFilters {
+    return ScheduledTransactionFilters(
+        searchPattern = this.searchPattern,
+        categories = this.categories,
+        startDate = this.startDate,
+        endDate = this.endDate,
+        types = this.types,
+        minAmount = this.minAmount,
+        maxAmount = this.maxAmount,
+        accountIds = this.accountIds,
+    )
+}
 fun RoutingCall.gatherTransactionFilters(): TransactionFilters{
     val call = this
     val searchPattern = call.parameters["search"]
@@ -87,6 +138,83 @@ fun RoutingCall.gatherTransactionFilters(): TransactionFilters{
     )
 
 }
+
+fun RoutingCall.gatherScheduledTransactionFilters(): ScheduledTransactionFilters {
+    val call = this
+    val searchPattern = call.parameters["search"]
+    val categories = call.parameters.getAll("category")
+    val startDate = call.parameters["startDate"]
+    val endDate = call.parameters["endDate"]
+    val types = call.parameters.getAll("type")?.map { TransactionType.valueOf(it) }
+    val minAmount = call.parameters["minAmount"]?.toDoubleOrNull()
+    val maxAmount = call.parameters["maxAmount"]?.toDoubleOrNull()
+    val accountIds = call.parameters.getAll("accountId")?.map { UUID.fromString(it) }
+    val frequencies = call.parameters.getAll("frequency")
+    val applyAutomatically = call.parameters["applyAutomatically"]?.toBoolean()
+
+    return ScheduledTransactionFilters(
+        searchPattern = searchPattern,
+        categories = categories,
+        startDate = startDate,
+        endDate = endDate,
+        types = types,
+        minAmount = minAmount,
+        maxAmount = maxAmount,
+        accountIds = accountIds?.map { it.toString() },
+        frequencies = frequencies?.map { Frequency.valueOf(it) },
+        applyAutomatically = applyAutomatically
+    )
+}
+
+fun buildScheduledTransactionFilters(
+    userId: Int,
+    filters: ScheduledTransactionFilters
+): Op<Boolean> {
+    var conditions = (ScheduledTransactions.user eq userId) and (ScheduledTransactions.status eq Status.ACTIVE)
+
+    filters.searchPattern?.let {
+        conditions = conditions and (ScheduledTransactions.description like "%$it%")
+    }
+
+    filters.categories?.let {
+        conditions = conditions and (ScheduledTransactions.category inList it)
+    }
+
+    filters.types?.let {
+        conditions = conditions and (ScheduledTransactions.type inList it)
+    }
+
+    filters.accountIds?.let {
+        conditions = conditions and (ScheduledTransactions.account inList it.map { UUID.fromString(it) })
+    }
+
+    filters.minAmount?.let {
+        conditions = conditions and (ScheduledTransactions.amount greaterEq it.toBigDecimal())
+    }
+
+    filters.maxAmount?.let {
+        conditions = conditions and (ScheduledTransactions.amount lessEq it.toBigDecimal())
+    }
+
+    filters.startDate?.let {
+        conditions = conditions and (ScheduledTransactions.startDate greaterEq it.toLocalDateTime())
+    }
+
+    filters.endDate?.let {
+        conditions = conditions and (ScheduledTransactions.startDate lessEq it.toLocalDateTime())
+    }
+
+    filters.frequencies?.let {
+        conditions = conditions and (ScheduledTransactions.frequency inList it)
+    }
+
+    filters.applyAutomatically?.let {
+        conditions = conditions and (ScheduledTransactions.applyAutomatically eq it)
+    }
+
+    return conditions
+}
+
 fun buildTransactionFilters(userId: Int, filters: TransactionFilters): Op<Boolean> {
     val conditions = mutableListOf<Op<Boolean>>()
     conditions += Transactions.user eq userId

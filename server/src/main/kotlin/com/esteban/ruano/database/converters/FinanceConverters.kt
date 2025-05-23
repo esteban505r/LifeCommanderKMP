@@ -4,6 +4,7 @@ import com.esteban.ruano.database.entities.Account
 import com.esteban.ruano.database.entities.Transaction
 import com.esteban.ruano.database.entities.Budget
 import com.esteban.ruano.database.entities.SavingsGoal
+import com.esteban.ruano.database.entities.ScheduledTransaction
 import com.esteban.ruano.lifecommander.models.finance.Category.Companion.toCategory
 import com.esteban.ruano.models.finance.*
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
@@ -81,5 +82,35 @@ fun SavingsGoal.toResponseDTO(): SavingsGoalResponseDTO {
         targetAmount = this.targetAmount.toDouble(),
         currentAmount = this.currentAmount.toDouble(),
         targetDate = this.targetDate.formatDefault()
+    )
+}
+
+fun ScheduledTransaction.toResponseDTO(): ScheduledTransactionResponseDTO {
+    return ScheduledTransactionResponseDTO(
+        id = this.id.value.toString(),
+        description = this.description,
+        amount = this.amount.toDouble(),
+        startDate = this.startDate.formatDefault(),
+        frequency = this.frequency.toString(),
+        interval = this.interval,
+        type = this.type,
+        category = this.category,
+        accountId = this.account.id.value.toString(),
+        applyAutomatically = this.applyAutomatically,
+        status = this.status.toString()
+    )
+}
+
+fun ScheduledTransaction.toDomainModel(): com.lifecommander.finance.model.ScheduledTransaction {
+    return com.lifecommander.finance.model.ScheduledTransaction(
+        id = this.id.value.toString(),
+        description = this.description,
+        amount = this.amount.toDouble(),
+        frequency = this.frequency.value,
+        interval = this.interval,
+        type = TransactionTypeDomainModel.valueOf(this.type.toString()),
+        category = CategoryDomainModel.valueOf(this.category),
+        accountId = this.account.id.value.toString(),
+        startDate = this.startDate.formatDefault(),
     )
 } 

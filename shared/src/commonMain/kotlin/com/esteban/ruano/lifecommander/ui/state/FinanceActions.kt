@@ -28,6 +28,14 @@ interface FinanceActions {
         onSuccess: () -> Unit,
     )
     
+    // Scheduled Transaction actions
+    fun addScheduledTransaction(transaction: ScheduledTransaction)
+    fun updateScheduledTransaction(transaction: ScheduledTransaction)
+    fun deleteScheduledTransaction(id: String)
+    fun getScheduledTransactions(
+        refresh: Boolean = false,
+    )
+    
     // Budget actions
     fun addBudget(budget: Budget)
     fun updateBudget(budget: Budget)

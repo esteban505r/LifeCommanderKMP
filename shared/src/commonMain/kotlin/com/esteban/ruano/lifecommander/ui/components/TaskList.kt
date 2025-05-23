@@ -109,7 +109,19 @@ fun TaskList(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            // Overdue tasks
+            item {
+                Text(
+                    "Tasks",
+                    style = MaterialTheme.typography.h3,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
+                        .heightIn(
+                            min = 48.dp,
+                            max = 48.dp
+                        ),
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }            // Overdue tasks
             taskListSection(
                 taskList = taskList.filter { item ->
                     (item.done == false && item.dueDateTime?.let { it.toLocalDateTime() < getCurrentDateTime() } ?: false)

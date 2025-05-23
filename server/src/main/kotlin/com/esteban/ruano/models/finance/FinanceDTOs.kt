@@ -2,6 +2,7 @@ package com.esteban.ruano.models.finance
 
 import com.lifecommander.finance.model.AccountType
 import com.lifecommander.finance.model.TransactionType
+import com.lifecommander.models.Frequency
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -151,4 +152,50 @@ data class RemainingAmountResponseDTO(
 @Serializable
 data class TotalBalanceResponseDTO(
     val totalBalance: Double
+)
+
+@Serializable
+data class CreateScheduledTransactionDTO(
+    val description: String,
+    val amount: Double,
+    val startDate: String,
+    val frequency: Frequency,
+    val interval: Int,
+    val type: TransactionType,
+    val category: String,
+    val accountId: String,
+    val applyAutomatically: Boolean = false
+)
+
+@Serializable
+data class UpdateScheduledTransactionDTO(
+    val description: String? = null,
+    val amount: Double? = null,
+    val startDate: String? = null,
+    val frequency: Frequency? = null,
+    val interval: Int? = null,
+    val type: TransactionType? = null,
+    val category: String? = null,
+    val applyAutomatically: Boolean? = null
+)
+
+@Serializable
+data class ScheduledTransactionResponseDTO(
+    val id: String,
+    val description: String,
+    val amount: Double,
+    val startDate: String,
+    val frequency: String,
+    val interval: Int,
+    val type: TransactionType,
+    val category: String,
+    val accountId: String,
+    val applyAutomatically: Boolean,
+    val status: String = "ACTIVE"
+)
+
+@Serializable
+data class ScheduledTransactionsResponseDTO(
+    val transactions: List<ScheduledTransactionResponseDTO>,
+    val totalCount: Long
 )
