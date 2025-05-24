@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -148,7 +149,7 @@ fun ScheduledTransactionList(
             // Transaction List
             LazyColumn(
                 state = listState,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).padding(bottom = 110.dp),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
                 items(transactions) { transaction ->
@@ -173,6 +174,86 @@ fun ScheduledTransactionList(
                                 strokeWidth = 2.dp
                             )
                         }
+                    }
+                }
+            }
+        }
+
+        // Summary Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .align(Alignment.BottomCenter),
+            backgroundColor = MaterialTheme.colors.surface,
+            elevation = 4.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Income Summary
+                    Column(
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            text = "Total Income",
+                            style = MaterialTheme.typography.subtitle2,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                        Text(
+                            text = transactions
+                                .filter { it.type == TransactionType.INCOME }
+                                .sumOf { it.amount }
+                                .toCurrencyFormat(),
+                            style = MaterialTheme.typography.h6,
+                            color = Color.Green
+                        )
+                    }
+
+                    // Expense Summary
+                    Column(
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            text = "Total Expenses",
+                            style = MaterialTheme.typography.subtitle2,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                        Text(
+                            text = transactions
+                                .filter { it.type == TransactionType.EXPENSE }
+                                .sumOf { it.amount }
+                                .toCurrencyFormat(),
+                            style = MaterialTheme.typography.h6,
+                            color = Color.Red
+                        )
+                    }
+
+                    // Net Summary
+                    Column(
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            text = "Net Amount",
+                            style = MaterialTheme.typography.subtitle2,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                        val netAmount = transactions.sumOf { 
+                            when (it.type) {
+                                TransactionType.INCOME -> it.amount
+                                TransactionType.EXPENSE -> -it.amount
+                                TransactionType.TRANSFER -> 0.0
+                            }
+                        }
+                        Text(
+                            text = netAmount.toCurrencyFormat(),
+                            style = MaterialTheme.typography.h6,
+                            color = if (netAmount >= 0) Color.Green else Color.Red
+                        )
                     }
                 }
             }
@@ -210,165 +291,169 @@ fun ScheduledTransactionItem(
         elevation = 2.dp,
         onClick = { onTransactionClick(transaction) }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Main Content Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+        SelectionContainer {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                // Left Column: Description and Category
-                Column(
-                    modifier = Modifier.weight(1f)
+                // Main Content Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Text(
-                        text = transaction.description,
-                        style = MaterialTheme.typography.subtitle1,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
+                    // Left Column: Description and Category
+                    Column(
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Icon(
-                            imageVector = when (transaction.type) {
-                                TransactionType.INCOME -> Icons.Outlined.TrendingUp
-                                TransactionType.EXPENSE -> Icons.Outlined.TrendingDown
-                                TransactionType.TRANSFER -> Icons.Outlined.SwapHoriz
-                            },
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = when (transaction.type) {
+                        Text(
+                            text = transaction.description,
+                            style = MaterialTheme.typography.subtitle1,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = when (transaction.type) {
+                                    TransactionType.INCOME -> Icons.Outlined.TrendingUp
+                                    TransactionType.EXPENSE -> Icons.Outlined.TrendingDown
+                                    TransactionType.TRANSFER -> Icons.Outlined.SwapHoriz
+                                },
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = when (transaction.type) {
+                                    TransactionType.INCOME -> Color.Green
+                                    TransactionType.EXPENSE -> Color.Red
+                                    TransactionType.TRANSFER -> Color.Blue
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.width(4.dp))
+
+                            Text(
+                                text = transaction.category.name.replace("_", " ").lowercase()
+                                    .replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+
+                    // Right Column: Amount
+                    Column(
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            text = transaction.amount.toCurrencyFormat(),
+                            style = MaterialTheme.typography.subtitle1,
+                            color = when (transaction.type) {
                                 TransactionType.INCOME -> Color.Green
                                 TransactionType.EXPENSE -> Color.Red
                                 TransactionType.TRANSFER -> Color.Blue
                             }
                         )
-                        
+                    }
+                }
+
+                Divider(
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.1f)
+                )
+
+                // Schedule Information Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Left: Frequency and Interval
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Repeat,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+
                         Spacer(modifier = Modifier.width(4.dp))
-                        
+
                         Text(
-                            text = transaction.category.name.replace("_", " ").lowercase()
-                                .replaceFirstChar { it.uppercase() },
+                            text = "${
+                                transaction.frequency?.lowercase()?.replaceFirstChar { it.uppercase() }
+                            } (${transaction.interval})",
+                            style = MaterialTheme.typography.caption,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+
+                    // Right: Start Date
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Event,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        Text(
+                            text = "Starts: ${transaction.startDate}",
                             style = MaterialTheme.typography.caption,
                             color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                         )
                     }
                 }
 
-                // Right Column: Amount
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    Text(
-                        text = transaction.amount.toCurrencyFormat(),
-                        style = MaterialTheme.typography.subtitle1,
-                        color = when (transaction.type) {
-                            TransactionType.INCOME -> Color.Green
-                            TransactionType.EXPENSE -> Color.Red
-                            TransactionType.TRANSFER -> Color.Blue
-                        }
-                    )
-                }
-            }
-
-            Divider(
-                modifier = Modifier.padding(vertical = 12.dp),
-                color = MaterialTheme.colors.onSurface.copy(alpha = 0.1f)
-            )
-
-            // Schedule Information Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Left: Frequency and Interval
+                // Action Buttons Row
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Repeat,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                    )
-                    
-                    Spacer(modifier = Modifier.width(4.dp))
-                    
-                    Text(
-                        text = "${transaction.frequency?.lowercase()?.replaceFirstChar { it.uppercase() }} (${transaction.interval})",
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                    )
-                }
+                    TextButton(
+                        onClick = { onEdit(transaction) },
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Edit,
+                            contentDescription = "Edit",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Edit")
+                    }
 
-                // Right: Start Date
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Event,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                    )
-                    
-                    Spacer(modifier = Modifier.width(4.dp))
-                    
-                    Text(
-                        text = "Starts: ${transaction.startDate}",
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                    )
-                }
-            }
+                    Spacer(modifier = Modifier.width(8.dp))
 
-            // Action Buttons Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(
-                    onClick = { onEdit(transaction) },
-                    contentPadding = PaddingValues(horizontal = 8.dp)
-                ) {
-                    Icon(
-                        Icons.Outlined.Edit,
-                        contentDescription = "Edit",
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Edit")
-                }
-                
-                Spacer(modifier = Modifier.width(8.dp))
-                
-                TextButton(
-                    onClick = { onDelete(transaction) },
-                    contentPadding = PaddingValues(horizontal = 8.dp)
-                ) {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = "Delete",
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colors.error
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        "Delete",
-                        color = MaterialTheme.colors.error
-                    )
+                    TextButton(
+                        onClick = { onDelete(transaction) },
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Delete,
+                            contentDescription = "Delete",
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colors.error
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            "Delete",
+                            color = MaterialTheme.colors.error
+                        )
+                    }
                 }
             }
         }

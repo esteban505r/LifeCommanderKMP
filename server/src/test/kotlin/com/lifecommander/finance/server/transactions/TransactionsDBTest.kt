@@ -2,8 +2,11 @@ package com.lifecommander.finance.server.transactions
 
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
+import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.service.TransactionService
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUtils.formatDateTime
+import com.esteban.ruano.utils.DateUtils.toLocalDate
 import com.lifecommander.finance.model.AccountType
 import com.lifecommander.finance.model.TransactionType
 import kotlinx.datetime.*
@@ -141,13 +144,15 @@ class TransactionsDBTest {
         val startDateTime = startInstant.toLocalDateTime(timeZone)
         val endDateTime = endInstant.toLocalDateTime(timeZone)
 
-        val transactions = service.getTransactionsByDateRange(
+        val transactions = service.getTransactionsByUser(
             userId = 1,
-            startDate = formatDateTime(startDateTime),
-            endDate = formatDateTime(endDateTime)
+            filters = TransactionFilters(
+                startDate = startDateTime.toLocalDate().formatDefault(),
+                endDate = endDateTime.toLocalDate().formatDefault()
+            )
         )
-        assertTrue(transactions.isNotEmpty())
-        assertEquals(1, transactions.size)
+        assertTrue(transactions.transactions.isNotEmpty())
+        assertEquals(1, transactions.transactions.size)
     }
 
     @Test

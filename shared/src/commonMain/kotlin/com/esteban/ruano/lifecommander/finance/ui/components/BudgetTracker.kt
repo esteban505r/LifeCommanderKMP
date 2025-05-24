@@ -224,16 +224,31 @@ fun BudgetTracker(
         ) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ){
                 Text(
-                    text = "Total Budgeted: ${budgets.sumOf { it.budget.amount }.toCurrencyFormat()}",
+                    text = "Total Budgeted: ${budgets.filter { 
+                        it.budget.name != "Unbudgeted"
+                    }.sumOf { it.budget.amount }.toCurrencyFormat()}",
                     style = MaterialTheme.typography.h5,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).weight(1f)
                 )
                 Text(
-                    text = "Total Spent: ${budgets.sumOf { it.spent }.toCurrencyFormat()}",
+                    text = "Total Overrun: ${budgets.filter {
+                        it.budget.name != "Unbudgeted"
+                    }.sumOf { 
+                        if(it.budget.amount < it.spent) (it.spent - it.budget.amount) else 0.0
+                    }.toCurrencyFormat()}",
+                    style = MaterialTheme.typography.h5.copy(color = MaterialTheme.colors.error),                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).weight(1f)
+                    )
+                Text(
+                    text = "Total Spent: ${budgets.filter{
+                        it.budget.name != "Unbudgeted"
+                    }.sumOf { it.spent }.toCurrencyFormat()}",
                     style = MaterialTheme.typography.h5,
                     textAlign = TextAlign.End,
                     fontWeight = FontWeight.Bold,

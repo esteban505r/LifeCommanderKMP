@@ -1,10 +1,6 @@
 
-import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -60,14 +56,6 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
-        val desktopTest by getting {
-            dependencies {
-                implementation(libs.kotlin.test)
-                implementation(libs.kotlinx.coroutines.test)
-                implementation(libs.mockk)
-                implementation(libs.turbine)
-            }
-        }
 
         androidMain.dependencies {
             implementation(compose.preview)
@@ -183,7 +171,7 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
 
-            implementation(libs.compose.material.icons.extended)
+            implementation(compose.materialIconsExtended)
 
             implementation(libs.compose.native.tray)
             implementation(libs.compose.native.notification)

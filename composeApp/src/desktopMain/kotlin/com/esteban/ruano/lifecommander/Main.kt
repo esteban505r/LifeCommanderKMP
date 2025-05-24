@@ -1,7 +1,10 @@
 package com.esteban.ruano.lifecommander
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,7 +15,10 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.*
+import androidx.compose.ui.window.ApplicationScope
+import androidx.compose.ui.window.DialogWindow
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModelStore
@@ -26,7 +32,6 @@ import com.kdroid.composenotification.builder.NotificationInitializer
 import com.kdroid.composetray.tray.api.Tray
 import di.appModule
 import extractResourceToTempFile
-import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import models.TimerModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -55,6 +60,7 @@ fun App(
 }
 
 fun main() = application {
+
     NotificationInitializer.configure(
         AppConfig(
             appName = "LifeCommander",

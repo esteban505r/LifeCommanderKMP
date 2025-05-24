@@ -9,9 +9,9 @@ app-version-name = "1.0.0"
 
 
 # Kotlin
-kotlin = "2.2.0-Beta2"
+kotlin = "2.2.0-RC"
 kotlinx-datetime = "0.6.0"
-kotlin-test = "2.1.20"
+kotlin-test = "2.1.21"
 kotlinx-coroutines-test = "1.10.1"
 kotlin-serialization = "2.2.0-RC"
 
@@ -20,15 +20,16 @@ calendar = "2.6.0-beta02"
 
 # Compose
 compose-desktop = "1.8.0"
-compose-ui = "1.8.1"
+compose-ui = "1.8.2"
 compose-icons = "1.7.8"
-compose-compiler = "1.5.15"
+android-compose-compiler = "1.5.15"
 compose-hilt-navigation = "1.2.0"
 compose-navigation = "2.9.0"
 androidx-test-junit = "1.2.1"
-compose-runtime = "1.8.1"
-compose-multiplatform = "1.8.0"
-compose-foundation = "1.8.1"
+compose-runtime = "1.8.2"
+compose-multiplatform = "1.8.1"
+compose-foundation = "1.8.2"
+composeHotReload = "1.0.0-alpha10"
 
 # AndroidX
 androidx-activityCompose = "1.10.1"
@@ -124,12 +125,11 @@ androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle
 
 #Desktop
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
-compose-desktop-current-os = { module = "org.jetbrains.compose.desktop:desktop", version.ref = "compose-desktop" }
 
 # Compose
 # compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose-ui" }
-compose-compiler = { module = "androidx.compose.compiler:compiler", version.ref = "compose-compiler" }
+compose-compiler = { module = "androidx.compose.compiler:compiler", version.ref = "android-compose-compiler" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose-ui" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose-ui" }
 compose-material = { module = "androidx.compose.material:material" }
@@ -223,8 +223,6 @@ koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
 
-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "material-icons" }
-
 compose-native-tray = { module = "io.github.kdroidfilter:composenativetray", version.ref = "composenativetray" }
 compose-native-notification = { module = "io.github.kdroidfilter:compose-native-notification", version.ref = "compose-native-notification" }
 
@@ -281,5 +279,6 @@ kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
 moko-resources = { id = "dev.icerock.mobile.multiplatform-resources"}
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-serialization" }

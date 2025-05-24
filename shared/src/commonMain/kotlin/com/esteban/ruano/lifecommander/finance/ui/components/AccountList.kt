@@ -1,14 +1,20 @@
 package com.lifecommander.finance.ui.components
 
+import androidx.compose.foundation.Indication
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.utils.toCurrencyFormat
 import com.esteban.ruano.utils.DateUIUtils.formatCurrency
@@ -67,8 +73,11 @@ private fun AccountItem(
 ) {
 
     Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().pointerInput(Unit) {
+            awaitPointerEventScope {
+
+            }
+        },
         backgroundColor = if (isSelected) {
             MaterialTheme.colors.primary.copy(alpha = 0.1f)
         } else {
@@ -83,26 +92,28 @@ private fun AccountItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = account.name,
-                    style = MaterialTheme.typography.h6,
-                    color = MaterialTheme.colors.onSurface
-                )
-                Text(
-                    text = account.type.name,
-                    style = MaterialTheme.typography.body2,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                )
-                Text(
-                    text = account.balance.toCurrencyFormat(),
-                    style = MaterialTheme.typography.h5,
-                    color = if (account.balance >= 0) {
-                        MaterialTheme.colors.primary
-                    } else {
-                        MaterialTheme.colors.error
-                    }
-                )
+            SelectionContainer {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = account.name,
+                        style = MaterialTheme.typography.h6,
+                        color = MaterialTheme.colors.onSurface
+                    )
+                    Text(
+                        text = account.type.name,
+                        style = MaterialTheme.typography.body2,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = account.balance.toCurrencyFormat(),
+                        style = MaterialTheme.typography.h5,
+                        color = if (account.balance >= 0) {
+                            MaterialTheme.colors.primary
+                        } else {
+                            MaterialTheme.colors.error
+                        }
+                    )
+                }
             }
             
             Row {
@@ -123,4 +134,4 @@ private fun AccountItem(
             }
         }
     }
-} 
+}
