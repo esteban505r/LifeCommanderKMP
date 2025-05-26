@@ -37,11 +37,11 @@ class HabitsDBTest {
 
     @Before
     fun setup() {
-        //Ensure you have a postgres database running on localhost:5432 with the name testdb
+        //Ensure you have a postgres database running on localhost:5431 with the name testdb
         habitService = HabitService(ReminderService())
         reminderService = ReminderService()
         Database.connect(
-            url = "jdbc:postgresql://localhost:5432/testdb",
+            url = "jdbc:postgresql://localhost:5431/testdb",
             driver = "org.postgresql.Driver",
             user = "testuser",
             password = "testpassword"

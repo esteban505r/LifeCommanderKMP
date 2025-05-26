@@ -29,7 +29,7 @@ object ModelConverters {
         return Task(
             id = id,
             name = name,
-            done = done,
+            done = done == false,
             note = note,
             dueDateTime = dueDateTime,
             scheduledDateTime = scheduledDateTime,
@@ -45,7 +45,7 @@ object ModelConverters {
             id = id,
             name = name,
             done = done,
-            note = note,
+            note = note ?: "",
             dueDateTime = dueDateTime,
             scheduledDateTime = scheduledDateTime,
             reminders = reminders?.map { it.toReminderDTO() },

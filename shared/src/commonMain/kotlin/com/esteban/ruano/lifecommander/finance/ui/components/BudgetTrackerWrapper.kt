@@ -1,29 +1,17 @@
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FilterChip
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.material.icons.filled.AutoFixNormal
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.esteban.ruano.lifecommander.finance.ui.components.BudgetTracker
-import com.esteban.ruano.lifecommander.models.finance.Budget
-import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
-import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
-import com.esteban.ruano.lifecommander.models.finance.Category
+import com.esteban.ruano.lifecommander.models.finance.*
 import com.esteban.ruano.lifecommander.ui.components.EnumChipSelector
 import com.esteban.ruano.lifecommander.ui.components.ExpandableFilterSection
 import com.esteban.ruano.lifecommander.ui.components.FilterSidePanel
@@ -54,27 +42,12 @@ fun BudgetScreenWrapper(
     onCategorizeAll: () -> Unit,
 ) {
     var showFilters by remember { mutableStateOf(false) }
-    var selectedCategories by remember { mutableStateOf(filters.categories ?: emptyList()) }
-
+    var showToolsPanel by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    if (showDatePicker) {
-        Dialog(onDismissRequest = { showDatePicker = false }) {
-            Surface {
-                CustomDatePicker(
-                    selectedDate = baseDate?:getCurrentDateTime().date,
-                    onDateSelected = {
-                        onChangeBaseDate(it)
-                        showDatePicker = false
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    onDismiss = { showDatePicker = false }
-                )
-            }
-        }
-    }
-
     BoxWithConstraints(Modifier.fillMaxSize()) {
+        val isMobile = maxWidth < 600.dp
+
         BudgetTracker(
             budgets = budgets,
             onLoadBudgets = onLoadBudgets,
@@ -83,50 +56,116 @@ fun BudgetScreenWrapper(
             onDeleteBudget = onDeleteBudget,
             onBudgetClick = onBudgetClick,
             onShowFilters = { showFilters = it },
-            onFiltersChange = { filters ->
-                onFiltersChange(filters)
-            },
-            baseDate = baseDate ?: getCurrentDateTime().date,
-            onToggleDatePicker = { showDatePicker = it },
-            onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
+            onOpenCategoryKeywordMapper = { showToolsPanel = true },
             onCategorizeUnbudgeted = onCategorizeUnbudgeted,
             onCategorizeAll = onCategorizeAll,
+            baseDate = baseDate ?: kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date,
+            filters = filters,
+            onFiltersChange = onFiltersChange,
+            onToggleDatePicker = { showDatePicker = it },
+            isMobile = isMobile,
+            onShowToolsPanel = { showToolsPanel = true }
         )
 
-        FilterSidePanel(
-            isVisible = showFilters,
-            onDismiss = { showFilters = false },
-            onClearFilters = { onFiltersChange(BudgetFilters()) },
-            hasActiveFilters = filters != BudgetFilters()
-        ) {
-            Column(
+        if (isMobile) {
+            if (showToolsPanel) {
+                Dialog(onDismissRequest = { showToolsPanel = false }) {
+                    Surface(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
+                        ToolsPanelContent(
+                            onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
+                            onCategorizeUnbudgeted = onCategorizeUnbudgeted,
+                            onCategorizeAll = onCategorizeAll,
+                            onClose = { showToolsPanel = false }
+                        )
+                    }
+                }
+            }
+        } else {
+            Surface(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .width(240.dp)
+                    .fillMaxHeight()
+                    .align(Alignment.CenterEnd),
+                elevation = 4.dp,
+                color = MaterialTheme.colors.surface
             ) {
-                ExpandableFilterSection(
-                    title = "Categories",
-                    summary = selectedCategories.joinToString(", ").ifEmpty { null }) {
-                    EnumChipSelector(
-                        enumValues = Category.entries.toTypedArray(),
-                        selectedValues = selectedCategories.map { Category.valueOf(it) }.toSet(),
-                        onValueSelected = {
-                            selectedCategories = it.map { c -> c.name }
-                            onFiltersChange(filters.copy(categories = selectedCategories.takeIf { it.isNotEmpty() }))
+                ToolsPanelContent(
+                    onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
+                    onCategorizeUnbudgeted = onCategorizeUnbudgeted,
+                    onCategorizeAll = onCategorizeAll,
+                    onClose = null
+                )
+            }
+        }
+
+        if (showDatePicker) {
+            Dialog(onDismissRequest = { showDatePicker = false }) {
+                Surface {
+                    CustomDatePicker(
+                        selectedDate = baseDate ?: kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date,
+                        onDateSelected = {
+                            onChangeBaseDate(it)
+                            showDatePicker = false
                         },
-                        multiSelect = true,
-                        labelMapper = { it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() } }
+                        modifier = Modifier.fillMaxWidth(),
+                        onDismiss = { showDatePicker = false }
                     )
                 }
+            }
+        }
+    }
+}
 
-                FilterChip(
-                    selected = filters.isOverBudget == true,
-                    onClick = {
-                        onFiltersChange(filters.copy(isOverBudget = if (filters.isOverBudget == true) null else true))
-                    },
-                    content = { Text("Show Over Budget Only") }
-                )
+@Composable
+private fun ToolsPanelContent(
+    onOpenCategoryKeywordMapper: () -> Unit,
+    onCategorizeUnbudgeted: () -> Unit,
+    onCategorizeAll: () -> Unit,
+    onClose: (() -> Unit)?
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Transaction Tools",
+            style = MaterialTheme.typography.h6,
+            fontWeight = FontWeight.Bold
+        )
+        Button(
+            onClick = onOpenCategoryKeywordMapper,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Category, contentDescription = "Category Keywords")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Category Keywords")
+        }
+        Button(
+            onClick = onCategorizeUnbudgeted,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.AutoFixHigh, contentDescription = "Categorize Unbudgeted")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Categorize Unbudgeted")
+        }
+        Button(
+            onClick = onCategorizeAll,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.AutoFixNormal, contentDescription = "Categorize All")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Categorize All")
+        }
+        if (onClose != null) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = onClose,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
+            ) {
+                Text("Close")
             }
         }
     }

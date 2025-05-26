@@ -64,7 +64,6 @@ sealed class FinanceIntent : UserIntent{
         val accountId: String
     ) : FinanceIntent()
 
-    data object LoadData : FinanceIntent()
 }
 
 sealed class FinanceEffect : Effect{

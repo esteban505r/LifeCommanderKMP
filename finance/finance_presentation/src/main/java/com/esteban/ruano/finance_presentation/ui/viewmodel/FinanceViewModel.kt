@@ -72,9 +72,6 @@ class FinanceViewModel @Inject constructor(
             is FinanceIntent.ImportTransactions -> importTransactions(intent.text, intent.accountId, intent.skipDuplicates)
             is FinanceIntent.PreviewTransactionImport -> previewTransactionImport(intent.text, intent.accountId)
             is FinanceIntent.ChangeTab -> TODO()
-            FinanceIntent.LoadData -> {
-                loadData()
-            }
         }
     }
 
@@ -836,11 +833,5 @@ class FinanceViewModel @Inject constructor(
                 }
             )
         }
-    }
-
-    override fun loadData() {
-        getTransactions()
-        getAccounts()
-        getBudgets()
     }
 } 

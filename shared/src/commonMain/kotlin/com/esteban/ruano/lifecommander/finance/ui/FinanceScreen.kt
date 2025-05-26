@@ -42,12 +42,6 @@ fun FinanceScreen(
 
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        scope.launch {
-            actions.loadData()
-        }
-    }
-
     Scaffold(
         backgroundColor = MaterialTheme.colors.background,
         modifier = modifier,
@@ -211,7 +205,7 @@ fun FinanceScreen(
                     selectedContentColor = MaterialTheme.colors.onPrimary,
                     unselectedContentColor = MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
                 )
-                Tab(
+               /* Tab(
                     selected = selectedTab == 4,
                     onClick = {
                         selectedTab = 4
@@ -238,7 +232,7 @@ fun FinanceScreen(
                     },
                     selectedContentColor = MaterialTheme.colors.onPrimary,
                     unselectedContentColor = MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
-                )
+                )*/
             }
 
             when (selectedTab) {
@@ -317,7 +311,7 @@ fun FinanceScreen(
                         onChangeBaseDate = {
                             actions.changeBudgetBaseDate(it)
                         },
-                        baseDate = state.budgetBaseDate?.toLocalDate(),
+                        baseDate = state.budgetBaseDate.toLocalDate(),
                         onOpenCategoryKeywordMapper = {
                             onOpenCategoryKeywordMapper()
                         },
@@ -330,11 +324,11 @@ fun FinanceScreen(
                     )
                 }
 
-                4 -> SavingsGoalTracker(
+               /* 4 -> SavingsGoalTracker(
                     onAddGoal = { showSavingsGoalForm = true },
                     onEditGoal = { editingSavingsGoal = it },
                     onDeleteGoal = { scope.launch { it.id?.let { id -> actions.deleteSavingsGoal(id) } } }
-                )
+                )*/
             }
         }
     }

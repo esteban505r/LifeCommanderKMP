@@ -2,6 +2,7 @@ package com.lifecommander.finance.server
 
 import com.esteban.ruano.database.entities.Accounts
 import com.esteban.ruano.database.entities.Budgets
+import com.esteban.ruano.database.entities.HistoryTracks
 import com.esteban.ruano.database.entities.Transactions
 import com.esteban.ruano.database.entities.Users
 import com.esteban.ruano.service.BudgetService
@@ -44,7 +45,7 @@ class BudgetDBTest{
         transactionService = TransactionService()
 
         Database.connect(
-            url = "jdbc:postgresql://localhost:5432/testdb",
+            url = "jdbc:postgresql://localhost:5431/testdb",
             driver = "org.postgresql.Driver",
             user = "testuser",
             password = "testpassword"
@@ -57,7 +58,8 @@ class BudgetDBTest{
                 Users,
                 Accounts,
                 Transactions,
-                Budgets
+                Budgets,
+                HistoryTracks
             )
         }
 

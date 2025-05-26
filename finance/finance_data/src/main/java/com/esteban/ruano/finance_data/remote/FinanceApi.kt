@@ -41,7 +41,7 @@ interface FinanceApi {
     // Budgets
     @GET("finance/budgets/withProgress")
     suspend fun getBudgetsWithProgress(
-        @QueryMap filters: Map<String, Any?> = emptyMap(),
+        @QueryMap filters: Map<String, @JvmSuppressWildcards Any?> = emptyMap(),
         @Query("referenceDate") referenceDate: String
     ): List<BudgetProgress>
 

@@ -22,29 +22,16 @@ fun FinanceDestination(
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        // Initial data loading
         coroutineScope.launch {
-            viewModel.handleIntent(FinanceIntent.LoadData)
+            viewModel.handleIntent(FinanceIntent.GetAccounts)
         }
     }
 
-    when {
-        state.isLoading -> {
-            Loading()
-        }
-        state.error != null -> {
-            Error(
-                message = state.error,
-            )
-        }
-        else -> {
-            com.lifecommander.finance.ui.FinanceScreen(
-                state = toDesktopState(state),
-                onOpenImporter = {
+    com.lifecommander.finance.ui.FinanceScreen(
+        state = toDesktopState(state),
+        onOpenImporter = {
 
-                },
-                actions = viewModel
-            )
-        }
-    }
+        },
+        actions = viewModel
+    )
 } 

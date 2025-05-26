@@ -74,44 +74,6 @@ class FinanceViewModel(
         getTransactions(refresh = true)
     }
 
-    override fun loadData() {
-        viewModelScope.launch {
-            try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
-                val accounts = service.getAccounts()
-                val budgets = service.getBudgetsWithProgress(
-                    referenceDate = getCurrentDateTime().date.formatDefault()
-                )
-                val savingsGoals = service.getSavingsGoals()
-                val transactionsResponse = service.getTransactions(
-                    limit = _state.value.pageSize,
-                    offset = 0,
-                    filters = _state.value.transactionFilters
-                )
-
-                val savingsGoalProgress = savingsGoals.associate { goal ->
-                    (goal.id?:"") to service.getSavingsGoalProgress(goal.id?:"").percentageComplete
-                }
-
-                _state.value = _state.value.copy(
-                    accounts = accounts,
-                    savingsGoals = savingsGoals,
-                    transactions = transactionsResponse.transactions,
-                    totalTransactions = transactionsResponse.totalCount,
-                    budgets = budgets,
-                    savingsGoalProgress = savingsGoalProgress,
-                    isLoading = false,
-                    currentPage = 0
-                )
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    error = e.message,
-                    isLoading = false
-                )
-            }
-        }
-    }
-
     override fun changeBudgetFilters(filters: BudgetFilters) {
         _state.value = _state.value.copy(
             budgetFilters = filters,
@@ -284,7 +246,7 @@ class FinanceViewModel(
             try {
                 _state.value = _state.value.copy(isLoading = true, error = null)
                 val newBudget = service.addBudget(budget)
-                loadData()
+                getBudgets()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
@@ -298,7 +260,7 @@ class FinanceViewModel(
             try {
                 _state.value = _state.value.copy(isLoading = true, error = null)
                 val updatedBudget = service.updateBudget(budget)
-               loadData()
+               getBudgets()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,

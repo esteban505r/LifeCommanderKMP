@@ -34,7 +34,7 @@ class TransactionsDBTest {
     fun setup() {
         service = TransactionService()
         Database.connect(
-            url = "jdbc:postgresql://localhost:5432/testdb",
+            url = "jdbc:postgresql://localhost:5431/testdb",
             driver = "org.postgresql.Driver",
             user = "testuser",
             password = "testpassword"

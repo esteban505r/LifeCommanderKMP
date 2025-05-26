@@ -51,7 +51,6 @@ interface FinanceActions {
     fun getSavingsGoalProgress(goalId: String)
     
     // Data loading
-    fun loadData()
     fun changeBudgetFilters(filters: BudgetFilters)
     fun changeBudgetBaseDate(date: LocalDate)
     fun categorizeUnbudgeted()
