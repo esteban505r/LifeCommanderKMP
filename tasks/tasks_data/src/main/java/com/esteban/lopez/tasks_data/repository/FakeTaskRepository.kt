@@ -1,6 +1,6 @@
 package com.esteban.ruano.tasks_data.repository
 
-import com.esteban.ruano.tasks_domain.model.Task
+import com.lifecommander.models.Task
 import com.esteban.ruano.tasks_domain.repository.TasksRepository
 
 class FakeTaskRepository : TasksRepository {
@@ -18,7 +18,9 @@ class FakeTaskRepository : TasksRepository {
                     name = "Tarea 1",
                     done = false,
                     dueDateTime = "10/10/2024",
-                    note = ""
+                    note = "",
+                    scheduledDateTime = null,
+                    reminders = emptyList(),
                 ),
                 Task(
                     id = "2",

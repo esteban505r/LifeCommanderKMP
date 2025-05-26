@@ -15,7 +15,9 @@ dependencies {
     implementation(project(":test-core"))
     implementation(project(":core-ui"))
     implementation(project(":tasks:tasks_domain"))
+    implementation(projects.shared)
 
+    implementation(libs.kotlinx.datetime)
     // Calendar
     implementation(libs.calendar.view)
     implementation(libs.calendar.compose)

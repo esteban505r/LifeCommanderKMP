@@ -1,6 +1,6 @@
 package com.esteban.ruano.tasks_presentation.utils
 
-import com.esteban.ruano.tasks_domain.model.TaskFilters
+import com.esteban.ruano.lifecommander.models.TaskFilters
 import com.esteban.ruano.core_ui.R
 
 fun TaskFilters.toResource(): Int{

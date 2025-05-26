@@ -3,7 +3,7 @@ package com.esteban.ruano.habits_presentation
 import com.esteban.ruano.core.utils.DateUtils.parseDateTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.formatTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.parseTime
-import com.esteban.ruano.habits_domain.model.Habit
+import com.lifecommander.models.Habit
 import com.esteban.ruano.habits_presentation.utilities.HabitsUtils.timeDoingIt
 import org.junit.Test
 

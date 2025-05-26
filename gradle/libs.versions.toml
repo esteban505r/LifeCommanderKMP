@@ -2,7 +2,7 @@
 # Android
 agp = "8.6.1"
 android-compileSdk = "35"
-android-minSdk = "24"
+android-minSdk = "26"
 android-targetSdk = "35"
 app-version-code = "1"
 app-version-name = "1.0.0"
@@ -104,6 +104,7 @@ postgres = "42.7.2"
 aws-sdk = "2.31.15"
 moko-resources = "0.24.5"
 dotenv = "6.4.1"
+media3CommonKtx = "1.7.1"
 
 [libraries]
 # Kotlin
@@ -268,6 +269,7 @@ aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenv" }
 
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines-test" }
+androidx-media3-common-ktx = { group = "androidx.media3", name = "media3-common-ktx", version.ref = "media3CommonKtx" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -15,5 +15,6 @@ dependencies {
     implementation(project(":test-core"))
     implementation(project(":core-data"))
     implementation(project(":tasks:tasks_domain"))
+    implementation(projects.shared)
     implementation(libs.kotlinx.coroutines.core)
 }

@@ -1,7 +1,7 @@
 package com.esteban.ruano.tasks_domain.repository
 
 import com.esteban.ruano.core.domain.model.DataException
-import com.esteban.ruano.tasks_domain.model.Task
+import com.lifecommander.models.Task
 
 interface TasksRepository {
     suspend fun getTasks(

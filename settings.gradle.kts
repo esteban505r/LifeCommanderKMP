@@ -56,6 +56,12 @@ include(":tasks")
 include(":tasks:tasks_presentation")
 include(":tasks:tasks_domain")
 include(":tasks:tasks_data")
+
+include(":finance")
+include(":finance:finance_presentation")
+include(":finance:finance_domain")
+include(":finance:finance_data")
+
 include(":test-core")
 include(":navigation")
 include(":home")

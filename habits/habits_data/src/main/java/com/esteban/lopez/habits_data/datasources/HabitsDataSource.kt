@@ -1,6 +1,7 @@
 package com.esteban.ruano.habits_data.datasources
 
-import com.esteban.ruano.habits_domain.model.Habit
+import com.lifecommander.models.Habit
+
 
 interface HabitsDataSource {
 

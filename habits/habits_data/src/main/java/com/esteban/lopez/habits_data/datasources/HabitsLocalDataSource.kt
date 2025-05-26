@@ -6,7 +6,7 @@ import com.esteban.ruano.core_data.local.addUpdateOperation
 import com.esteban.ruano.habits_data.local.HabitsDao
 import com.esteban.ruano.habits_data.mapper.toDatabaseEntity
 import com.esteban.ruano.habits_data.mapper.toDomainModel
-import com.esteban.ruano.habits_domain.model.Habit
+import com.lifecommander.models.Habit
 import com.esteban.ruano.habits_data.local.model.Habit as LocalHabit
 
 class HabitsLocalDataSource(

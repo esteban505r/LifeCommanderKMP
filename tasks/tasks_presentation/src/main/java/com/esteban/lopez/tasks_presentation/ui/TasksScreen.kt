@@ -48,14 +48,14 @@ import com.esteban.ruano.core_ui.composables.ToggleChipsButtons
 import com.esteban.ruano.core_ui.utils.LocalMainIntent
 import com.esteban.ruano.core_ui.utils.LocalMainState
 import com.esteban.ruano.core_ui.view_model.intent.MainIntent
-import com.esteban.ruano.tasks_domain.model.Task
+import com.lifecommander.models.Task
 import com.esteban.ruano.tasks_presentation.intent.TaskIntent
-import com.esteban.ruano.tasks_domain.model.TaskFilters
-import com.esteban.ruano.tasks_presentation.ui.composables.TaskList
+import com.esteban.ruano.lifecommander.models.TaskFilters
 import com.esteban.ruano.tasks_presentation.ui.composables.TasksCalendarView
 import com.esteban.ruano.tasks_presentation.ui.viewmodel.state.TaskState
 import com.esteban.ruano.tasks_presentation.utils.toResource
 import com.esteban.ruano.test_core.base.TestTags
+import com.esteban.ruano.ui.components.TaskList
 import kotlinx.coroutines.launch
 
 @Composable
@@ -292,6 +292,28 @@ fun TasksScreen(
                                                         }
                                                     )
                                                 }
+                                            }
+                                        },
+                                        onEdit = {
+                                            onTaskClick(it)
+                                        },
+                                        onDelete = {
+                                            coroutineScope.launch {
+                                                userIntent(
+                                                    TaskIntent.DeleteTask(it.id)
+                                                )
+                                            }
+                                        },
+                                        onReschedule = {
+                                            coroutineScope.launch {
+                                                userIntent(
+                                                    TaskIntent.RescheduleTask(it.id!!, it)
+                                                )
+                                            }
+                                        },
+                                        itemWrapper = { content,task ->
+                                            Box {
+                                                content.invoke()
                                             }
                                         }
                                     )

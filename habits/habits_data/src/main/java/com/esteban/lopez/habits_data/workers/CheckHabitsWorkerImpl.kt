@@ -2,13 +2,12 @@ package com.esteban.ruano.habits_data.workers
 
 import android.content.Context
 import androidx.work.CoroutineWorker
-import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.esteban.ruano.core.utils.DateUtils.parseDate
 import com.esteban.ruano.core_data.workManager.habits.CheckHabitsWorker
 import com.esteban.ruano.habits_data.mapper.toResponseModel
 import com.esteban.ruano.habits_data.remote.dto.HabitResponse
-import com.esteban.ruano.habits_domain.repository.HabitsRepository
+import com.esteban.lopez.habits_domain.repository.HabitsRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.runBlocking

@@ -15,12 +15,12 @@ import com.esteban.ruano.core.di.TasksAlarmReceiverClass
 import com.esteban.ruano.core.helpers.NetworkHelper
 import com.esteban.ruano.core.helpers.NetworkHelperImpl
 import com.esteban.ruano.core.interfaces.OperationListener
-import com.esteban.ruano.core.utils.AppConstants
+import com.esteban.lopez.core.utils.AppConstants
 import com.esteban.ruano.core_data.local.HistoryTrackDao
 import com.esteban.ruano.core_data.models.Local
 import com.esteban.ruano.core_data.models.Remote
 import com.esteban.ruano.habits_data.local.HabitsDao
-import com.esteban.ruano.habits_domain.repository.HabitsRepository
+import com.esteban.lopez.habits_domain.repository.HabitsRepository
 import com.esteban.ruano.lifecommander.data.datasource.SyncDataSource
 import com.esteban.ruano.lifecommander.data.datasource.SyncLocalDataSource
 import com.esteban.ruano.lifecommander.data.datasource.SyncRemoteDataSource

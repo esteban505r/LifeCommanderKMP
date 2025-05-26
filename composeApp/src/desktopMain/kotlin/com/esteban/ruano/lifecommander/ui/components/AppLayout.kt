@@ -16,6 +16,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
 import com.esteban.ruano.lifecommander.ui.composables.FloatingActionButtons
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
+import com.esteban.ruano.lifecommander.utils.APP_NAME
 import com.esteban.ruano.utils.DateUtils.formatDefault
 import services.NightBlockService
 import services.tasks.models.Priority
@@ -71,7 +72,7 @@ fun AppLayout(
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Life Commander")
+                        Text(APP_NAME)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "🍅 $pomodoroCount",

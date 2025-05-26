@@ -5,7 +5,7 @@ import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.helpers.NetworkHelper
 import com.esteban.ruano.core_data.local.model.DBActions
 import com.esteban.ruano.core_data.local.model.SyncItemDTO
-import com.esteban.ruano.habits_domain.repository.HabitsRepository
+import com.esteban.lopez.habits_domain.repository.HabitsRepository
 import com.esteban.ruano.lifecommander.database.SyncDTO
 import com.esteban.ruano.lifecommander.domain.repository.SyncRepository
 import com.esteban.ruano.tasks_domain.repository.TasksRepository

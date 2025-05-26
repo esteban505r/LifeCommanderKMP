@@ -6,7 +6,7 @@ import com.esteban.ruano.core.utils.DateUtils.parseDate
 import com.esteban.ruano.core_ui.WorkManagerUtils
 import com.esteban.ruano.core_ui.utils.SnackbarType
 import com.esteban.ruano.core_ui.view_model.BaseViewModel
-import com.esteban.ruano.habits_domain.model.Habit
+import com.lifecommander.models.Habit
 import com.esteban.ruano.habits_domain.use_case.HabitUseCases
 import com.esteban.ruano.habits_presentation.ui.intent.HabitIntent
 import com.esteban.ruano.habits_presentation.ui.intent.HabitEffect

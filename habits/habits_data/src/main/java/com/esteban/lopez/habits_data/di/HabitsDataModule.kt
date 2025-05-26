@@ -1,8 +1,8 @@
-package com.esteban.ruano.habits_data.di
+package com.esteban.lopez.habits_data.di
 
 import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.helpers.NetworkHelper
-import com.esteban.ruano.core.utils.AppConstants
+import com.esteban.lopez.core.utils.AppConstants
 import com.esteban.ruano.core_data.local.HistoryTrackDao
 import com.esteban.ruano.core_data.models.Local
 import com.esteban.ruano.core_data.models.Remote
@@ -14,7 +14,7 @@ import com.esteban.ruano.habits_data.local.HabitsDao
 import com.esteban.ruano.habits_data.remote.HabitsApi
 import com.esteban.ruano.habits_data.repository.HabitsRepositoryImpl
 import com.esteban.ruano.habits_data.workers.factories.CheckHabitsWorkerFactoryImpl
-import com.esteban.ruano.habits_domain.repository.HabitsRepository
+import com.esteban.lopez.habits_domain.repository.HabitsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -3,7 +3,7 @@ package com.esteban.ruano.tasks_data.datasources
 import com.esteban.ruano.tasks_data.mappers.toDomainModel
 import com.esteban.ruano.tasks_data.mappers.toResponseModel
 import com.esteban.ruano.tasks_data.remote.TasksApi
-import com.esteban.ruano.tasks_domain.model.Task
+import com.lifecommander.models.Task
 
 class TaskRemoteDataSource(
     private val api:TasksApi

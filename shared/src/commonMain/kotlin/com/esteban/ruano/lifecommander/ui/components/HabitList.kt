@@ -102,19 +102,6 @@ fun HabitList(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            item {
-                Text(
-                    "Habits",
-                    style = MaterialTheme.typography.h3,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 16.dp)
-                        .heightIn(
-                            min = 48.dp,
-                            max = 48.dp
-                        ),
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
             habitListSection(
                 habitList = habitList.filter {
                     it.done == false && compareTimes(

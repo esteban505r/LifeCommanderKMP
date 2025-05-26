@@ -2,7 +2,7 @@ package com.esteban.ruano.habits_data.local.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.esteban.ruano.habits_domain.model.Frequency
+import com.lifecommander.models.Frequency
 import java.util.UUID
 
 @Entity(tableName = Habit.TABLE_NAME)

@@ -11,7 +11,8 @@ object Routes {
         val TASKS = BottomNavRoute("tasks", "tasks", "Tasks")
         val WORKOUT = BottomNavRoute("workout", "workout", "Workout")
         val NUTRITION = BottomNavRoute("nutrition", "nutrition", "Nutrition")
-        fun getAllRoutes() = listOf(HOME, HABITS, TASKS, WORKOUT, NUTRITION)
+        val FINANCE = BottomNavRoute("finance", "finance", "Finance")
+        fun getAllRoutes() = listOf(HOME, HABITS, TASKS, WORKOUT, NUTRITION, FINANCE)
     }
 
     const val WELCOME = "welcome"

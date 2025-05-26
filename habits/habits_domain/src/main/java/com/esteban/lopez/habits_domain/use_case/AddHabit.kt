@@ -1,7 +1,7 @@
 package com.esteban.ruano.habits_domain.use_case
 
-import com.esteban.ruano.habits_domain.model.Habit
-import com.esteban.ruano.habits_domain.repository.HabitsRepository
+import com.esteban.lopez.habits_domain.repository.HabitsRepository
+import com.lifecommander.models.Habit
 
 class AddHabit(
     val repository: HabitsRepository

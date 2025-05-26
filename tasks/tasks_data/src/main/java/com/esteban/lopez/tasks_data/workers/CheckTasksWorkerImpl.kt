@@ -8,7 +8,7 @@ import com.esteban.ruano.core_data.workManager.habits.CheckHabitsWorker
 import com.esteban.ruano.core_data.workManager.tasks.CheckTasksWorker
 import com.esteban.ruano.tasks_data.remote.model.TaskResponse
 import com.esteban.ruano.tasks_data.mappers.toResponseModel
-import com.esteban.ruano.tasks_domain.model.TaskFilters
+import com.esteban.ruano.lifecommander.models.TaskFilters
 import com.esteban.ruano.tasks_domain.repository.TasksRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject

@@ -12,10 +12,9 @@ import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.Error
 import com.esteban.ruano.core_ui.composables.Loading
 import com.esteban.ruano.core_ui.utils.LocalMainIntent
-import com.esteban.ruano.core_ui.view_model.intent.MainIntent
 import com.esteban.ruano.habits_presentation.ui.intent.HabitEffect
 import com.esteban.ruano.habits_presentation.ui.intent.HabitIntent
-import com.esteban.ruano.habits_presentation.ui.screens.HabitsScreen
+import com.esteban.lopez.habits_presentation.ui.screens.HabitsScreen
 import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.HabitViewModel
 import kotlinx.coroutines.launch
 

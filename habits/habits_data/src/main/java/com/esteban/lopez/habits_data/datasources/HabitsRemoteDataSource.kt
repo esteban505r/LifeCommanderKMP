@@ -3,7 +3,7 @@ package com.esteban.ruano.habits_data.datasources
 import com.esteban.ruano.habits_data.mapper.toDomainModel
 import com.esteban.ruano.habits_data.mapper.toResponseModel
 import com.esteban.ruano.habits_data.remote.HabitsApi
-import com.esteban.ruano.habits_domain.model.Habit
+import com.lifecommander.models.Habit
 
 class HabitsRemoteDataSource(
     private val habitsApi: HabitsApi

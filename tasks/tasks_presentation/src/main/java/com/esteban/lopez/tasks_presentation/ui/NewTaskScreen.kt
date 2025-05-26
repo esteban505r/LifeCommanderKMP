@@ -57,11 +57,11 @@ import com.esteban.ruano.core_ui.utils.DateUIUtils.getTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.parseTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.core_ui.utils.toResourceString
-import com.esteban.ruano.tasks_domain.model.Task
-import com.esteban.ruano.tasks_domain.model.TaskReminder
+import com.lifecommander.models.Task
 import com.esteban.ruano.tasks_presentation.intent.TaskIntent
 import com.esteban.ruano.tasks_presentation.ui.composables.TaskReminderItem
 import com.esteban.ruano.tasks_presentation.ui.viewmodel.TaskDetailViewModel
+import com.lifecommander.models.Reminder
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
@@ -182,7 +182,7 @@ fun NewTaskScreenComposable(
                 showRemindersDialog = false
             },
             onConfirm = {
-                reminders = reminders + TaskReminder(
+                reminders = reminders + Reminder(
                     time = it
                 )
                 showRemindersDialog = false

@@ -2,17 +2,17 @@ package com.esteban.ruano.habits_data.mapper
 
 import com.esteban.ruano.habits_data.remote.dto.HabitReminderResponseResponse
 import com.esteban.ruano.habits_data.remote.dto.HabitResponse
-import com.esteban.ruano.habits_domain.model.Frequency
-import com.esteban.ruano.habits_domain.model.Habit
-import com.esteban.ruano.habits_domain.model.HabitReminder
+import com.lifecommander.models.Frequency
+import com.esteban.ruano.lifecommander.models.HabitReminder
+import com.lifecommander.models.Habit
 import com.esteban.ruano.habits_data.local.model.Habit as HabitEntity
 
 
 fun HabitResponse.toDomainModel(): Habit {
     return Habit(
         id = id,
-        name = name,
-        frequency = frequency,
+        name = name ?: "",
+        frequency = frequency ?: Frequency.DAILY.value,
         dateTime = dateTime,
         note = note,
         done = done,

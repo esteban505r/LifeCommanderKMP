@@ -5,21 +5,21 @@ import kotlinx.serialization.Serializable
 data class Task(
     val id: String,
     val name: String,
-    val done: Boolean?,
-    val note: String,
-    val dueDateTime: String?,
-    val scheduledDateTime: String?,
-    val reminders: List<Reminder>?,
-    val priority: Int,
+    val done: Boolean = false,
+    val note: String? = null,
+    val dueDateTime: String? = null,
+    val scheduledDateTime: String? = null,
+    val reminders: List<Reminder>? = null,
+    val priority: Int = 0,
     val createdAt: String? = null,
     val updatedAt: String? = null
 )
 
 @Serializable
 data class Reminder(
-    val id: String,
+    val id: String? = null,
     val time: Long,
-    val type: ReminderType
+    val type: ReminderType = ReminderType.NOTIFICATION,
 )
 
 enum class ReminderType {

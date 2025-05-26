@@ -3,7 +3,7 @@ package com.esteban.ruano.habits_presentation.ui.utils
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.habits_domain.model.Frequency
+import com.lifecommander.models.Frequency
 
 object FrequencyUtils {
 

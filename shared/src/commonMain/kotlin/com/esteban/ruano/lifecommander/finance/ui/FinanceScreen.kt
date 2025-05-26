@@ -12,10 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.esteban.ruano.lifecommander.finance.ui.AccountForm
-import com.esteban.ruano.lifecommander.finance.ui.components.BudgetTracker
 import com.esteban.ruano.lifecommander.finance.ui.components.TransactionListWrapper
 import com.esteban.ruano.lifecommander.finance.ui.components.ScheduledTransactionListWrapper
-import com.esteban.ruano.ui.components.TransactionList
+import com.esteban.ruano.lifecommander.ui.state.FinanceState
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.finance.model.*
 import com.lifecommander.finance.ui.components.*

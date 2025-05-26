@@ -13,6 +13,7 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":core-data"))
+    implementation(projects.shared)
     implementation(project(":habits:habits_domain"))
 
     implementation(libs.kotlinx.coroutines.core)

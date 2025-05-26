@@ -22,7 +22,7 @@ import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.theme.SoftRed
 import com.esteban.ruano.core_ui.utils.ReminderType.Companion.toReminderType
 import com.esteban.ruano.core_ui.utils.ReminderType.Companion.toResource
-import com.esteban.ruano.habits_domain.model.HabitReminder
+import com.esteban.ruano.lifecommander.models.HabitReminder
 
 @Composable
 fun HabitReminderItem(

@@ -1,0 +1,50 @@
+package com.esteban.ruano.finance_presentation.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.esteban.ruano.core_ui.composables.Error
+import com.esteban.ruano.core_ui.composables.Loading
+import com.esteban.ruano.finance_presentation.converter.FinanceStateConverter.toDesktopState
+import com.esteban.ruano.finance_presentation.ui.intent.FinanceIntent
+import com.esteban.ruano.finance_presentation.ui.viewmodel.FinanceViewModel
+import kotlinx.coroutines.launch
+
+@Composable
+fun FinanceDestination(
+    viewModel: FinanceViewModel = hiltViewModel(),
+    navController: NavController,
+) {
+    val state =  viewModel.viewState.collectAsState().value
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        // Initial data loading
+        coroutineScope.launch {
+            viewModel.handleIntent(FinanceIntent.LoadData)
+        }
+    }
+
+    when {
+        state.isLoading -> {
+            Loading()
+        }
+        state.error != null -> {
+            Error(
+                message = state.error,
+            )
+        }
+        else -> {
+            com.lifecommander.finance.ui.FinanceScreen(
+                state = toDesktopState(state),
+                onOpenImporter = {
+
+                },
+                actions = viewModel
+            )
+        }
+    }
+} 

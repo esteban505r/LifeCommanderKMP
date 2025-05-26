@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.esteban.ruano.core.utils.AppConstants.EMPTY_STRING
+import com.esteban.lopez.core.utils.AppConstants.EMPTY_STRING
 import com.esteban.ruano.core_ui.composables.AppBar
 import com.esteban.ruano.core_ui.composables.text.TitleH3
 import com.esteban.ruano.core_ui.theme.Gray

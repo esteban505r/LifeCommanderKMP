@@ -1,9 +1,9 @@
 package com.esteban.ruano.tasks_presentation.ui.viewmodel.state
 
-import com.esteban.ruano.core.utils.AppConstants.EMPTY_STRING
+import com.esteban.lopez.core.utils.AppConstants.EMPTY_STRING
 import com.esteban.ruano.core_ui.view_model.ViewState
-import com.esteban.ruano.tasks_domain.model.Task
-import com.esteban.ruano.tasks_domain.model.TaskFilters
+import com.esteban.ruano.lifecommander.models.TaskFilters
+import com.lifecommander.models.Task
 
 data class TaskState(
     val tasks: List<Task> = emptyList(),

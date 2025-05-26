@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.esteban.ruano.lifecommander.models.finance.Budget
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
-import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.lifecommander.services.finance.FinanceService
+import com.esteban.ruano.lifecommander.ui.state.FinanceState
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.lifecommander.finance.model.*

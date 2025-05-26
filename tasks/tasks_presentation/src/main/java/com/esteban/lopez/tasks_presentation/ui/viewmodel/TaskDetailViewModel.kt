@@ -1,15 +1,19 @@
 package com.esteban.ruano.tasks_presentation.ui.viewmodel
 
 import androidx.lifecycle.viewModelScope
+import com.esteban.ruano.core.utils.DateUtils.parseDateTime
 import com.esteban.ruano.core_ui.view_model.BaseViewModel
-import com.esteban.ruano.tasks_domain.model.Task
-import com.esteban.ruano.tasks_domain.model.TaskReminder
+import com.lifecommander.models.Task
 import com.esteban.ruano.tasks_domain.use_cases.TaskUseCases
 import com.esteban.ruano.tasks_presentation.intent.TaskEffect
 import com.esteban.ruano.tasks_presentation.intent.TaskIntent
 import com.esteban.ruano.tasks_presentation.ui.viewmodel.state.TaskDetailState
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.lifecommander.models.Reminder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.inject.Inject
 
@@ -38,7 +42,7 @@ class TaskDetailViewModel @Inject constructor(
         }
     }
 
-    private fun addTask(name:String, note:String?, dueDate:String?,scheduledDate:String?,reminders:List<TaskReminder>, onComplete: (Boolean) -> Unit) {
+    private fun addTask(name:String, note:String?, dueDate:String?, scheduledDate:String?, reminders:List<Reminder>, onComplete: (Boolean) -> Unit) {
         viewModelScope.launch {
             emitState {
                 currentState.copy(isLoading = true)
@@ -47,10 +51,12 @@ class TaskDetailViewModel @Inject constructor(
                 Task(
                     id = UUID.randomUUID().toString(),
                     name = name,
-                    note = note,
+                    note = note?:"",
                     scheduledDateTime = scheduledDate,
                     dueDateTime = dueDate,
-                    reminders = reminders
+                    reminders = reminders,
+                    done = false,
+                    priority = 0,
                 )
             )
             emitState {
@@ -144,8 +150,47 @@ class TaskDetailViewModel @Inject constructor(
                 is TaskIntent.ToggleCalendarView -> {
 
                 }
+                is TaskIntent.RescheduleTask -> {
+                    rescheduleTask(it.id, it.task)
+                }
                 else -> {}
             }
+        }
+    }
+
+    private fun rescheduleTask(id:String, task: Task) {
+        viewModelScope.launch {
+            try {
+                // Get the current time
+                val now = LocalDateTime.now()
+
+                // Get the original time from either scheduled or due date
+                val originalDateTime = task.scheduledDateTime?.toLocalDateTime()
+                    ?: task.dueDateTime?.toLocalDateTime()
+
+                if (originalDateTime != null) {
+                    // Create tomorrow's date with the original time
+                    val tomorrow = now.plus(1, ChronoUnit.DAYS)
+                        .withHour(originalDateTime.hour)
+                        .withMinute(originalDateTime.minute)
+
+                    // Create updated task with new date
+                    val updatedTask = task.copy(
+                        scheduledDateTime = tomorrow.parseDateTime(),
+                        dueDateTime = if (task.dueDateTime != null) tomorrow.parseDateTime() else null
+                    )
+
+                    updateTask(
+                        id = id,
+                        task = updatedTask
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+
+            }
+
         }
     }
 

@@ -1,6 +1,7 @@
-package com.esteban.ruano.habits_domain.repository
+package com.esteban.lopez.habits_domain.repository
 
-import com.esteban.ruano.habits_domain.model.Habit
+import com.lifecommander.models.Habit
+
 
 interface HabitsRepository {
     suspend fun getHabits(

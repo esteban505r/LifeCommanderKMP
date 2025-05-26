@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":home:home_presentation"))
     implementation(project(":habits:habits_presentation"))
     implementation(project(":habits:habits_domain"))
+    implementation(project(":finance:finance_presentation"))
     implementation(project(":nutrition:nutrition_presentation"))
     implementation(project(":tasks:tasks_presentation"))
     implementation(project(":tasks:tasks_domain"))

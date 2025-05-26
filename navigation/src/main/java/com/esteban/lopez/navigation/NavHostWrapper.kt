@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.esteban.ruano.core.routes.Routes
+import com.esteban.ruano.finance_presentation.ui.navigation.financeGraph
 import com.esteban.ruano.habits_presentation.navigation.habitsGraph
 import com.esteban.ruano.home_presentation.navigation.homeGraph
 import com.esteban.ruano.tasks_presentation.navigation.tasksGraph
@@ -32,5 +33,7 @@ fun NavHostWrapper(
         workoutGraph(navController)
 
         nutritionGraph(navController)
+
+        financeGraph(navController)
     }
 }

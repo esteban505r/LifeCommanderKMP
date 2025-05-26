@@ -60,9 +60,9 @@ import com.esteban.ruano.core_ui.utils.DateUIUtils
 import com.esteban.ruano.core_ui.utils.DateUIUtils.getTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.core_ui.utils.ReminderType
-import com.esteban.ruano.habits_domain.model.Frequency
-import com.esteban.ruano.habits_domain.model.Habit
-import com.esteban.ruano.habits_domain.model.HabitReminder
+import com.lifecommander.models.Frequency
+import com.lifecommander.models.Habit
+import com.esteban.ruano.lifecommander.models.HabitReminder
 import com.esteban.ruano.habits_presentation.ui.composables.HabitReminderItem
 import com.esteban.ruano.habits_presentation.ui.intent.HabitIntent
 import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.HabitDetailViewModel

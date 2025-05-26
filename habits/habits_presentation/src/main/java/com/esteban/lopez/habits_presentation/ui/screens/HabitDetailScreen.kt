@@ -1,5 +1,7 @@
 package com.esteban.ruano.habits_presentation.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -48,12 +50,14 @@ import com.esteban.ruano.core_ui.theme.LightGray3
 import com.esteban.ruano.core_ui.theme.MediumGray
 import com.esteban.ruano.core_ui.theme.SoftYellow
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDate
-import com.esteban.ruano.habits_domain.model.Frequency
-import com.esteban.ruano.habits_domain.model.Habit
+import com.lifecommander.models.Frequency
 import com.esteban.ruano.habits_presentation.ui.composables.HabitReminderItem
 import com.esteban.ruano.habits_presentation.ui.intent.HabitIntent
 import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.state.HabitDetailState
 import com.esteban.ruano.habits_presentation.ui.utils.FrequencyUtils
+import com.esteban.ruano.utils.HabitsUtils.date
+import com.esteban.ruano.utils.HabitsUtils.time
+import com.lifecommander.models.Habit
 import kotlinx.coroutines.launch
 
 @Composable
@@ -319,7 +323,9 @@ fun HabitDetailScreenPreview() {
                     name = "Drink water",
                     frequency = "daily",
                     reminders = emptyList(),
-                    done = false
+                    done = false,
+                    note = "Drink water every day",
+                    dateTime = "2023-10-01 00:00:00",
                 )
             ),
             userIntent = {}

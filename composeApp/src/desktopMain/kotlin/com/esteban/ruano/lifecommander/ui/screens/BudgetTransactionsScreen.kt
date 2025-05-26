@@ -6,7 +6,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -14,12 +13,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.finance.ui.components.TransactionListWrapper
 import com.lifecommander.finance.model.FinanceActions
-import com.lifecommander.finance.model.FinanceState
+import com.esteban.ruano.lifecommander.ui.state.FinanceState
 import com.lifecommander.finance.model.Transaction
 import com.lifecommander.finance.ui.TransactionForm
 import kotlinx.coroutines.launch

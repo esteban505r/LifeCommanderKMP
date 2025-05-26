@@ -1,38 +1,25 @@
-package com.esteban.ruano.habits_presentation.ui.screens
+package com.esteban.lopez.habits_presentation.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FabPosition
-import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -42,17 +29,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.utils.DateUIUtils.parseDate
-import com.esteban.ruano.habits_domain.model.Habit
-import com.esteban.ruano.habits_presentation.ui.composables.HabitList
 import com.esteban.ruano.habits_presentation.ui.intent.HabitIntent
-import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.HabitViewModel
 import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.state.HabitState
-import com.esteban.ruano.habits_presentation.utilities.HabitsUtils.findCurrentHabit
+import com.esteban.ruano.ui.components.HabitList
+import com.esteban.ruano.utils.HabitsUtils.findCurrentHabit
+import com.lifecommander.models.Habit
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -177,6 +160,14 @@ fun HabitsScreen(
                         onPullRefresh = {
                             coroutineScope.launch {
                                 userIntent(HabitIntent.FetchHabits())
+                            }
+                        },
+                        onEdit = {_->
+                            },
+                        onDelete = { habit ->},
+                        itemWrapper = { content, habit ->
+                            Box {
+                                content()
                             }
                         }
                     )

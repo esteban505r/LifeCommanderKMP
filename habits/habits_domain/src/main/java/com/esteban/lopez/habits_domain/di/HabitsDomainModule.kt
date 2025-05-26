@@ -1,11 +1,11 @@
-package com.esteban.ruano.habits_domain.di
+package com.esteban.lopez.habits_domain.di
 
-import com.esteban.ruano.habits_domain.repository.HabitsRepository
+import com.esteban.lopez.habits_domain.repository.HabitsRepository
 import com.esteban.ruano.habits_domain.use_case.AddHabit
 import com.esteban.ruano.habits_domain.use_case.CompleteHabit
 import com.esteban.ruano.habits_domain.use_case.DeleteHabit
-import com.esteban.ruano.habits_domain.use_case.GetHabit
-import com.esteban.ruano.habits_domain.use_case.GetHabitsByRangeDate
+import com.esteban.lopez.habits_domain.use_case.GetHabit
+import com.esteban.lopez.habits_domain.use_case.GetHabitsByRangeDate
 import com.esteban.ruano.habits_domain.use_case.GetHabits
 import com.esteban.ruano.habits_domain.use_case.HabitUseCases
 import com.esteban.ruano.habits_domain.use_case.UnCompleteHabit

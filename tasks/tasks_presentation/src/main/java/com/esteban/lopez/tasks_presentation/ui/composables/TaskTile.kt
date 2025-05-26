@@ -25,7 +25,7 @@ import com.esteban.ruano.core_ui.theme.DarkGray2
 import com.esteban.ruano.core_ui.theme.Gray3
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toResourceStringBasedOnNow
-import com.esteban.ruano.tasks_domain.model.Task
+import com.lifecommander.models.Task
 
 @Composable
 fun TaskTile(task: Task) {

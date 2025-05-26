@@ -1,11 +1,15 @@
-package com.lifecommander.finance.model
+package com.esteban.ruano.lifecommander.ui.state
 
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
-import kotlinx.serialization.Serializable
+import com.lifecommander.finance.model.Account
+import com.lifecommander.finance.model.SavingsGoal
+import com.lifecommander.finance.model.ScheduledTransaction
+import com.lifecommander.finance.model.Transaction
+import com.lifecommander.finance.model.TransactionImportPreview
 
 data class FinanceState(
     val accounts: List<Account> = emptyList(),

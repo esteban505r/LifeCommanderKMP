@@ -24,6 +24,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import com.esteban.ruano.lifecommander.utils.PROD_VARIANT
+import com.esteban.ruano.lifecommander.utils.VARIANT
 import com.google.gson.Gson
 import com.kdroid.composenotification.builder.AppConfig
 import com.kdroid.composenotification.builder.ExperimentalNotificationsApi
@@ -141,8 +143,12 @@ fun ApplicationScope.AppWindow() {
             }
 
             Tray(
-                iconPath = extractResourceToTempFile("icon.png", ".png"),
-                windowsIconPath = extractResourceToTempFile("icon.png", ".png"),
+                iconPath = extractResourceToTempFile(
+                    if(VARIANT == PROD_VARIANT) "icon-prod.png" else "icon.png"
+                    , ".png"),
+                windowsIconPath = extractResourceToTempFile(
+                    if(VARIANT == PROD_VARIANT) "icon-prod.png" else "icon.png"
+                    , ".png"),
                 tooltip = "LifeCommander",
                 primaryAction = {
                     if (appState.isMinimized) {

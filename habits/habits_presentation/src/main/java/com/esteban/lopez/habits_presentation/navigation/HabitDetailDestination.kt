@@ -6,19 +6,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import com.esteban.ruano.core.routes.Routes
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.Error
 import com.esteban.ruano.core_ui.composables.Loading
 import com.esteban.ruano.core_ui.utils.LocalMainIntent
-import com.esteban.ruano.core_ui.view_model.intent.MainIntent
 import com.esteban.ruano.habits_presentation.ui.intent.HabitEffect
 import com.esteban.ruano.habits_presentation.ui.intent.HabitIntent
 import com.esteban.ruano.habits_presentation.ui.screens.HabitDetailScreen
-import com.esteban.ruano.habits_presentation.ui.screens.HabitsScreen
 import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.HabitDetailViewModel
-import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.HabitViewModel
 import kotlinx.coroutines.launch
 
 @Composable

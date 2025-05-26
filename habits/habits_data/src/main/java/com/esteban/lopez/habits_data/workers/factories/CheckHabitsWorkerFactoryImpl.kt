@@ -6,7 +6,7 @@ import androidx.work.WorkerParameters
 import com.esteban.ruano.core.models.habits.HabitResponseInterface
 import com.esteban.ruano.core_data.workManager.habits.factories.CheckHabitsWorkerFactory
 import com.esteban.ruano.habits_data.workers.CheckHabitsWorkerImpl
-import com.esteban.ruano.habits_domain.repository.HabitsRepository
+import com.esteban.lopez.habits_domain.repository.HabitsRepository
 import javax.inject.Inject
 
 class CheckHabitsWorkerFactoryImpl @Inject constructor(

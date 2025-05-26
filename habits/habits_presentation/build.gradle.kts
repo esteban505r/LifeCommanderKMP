@@ -13,6 +13,7 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":core-ui"))
+    implementation(projects.shared)
     implementation(project(":habits:habits_domain"))
     testImplementation(project(":test-core"))
 }

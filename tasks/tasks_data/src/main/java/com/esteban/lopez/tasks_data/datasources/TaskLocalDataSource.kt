@@ -7,7 +7,7 @@ import com.esteban.ruano.core_data.local.addUpdateOperation
 import com.esteban.ruano.tasks_data.local.TaskDao
 import com.esteban.ruano.tasks_data.mappers.toDatabaseEntity
 import com.esteban.ruano.tasks_data.mappers.toDomainModel
-import com.esteban.ruano.tasks_domain.model.Task
+import com.lifecommander.models.Task
 import com.esteban.ruano.tasks_data.local.model.Task as LocalTask
 
 class TaskLocalDataSource(

@@ -22,13 +22,13 @@ import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.theme.SoftRed
 import com.esteban.ruano.core_ui.utils.ReminderType.Companion.toReminderType
 import com.esteban.ruano.core_ui.utils.ReminderType.Companion.toResource
-import com.esteban.ruano.tasks_domain.model.TaskReminder
+import com.lifecommander.models.Reminder
 
 @Composable
 fun TaskReminderItem(
     withActions: Boolean = false,
-    reminder: TaskReminder,
-    onDeleteReminder: ((TaskReminder) -> Unit)? = null
+    reminder: Reminder,
+    onDeleteReminder: ((Reminder) -> Unit)? = null
 ){
     Row(
         modifier = Modifier.fillMaxWidth()

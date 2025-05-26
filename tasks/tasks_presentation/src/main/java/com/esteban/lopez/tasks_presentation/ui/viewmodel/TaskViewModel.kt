@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.interfaces.OperationListener
-import com.esteban.ruano.core.utils.AppConstants.SYNC_INTERVAL
+import com.esteban.lopez.core.utils.AppConstants.SYNC_INTERVAL
 import com.esteban.ruano.core_ui.WorkManagerUtils
 import com.esteban.ruano.tasks_domain.use_cases.TaskUseCases
 import com.esteban.ruano.core_ui.view_model.BaseViewModel

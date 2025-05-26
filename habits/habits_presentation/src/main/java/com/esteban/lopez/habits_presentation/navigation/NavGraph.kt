@@ -4,9 +4,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.esteban.ruano.core.routes.Routes
-import com.esteban.ruano.habits_presentation.ui.screens.HabitDetailScreen
-import com.esteban.ruano.habits_presentation.ui.screens.HabitsScreen
-import com.esteban.ruano.habits_presentation.ui.screens.NewHabitScreen
 
 fun NavGraphBuilder.habitsGraph(
     navController: NavHostController,

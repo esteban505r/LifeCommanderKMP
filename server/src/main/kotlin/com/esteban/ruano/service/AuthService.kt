@@ -21,7 +21,7 @@ class AuthService : BaseService() {
         user ?: return null
 
         val verified = SecurityUtils.checkPassword(password, user.password)
-        return if (verified) LoggedUserDTO(user.id,user.email) else null
+        return if (verified) user.id?.let { LoggedUserDTO(it,user.email) } else null
     }
 
     fun register(user: RegisterUserDTO): Boolean {

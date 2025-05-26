@@ -1,9 +1,9 @@
 package com.esteban.ruano.lifecommander.database
 
 import com.esteban.ruano.core_data.local.model.SyncItemDTO
-import com.esteban.ruano.habits_domain.model.Habit
-import com.esteban.ruano.tasks_domain.model.Task
+import com.lifecommander.models.Task
 import com.esteban.ruano.workout_domain.model.WorkoutDay
+import com.lifecommander.models.Habit
 
 data class SyncDTO(
     val tasks: List<SyncItemDTO<Task>>,

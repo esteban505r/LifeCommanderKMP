@@ -1,6 +1,7 @@
 package com.esteban.ruano.tasks_data.datasources
 
-import com.esteban.ruano.tasks_domain.model.Task
+import com.lifecommander.models.Task
+
 
 interface TaskDataSource {
     suspend fun getTasks(
