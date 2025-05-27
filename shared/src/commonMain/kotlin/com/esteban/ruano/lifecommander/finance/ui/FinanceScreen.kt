@@ -19,6 +19,8 @@ import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.finance.model.*
 import com.lifecommander.finance.ui.components.*
 import kotlinx.coroutines.launch
+import com.esteban.ruano.lifecommander.finance.ui.components.FinanceTabRow
+import com.esteban.ruano.lifecommander.finance.ui.components.FinanceTabItem
 
 @Composable
 fun FinanceScreen(
@@ -27,7 +29,8 @@ fun FinanceScreen(
     onOpenImporter: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenBudgetTransactions: (String) -> Unit = {},
-    onOpenCategoryKeywordMapper: () -> Unit = {}
+    onOpenCategoryKeywordMapper: () -> Unit = {},
+    isDesktop: Boolean = false
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var showTransactionForm by remember { mutableStateOf(false) }
@@ -41,6 +44,67 @@ fun FinanceScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val scope = rememberCoroutineScope()
+
+    val tabItems = remember {
+        listOf(
+            FinanceTabItem(
+                title = "Accounts",
+                icon = {
+                    Icon(
+                        Icons.Default.AccountBalance,
+                        contentDescription = null,
+                        tint = if (selectedTab == 0) 
+                            MaterialTheme.colors.onPrimary 
+                        else 
+                            MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                    )
+                },
+                action = { actions.getAccounts() }
+            ),
+            FinanceTabItem(
+                title = "Transactions",
+                icon = {
+                    Icon(
+                        Icons.Default.Receipt,
+                        contentDescription = null,
+                        tint = if (selectedTab == 1) 
+                            MaterialTheme.colors.onPrimary 
+                        else 
+                            MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                    )
+                },
+                action = { actions.getTransactions(true) }
+            ),
+            FinanceTabItem(
+                title = "Scheduled",
+                icon = {
+                    Icon(
+                        Icons.Default.Schedule,
+                        contentDescription = null,
+                        tint = if (selectedTab == 2) 
+                            MaterialTheme.colors.onPrimary 
+                        else 
+                            MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                    )
+                },
+                action = { actions.getScheduledTransactions(true) }
+            ),
+            FinanceTabItem(
+                title = "Budgets",
+                icon = {
+                    Icon(
+                        Icons.Default.PieChart,
+                        contentDescription = null,
+                        tint = if (selectedTab == 3) 
+                            MaterialTheme.colors.onPrimary 
+                        else 
+                            MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                    )
+                },
+                action = { actions.getBudgets() }
+            )
+        )
+    }
 
     Scaffold(
         backgroundColor = MaterialTheme.colors.background,
@@ -81,159 +145,12 @@ fun FinanceScreen(
                 .padding(padding)
                 .background(MaterialTheme.colors.background)
         ) {
-            TabRow(
-                selectedTabIndex = selectedTab,
-                backgroundColor = MaterialTheme.colors.primary,
-                contentColor = MaterialTheme.colors.onPrimary,
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        color = MaterialTheme.colors.onPrimary,
-                        height = 3.dp
-                    )
-                }
-            ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = {
-                        selectedTab = 0
-                        coroutineScope.launch {
-                            actions.getAccounts()
-                        }
-                    },
-                    text = {
-                        Text(
-                            "Accounts",
-                            color = if (selectedTab == 0) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
-                                alpha = 0.6f
-                            )
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            Icons.Default.AccountBalance,
-                            contentDescription = null,
-                            tint = if (selectedTab == 0) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
-                                alpha = 0.6f
-                            )
-                        )
-                    },
-                    selectedContentColor = MaterialTheme.colors.onPrimary,
-                    unselectedContentColor = MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = {
-                        selectedTab = 1
-                        coroutineScope.launch {
-                            actions.getTransactions(true)
-                        }
-                    },
-                    text = {
-                        Text(
-                            "Transactions",
-                            color = if (selectedTab == 1) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
-                                alpha = 0.6f
-                            )
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            Icons.Default.Receipt,
-                            contentDescription = null,
-                            tint = if (selectedTab == 1) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
-                                alpha = 0.6f
-                            )
-                        )
-                    },
-                    selectedContentColor = MaterialTheme.colors.onPrimary,
-                    unselectedContentColor = MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
-                )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = {
-                        selectedTab = 2
-                        coroutineScope.launch {
-                            actions.getScheduledTransactions(true)
-                        }
-                    },
-                    text = {
-                        Text(
-                            "Scheduled",
-                            color = if (selectedTab == 2) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
-                                alpha = 0.6f
-                            )
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            Icons.Default.Schedule,
-                            contentDescription = null,
-                            tint = if (selectedTab == 2) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
-                                alpha = 0.6f
-                            )
-                        )
-                    },
-                    selectedContentColor = MaterialTheme.colors.onPrimary,
-                    unselectedContentColor = MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
-                )
-                Tab(
-                    selected = selectedTab == 3,
-                    onClick = {
-                        selectedTab = 3
-                        coroutineScope.launch {
-                            actions.getBudgets()
-                        }
-                    },
-                    text = {
-                        Text(
-                            "Budgets",
-                            color = if (selectedTab == 3) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
-                                alpha = 0.6f
-                            )
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            Icons.Default.PieChart,
-                            contentDescription = null,
-                            tint = if (selectedTab == 3) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
-                                alpha = 0.6f
-                            )
-                        )
-                    },
-                    selectedContentColor = MaterialTheme.colors.onPrimary,
-                    unselectedContentColor = MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
-                )
-               /* Tab(
-                    selected = selectedTab == 4,
-                    onClick = {
-                        selectedTab = 4
-                        coroutineScope.launch {
-                            actions.getSavingsGoals()
-                        }
-                    },
-                    text = {
-                        Text(
-                            "Savings",
-                            color = if (selectedTab == 4) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
-                                alpha = 0.6f
-                            )
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            Icons.Default.Savings,
-                            contentDescription = null,
-                            tint = if (selectedTab == 4) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onPrimary.copy(
-                                alpha = 0.6f
-                            )
-                        )
-                    },
-                    selectedContentColor = MaterialTheme.colors.onPrimary,
-                    unselectedContentColor = MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
-                )*/
-            }
+            FinanceTabRow(
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it },
+                actions = tabItems,
+                isDesktop = isDesktop
+            )
 
             when (selectedTab) {
                 0 -> AccountList(
@@ -323,12 +240,6 @@ fun FinanceScreen(
                         }
                     )
                 }
-
-               /* 4 -> SavingsGoalTracker(
-                    onAddGoal = { showSavingsGoalForm = true },
-                    onEditGoal = { editingSavingsGoal = it },
-                    onDeleteGoal = { scope.launch { it.id?.let { id -> actions.deleteSavingsGoal(id) } } }
-                )*/
             }
         }
     }

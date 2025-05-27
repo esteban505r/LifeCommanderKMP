@@ -24,6 +24,7 @@ import com.esteban.ruano.lifecommander.utils.toCurrencyFormat
 import com.lifecommander.finance.model.*
 import dev.icerock.moko.resources.compose.stringResource
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ScheduledTransactionList(
     transactions: List<ScheduledTransaction>,
@@ -85,7 +86,9 @@ fun ScheduledTransactionList(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        IconButton(
+
+                        Button(
+                            modifier = Modifier.padding(8.dp),
                             onClick = {
                                 val newSortOrder = when (currentFilters.amountSortOrder) {
                                     SortOrder.NONE -> SortOrder.ASCENDING
@@ -93,7 +96,13 @@ fun ScheduledTransactionList(
                                     SortOrder.DESCENDING -> SortOrder.NONE
                                 }
                                 onFiltersChange(currentFilters.copy(amountSortOrder = newSortOrder))
-                            }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = if (currentFilters.amountSortOrder != SortOrder.NONE)
+                                    MaterialTheme.colors.primary
+                                else
+                                    MaterialTheme.colors.surface,
+                            )
                         ) {
                             Icon(
                                 imageVector = when (currentFilters.amountSortOrder) {
@@ -104,12 +113,13 @@ fun ScheduledTransactionList(
                                 contentDescription = "Sort by amount",
                                 tint = when (currentFilters.amountSortOrder) {
                                     SortOrder.NONE -> MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                                    else -> MaterialTheme.colors.primary
+                                    else -> MaterialTheme.colors.onPrimary
                                 }
                             )
                         }
 
                         Button(
+                            modifier = Modifier.padding(8.dp),
                             onClick = { onShowFilters(true) },
                             colors = ButtonDefaults.buttonColors(
                                 backgroundColor = if (currentFilters != TransactionFilters()) 
@@ -126,8 +136,6 @@ fun ScheduledTransactionList(
                                 Icons.Default.FilterList,
                                 contentDescription = stringResource(MR.strings.filter_transactions)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(MR.strings.filters))
                         }
 
                         if (currentFilters != TransactionFilters()) {
@@ -152,6 +160,35 @@ fun ScheduledTransactionList(
                 modifier = Modifier.weight(1f).padding(bottom = 110.dp),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        elevation = 2.dp,
+                        onClick = onAddTransaction
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = stringResource(MR.strings.add_scheduled_transaction),
+                                tint = MaterialTheme.colors.primary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "New Scheduled Transaction",
+                                style = MaterialTheme.typography.h6,
+                                color = MaterialTheme.colors.primary
+                            )
+                        }
+                    }
+                }
                 items(transactions) { transaction ->
                     ScheduledTransactionItem(
                         transaction = transaction,
@@ -257,21 +294,6 @@ fun ScheduledTransactionList(
                     }
                 }
             }
-        }
-
-        // Add Transaction FAB
-        FloatingActionButton(
-            onClick = onAddTransaction,
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.BottomEnd),
-            backgroundColor = MaterialTheme.colors.primary
-        ) {
-            Icon(
-                Icons.Default.Add,
-                contentDescription = stringResource(MR.strings.add_scheduled_transaction),
-                tint = MaterialTheme.colors.onPrimary
-            )
         }
     }
 }

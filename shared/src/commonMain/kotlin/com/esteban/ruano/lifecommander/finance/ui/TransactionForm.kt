@@ -1,7 +1,9 @@
 package com.lifecommander.finance.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -52,7 +54,7 @@ fun TransactionForm(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp).verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
@@ -86,6 +88,7 @@ fun TransactionForm(
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
                 modifier = Modifier
                     .fillMaxWidth(),
+                singleLine = true,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     textColor = MaterialTheme.colors.onSurface,
                     cursorColor = MaterialTheme.colors.primary,
@@ -124,6 +127,7 @@ fun TransactionForm(
                 onValueChange = { },
                 readOnly = true,
                 label = { Text(stringResource(MR.strings.account)) },
+                singleLine = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = accountExpanded) },
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -157,6 +161,7 @@ fun TransactionForm(
             onValueChange = { description = it },
             label = { Text(stringResource(MR.strings.description)) },
             modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 textColor = MaterialTheme.colors.onSurface,
                 cursorColor = MaterialTheme.colors.primary,

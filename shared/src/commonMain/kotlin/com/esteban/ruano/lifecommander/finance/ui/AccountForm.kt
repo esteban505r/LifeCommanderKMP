@@ -1,7 +1,9 @@
 package com.esteban.ruano.lifecommander.finance.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,7 +30,8 @@ fun AccountForm(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         OutlinedTextField(
@@ -81,6 +84,7 @@ fun AccountForm(
                     initialBalance = it
                 }
             },
+            singleLine = true,
             label = { Text("Initial Balance") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth()
@@ -89,6 +93,7 @@ fun AccountForm(
         OutlinedTextField(
             value = currency,
             onValueChange = { currency = it.uppercase().take(3) },
+            maxLines = 1,
             label = { Text("Currency") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true

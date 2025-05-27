@@ -51,6 +51,7 @@ fun FormattedAmountInput(
             }
         },
         label = { Text("Amount") },
+        singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = modifier.fillMaxWidth(),
         colors = TextFieldDefaults.outlinedTextFieldColors(

@@ -34,6 +34,7 @@ import com.lifecommander.ui.components.CustomDatePicker
 import com.lifecommander.ui.components.CustomTimePicker
 import com.esteban.ruano.lifecommander.models.finance.SortOrder
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun TransactionList(
     transactions: List<Transaction>,
@@ -95,8 +96,8 @@ fun TransactionList(
 
                     Spacer(modifier = Modifier.width(16.dp))
 
-                    // Amount Sort Button
-                    IconButton(
+                    Button(
+                        modifier = Modifier.padding(8.dp),
                         onClick = {
                             val newSortOrder = when (currentFilters.amountSortOrder) {
                                 SortOrder.NONE -> SortOrder.ASCENDING
@@ -105,7 +106,12 @@ fun TransactionList(
                             }
                             onFiltersChange(currentFilters.copy(amountSortOrder = newSortOrder))
                         },
-                        modifier = Modifier.padding(horizontal = 4.dp)
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = if (currentFilters.amountSortOrder != SortOrder.NONE)
+                                MaterialTheme.colors.primary
+                            else
+                                MaterialTheme.colors.surface,
+                        )
                     ) {
                         Icon(
                             imageVector = when (currentFilters.amountSortOrder) {
@@ -116,25 +122,29 @@ fun TransactionList(
                             contentDescription = "Sort by amount",
                             tint = when (currentFilters.amountSortOrder) {
                                 SortOrder.NONE -> MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                                else -> MaterialTheme.colors.primary
+                                else -> MaterialTheme.colors.onPrimary
                             }
                         )
                     }
 
-                    // Filter Toggle Button
                     Button(
+                        modifier = Modifier.padding(8.dp),
                         onClick = { onShowFilters(true) },
                         colors = ButtonDefaults.buttonColors(
-                            backgroundColor = if (currentFilters != TransactionFilters()) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
-                            contentColor = if (currentFilters != TransactionFilters()) MaterialTheme.colors.onPrimary else MaterialTheme.colors.primary
+                            backgroundColor = if (currentFilters != TransactionFilters())
+                                MaterialTheme.colors.primary
+                            else
+                                MaterialTheme.colors.surface,
+                            contentColor = if (currentFilters != TransactionFilters())
+                                MaterialTheme.colors.onPrimary
+                            else
+                                MaterialTheme.colors.primary
                         )
                     ) {
                         Icon(
                             Icons.Default.FilterList,
                             contentDescription = stringResource(MR.strings.filter_transactions)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(MR.strings.filters))
                     }
 
                     // Clear Filters Button
@@ -162,6 +172,35 @@ fun TransactionList(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    elevation = 2.dp,
+                    onClick = onAddTransaction
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = stringResource(MR.strings.add_transaction),
+                            tint = MaterialTheme.colors.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "New Transaction",
+                            style = MaterialTheme.typography.h6,
+                            color = MaterialTheme.colors.primary
+                        )
+                    }
+                }
+            }
             items(transactions) { transaction ->
                 TransactionItem(
                     transaction = transaction,
@@ -187,21 +226,6 @@ fun TransactionList(
                     }
                 }
             }
-        }
-
-        // Add Transaction FAB
-        FloatingActionButton(
-            onClick = onAddTransaction,
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.End),
-            backgroundColor = MaterialTheme.colors.primary
-        ) {
-            Icon(
-                Icons.Default.Add,
-                contentDescription = stringResource(MR.strings.add_transaction),
-                tint = MaterialTheme.colors.onPrimary
-            )
         }
     }
 }

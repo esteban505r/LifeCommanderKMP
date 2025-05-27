@@ -70,7 +70,6 @@ fun LoginScreen(
                             tint = MaterialTheme.colors.primary
                         )
                     },
-                    maxLines = 1,
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -98,7 +97,6 @@ fun LoginScreen(
                     value = password,
                     onValueChange = { onPasswordChange(it) },
                     placeholder = { Text("Password") },
-                    maxLines = 1,
                     singleLine = true,
                     leadingIcon = {
                         Icon(

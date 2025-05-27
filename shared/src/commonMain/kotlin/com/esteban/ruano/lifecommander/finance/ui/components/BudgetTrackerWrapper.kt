@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.AutoFixNormal
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +43,7 @@ fun BudgetScreenWrapper(
     onCategorizeAll: () -> Unit,
 ) {
     var showFilters by remember { mutableStateOf(false) }
+    var selectedCategories by remember { mutableStateOf(filters.categories ?: emptyList()) }
     var showToolsPanel by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -67,11 +69,49 @@ fun BudgetScreenWrapper(
             onShowToolsPanel = { showToolsPanel = true }
         )
 
+        FilterSidePanel(
+            isVisible = showFilters,
+            onDismiss = { showFilters = false },
+            onClearFilters = { onFiltersChange(BudgetFilters()) },
+            hasActiveFilters = filters != BudgetFilters()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                ExpandableFilterSection(
+                    title = "Categories",
+                    summary = selectedCategories.joinToString(", ").ifEmpty { null }) {
+                    EnumChipSelector(
+                        enumValues = Category.entries.toTypedArray(),
+                        selectedValues = selectedCategories.map { Category.valueOf(it) }.toSet(),
+                        onValueSelected = {
+                            selectedCategories = it.map { c -> c.name }
+                            onFiltersChange(filters.copy(categories = selectedCategories.takeIf { it.isNotEmpty() }))
+                        },
+                        multiSelect = true,
+                        labelMapper = { it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() } }
+                    )
+                }
+
+                FilterChip(
+                    selected = filters.isOverBudget == true,
+                    onClick = {
+                        onFiltersChange(filters.copy(isOverBudget = if (filters.isOverBudget == true) null else true))
+                    },
+                    content = { Text("Show Over Budget Only") }
+                )
+            }
+        }
+
         if (isMobile) {
             if (showToolsPanel) {
                 Dialog(onDismissRequest = { showToolsPanel = false }) {
                     Surface(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
                         ToolsPanelContent(
+                            isMobile = isMobile,
                             onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
                             onCategorizeUnbudgeted = onCategorizeUnbudgeted,
                             onCategorizeAll = onCategorizeAll,
@@ -81,20 +121,25 @@ fun BudgetScreenWrapper(
                 }
             }
         } else {
-            Surface(
-                modifier = Modifier
-                    .width(240.dp)
-                    .fillMaxHeight()
-                    .align(Alignment.CenterEnd),
-                elevation = 4.dp,
-                color = MaterialTheme.colors.surface
-            ) {
-                ToolsPanelContent(
-                    onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
-                    onCategorizeUnbudgeted = onCategorizeUnbudgeted,
-                    onCategorizeAll = onCategorizeAll,
-                    onClose = null
-                )
+            if(showToolsPanel){
+                Surface(
+                    modifier = Modifier
+                        .width(240.dp)
+                        .fillMaxHeight()
+                        .align(Alignment.CenterEnd),
+                    elevation = 4.dp,
+                    color = MaterialTheme.colors.surface
+                ) {
+                    ToolsPanelContent(
+                        isMobile = isMobile,
+                        onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
+                        onCategorizeUnbudgeted = onCategorizeUnbudgeted,
+                        onCategorizeAll = onCategorizeAll,
+                        onClose = {
+                            showToolsPanel = false
+                        }
+                    )
+                }
             }
         }
 
@@ -118,6 +163,7 @@ fun BudgetScreenWrapper(
 
 @Composable
 private fun ToolsPanelContent(
+    isMobile: Boolean = false,
     onOpenCategoryKeywordMapper: () -> Unit,
     onCategorizeUnbudgeted: () -> Unit,
     onCategorizeAll: () -> Unit,
@@ -129,11 +175,22 @@ private fun ToolsPanelContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Transaction Tools",
-            style = MaterialTheme.typography.h6,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Transaction Tools",
+                style = MaterialTheme.typography.h6,
+                fontWeight = FontWeight.Bold
+            )
+            if (!isMobile) {
+                IconButton(onClick = { onClose?.invoke() }) {
+                    Icon(Icons.Default.Close, contentDescription = "Close Tools Panel")
+                }
+            }
+        }
         Button(
             onClick = onOpenCategoryKeywordMapper,
             modifier = Modifier.fillMaxWidth()
@@ -158,7 +215,7 @@ private fun ToolsPanelContent(
             Spacer(modifier = Modifier.width(8.dp))
             Text("Categorize All")
         }
-        if (onClose != null) {
+        if (onClose != null && isMobile) {
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = onClose,

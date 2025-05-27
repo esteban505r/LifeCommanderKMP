@@ -24,6 +24,8 @@ import com.esteban.ruano.lifecommander.utils.SOCKETS_PORT
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackManager
 import com.esteban.ruano.lifecommander.ui.viewmodels.CategoryKeywordMapperViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
+import com.esteban.ruano.lifecommander.utils.DEV_VARIANT
+import com.esteban.ruano.lifecommander.utils.VARIANT
 import com.esteban.ruano.lifecommander.websocket.TimerWebSocketClient
 import io.ktor.client.plugins.websocket.WebSockets
 import org.koin.core.qualifier.named
@@ -46,9 +48,11 @@ val socketQualifier = named("socketHttpClient")
 val networkModule = module {
     single {
         HttpClient(CIO) {
-            engine {
-                //Proxy for debugging
-                proxy = ProxyBuilder.http("http://localhost:8000")
+            if(VARIANT == DEV_VARIANT) {
+                engine {
+                    //Proxy for debugging
+                    proxy = ProxyBuilder.http("http://localhost:8000")
+                }
             }
             install(ContentNegotiation) {
                 gson {

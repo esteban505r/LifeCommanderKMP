@@ -11,7 +11,7 @@ data class Budget(
     val category: Category,
     val startDate: String,
     val endDate: String? = null,
-    val frequency: Frequency,
+    val frequency: Frequency? = null,
     val rollover: Boolean = false,
     val rolloverAmount: Double = 0.0
 )

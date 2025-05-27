@@ -1,5 +1,7 @@
 package com.esteban.ruano.lifecommander.finance.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,6 +11,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -26,6 +29,7 @@ import com.lifecommander.finance.ui.BudgetForm
 import com.lifecommander.ui.components.CustomDatePicker
 import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.datetime.*
+import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -51,22 +55,26 @@ fun BudgetTracker(
     var editingBudget by remember { mutableStateOf<Budget?>(null) }
     var searchPattern by remember { mutableStateOf(filters.searchPattern) }
 
+    LaunchedEffect(Unit) {
+        if(!budgets.isEmpty()) {
+            println("Loading budgets...")
+            println("Budgets loaded: ${Json{}.encodeToString(budgets)}")
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(if (isMobile) 8.dp else 16.dp)
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = 4.dp,
                 color = MaterialTheme.colors.surface
             ) {
-                Column(
-                    modifier = Modifier.padding(if (isMobile) 8.dp else 16.dp)
-                ) {
+                Column {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(if (isMobile) 8.dp else 16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -101,47 +109,72 @@ fun BudgetTracker(
                             }
                         }
                         Spacer(modifier = Modifier.width(if (isMobile) 8.dp else 16.dp))
-                        Button(
-                            onClick = { onShowFilters(true) },
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = if (filters != BudgetFilters()) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
-                                contentColor = if (filters != BudgetFilters()) MaterialTheme.colors.onPrimary else MaterialTheme.colors.primary
-                            )
-                        ) {
-                            Icon(Icons.Default.FilterList, contentDescription = "Filters")
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Filters")
-                        }
-                        if (isMobile) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            IconButton(onClick = onShowToolsPanel) {
+                        Column(
+                            verticalArrangement = Arrangement.Center
+                        ){
+                            Button(
+                                onClick = { onShowFilters(true) },
+                                colors = ButtonDefaults.buttonColors(
+                                    backgroundColor = if (filters != BudgetFilters()) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
+                                    contentColor = if (filters != BudgetFilters()) MaterialTheme.colors.onPrimary else MaterialTheme.colors.primary
+                                )
+                            ) {
+                                Icon(Icons.Default.FilterList, contentDescription = "Filters")
+                            }
+                            /*IconButton(onClick = onShowToolsPanel) {
                                 Icon(Icons.Default.Menu, contentDescription = "Tools")
+                            }*/
+                            Button(
+                                onClick = onShowToolsPanel,
+                                colors = ButtonDefaults.buttonColors(
+                                    backgroundColor = MaterialTheme.colors.surface,
+                                    contentColor = MaterialTheme.colors.primary
+                                )
+                            ) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menu")
                             }
                         }
                     }
                 }
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(if (isMobile) 8.dp else 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Budgets",
-                    style = MaterialTheme.typography.h5,
-                    fontWeight = FontWeight.Bold
-                )
-            }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(bottom = 64.dp),
+                    .padding(bottom = 128.dp, top = 16.dp),
                 contentPadding = PaddingValues(horizontal = if (isMobile) 8.dp else 16.dp),
                 verticalArrangement = Arrangement.spacedBy(if (isMobile) 8.dp else 16.dp)
             ) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            editingBudget = null
+                            showBudgetFormDialog = true
+                        },
+                        elevation = 4.dp
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Add Budget",
+                                tint = MaterialTheme.colors.primary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "New Budget",
+                                style = MaterialTheme.typography.h6,
+                                color = MaterialTheme.colors.primary
+                            )
+                        }
+                    }
+                }
                 items(budgets) { budgetProgress ->
                     BudgetProgressItem(
                         budgetProgress = budgetProgress,
@@ -150,7 +183,8 @@ fun BudgetTracker(
                             showBudgetFormDialog = true
                         },
                         onDelete = { onDeleteBudget(budgetProgress.budget) },
-                        onBudgetClick = onBudgetClick
+                        onBudgetClick = onBudgetClick,
+                        isMobile = isMobile
                     )
                 }
             }
@@ -167,42 +201,37 @@ fun BudgetTracker(
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
-            ){
+            ) {
                 Text(
-                    text = "Total Budgeted: ${budgets.filter { it.budget.name != "Unbudgeted" }.sumOf { it.budget.amount }.toCurrencyFormat()}",
+                    text = "Total Budgeted: ${
+                        budgets.filter { it.budget.name != "Unbudgeted" }.sumOf { it.budget.amount }.toCurrencyFormat()
+                    }",
                     style = MaterialTheme.typography.h5,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).weight(1f)
                 )
                 Text(
-                    text = "Total Overrun: ${budgets.filter { it.budget.name != "Unbudgeted" }.sumOf { if(it.budget.amount < it.spent) (it.spent - it.budget.amount) else 0.0 }.toCurrencyFormat()}",
+                    text = "Total Overrun: ${
+                        budgets.filter { it.budget.name != "Unbudgeted" }
+                            .sumOf { if (it.budget.amount < it.spent) (it.spent - it.budget.amount) else 0.0 }
+                            .toCurrencyFormat()
+                    }",
                     style = MaterialTheme.typography.h5.copy(color = MaterialTheme.colors.error),
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).weight(1f)
                 )
                 Text(
-                    text = "Total Spent: ${budgets.filter{ it.budget.name != "Unbudgeted" }.sumOf { it.spent }.toCurrencyFormat()}",
+                    text = "Total Spent: ${
+                        budgets.filter { it.budget.name != "Unbudgeted" }.sumOf { it.spent }.toCurrencyFormat()
+                    }",
                     style = MaterialTheme.typography.h5,
                     textAlign = TextAlign.End,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).weight(1f)
                 )
             }
-        }
-
-        FloatingActionButton(
-            onClick = {
-                editingBudget = null
-                showBudgetFormDialog = true
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            backgroundColor = MaterialTheme.colors.primary
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Budget", tint = MaterialTheme.colors.onPrimary)
         }
 
         if (showBudgetFormDialog) {
@@ -230,22 +259,37 @@ private fun BudgetProgressItem(
     budgetProgress: BudgetProgress,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onBudgetClick: (Budget) -> Unit
+    onBudgetClick: (Budget) -> Unit,
+    isMobile: Boolean = false
 ) {
+    var showOptionsDialog by remember { mutableStateOf(false) }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = {
-            onBudgetClick(budgetProgress.budget)
-        },
-        backgroundColor = if (budgetProgress.isOverBudget) {
-            MaterialTheme.colors.error.copy(alpha = 0.1f)
-        } else {
-            MaterialTheme.colors.surface
+        modifier = Modifier.fillMaxWidth().pointerInput(Unit) {
+            detectTapGestures(
+                onTap = {
+                    if (!isMobile) {
+                        onBudgetClick(budgetProgress.budget)
+                    }
+                },
+                onLongPress = {
+                    if (isMobile) {
+                        showOptionsDialog = true
+                    }
+                }
+            )
         },
         elevation = 4.dp
     ) {
         Column(
             modifier = Modifier
+                .background(
+                    if (budgetProgress.isOverBudget) {
+                        MaterialTheme.colors.error.copy(alpha = 0.1f)
+                    } else {
+                        MaterialTheme.colors.surface
+                    },
+                )
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
@@ -278,19 +322,21 @@ private fun BudgetProgressItem(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colors.onSurface
                     )
-                    IconButton(onClick = onEdit) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Edit Budget",
-                            tint = MaterialTheme.colors.primary
-                        )
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Delete Budget",
-                            tint = MaterialTheme.colors.error
-                        )
+                    if (!isMobile) {
+                        IconButton(onClick = onEdit) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Edit Budget",
+                                tint = MaterialTheme.colors.primary
+                            )
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete Budget",
+                                tint = MaterialTheme.colors.error
+                            )
+                        }
                     }
                 }
             }
@@ -298,7 +344,7 @@ private fun BudgetProgressItem(
             Spacer(modifier = Modifier.height(8.dp))
 
             LinearProgressIndicator(
-                progress = budgetProgress.progressPercentage.toFloat()/100,
+                progress = budgetProgress.progressPercentage.toFloat() / 100,
                 modifier = Modifier.fillMaxWidth(),
                 color = if (budgetProgress.isOverBudget) {
                     MaterialTheme.colors.error
@@ -330,5 +376,33 @@ private fun BudgetProgressItem(
                 )
             }
         }
+    }
+
+    if (showOptionsDialog) {
+        AlertDialog(
+            onDismissRequest = { showOptionsDialog = false },
+            title = { Text(budgetProgress.budget.name) },
+            text = { Text("What would you like to do with this budget?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showOptionsDialog = false
+                        onEdit()
+                    }
+                ) {
+                    Text("Edit")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showOptionsDialog = false
+                        onDelete()
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colors.error)
+                }
+            }
+        )
     }
 }

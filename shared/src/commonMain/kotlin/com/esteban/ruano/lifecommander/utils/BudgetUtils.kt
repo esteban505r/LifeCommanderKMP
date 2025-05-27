@@ -52,6 +52,9 @@ fun getCurrentPeriod(budget: Budget, referenceDate: LocalDate): Pair<LocalDate, 
             val periodEnd = periodStart.plus(DatePeriod(days = 13))
             Pair(periodStart, periodEnd)
         }
+        else -> {
+            Pair(startDate, startDate)
+        }
     }
     println("startDate: ${result.first}, endDate: ${result.second}")
     return result

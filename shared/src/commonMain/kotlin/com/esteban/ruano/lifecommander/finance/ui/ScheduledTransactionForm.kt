@@ -1,7 +1,9 @@
 package com.lifecommander.finance.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,7 +56,8 @@ fun ScheduledTransactionForm(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         FormattedAmountInput(
@@ -85,6 +88,7 @@ fun ScheduledTransactionForm(
                 readOnly = true,
                 label = { Text(stringResource(MR.strings.category)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     textColor = MaterialTheme.colors.onSurface,
@@ -125,6 +129,7 @@ fun ScheduledTransactionForm(
                 readOnly = true,
                 label = { Text(stringResource(MR.strings.account)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = accountExpanded) },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     textColor = MaterialTheme.colors.onSurface,
@@ -156,6 +161,7 @@ fun ScheduledTransactionForm(
             onValueChange = { description = it },
             label = { Text(stringResource(MR.strings.description)) },
             modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 textColor = MaterialTheme.colors.onSurface,
                 cursorColor = MaterialTheme.colors.primary,
@@ -240,6 +246,7 @@ fun ScheduledTransactionForm(
                         interval = it
                     }
                 },
+                singleLine = true,
                 label = { Text("Interval") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),

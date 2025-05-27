@@ -99,6 +99,7 @@ fun BudgetForm(
             value = name,
             onValueChange = { name = it },
             label = { Text("Name") },
+            singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 textColor = MaterialTheme.colors.onSurface,
@@ -194,6 +195,7 @@ fun BudgetForm(
                 onValueChange = { rolloverAmount = it },
                 label = { Text("Rollover Amount") },
                 modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     textColor = MaterialTheme.colors.onSurface,
                     cursorColor = MaterialTheme.colors.primary,
