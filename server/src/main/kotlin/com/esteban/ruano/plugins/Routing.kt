@@ -10,6 +10,7 @@ import com.esteban.ruano.routing.*
 import com.esteban.ruano.routing.habitsRouting
 import com.esteban.ruano.service.*
 import com.esteban.ruano.utils.VERSION
+import com.esteban.ruano.routing.portfolioRouting
 import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
 
@@ -64,13 +65,24 @@ fun Application.configureRouting() {
     val savingsGoalRepository = SavingsGoalRepository(SavingsGoalService())
     val categoryKeywordRepository = CategoryKeywordRepository(CategoryKeywordService())
     val scheduledTransactionRepository = ScheduledTransactionRepository(ScheduledTransactionService())
+    val portfolioRepository = PortfolioRepository(PortfolioService())
 
     routing {
+        // Handle preflight OPTIONS requests globally
+        options("/{...}") {
+            call.respond(HttpStatusCode.OK)
+        }
+        
         get("/") {
             call.respondText("Hello, world!")
         }
 
         route("/api/$VERSION") {
+            // Handle preflight OPTIONS requests for API routes
+            options("/{...}") {
+                call.respond(HttpStatusCode.OK)
+            }
+            
             authenticate {
 
                 habitsRouting(habitRepository)
@@ -104,6 +116,8 @@ fun Application.configureRouting() {
             }
 
             blogRouting(blogRepository)
+
+            portfolioRouting(portfolioRepository)
 
 
             authRouting(authService)

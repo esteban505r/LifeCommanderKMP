@@ -240,6 +240,7 @@ ktor-server-test-host = { module = "io.ktor:ktor-server-test-host-jvm", version.
 ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor" }
 ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
 ktor-serialization-gson-jvm = { module = "io.ktor:ktor-serialization-gson-jvm", version.ref = "ktor" }
+ktor-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin-server" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin-server" }

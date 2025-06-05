@@ -13,7 +13,15 @@ import com.esteban.ruano.utils.SecurityUtils.hashPassword
 
 fun Route.authRouting(authService: AuthService) {
     route("/auth") {
+        // Handle preflight OPTIONS requests for all auth routes
+        options("/{...}") {
+            call.respond(HttpStatusCode.OK)
+        }
+        
         route("/login") {
+            options {
+                call.respond(HttpStatusCode.OK)
+            }
             post {
                 val credentials = call.receive<LoginUserDTO>()
                 val userLogged = authService.login(credentials.email, credentials.password)
@@ -25,6 +33,9 @@ fun Route.authRouting(authService: AuthService) {
             }
         }
         route("/register") {
+            options {
+                call.respond(HttpStatusCode.OK)
+            }
             post {
                 val user = call.receive<RegisterUserDTO>().hashPassword()
                 val wasCreated = authService.register(user)
