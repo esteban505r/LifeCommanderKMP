@@ -78,7 +78,6 @@ fun Application.configureRouting() {
         }
 
         route("/api/$VERSION") {
-            // Handle preflight OPTIONS requests for API routes
             options("/{...}") {
                 call.respond(HttpStatusCode.OK)
             }

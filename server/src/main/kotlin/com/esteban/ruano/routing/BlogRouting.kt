@@ -13,7 +13,7 @@ import java.io.File
 fun Route.blogRouting(
     blogRepository: BlogRepository
 ) {
-    route("/blog"){
+    route("/blog") {
         get("/posts/{slug}") {
             val slug = call.parameters["slug"] ?: return@get call.respond(HttpStatusCode.BadRequest)
 
@@ -28,10 +28,14 @@ fun Route.blogRouting(
         post("/posts") {
             val multipart = call.receiveMultipart()
             var title: String? = null
+            var description: String? = null
+            var tags: List<String> = emptyList()
+            var imageUrl: String? = null
             var slug: String? = null
             var publishedDate: String? = null
+            var category = "Uncategorized"
             var file: File? = null
-            var s3key:String? = null
+            var s3key: String? = null
 
             multipart.forEachPart { part ->
                 when (part) {
@@ -42,16 +46,29 @@ fun Route.blogRouting(
                                 slug = part.value
                                 s3key = "${part.value}.md"
                             }
+                            "category" -> {
+                                if (part.value.isBlank()) {
+                                    call.respond(HttpStatusCode.BadRequest, "Category cannot be empty")
+                                    return@forEachPart
+                                }
+                                category = part.value
+                            }
+                            "description" -> description = part.value
+                            "tags" -> tags = part.value.split(",").map { it.trim() }
+                            "imageUrl" -> imageUrl = part.value
                             "publishedDate" -> publishedDate = part.value
                         }
                     }
+
                     is PartData.FileItem -> {
                         if (part.name == "file") {
                             val tempFile = File.createTempFile("upload-", ".tmp")
-                            part.streamProvider().use { its -> tempFile.outputStream().buffered().use { its.copyTo(it) } }
+                            part.streamProvider()
+                                .use { its -> tempFile.outputStream().buffered().use { its.copyTo(it) } }
                             file = tempFile
                         }
                     }
+
                     else -> {}
                 }
                 part.dispose()
@@ -62,24 +79,34 @@ fun Route.blogRouting(
                 return@post
             }
 
-            val postId = blogRepository.createPost(title!!, slug!!, file!!, s3key!!, publishedDate!!,)
-            call.respond(HttpStatusCode.Created, mapOf("id" to postId, "slug" to slug))
+            val postId = blogRepository.createPost(
+                title!!,
+                slug!!,
+                imageUrl ?: "",
+                description ?: "",
+                category,
+                tags,
+                file!!,
+                s3key!!,
+                publishedDate!!,
+            )
+            call.respond(HttpStatusCode.Created, mapOf("id" to postId.toString(), "slug" to slug))
 
         }
 
-        get("/posts"){
-            val filter = call.request.queryParameters["filter"]?:""
+        get("/posts") {
+            val filter = call.request.queryParameters["filter"] ?: ""
             val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
             val offset = call.request.queryParameters["offset"]?.toLong() ?: 0
             val date = call.request.queryParameters["date"]
 
-            if(date!=null){
+            if (date != null) {
                 val isValid = Validator.isValidDateFormat(date)
-                if(!isValid){
-                    call.respond(HttpStatusCode.BadRequest,"Invalid date format")
+                if (!isValid) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid date format")
                     return@get
                 }
-                try{
+                try {
                     val posts = blogRepository.getPosts(
                         limit = limit,
                         offset = offset,
@@ -87,19 +114,19 @@ fun Route.blogRouting(
                         date = date
                     )
                     call.respond(posts)
-                }
-                catch(e: Exception){
+                } catch (e: Exception) {
                     e.printStackTrace()
                     call.respond(HttpStatusCode.BadRequest)
                     return@get
                 }
-            }
-            else{
-                call.respond(blogRepository.getPosts(
-                    limit = limit,
-                    offset = offset,
-                    pattern = filter
-                ))
+            } else {
+                call.respond(
+                    blogRepository.getPosts(
+                        limit = limit,
+                        offset = offset,
+                        pattern = filter
+                    )
+                )
             }
         }
     }

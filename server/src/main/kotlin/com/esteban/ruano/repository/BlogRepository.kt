@@ -17,6 +17,10 @@ class BlogRepository(private val blogService: BlogService) {
     fun createPost(
         title: String,
         slug: String,
+        imageUrl: String,
+        description: String,
+        category: String,
+        tags: List<String>,
         content: File,
         s3Key: String,
         publishedDate: String
@@ -24,6 +28,10 @@ class BlogRepository(private val blogService: BlogService) {
         return blogService.createPost(
             title = title,
             slug = slug,
+            imageUrl = imageUrl,
+            description = description,
+            category = category,
+            tags = tags,
             content = content,
             s3Key = s3Key,
             publishedDate = publishedDate

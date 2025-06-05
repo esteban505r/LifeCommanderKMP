@@ -11,6 +11,10 @@ import java.util.*
 object Posts : UUIDTable() {
     val title = varchar("title", 255)
     val slug = varchar("slug", 255).uniqueIndex()
+    val imageUrl = varchar("image_url", 1024).nullable()
+    val description = text("description").nullable()
+    val tags = array<String>("tags").default(listOf())
+    val category = varchar("category", 100).default("Uncategorized")
     val publishedDate = datetime("published_date").nullable()
     val s3Key = varchar("s3_key", 1024)
 }
@@ -20,6 +24,10 @@ class Post(id: EntityID<UUID>) : UUIDEntity(id) {
 
     var title by Posts.title
     var slug by Posts.slug
+    var imageUrl by Posts.imageUrl
+    var description by Posts.description
+    var category by Posts.category
+    var categories by Posts.tags
     var publishedDate by Posts.publishedDate
     var s3Key by Posts.s3Key
 }

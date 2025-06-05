@@ -70,6 +70,10 @@ class BlogService : BaseService() {
     fun createPost(
         title: String,
         slug: String,
+        imageUrl: String,
+        description: String,
+        tags: List<String>,
+        category: String,
         content: File,
         s3Key: String,
         publishedDate: String
@@ -84,6 +88,10 @@ class BlogService : BaseService() {
             val item = Posts.insert {
                 it[this.title] = title
                 it[this.slug] = slug
+                it[this.imageUrl] = imageUrl
+                it[this.description] = description
+                it[this.tags] = tags
+                it[this.category] = category
                 it[this.s3Key] = s3Key
                 it[this.publishedDate] = parseDateTime(publishedDate)
             }.resultedValues?.firstOrNull()?.getOrNull(Posts.id)
