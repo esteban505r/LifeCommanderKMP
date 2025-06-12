@@ -34,3 +34,37 @@ val WarningColor = Color(0xFFFFAB00)
 val InfoColor = Color(0xFF018786)
 val SuccessColor = Color(0xFF00C853)
 
+// Modern Home Screen Color Palette (Flattened Structure)
+object HomeColors {
+    val PrimaryBlue = Color(0xFF2196F3)
+    val PrimaryDark = Color(0xFF1976D2)
+    val AccentPink = Color(0xFFE91E63)
+    val AccentOrange = Color(0xFFFF5722)
+    val SoftGreen = Color(0xFF4CAF50)
+    val SoftPurple = Color(0xFF9C27B0)
+    val LightBackground = Color(0xFFF8F9FA)
+    val CardBackground = Color(0xFFFFFFFF)
+    
+    // Text Colors
+    val TextPrimary = Color(0xFF1E293B)
+    val TextSecondary = Color(0xFF64748B)
+    val TextTertiary = Color(0xFF94A3B8)
+    
+    // Status Colors
+    val StatusHigh = Color(0xFFDC2626)
+    val StatusMedium = Color(0xFFF59E0B)
+    val StatusLow = Color(0xFF06B6D4)
+    
+    // Surface Colors
+    val SurfaceLight = Color(0xFFF1F5F9)
+    val SurfaceBorder = Color(0xFFE2E8F0)
+    
+    // Category Colors
+    val CategoryBlue = Color(0xFF3B82F6)
+    val CategoryGreen = Color(0xFF10B981)
+    val CategoryYellow = Color(0xFFF59E0B)
+    val CategoryRed = Color(0xFFEF4444)
+    val CategoryPurple = Color(0xFF8B5CF6)
+    val CategoryCyan = Color(0xFF06B6D4)
+}
+

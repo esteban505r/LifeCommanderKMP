@@ -17,6 +17,7 @@ fun Portfolio.toDTO(): PortfolioDTO {
         imageUrl = this.imageUrl,
         projectUrl = this.projectUrl,
         githubUrl = this.githubUrl,
+        extendedDescription = this.extendedDescription,
         technologies = this.technologies,
         category = this.category,
         featured = this.featured,
@@ -37,6 +38,7 @@ fun PortfolioDTO.toCreatePortfolioDTO(): CreatePortfolioDTO {
         technologies = this.technologies,
         category = this.category,
         featured = this.featured,
+        extendedDescription = this.extendedDescription,
         startDate = this.startDate,
         endDate = this.endDate,
         createdAt = this.createdAt
@@ -50,6 +52,7 @@ fun PortfolioDTO.toUpdatePortfolioDTO(): UpdatePortfolioDTO {
         imageUrl = this.imageUrl,
         projectUrl = this.projectUrl,
         githubUrl = this.githubUrl,
+        extendedDescription = this.extendedDescription,
         technologies = this.technologies,
         category = this.category,
         featured = this.featured,

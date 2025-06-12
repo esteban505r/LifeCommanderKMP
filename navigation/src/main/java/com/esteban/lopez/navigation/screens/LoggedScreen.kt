@@ -1,9 +1,12 @@
 package com.esteban.ruano.navigation.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Scaffold
@@ -61,7 +64,7 @@ fun LoggedScreen(onRootNavigate: (String) -> Unit) {
         }
     ) {
         NavHostWrapper(
-            modifier = Modifier.padding(it),
+            modifier = Modifier.padding(WindowInsets.systemBars.asPaddingValues()).padding(it),
             navController = navController,
             shouldShowOnboarding = false,
         )

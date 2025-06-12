@@ -14,7 +14,8 @@ import java.util.*
 
 object Portfolios : UUIDTable("portfolios") {
     val title = varchar("title", 255)
-    val description = text("description")
+    val description = text("description").default("")
+    val extended_description = text("extended_description").default("")
     val imageUrl = varchar("image_url", 500).nullable()
     val projectUrl = varchar("project_url", 500).nullable()
     val githubUrl = varchar("github_url", 500).nullable()
@@ -40,6 +41,7 @@ class Portfolio(id: EntityID<UUID>) : UUIDEntity(id) {
     var technologies by Portfolios.technologies
     var category by Portfolios.category
     var featured by Portfolios.featured
+    var extendedDescription by Portfolios.extended_description
     var startDate by Portfolios.startDate
     var endDate by Portfolios.endDate
     var createdDate by Portfolios.createdDate

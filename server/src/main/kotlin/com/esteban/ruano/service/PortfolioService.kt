@@ -26,6 +26,7 @@ class PortfolioService : BaseService() {
                     it[description] = portfolio.description
                     it[imageUrl] = portfolio.imageUrl
                     it[projectUrl] = portfolio.projectUrl
+                    it[extended_description] = portfolio.extendedDescription ?: ""
                     it[githubUrl] = portfolio.githubUrl
                     it[technologies] = portfolio.technologies
                     it[category] = portfolio.category
@@ -45,6 +46,7 @@ class PortfolioService : BaseService() {
                 val updatedRows = update({ (Portfolios.id eq id) and (Portfolios.userId eq userId) }) { row ->
                     portfolio.title?.let { row[title] = it }
                     portfolio.description?.let { row[description] = it }
+                    portfolio.extendedDescription?.let { row[extended_description] = it }
                     portfolio.imageUrl?.let { row[imageUrl] = it }
                     portfolio.projectUrl?.let { row[projectUrl] = it }
                     portfolio.githubUrl?.let { row[githubUrl] = it }
@@ -117,6 +119,14 @@ class PortfolioService : BaseService() {
                 .limit(limit, offset)
                 .toList()
                 .map { it.toDTO() }
+        }
+    }
+
+    fun getPublicById(id: UUID): PortfolioDTO? {
+        return transaction {
+            Portfolio.find {
+                (Portfolios.id eq id) and (Portfolios.status eq Status.ACTIVE)
+            }.firstOrNull()?.toDTO()
         }
     }
 }

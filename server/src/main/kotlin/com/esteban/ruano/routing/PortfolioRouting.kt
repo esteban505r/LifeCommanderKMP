@@ -95,4 +95,17 @@ fun Route.portfolioRouting(portfolioRepository: PortfolioRepository) {
             call.respond(portfolios)
         }
     }
+
+    route("/public/portfolio/{id}") {
+        get {
+            val id = UUID.fromString(call.parameters["id"]!!)
+            val portfolio = portfolioRepository.getPublicById(id)
+
+            if (portfolio != null) {
+                call.respond(portfolio)
+            } else {
+                call.respond(HttpStatusCode.NotFound)
+            }
+        }
+    }
 }

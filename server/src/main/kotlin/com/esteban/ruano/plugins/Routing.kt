@@ -47,6 +47,7 @@ fun Application.configureRouting() {
     )
     val nutritionService = NutritionService()
     val blogService = BlogService()
+    val postCategoryService = PostCategoryService()
     val timerService = TimerService()
 
     val workoutRepository = WorkoutRepository(workoutService)
@@ -68,20 +69,11 @@ fun Application.configureRouting() {
     val portfolioRepository = PortfolioRepository(PortfolioService())
 
     routing {
-        // Handle preflight OPTIONS requests globally
-        options("/{...}") {
-            call.respond(HttpStatusCode.OK)
-        }
-        
         get("/") {
             call.respondText("Hello, world!")
         }
 
         route("/api/$VERSION") {
-            options("/{...}") {
-                call.respond(HttpStatusCode.OK)
-            }
-            
             authenticate {
 
                 habitsRouting(habitRepository)
@@ -114,7 +106,7 @@ fun Application.configureRouting() {
                 )
             }
 
-            blogRouting(blogRepository)
+            blogRouting(blogRepository, postCategoryService)
 
             portfolioRouting(portfolioRepository)
 

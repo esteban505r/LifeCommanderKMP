@@ -8,11 +8,17 @@ import java.util.UUID
 
 class BlogRepository(private val blogService: BlogService) {
 
-    fun getPostBySlug(slug: String): String {
-        val post = blogService.getPostFromS3(slug)
-        return post
+    fun getPostFromS3(slug: String, password: String? = null): String {
+        return blogService.getPostFromS3(slug, password)
     }
 
+    fun getPostBySlug(slug: String, password: String? = null): PostDTO? {
+        return blogService.getPostBySlug(slug, password)
+    }
+
+    fun verifyPostPassword(slug: String, password: String): Boolean {
+        return blogService.verifyPostPassword(slug, password)
+    }
 
     fun createPost(
         title: String,
@@ -23,18 +29,20 @@ class BlogRepository(private val blogService: BlogService) {
         tags: List<String>,
         content: File,
         s3Key: String,
-        publishedDate: String
+        publishedDate: String,
+        password: String? = null
     ): UUID {
         return blogService.createPost(
             title = title,
             slug = slug,
             imageUrl = imageUrl,
             description = description,
-            category = category,
+            categoryName = category,
             tags = tags,
             content = content,
             s3Key = s3Key,
-            publishedDate = publishedDate
+            publishedDate = publishedDate,
+            password = password
         )
     }
 
@@ -43,13 +51,18 @@ class BlogRepository(private val blogService: BlogService) {
         limit: Int = 10,
         offset: Long = 0,
         pattern: String = "",
+        category: String? = null,
+        password: String? = null,
+        includeProtected: Boolean = false
     ): List<PostDTO> {
         return blogService.getPosts(
+            pattern = pattern,
             limit = limit,
             offset = offset,
-            pattern = pattern,
-            date = date?.let{parseDate(it)}
+            category = category,
+            date = date?.let { parseDate(it) },
+            password = password,
+            includeProtected = includeProtected
         )
     }
-
 }

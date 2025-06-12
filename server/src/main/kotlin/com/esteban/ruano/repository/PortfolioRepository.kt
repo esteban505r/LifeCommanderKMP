@@ -42,4 +42,8 @@ class PortfolioRepository(private val portfolioService: PortfolioService) {
     ): List<PortfolioDTO> {
         return portfolioService.getAllPublic(limit, offset, category, featured)
     }
+
+    fun getPublicById(id: UUID): PortfolioDTO? {
+        return portfolioService.getPublicById(id)
+    }
 }

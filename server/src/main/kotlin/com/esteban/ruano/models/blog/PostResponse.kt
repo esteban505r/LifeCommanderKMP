@@ -10,6 +10,6 @@ data class PostResponse(
     val imageUrl: String?,
     val description: String?,
     val tags: List<String>,
-    val category: String,
+    val category: PostCategoryDTO,
     val publishedDate: String?,
 )

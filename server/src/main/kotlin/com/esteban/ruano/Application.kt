@@ -4,6 +4,7 @@ import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.plugins.*
 import com.esteban.ruano.service.TimerCheckerService
 import com.esteban.ruano.service.TimerService
+import com.esteban.ruano.utils.X_POST_PASSWORD_HEADER
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.config.yaml.*
@@ -12,11 +13,15 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.response.*
 import io.ktor.server.websocket.*
+import io.ktor.server.request.*
+import io.ktor.server.plugins.calllogging.*
+import io.ktor.server.application.ApplicationCallPipeline
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.time.Duration.Companion.seconds
+import org.slf4j.event.Level
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
@@ -25,6 +30,10 @@ fun main() {
 
 @Suppress("unused")
 fun Application.module() {
+    install(CallLogging) {
+        level = Level.INFO
+        filter { call -> call.request.path().startsWith("/api") }
+    }
     configureCORS()
     configureWebSockets()
     configureSecurity()
@@ -43,50 +52,37 @@ fun Application.module() {
 fun Application.configureCORS() {
     install(CORS) {
         allowMethod(HttpMethod.Options)
-        allowMethod(HttpMethod.Get)
-        allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Patch)
-        allowMethod(HttpMethod.Head)
-        
+        allowMethod(HttpMethod.Get)
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.Accept)
-        allowHeader(HttpHeaders.AcceptEncoding)
-        allowHeader(HttpHeaders.Connection)
         allowHeader(HttpHeaders.UserAgent)
-        allowHeader(HttpHeaders.AccessControlAllowOrigin)
-        allowHeader(HttpHeaders.AccessControlAllowMethods)
-        allowHeader(HttpHeaders.AccessControlAllowHeaders)
+        allowHeader(X_POST_PASSWORD_HEADER)
         allowHeader("X-Requested-With")
-        
         allowCredentials = true
-        allowSameOrigin = true
-        allowNonSimpleContentTypes = true
+        allowHost("localhost:3000", schemes = listOf("http", "https"))
+        allowHost("127.0.0.1:3000", schemes = listOf("http", "https"))
         
-        // Environment-based origin configuration
-        val isDevelopment = this@configureCORS.environment.config.propertyOrNull("ktor.development")?.getString()?.toBoolean() ?: true
-        
-        if (isDevelopment) {
-            // Development: Allow local development servers
-            allowHost("localhost:3000", schemes = listOf("http"))
-            allowHost("localhost:5173", schemes = listOf("http")) // Vite default
-            allowHost("localhost:3001", schemes = listOf("http"))
-            allowHost("127.0.0.1:3000", schemes = listOf("http"))
-            allowHost("127.0.0.1:5173", schemes = listOf("http"))
-            
-            // For testing purposes in development
-            allowHost("localhost:8080", schemes = listOf("http"))
-        } else {
-            // Production: Only allow your specific domains
-            allowHost("ec2-3-91-21-254.compute-1.amazonaws.com", schemes = listOf("http", "https"))
-            allowHost("estebanruano.com", schemes = listOf("http", "https"))
-            // Add your production domains here:
-            // allowHost("yourdomain.com", schemes = listOf("https"))
-            // allowHost("app.yourdomain.com", schemes = listOf("https"))
-        }
+
     }
+    
+    // Add interceptor to log request headers for debugging
+    /* intercept(ApplicationCallPipeline.Call) { 
+        if (call.request.path().contains("/api/v1/public/portfolio")) {
+            application.log.info("=== CORS DEBUG for ${call.request.path()} ===")
+            application.log.info("Request method: ${call.request.httpMethod.value}")
+            application.log.info("Request headers:")
+            call.request.headers.forEach { name, values ->
+                application.log.info("  $name: ${values.joinToString(", ")}")
+            }
+            application.log.info("Origin: ${call.request.headers[HttpHeaders.Origin]}")
+            application.log.info("=== END CORS DEBUG ===")
+        }
+    } */
 }
 
 fun Application.configureWebSockets() {
@@ -133,7 +129,7 @@ fun Application.connectToPostgres() {
             Resources, WorkoutTracks, Exercises,
             Equipments, WorkoutDays, ExercisesWithWorkoutDays,
             ExercisesWithWorkoutTracks, Users, Habits,
-            Tasks, HistoryTracks, HabitTracks, Reminders, Recipes, Posts,
+            Tasks, HistoryTracks, HabitTracks, Reminders, Recipes, Posts, PostCategories,
             DailyJournals, Pomodoros, Questions, QuestionAnswers,
             Transactions, ScheduledTransactions, Accounts, Budgets, SavingsGoals, TimerLists,
             Timers, UserSettings, DeviceTokens, CategoryKeywords, Portfolios

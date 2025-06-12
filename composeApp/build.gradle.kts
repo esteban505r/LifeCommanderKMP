@@ -73,6 +73,7 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.compose.google.fonts)
+                implementation(libs.kotlinx.datetime)
 
                 implementation(libs.material3)
 

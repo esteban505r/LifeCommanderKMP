@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class UpdatePortfolioDTO(
     val title: String? = null,
     val description: String? = null,
+    val extendedDescription: String? = null,
     val imageUrl: String? = null,
     val projectUrl: String? = null,
     val githubUrl: String? = null,

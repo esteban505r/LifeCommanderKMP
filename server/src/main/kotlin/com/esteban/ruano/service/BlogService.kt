@@ -5,12 +5,19 @@ import io.github.cdimascio.dotenv.dotenv
 import io.ktor.server.plugins.*
 import kotlinx.datetime.LocalDate
 import com.esteban.ruano.database.converters.toDTO
+import com.esteban.ruano.database.converters.verifyPassword
+import com.esteban.ruano.database.converters.isPasswordProtected
 import com.esteban.ruano.database.entities.Post
 import com.esteban.ruano.database.entities.Posts
+import com.esteban.ruano.database.entities.PostCategory
+import com.esteban.ruano.database.entities.PostCategories
 import com.esteban.ruano.models.tasks.PostDTO
 import com.esteban.ruano.utils.parseDateTime
+import com.esteban.ruano.utils.SecurityUtils
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.kotlin.datetime.date
@@ -48,8 +55,23 @@ class BlogService : BaseService() {
         .region(Region.US_EAST_1)
         .build()
 
-    fun getPostFromS3(slug: String): String {
+    private fun hashPassword(password: String): String {
+        return at.favre.lib.crypto.bcrypt.BCrypt.withDefaults().hashToString(12, password.toCharArray())
+    }
+
+    fun getPostFromS3(slug: String, password: String? = null): String {
         try {
+            // First verify the post exists and check password
+            val post = transaction {
+                Post.find { Posts.slug eq slug }.firstOrNull()
+            } ?: throw NotFoundException("Post not found")
+
+            transaction {
+                if (!post.verifyPassword(password)) {
+                    throw BadRequestException("Invalid password for protected content")
+                }
+            }
+
             val key = "$slug.md"
             val s3Object = s3Client.getObject(
                 GetObjectRequest.builder()
@@ -62,9 +84,23 @@ class BlogService : BaseService() {
             return content
 
         } catch (e: NoSuchKeyException) {
-            throw NotFoundException("Post not found")
+            throw NotFoundException("Post content not found")
         }
+    }
 
+    private fun findOrCreateCategory(categoryName: String): PostCategory {
+        return transaction {
+            PostCategory.find { PostCategories.name eq categoryName }.firstOrNull()
+                ?: PostCategory.new {
+                    name = categoryName
+                    slug = categoryName.lowercase().replace(" ", "-").replace(Regex("[^a-z0-9-]"), "")
+                    description = null
+                    color = null
+                    icon = null
+                    displayOrder = 0
+                    password = null
+                }
+        }
     }
 
     fun createPost(
@@ -73,10 +109,11 @@ class BlogService : BaseService() {
         imageUrl: String,
         description: String,
         tags: List<String>,
-        category: String,
+        categoryName: String,
         content: File,
         s3Key: String,
-        publishedDate: String
+        publishedDate: String,
+        password: String? = null
     ): UUID {
         val putObjectRequest = PutObjectRequest.builder()
             .bucket(bucketName)
@@ -85,13 +122,16 @@ class BlogService : BaseService() {
         s3Client.putObject(putObjectRequest, RequestBody.fromFile(content))
 
         return transaction {
+            val category = findOrCreateCategory(categoryName)
+            
             val item = Posts.insert {
                 it[this.title] = title
                 it[this.slug] = slug
                 it[this.imageUrl] = imageUrl
                 it[this.description] = description
                 it[this.tags] = tags
-                it[this.category] = category
+                it[this.categoryId] = category.id
+                it[this.password] = password?.let { hashPassword(it) }
                 it[this.s3Key] = s3Key
                 it[this.publishedDate] = parseDateTime(publishedDate)
             }.resultedValues?.firstOrNull()?.getOrNull(Posts.id)
@@ -100,15 +140,66 @@ class BlogService : BaseService() {
     }
 
     fun getPosts(
-        pattern: String, limit: Int, offset: Long, date: LocalDate? = null
+        pattern: String, 
+        limit: Int, 
+        offset: Long,
+        category:String? = null,
+        date: LocalDate? = null,
+        password: String? = null,
+        includeProtected: Boolean = false
     ): List<PostDTO> {
         return transaction {
+            val slugCondition = Posts.slug like "%${pattern.lowercase()}%"
+            val dateCondition = date?.let { Posts.publishedDate.date() eq it }
+            val categoryCondition = category?.let { Posts.categoryId eq UUID.fromString(category) }
+
+            var finalCondition:Op<Boolean> = slugCondition
+
+            dateCondition?.let {
+                finalCondition = finalCondition.and(dateCondition)
+            }
+
+            categoryCondition?.let {
+                finalCondition = finalCondition.and(categoryCondition)
+            }
+
+
             Post.find {
-                (Posts.slug like "%${pattern.lowercase()}%")
-                    .and(date?.let { Posts.publishedDate.date() eq it } ?: Op.TRUE)
+                finalCondition
             }.orderBy(Posts.publishedDate to SortOrder.DESC)
-                .limit(limit, offset).toList().map { it.toDTO() }
+                .limit(limit, offset)
+                .toList()
+                .map { post -> post.toDTO(password) }
+                .filter { postDTO ->
+                    if (!includeProtected) {
+                        !postDTO.requiresPassword
+                    } else {
+                        true
+                    }
+                }
         }
     }
 
+    fun getPostBySlug(slug: String, password: String? = null): PostDTO? {
+        return transaction {
+            val post = Post.find { Posts.slug eq slug }.firstOrNull() ?: return@transaction null
+            post.toDTO(password)
+        }
+    }
+
+    fun verifyPostPassword(slug: String, password: String): Boolean {
+        return transaction {
+            val post = Post.find { Posts.slug eq slug }.firstOrNull() ?: return@transaction false
+            post.verifyPassword(password)
+        }
+    }
+
+    fun verifyCategoryPassword(categoryId: UUID, password: String): Boolean {
+        return transaction {
+            val category = PostCategory.findById(categoryId) ?: return@transaction false
+            category.password?.let { hashedPassword ->
+                SecurityUtils.checkPassword(password, hashedPassword)
+            } ?: false
+        }
+    }
 }
