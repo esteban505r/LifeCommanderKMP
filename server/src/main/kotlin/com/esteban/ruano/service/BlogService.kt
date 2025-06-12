@@ -153,6 +153,18 @@ class BlogService : BaseService() {
             val dateCondition = date?.let { Posts.publishedDate.date() eq it }
             val categoryCondition = category?.let { Posts.categoryId eq UUID.fromString(category) }
 
+            category?.let{
+                val result = PostCategory.find {
+                    PostCategories.id eq UUID.fromString(it)
+                }.firstOrNull()
+
+                if(result?.password?.isNotEmpty() == true){
+                    if (password.isNullOrEmpty() || !SecurityUtils.checkPassword(password, result.password?:"")) {
+                        throw BadRequestException("Invalid password for category")
+                    }
+                }
+            }
+
             var finalCondition:Op<Boolean> = slugCondition
 
             dateCondition?.let {

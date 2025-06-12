@@ -4,6 +4,7 @@ import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.plugins.*
 import com.esteban.ruano.service.TimerCheckerService
 import com.esteban.ruano.service.TimerService
+import com.esteban.ruano.utils.X_CATEGORY_PASSWORD_HEADER
 import com.esteban.ruano.utils.X_POST_PASSWORD_HEADER
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -62,14 +63,15 @@ fun Application.configureCORS() {
         allowHeader(HttpHeaders.Accept)
         allowHeader(HttpHeaders.UserAgent)
         allowHeader(X_POST_PASSWORD_HEADER)
+        allowHeader(X_CATEGORY_PASSWORD_HEADER)
         allowHeader("X-Requested-With")
         allowCredentials = true
-        allowHost("localhost:3000", schemes = listOf("http", "https"))
-        allowHost("127.0.0.1:3000", schemes = listOf("http", "https"))
-        
-
+//        allowHost("localhost:3000", schemes = listOf("http", "https"))
+//        allowHost("127.0.0.1:3000", schemes = listOf("http", "https"))
+        allowHost("estebanruano.com", schemes = listOf("https"))
+        allowHost("www.estebanruano.com", schemes = listOf("https"))
     }
-    
+
     // Add interceptor to log request headers for debugging
     /* intercept(ApplicationCallPipeline.Call) { 
         if (call.request.path().contains("/api/v1/public/portfolio")) {

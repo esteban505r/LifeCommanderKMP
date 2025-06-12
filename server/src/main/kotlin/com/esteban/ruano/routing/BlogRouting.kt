@@ -13,7 +13,9 @@ import com.esteban.ruano.models.blog.UpdatePostCategoryDTO
 import com.esteban.ruano.models.blog.PasswordVerificationRequest
 import com.esteban.ruano.models.blog.PasswordVerificationResponse
 import com.esteban.ruano.utils.Validator
+import com.esteban.ruano.utils.X_CATEGORY_PASSWORD_HEADER
 import com.esteban.ruano.utils.X_POST_PASSWORD_HEADER
+import io.ktor.server.plugins.BadRequestException
 import java.io.File
 import java.util.UUID
 
@@ -156,8 +158,8 @@ fun Route.blogRouting(
             val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
             val offset = call.request.queryParameters["offset"]?.toLong() ?: 0
             val date = call.request.queryParameters["date"]
-            val password = call.request.headers["X-Post-Password"] 
-                ?: call.request.queryParameters["password"]
+            val password = call.request.headers[X_POST_PASSWORD_HEADER] ?:
+            call.request.headers[X_CATEGORY_PASSWORD_HEADER] ?: call.request.queryParameters["password"]
             val category = call.request.queryParameters["category"]
             val includeProtected = call.request.queryParameters["includeProtected"]?.toBoolean() ?: false
 
@@ -184,8 +186,8 @@ fun Route.blogRouting(
                     return@get
                 }
             } else {
-                call.respond(
-                    blogRepository.getPosts(
+                try {
+                    val posts = blogRepository.getPosts(
                         limit = limit,
                         offset = offset,
                         pattern = filter,
@@ -193,7 +195,16 @@ fun Route.blogRouting(
                         password = password,
                         includeProtected = includeProtected
                     )
-                )
+                    call.respond(posts)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    if (e is BadRequestException) {
+                        call.respond(HttpStatusCode.Forbidden, "Invalid password")
+                    } else {
+                        call.respond(HttpStatusCode.InternalServerError, e.message ?: "Internal server error")
+                    }
+                    return@get
+                }
             }
         }
 
