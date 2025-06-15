@@ -2,6 +2,7 @@ package com.esteban.ruano.lifecommander.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -161,11 +162,11 @@ fun AppLayout(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Dashboard.route) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { navController.navigate(Screen.Dashboard.route) },
+                    Box(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
@@ -173,7 +174,8 @@ fun AppLayout(
                                     MaterialTheme.colors.primary.copy(alpha = 0.1f)
                                 else Color.Transparent,
                                 shape = MaterialTheme.shapes.medium
-                            )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Home,
@@ -196,11 +198,11 @@ fun AppLayout(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Tasks.route) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { navController.navigate(Screen.Tasks.route) },
+                    Box(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
@@ -208,7 +210,8 @@ fun AppLayout(
                                     MaterialTheme.colors.primary.copy(alpha = 0.1f)
                                 else Color.Transparent,
                                 shape = MaterialTheme.shapes.medium
-                            )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
@@ -231,11 +234,11 @@ fun AppLayout(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Habits.route) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { navController.navigate(Screen.Habits.route) },
+                    Box(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
@@ -243,7 +246,8 @@ fun AppLayout(
                                     MaterialTheme.colors.primary.copy(alpha = 0.1f)
                                 else Color.Transparent,
                                 shape = MaterialTheme.shapes.medium
-                            )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Repeat,
@@ -266,11 +270,11 @@ fun AppLayout(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Calendar.route) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { navController.navigate(Screen.Calendar.route) },
+                    Box(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
@@ -278,7 +282,8 @@ fun AppLayout(
                                     MaterialTheme.colors.primary.copy(alpha = 0.1f)
                                 else Color.Transparent,
                                 shape = MaterialTheme.shapes.medium
-                            )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.CalendarToday,
@@ -301,11 +306,11 @@ fun AppLayout(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Finance.route) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { navController.navigate(Screen.Finance.route) },
+                    Box(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
@@ -313,7 +318,8 @@ fun AppLayout(
                                     MaterialTheme.colors.primary.copy(alpha = 0.1f)
                                 else Color.Transparent,
                                 shape = MaterialTheme.shapes.medium
-                            )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.AccountBalance,
@@ -336,11 +342,11 @@ fun AppLayout(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Timers.route) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { navController.navigate(Screen.Timers.route) },
+                    Box(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
@@ -348,7 +354,8 @@ fun AppLayout(
                                     MaterialTheme.colors.primary.copy(alpha = 0.1f)
                                 else Color.Transparent,
                                 shape = MaterialTheme.shapes.medium
-                            )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Timer,
@@ -371,11 +378,11 @@ fun AppLayout(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Settings.route) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { navController.navigate(Screen.Settings.route) },
+                    Box(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
@@ -383,7 +390,8 @@ fun AppLayout(
                                     MaterialTheme.colors.primary.copy(alpha = 0.1f)
                                 else Color.Transparent,
                                 shape = MaterialTheme.shapes.medium
-                            )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -406,11 +414,11 @@ fun AppLayout(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Pomodoros.route) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { navController.navigate(Screen.Pomodoros.route) },
+                    Box(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
@@ -418,7 +426,8 @@ fun AppLayout(
                                     MaterialTheme.colors.primary.copy(alpha = 0.1f)
                                 else Color.Transparent,
                                 shape = MaterialTheme.shapes.medium
-                            )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.LockClock,
@@ -433,6 +442,115 @@ fun AppLayout(
                         text = "Pomodoros",
                         style = MaterialTheme.typography.subtitle1,
                         color = if (navController.currentDestination?.route == Screen.Pomodoros.route)
+                            MaterialTheme.colors.primary
+                        else MaterialTheme.colors.onSurface
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Meals.route) },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Meals.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Fastfood,
+                            contentDescription = "Meals",
+                            tint = if (navController.currentDestination?.route == Screen.Meals.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Meals",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Meals.route)
+                            MaterialTheme.colors.primary
+                        else MaterialTheme.colors.onSurface
+                    )
+                }
+
+                //Workout
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Workout.route) },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Workout.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FitnessCenter,
+                            contentDescription = "Workout",
+                            tint = if (navController.currentDestination?.route == Screen.Workout.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Workouts",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Workout.route)
+                            MaterialTheme.colors.primary
+                        else MaterialTheme.colors.onSurface
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Journal.route) },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Journal.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Book,
+                            contentDescription = "Journal",
+                            tint = if (navController.currentDestination?.route == Screen.Journal.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Journal",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Journal.route)
                             MaterialTheme.colors.primary
                         else MaterialTheme.colors.onSurface
                     )

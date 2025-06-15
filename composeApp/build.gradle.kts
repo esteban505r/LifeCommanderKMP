@@ -1,4 +1,3 @@
-
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -135,6 +134,7 @@ kotlin {
                 androidTestImplementation(libs.test.runner)
 
                 implementation("androidx.media3:media3-exoplayer:1.3.1")
+                implementation(libs.vico.compose.multiplatform)
             }
 
         }
@@ -184,6 +184,7 @@ kotlin {
             implementation(libs.compose.native.tray)
             implementation(libs.compose.native.notification)
             implementation(libs.calendar.compose.multiplatform)
+            implementation(libs.vico.compose.multiplatform)
         }
     }
 }

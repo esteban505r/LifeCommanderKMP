@@ -17,6 +17,13 @@ class WorkoutRepository(private val workoutService: WorkoutService) {
         )
     }
 
+    fun getByDay(userId: Int, day: Int): List<WorkoutDayDTO> {
+        return workoutService.getWorkoutDaysByDay(
+            userId,
+            day
+        )
+    }
+
     fun getById(userId: Int,workoutDayId: Int): WorkoutDayDTO {
         return workoutService.getWorkoutDayById(
             userId,workoutDayId

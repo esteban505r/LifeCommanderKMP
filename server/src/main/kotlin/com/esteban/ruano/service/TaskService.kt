@@ -229,4 +229,27 @@ class TaskService(
         }
     }
 
+    fun getTasksCompletedPerDayThisWeek(userId: Int): List<Int> {
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val startOfWeek = today.minus((today.dayOfWeek.ordinal).toLong(), DateTimeUnit.DAY)
+        val endOfWeek = startOfWeek.plus(6, DateTimeUnit.DAY)
+        val completedPerDay = IntArray(7) { 0 }
+        transaction {
+            Task.find {
+                (Tasks.user eq userId) and
+                (Tasks.status eq Status.ACTIVE) and
+                (Tasks.doneDateTime.isNotNull()) and
+                (Tasks.doneDateTime.date() greaterEq startOfWeek) and
+                (Tasks.doneDateTime.date() lessEq endOfWeek)
+            }.forEach { task ->
+                val doneDate = task.doneDateTime?.date
+                if (doneDate != null) {
+                    val dayIdx = doneDate.dayOfWeek.ordinal // 0=Mon, 6=Sun
+                    completedPerDay[dayIdx]++
+                }
+            }
+        }
+        return completedPerDay.toList()
+    }
+
 }

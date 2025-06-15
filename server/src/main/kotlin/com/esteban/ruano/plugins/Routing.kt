@@ -11,7 +11,7 @@ import com.esteban.ruano.routing.habitsRouting
 import com.esteban.ruano.service.*
 import com.esteban.ruano.utils.VERSION
 import com.esteban.ruano.routing.portfolioRouting
-import com.esteban.ruano.services.DashboardService
+import com.esteban.ruano.service.DashboardService
 import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
 
@@ -50,6 +50,13 @@ fun Application.configureRouting() {
     val blogService = BlogService()
     val postCategoryService = PostCategoryService()
     val timerService = TimerService()
+    val dailyJournalService = DailyJournalService(
+        PomodoroService(),
+        QuestionAnswerService()
+    )
+    val accountService = AccountService()
+    val transactionService = TransactionService()
+
 
     val workoutRepository = WorkoutRepository(workoutService)
     val taskRepository = TaskRepository(taskService)
@@ -70,7 +77,12 @@ fun Application.configureRouting() {
     val portfolioRepository = PortfolioRepository(PortfolioService())
     val dashboardService = DashboardService(
         taskService = taskService,
-        habitService = habitService
+        habitService = habitService,
+        transactionService =  transactionService,
+        accountService = accountService,
+        nutritionService = nutritionService,
+        workoutService = workoutService,
+        journalService = dailyJournalService
     )
 
     routing {

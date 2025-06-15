@@ -23,6 +23,13 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
                 call.respond(workoutRepository.getWorkoutDashboard(userId))
             }
         }
+        route("/byDay"){
+            get("/{day}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val day = call.parameters["day"]?.toInt() ?: 0
+                call.respond(workoutRepository.getByDay(userId, day))
+            }
+        }
         route("/days") {
          get {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id

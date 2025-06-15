@@ -105,6 +105,7 @@ aws-sdk = "2.31.15"
 moko-resources = "0.24.5"
 dotenv = "6.4.1"
 media3CommonKtx = "1.7.1"
+vico = "2.1.3"
 
 [libraries]
 # Kotlin
@@ -272,6 +273,9 @@ dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "d
 
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines-test" }
 androidx-media3-common-ktx = { group = "androidx.media3", name = "media3-common-ktx", version.ref = "media3CommonKtx" }
+
+# Vico Charts Compose Multiplatform
+vico-compose-multiplatform =  { group = "com.patrykandpatrick.vico", name = "multiplatform-m3", version.ref = "vico" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

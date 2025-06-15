@@ -11,6 +11,7 @@ import com.esteban.ruano.models.workout.WorkoutDashboardDTO
 import com.esteban.ruano.utils.toDayOfWeek
 import com.esteban.ruano.utils.toLocalTime
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.lowerCase
@@ -191,6 +192,36 @@ class WorkoutService : BaseService() {
                 }
             }
             updatedRow != null
+        }
+    }
+
+    fun getWorkoutDaysByDay(userId: Int, day: Int): List<WorkoutDayDTO> {
+        if(day !in 1..7){
+            throw Exception("Day must be between 1 and 7")
+        }
+        return transaction {
+            val workoutDays = WorkoutDay.find((WorkoutDays.user eq userId) and (WorkoutDays.day eq day)).toList()
+            if(workoutDays.isEmpty()){
+                return@transaction emptyList<WorkoutDayDTO>()
+            }
+            val exercisesWithWorkoutDays = ExerciseWithWorkoutDay.find((ExercisesWithWorkoutDays.user eq userId)
+                .and (ExercisesWithWorkoutDays.workoutDay inList workoutDays.map { it.id })).toList()
+
+            val exerciseIds = exercisesWithWorkoutDays.map { it.exercise.id.value }
+            val exercises = Exercise.find { Exercises.id inList exerciseIds }.toList()
+
+            //val equipment = Equipment.find { Equipments.exercise inList exerciseIds }.groupBy { it.exercise.id.value }
+
+            workoutDays.map {
+                it.toDTO(
+                    exercises = exercises.map { e ->
+                        e.toDTO(
+                          //  equipmentDTO = equipment[e.id.value]?.map { it.toDTO() } ?: emptyList(),
+                            equipmentDTO = emptyList()
+                        )
+                    }
+                )
+            }
         }
     }
 

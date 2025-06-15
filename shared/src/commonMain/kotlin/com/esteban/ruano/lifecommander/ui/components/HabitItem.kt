@@ -72,7 +72,7 @@ fun HabitItem(
             ) {
                 Text(
                     text = habit.getTimeText().localized(),
-                    style = MaterialTheme.typography.body2.copy(fontSize = 24.sp),
+                    style = MaterialTheme.typography.body2.copy(fontSize = 18.sp),
                     color = if (!isEnabled) {
                         MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
                     } else {

@@ -5,12 +5,14 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,8 +40,14 @@ import ui.composables.*
 import ui.viewmodels.*
 import com.esteban.ruano.lifecommander.ui.components.TasksSummary
 import com.esteban.ruano.lifecommander.ui.components.HabitsSummary
+import com.esteban.ruano.lifecommander.ui.components.FinanceSummary
+import com.esteban.ruano.lifecommander.ui.components.MealsSummary
+import com.esteban.ruano.lifecommander.ui.components.WorkoutSummary
+import com.esteban.ruano.lifecommander.ui.components.JournalSummary
+import com.esteban.ruano.lifecommander.ui.components.StatsChart
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen(
     habitsViewModel: HabitsViewModel = koinViewModel(),
@@ -94,13 +102,19 @@ fun HomeScreen(
     }
 
     // Track expanded state for each section, all expanded by default
-    val expandedSections = remember { 
+    val expandedSections = remember {
         mutableStateMapOf<HomeSection, Boolean>().apply {
             sections.forEach { section ->
                 put(section, true)
             }
         }
     }
+
+    // Compute weekly tasks completed (placeholder: use tasksViewModel.tasks if available)
+    val tasksCompletedPerDayThisWeek by dashboardViewModel.tasksCompletedPerDayThisWeek.collectAsState()
+
+    // --- Toolbar for toggling sections ---
+
 
     // Check for Night Block activation every minute
     LaunchedEffect(Unit) {
@@ -185,34 +199,106 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                items(sections) { section ->
-                    HomeSectionCard(
-                        section = section,
-                        isExpanded = expandedSections[section] ?: true,
-                        onToggleExpand = { expandedSections[section] = !(expandedSections[section] ?: true) },
-                        content = {
-                            when (section) {
-                                HomeSection.Tasks -> TasksSummary(
-                                    nextTask = nextTask,
-                                    taskStats = taskStats,
-                                    onViewAllClick = onNavigateToTasks,
-                                    isExpanded = expandedSections[section] ?: true,
-                                    currentTime = currentTime
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Column(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                        Text("Weekly Overview", style = MaterialTheme.typography.h5, fontWeight = FontWeight.Bold)
+                        StatsChart(data = tasksCompletedPerDayThisWeek, modifier = Modifier.height(220.dp).fillMaxWidth())
+                    }
+                }
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        sections.forEach { section ->
+                            FilterChip(
+                                selected = expandedSections[section] == true,
+                                onClick = { expandedSections[section] = !(expandedSections[section] ?: true) },
+                                colors = ChipDefaults.filterChipColors(
+                                    backgroundColor = if (expandedSections[section] == true) MaterialTheme.colors.primary.copy(alpha = 0.15f) else MaterialTheme.colors.surface,
+                                    contentColor = MaterialTheme.colors.primary
+                                ),
+                                modifier = Modifier.height(36.dp)
+                            ) {
+                                Icon(
+                                    imageVector = section.icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
                                 )
-                                HomeSection.Habits -> HabitsSummary(
-                                    nextHabit = nextHabit,
-                                    habitStats = habitStats,
-                                    onViewAllClick = onNavigateToHabits,
-                                    isExpanded = expandedSections[section] ?: true,
-                                    currentTime = currentTime
-                                )
-                                HomeSection.Meals -> MealsSection()
-                                HomeSection.Workout -> WorkoutSection()
-                                HomeSection.Finances -> FinancesSection()
-                                HomeSection.Journal -> JournalSection(dailyJournalViewModel)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(section.title)
                             }
                         }
-                    )
+                    }
+                }
+                items(sections) { section ->
+                    AnimatedVisibility(
+                        visible = expandedSections[section] == true,
+                        enter = expandVertically(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        ) + fadeIn(
+                            animationSpec = tween(durationMillis = 300)
+                        ),
+                        exit = shrinkVertically(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        ) + fadeOut(
+                            animationSpec = tween(durationMillis = 300)
+                        )
+                    ) {
+                        HomeSectionCard(
+                            section = section,
+                            isExpanded = true,
+                            onToggleExpand = { expandedSections[section] = false },
+                            content = {
+                                when (section) {
+                                    HomeSection.Tasks -> TasksSummary(
+                                        nextTask = nextTask,
+                                        taskStats = taskStats,
+                                        onViewAllClick = onNavigateToTasks,
+                                        isExpanded = true,
+                                        currentTime = currentTime
+                                    )
+                                    HomeSection.Habits -> HabitsSummary(
+                                        nextHabit = nextHabit,
+                                        habitStats = habitStats,
+                                        onViewAllClick = onNavigateToHabits,
+                                        isExpanded = true,
+                                        currentTime = currentTime
+                                    )
+                                    HomeSection.Meals -> MealsSummary(
+                                        todayCalories = dashboardViewModel.todayCalories.collectAsState().value,
+                                        mealsLogged = dashboardViewModel.mealsLogged.collectAsState().value,
+                                        nextMeal = dashboardViewModel.nextMeal.collectAsState().value,
+                                        weeklyMealLogging = dashboardViewModel.weeklyMealLogging.collectAsState().value
+                                    )
+                                    HomeSection.Workout -> WorkoutSummary(
+                                        todayWorkout = dashboardViewModel.todayWorkout.collectAsState().value,
+                                        caloriesBurned = dashboardViewModel.caloriesBurned.collectAsState().value,
+                                        workoutStreak = dashboardViewModel.workoutStreak.collectAsState().value,
+                                        weeklyWorkoutCompletion = dashboardViewModel.weeklyWorkoutCompletion.collectAsState().value
+                                    )
+                                    HomeSection.Finances -> FinanceSummary(
+                                        recentTransactions = dashboardViewModel.recentTransactions.collectAsState().value,
+                                        accountBalance = dashboardViewModel.accountBalance.collectAsState().value
+                                    )
+                                    HomeSection.Journal -> JournalSummary(
+                                        journalCompleted = dashboardViewModel.journalCompleted.collectAsState().value,
+                                        journalStreak = dashboardViewModel.journalStreak.collectAsState().value,
+                                        recentJournalEntries = dashboardViewModel.recentJournalEntries.collectAsState().value
+                                    )
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -302,23 +388,16 @@ private fun HomeSectionCard(
 ) {
     val transitionState = remember { MutableTransitionState(false).apply { targetState = true } }
     val transition = updateTransition(transitionState, label = "cardTransition")
-    
     val cardElevation by transition.animateDp(
         transitionSpec = { spring(stiffness = Spring.StiffnessLow) },
         label = "elevation"
     ) { if (isExpanded) 8.dp else 2.dp }
 
-    val rotationAngle by transition.animateFloat(
-        transitionSpec = { spring(stiffness = Spring.StiffnessLow) },
-        label = "rotation"
-    ) { if (isExpanded) 180f else 0f }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(cardElevation, RoundedCornerShape(16.dp))
-            .animateContentSize()
-            .clickable(onClick = onToggleExpand),
+            .animateContentSize(),
         shape = RoundedCornerShape(16.dp),
         elevation = 0.dp
     ) {
@@ -346,44 +425,19 @@ private fun HomeSectionCard(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                Icon(
-                    imageVector = Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
-                    tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                    modifier = Modifier.graphicsLayer {
-                        rotationZ = rotationAngle
-                    }
-                )
-            }
-
-            // Content
-            AnimatedVisibility(
-                visible = isExpanded,
-                enter = expandVertically(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                ) + fadeIn(
-                    animationSpec = tween(durationMillis = 300)
-                ),
-                exit = shrinkVertically(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                ) + fadeOut(
-                    animationSpec = tween(durationMillis = 300)
-                )
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                IconButton(
+                    onClick = onToggleExpand,
+                    modifier = Modifier.size(28.dp)
                 ) {
-                    content()
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close section",
+                        tint = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                    )
                 }
             }
+            // Content
+            content()
         }
     }
 }

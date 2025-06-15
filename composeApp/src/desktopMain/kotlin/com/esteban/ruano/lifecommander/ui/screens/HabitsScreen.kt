@@ -169,7 +169,7 @@ fun HabitsScreen(
                     modifier = Modifier.fillMaxSize(),
                     onDelete = onDelete,
                     itemWrapper = { content, habit ->
-                        content
+                        content()
                     },
                     onEdit = { habit ->
                         habitToEdit = habit

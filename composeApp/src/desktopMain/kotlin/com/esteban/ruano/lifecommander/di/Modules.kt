@@ -18,12 +18,16 @@ import com.esteban.ruano.lifecommander.utils.BASE_URL
 import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
 import com.esteban.ruano.lifecommander.services.finance.FinanceService
+import com.esteban.ruano.lifecommander.services.meals.RecipesService
+import com.esteban.ruano.lifecommander.services.workout.WorkoutService
 import com.esteban.ruano.lifecommander.utils.SOCKETS_HOST
 import com.esteban.ruano.lifecommander.utils.SOCKETS_PATH
 import com.esteban.ruano.lifecommander.utils.SOCKETS_PORT
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackManager
 import com.esteban.ruano.lifecommander.ui.viewmodels.CategoryKeywordMapperViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.RecipesViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.WorkoutViewModel
 import com.esteban.ruano.lifecommander.utils.DEV_VARIANT
 import com.esteban.ruano.lifecommander.utils.VARIANT
 import com.esteban.ruano.lifecommander.websocket.TimerWebSocketClient
@@ -106,6 +110,8 @@ val servicesModule = module {
     single { CategoryKeywordService(BASE_URL, get(),get()) }
     single { PomodoroService(BASE_URL, get(), get()) }
     single { DashboardService(BASE_URL,get(),get()) }
+    single { RecipesService (BASE_URL, get(), get()) }
+    single { WorkoutService(BASE_URL, get(), get()) }
 }
 
 // ViewModels Module
@@ -122,6 +128,8 @@ val viewModelsModule = module {
     viewModel { DashboardViewModel(
         get(),
     ) }
+    viewModel { RecipesViewModel(get()) }
+    viewModel { WorkoutViewModel(get()) }
 }
 
 // Combine all modules

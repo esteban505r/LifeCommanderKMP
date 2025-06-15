@@ -1,7 +1,7 @@
 package com.esteban.ruano.routing
 
 import com.esteban.ruano.models.users.LoggedUserDTO
-import com.esteban.ruano.services.DashboardService
+import com.esteban.ruano.service.DashboardService
 import com.esteban.ruano.utils.Validator
 import io.ktor.http.*
 import io.ktor.server.auth.*

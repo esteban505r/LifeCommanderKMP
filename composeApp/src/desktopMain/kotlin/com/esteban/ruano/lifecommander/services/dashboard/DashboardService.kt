@@ -3,8 +3,6 @@ package services.dashboard
 import com.esteban.ruano.lifecommander.utils.appHeaders
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
-import com.lifecommander.models.Habit
-import com.lifecommander.models.Task
 import com.lifecommander.models.dashboard.DashboardResponse
 import encodeUrlWithSpaces
 import io.ktor.client.*

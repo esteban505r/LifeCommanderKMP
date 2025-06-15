@@ -12,11 +12,13 @@ import com.esteban.ruano.lifecommander.ui.navigation.CategoryKeywordMapperDestin
 import com.esteban.ruano.lifecommander.ui.components.AppLayout
 import com.esteban.ruano.lifecommander.ui.navigation.CalendarScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.HabitsScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.MealsScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.PomodorosScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.SettingsScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TasksScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimerListDetailDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimersScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.WorkoutScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.routes.BudgetTransactionsRoute
 import com.esteban.ruano.lifecommander.ui.navigation.routes.TimerListDetailRoute
 import com.esteban.ruano.lifecommander.ui.screens.BudgetTransactionsScreen
@@ -36,6 +38,7 @@ import ui.viewmodels.DailyJournalViewModel
 import services.NightBlockService
 import ui.viewmodels.HabitsViewModel
 import ui.viewmodels.TasksViewModel
+import com.esteban.ruano.lifecommander.ui.navigation.JournalScreenDestination
 
 sealed class Screen(val route: String) {
     object Auth : Screen("auth")
@@ -49,9 +52,12 @@ sealed class Screen(val route: String) {
     object Pomodoros : Screen("pomodoros")
     object Tasks : Screen("tasks")
     object Habits : Screen("habits")
+    object Meals : Screen("meals")
+    object Workout : Screen("workout")
     object BudgetTransactions : Screen("budget_transactions/{budgetId}") {
         fun createRoute(budgetId: String) = "budget_transactions/$budgetId"
     }
+    object Journal : Screen("journal")
 }
 
 @Composable
@@ -269,6 +275,22 @@ fun AppNavHost(
                         onHabitClick = { habitId ->
                         }
                     )
+                }
+
+                composable(Screen.Meals.route) {
+                    MealsScreenDestination(
+                        onNavigateUp = { navController.popBackStack() },
+                        onNewRecipe = { /* TODO: Navigate to NewEditRecipe screen */ },
+                        onDetailRecipe = { recipeId -> /* TODO: Navigate to RecipeDetail screen with recipeId */ }
+                    )
+                }
+
+                composable(Screen.Workout.route) {
+                    WorkoutScreenDestination()
+                }
+
+                composable(Screen.Journal.route) {
+                    JournalScreenDestination()
                 }
             }
         }
