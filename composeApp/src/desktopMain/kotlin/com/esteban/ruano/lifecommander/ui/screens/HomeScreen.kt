@@ -12,24 +12,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.models.TaskFilters
-import com.esteban.ruano.lifecommander.ui.components.CurrentHabitComposable
-import com.lifecommander.models.Habit
+import com.esteban.ruano.lifecommander.ui.components.*
+import com.esteban.ruano.lifecommander.ui.components.ChartSeries
 import com.esteban.ruano.ui.components.HabitList
 import com.esteban.ruano.ui.components.TaskList
+import com.lifecommander.models.Habit
 import com.lifecommander.models.Task
-import com.esteban.ruano.lifecommander.ui.components.ToggleChipsButtons
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -38,14 +36,6 @@ import services.NightBlockService
 import ui.components.*
 import ui.composables.*
 import ui.viewmodels.*
-import com.esteban.ruano.lifecommander.ui.components.TasksSummary
-import com.esteban.ruano.lifecommander.ui.components.HabitsSummary
-import com.esteban.ruano.lifecommander.ui.components.FinanceSummary
-import com.esteban.ruano.lifecommander.ui.components.MealsSummary
-import com.esteban.ruano.lifecommander.ui.components.WorkoutSummary
-import com.esteban.ruano.lifecommander.ui.components.JournalSummary
-import com.esteban.ruano.lifecommander.ui.components.StatsChart
-import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
@@ -202,7 +192,31 @@ fun HomeScreen(
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Column(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
                         Text("Weekly Overview", style = MaterialTheme.typography.h5, fontWeight = FontWeight.Bold)
-                        StatsChart(data = tasksCompletedPerDayThisWeek, modifier = Modifier.height(220.dp).fillMaxWidth())
+                        StatsChart(
+                            series = listOf(
+                                ChartSeries(
+                                    name = "Tasks",
+                                    data = dashboardViewModel.tasksCompletedPerDayThisWeek.collectAsState().value,
+                                    color = Color(0xFF2196F3)
+                                ),
+                                ChartSeries(
+                                    name = "Habits",
+                                    data = dashboardViewModel.habitsCompletedPerDayThisWeek.collectAsState().value,
+                                    color = Color(0xFF9C27B0)
+                                ),
+                                ChartSeries(
+                                    name = "Workouts",
+                                    data = dashboardViewModel.workoutsCompletedPerDayThisWeek.collectAsState().value,
+                                    color = Color(0xFF4CAF50)
+                                ),
+                                ChartSeries(
+                                    name = "Meals",
+                                    data = dashboardViewModel.mealsLoggedPerDayThisWeek.collectAsState().value,
+                                    color = Color(0xFFFFA726)
+                                )
+                            ),
+                            modifier = Modifier.height(220.dp).fillMaxWidth()
+                        )
                     }
                 }
                 item(span = { GridItemSpan(maxLineSpan) }) {

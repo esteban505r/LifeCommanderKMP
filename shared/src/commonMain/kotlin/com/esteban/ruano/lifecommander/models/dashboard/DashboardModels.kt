@@ -30,7 +30,11 @@ data class DashboardResponse(
     val weeklyHabitCompletion: Float = 0f,
     val weeklyWorkoutCompletion: Float = 0f,
     val weeklyMealLogging: Float = 0f,
-    val tasksCompletedPerDayThisWeek: List<Int> = emptyList()
+    // Daily completion data for charts
+    val tasksCompletedPerDayThisWeek: List<Int> = emptyList(),
+    val habitsCompletedPerDayThisWeek: List<Int> = emptyList(),
+    val workoutsCompletedPerDayThisWeek: List<Int> = emptyList(),
+    val mealsLoggedPerDayThisWeek: List<Int> = emptyList()
 )
 
 @Serializable

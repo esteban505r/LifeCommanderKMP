@@ -82,6 +82,15 @@ class DashboardViewModel(
     private val _tasksCompletedPerDayThisWeek = MutableStateFlow<List<Int>>(emptyList())
     val tasksCompletedPerDayThisWeek: StateFlow<List<Int>> = _tasksCompletedPerDayThisWeek.asStateFlow()
 
+    private val _habitsCompletedPerDayThisWeek = MutableStateFlow<List<Int>>(emptyList())
+    val habitsCompletedPerDayThisWeek: StateFlow<List<Int>> = _habitsCompletedPerDayThisWeek.asStateFlow()
+
+    private val _workoutsCompletedPerDayThisWeek = MutableStateFlow<List<Int>>(emptyList())
+    val workoutsCompletedPerDayThisWeek: StateFlow<List<Int>> = _workoutsCompletedPerDayThisWeek.asStateFlow()
+
+    private val _mealsLoggedPerDayThisWeek = MutableStateFlow<List<Int>>(emptyList())
+    val mealsLoggedPerDayThisWeek: StateFlow<List<Int>> = _mealsLoggedPerDayThisWeek.asStateFlow()
+
     private var timerJob: Job? = null
 
     init {
@@ -124,6 +133,9 @@ class DashboardViewModel(
                 _weeklyWorkoutCompletion.value = response.weeklyWorkoutCompletion
                 _weeklyMealLogging.value = response.weeklyMealLogging
                 _tasksCompletedPerDayThisWeek.value = response.tasksCompletedPerDayThisWeek
+                _habitsCompletedPerDayThisWeek.value = response.habitsCompletedPerDayThisWeek
+                _workoutsCompletedPerDayThisWeek.value = response.workoutsCompletedPerDayThisWeek
+                _mealsLoggedPerDayThisWeek.value = response.mealsLoggedPerDayThisWeek
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {

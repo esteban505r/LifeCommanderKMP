@@ -242,7 +242,7 @@ class TaskService(
                 (Tasks.doneDateTime.date() greaterEq startOfWeek) and
                 (Tasks.doneDateTime.date() lessEq endOfWeek)
             }.forEach { task ->
-                val doneDate = task.doneDateTime?.date
+                val doneDate = task.doneDate?.date
                 if (doneDate != null) {
                     val dayIdx = doneDate.dayOfWeek.ordinal // 0=Mon, 6=Sun
                     completedPerDay[dayIdx]++
