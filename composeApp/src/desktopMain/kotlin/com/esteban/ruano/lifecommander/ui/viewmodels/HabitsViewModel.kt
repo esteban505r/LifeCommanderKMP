@@ -4,13 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lifecommander.models.Habit
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import services.auth.TokenStorageImpl
 import services.habits.HabitService
 import utils.DateUtils.parseDate
 import utils.DateUtils.parseDateTime
 import java.time.LocalDateTime
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.asStateFlow
 
 class HabitsViewModel(
     private val tokenStorageImpl: TokenStorageImpl,
@@ -21,10 +24,45 @@ class HabitsViewModel(
         emptyList()
     )
 
-    val habits = _habits
+    val habits: StateFlow<List<Habit>> = _habits.asStateFlow()
 
     val _loading = MutableStateFlow(false)
-    val loading = _loading.asStateFlow()
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
+    private val _currentTime = MutableStateFlow(System.currentTimeMillis())
+    val currentTime: StateFlow<Long> = _currentTime.asStateFlow()
+
+    private val _nextHabitTime = MutableStateFlow<Long?>(null)
+    val nextHabitTime: StateFlow<Long?> = _nextHabitTime.asStateFlow()
+
+    private var timerJob: Job? = null
+
+    init {
+        startTimer()
+    }
+
+    private fun startTimer() {
+        timerJob = viewModelScope.launch {
+            while (true) {
+                _currentTime.value = System.currentTimeMillis()
+                updateNextHabitTime()
+                delay(1000)
+            }
+        }
+    }
+
+    private fun updateNextHabitTime() {
+        viewModelScope.launch {
+            try {
+                _nextHabitTime.value = habitService.getNextHabitOccurrence(
+                    token = tokenStorageImpl.getToken() ?: "",
+                    currentTime = LocalDateTime.now().parseDateTime()
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     fun getHabits() {
         viewModelScope.launch {
@@ -37,6 +75,7 @@ class HabitsViewModel(
                     date = LocalDateTime.now().toLocalDate().parseDate()
                 )
                 _habits.value = response
+                updateNextHabitTime()
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -130,5 +169,10 @@ class HabitsViewModel(
                 _loading.value = false
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        timerJob?.cancel()
     }
 }

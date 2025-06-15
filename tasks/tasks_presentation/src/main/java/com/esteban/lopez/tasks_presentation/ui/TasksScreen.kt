@@ -2,30 +2,12 @@ package com.esteban.ruano.tasks_presentation.ui
 
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FabPosition
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Switch
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,18 +26,18 @@ import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.AppBar
 import com.esteban.ruano.core_ui.composables.GeneralOutlinedTextField
-import com.esteban.ruano.core_ui.composables.ToggleChipsButtons
 import com.esteban.ruano.core_ui.utils.LocalMainIntent
 import com.esteban.ruano.core_ui.utils.LocalMainState
 import com.esteban.ruano.core_ui.view_model.intent.MainIntent
-import com.lifecommander.models.Task
-import com.esteban.ruano.tasks_presentation.intent.TaskIntent
 import com.esteban.ruano.lifecommander.models.TaskFilters
+import com.esteban.ruano.lifecommander.ui.components.ToggleChipsButtons
+import com.esteban.ruano.tasks_presentation.intent.TaskIntent
 import com.esteban.ruano.tasks_presentation.ui.composables.TasksCalendarView
 import com.esteban.ruano.tasks_presentation.ui.viewmodel.state.TaskState
 import com.esteban.ruano.tasks_presentation.utils.toResource
 import com.esteban.ruano.test_core.base.TestTags
 import com.esteban.ruano.ui.components.TaskList
+import com.lifecommander.models.Task
 import kotlinx.coroutines.launch
 
 @Composable

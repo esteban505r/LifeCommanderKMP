@@ -4,8 +4,6 @@ import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.plugins.*
 import com.esteban.ruano.service.TimerCheckerService
 import com.esteban.ruano.service.TimerService
-import com.esteban.ruano.utils.X_CATEGORY_PASSWORD_HEADER
-import com.esteban.ruano.utils.X_POST_PASSWORD_HEADER
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.config.yaml.*
@@ -14,15 +12,11 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.response.*
 import io.ktor.server.websocket.*
-import io.ktor.server.request.*
-import io.ktor.server.plugins.calllogging.*
-import io.ktor.server.application.ApplicationCallPipeline
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.time.Duration.Companion.seconds
-import org.slf4j.event.Level
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
@@ -31,10 +25,6 @@ fun main() {
 
 @Suppress("unused")
 fun Application.module() {
-    install(CallLogging) {
-        level = Level.INFO
-        filter { call -> call.request.path().startsWith("/api") }
-    }
     configureCORS()
     configureWebSockets()
     configureSecurity()
@@ -57,34 +47,9 @@ fun Application.configureCORS() {
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Patch)
-        allowMethod(HttpMethod.Get)
         allowHeader(HttpHeaders.Authorization)
-        allowHeader(HttpHeaders.ContentType)
-        allowHeader(HttpHeaders.Accept)
-        allowHeader(HttpHeaders.UserAgent)
-        allowHeader(X_POST_PASSWORD_HEADER)
-        allowHeader(X_CATEGORY_PASSWORD_HEADER)
-        allowHeader("X-Requested-With")
-        allowCredentials = true
-//        allowHost("localhost:3000", schemes = listOf("http", "https"))
-//        allowHost("127.0.0.1:3000", schemes = listOf("http", "https"))
-        allowHost("estebanruano.com", schemes = listOf("https"))
-        allowHost("www.estebanruano.com", schemes = listOf("https"))
+        allowHost("localhost:3000", schemes = listOf("http", "https"))
     }
-
-    // Add interceptor to log request headers for debugging
-    /* intercept(ApplicationCallPipeline.Call) { 
-        if (call.request.path().contains("/api/v1/public/portfolio")) {
-            application.log.info("=== CORS DEBUG for ${call.request.path()} ===")
-            application.log.info("Request method: ${call.request.httpMethod.value}")
-            application.log.info("Request headers:")
-            call.request.headers.forEach { name, values ->
-                application.log.info("  $name: ${values.joinToString(", ")}")
-            }
-            application.log.info("Origin: ${call.request.headers[HttpHeaders.Origin]}")
-            application.log.info("=== END CORS DEBUG ===")
-        }
-    } */
 }
 
 fun Application.configureWebSockets() {
@@ -131,7 +96,7 @@ fun Application.connectToPostgres() {
             Resources, WorkoutTracks, Exercises,
             Equipments, WorkoutDays, ExercisesWithWorkoutDays,
             ExercisesWithWorkoutTracks, Users, Habits,
-            Tasks, HistoryTracks, HabitTracks, Reminders, Recipes, Posts, PostCategories,
+            Tasks, HistoryTracks, HabitTracks, Reminders, Recipes, Posts,
             DailyJournals, Pomodoros, Questions, QuestionAnswers,
             Transactions, ScheduledTransactions, Accounts, Budgets, SavingsGoals, TimerLists,
             Timers, UserSettings, DeviceTokens, CategoryKeywords, Portfolios

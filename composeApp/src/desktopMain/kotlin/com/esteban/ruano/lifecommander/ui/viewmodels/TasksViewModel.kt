@@ -2,13 +2,13 @@ package ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.esteban.ruano.lifecommander.models.TaskFilters
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import services.auth.TokenStorageImpl
 import services.tasks.TaskService
 import services.tasks.sortedByDefault
-import ui.models.TaskFilters
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import utils.DateUtils.parseDateTime
 import utils.StatusBarService
@@ -127,8 +127,8 @@ class TasksViewModel(
                     token = tokenStorageImpl.getToken() ?: "",
                     page = 0,
                     limit = 30,
-                    startDate = dates.first,
-                    endDate = dates.second
+                    startDate = dates.first!!,
+                    endDate = dates.second!!
                 )
                 _tasks.value = response.sortedByDefault()
                 if(_selectedFilter.value == TaskFilters.TODAY) {
@@ -253,5 +253,11 @@ class TasksViewModel(
                 _loading.value = false
             }
         }
+    }
+
+    fun setSelectedFilter(indexOf: Int) {
+        val filter = TaskFilters.entries.getOrNull(indexOf) ?: TaskFilters.TODAY
+        _selectedFilter.value = filter
+        getTasksByFilter()
     }
 }

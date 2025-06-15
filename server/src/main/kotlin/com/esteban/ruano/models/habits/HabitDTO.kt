@@ -13,5 +13,6 @@ data class HabitDTO(
     val note: String,
     val reminders: List<ReminderDTO>,
     val createdAt: String? = null,
+    val streak: Int = 0,
     val updatedAt: String? = null
 )

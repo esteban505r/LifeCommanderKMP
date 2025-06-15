@@ -11,6 +11,7 @@ import com.esteban.ruano.routing.habitsRouting
 import com.esteban.ruano.service.*
 import com.esteban.ruano.utils.VERSION
 import com.esteban.ruano.routing.portfolioRouting
+import com.esteban.ruano.services.DashboardService
 import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
 
@@ -67,6 +68,10 @@ fun Application.configureRouting() {
     val categoryKeywordRepository = CategoryKeywordRepository(CategoryKeywordService())
     val scheduledTransactionRepository = ScheduledTransactionRepository(ScheduledTransactionService())
     val portfolioRepository = PortfolioRepository(PortfolioService())
+    val dashboardService = DashboardService(
+        taskService = taskService,
+        habitService = habitService
+    )
 
     routing {
         get("/") {
@@ -112,6 +117,10 @@ fun Application.configureRouting() {
 
 
             authRouting(authService)
+
+            dashboardRouting(
+                dashboardService
+            )
 
         }
     }

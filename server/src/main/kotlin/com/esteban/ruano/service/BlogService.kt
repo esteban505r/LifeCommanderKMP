@@ -158,11 +158,17 @@ class BlogService : BaseService() {
                     PostCategories.id eq UUID.fromString(it)
                 }.firstOrNull()
 
-                if(result?.password?.isNotEmpty() == true){
-                    if (password.isNullOrEmpty() || !SecurityUtils.checkPassword(password, result.password?:"")) {
+                if(result?.password?.isEmpty() == false && password.isNullOrEmpty()) {
+                    throw BadRequestException("Category requires a password")
+                }
+
+                if(result?.password?.isNotEmpty() == true && password?.isNotEmpty() == true){
+                    if (!SecurityUtils.checkPassword(password, result.password!!)) {
                         throw BadRequestException("Invalid password for category")
                     }
                 }
+
+
             }
 
             var finalCondition:Op<Boolean> = slugCondition
@@ -183,7 +189,7 @@ class BlogService : BaseService() {
                 .toList()
                 .map { post -> post.toDTO(password) }
                 .filter { postDTO ->
-                    if (!includeProtected) {
+                    if (!includeProtected && password==null) {
                         !postDTO.requiresPassword
                     } else {
                         true

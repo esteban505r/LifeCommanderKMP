@@ -7,4 +7,4 @@ import kotlinx.serialization.Serializable
 data class LoggedUserDTO(
     val id: Int,
     val email: String,
-) : Principal
+)

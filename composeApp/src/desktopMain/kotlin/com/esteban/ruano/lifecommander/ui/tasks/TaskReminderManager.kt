@@ -1,11 +1,11 @@
 package ui.tasks
 
+import com.esteban.ruano.lifecommander.models.TaskFilters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import services.auth.TokenStorageImpl
 import services.tasks.TaskService
-import ui.models.TaskFilters
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import kotlinx.datetime.toJavaLocalDateTime
 import java.time.LocalDateTime
@@ -48,7 +48,7 @@ class TaskReminderManager(
             token = tokenStorageImpl.getToken()?:"",
             page = 0,
             limit = 30,
-            date = TaskFilters.TODAY.getDateRangeByFilter().first,
+            date = TaskFilters.TODAY.getDateRangeByFilter().first?:"",
         )
 
         println("Checking tasks: ${tasks.size} tasks found")

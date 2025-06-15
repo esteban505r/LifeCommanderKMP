@@ -148,6 +148,15 @@ class HabitService(
             }
         }
     }
+
+    suspend fun getNextHabitOccurrence(token: String, currentTime: String): Long? {
+        // Implementation of getNextHabitOccurrence method
+        // This method is not provided in the original file or the interface
+        // It's assumed to exist as it's called in the code block
+        // Implementation details are not provided in the original file or the interface
+        // This is a placeholder and should be implemented
+        return null
+    }
 }
 
 class HabitServiceException(message: String, cause: Throwable? = null) : Exception(message, cause)

@@ -7,11 +7,12 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import ui.models.TaskFilters
+import com.esteban.ruano.lifecommander.models.TaskFilters
+
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun TaskFilterChip(selectedFilter:TaskFilters, filter: TaskFilters, onClick: (TaskFilters) -> Unit) {
+fun TaskFilterChip(selectedFilter: TaskFilters, filter: TaskFilters, onClick: (TaskFilters) -> Unit) {
     Chip(
         colors = ChipDefaults.chipColors(
             backgroundColor = if (selectedFilter == filter) MaterialTheme.colors.primary else MaterialTheme.colors.surface
@@ -22,7 +23,7 @@ fun TaskFilterChip(selectedFilter:TaskFilters, filter: TaskFilters, onClick: (Ta
             onClick(filter)
         }
     ){
-        Text(text = filter.text, style = MaterialTheme.typography.body2,
+        Text(text = filter.value, style = MaterialTheme.typography.body2,
             color = if (selectedFilter == filter) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface)
     }
 }

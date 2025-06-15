@@ -11,16 +11,16 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.*
 
 
-enum class TaskFilters(val value: String) {
-    TODAY("today"),
-    TOMORROW("tomorrow"),
-    NEXT_WEEK("next_week"),
-    THIS_MONTH("this_month"),
-    NO_DUE_DATE("no_due_date"),
-    ALL("all");
+enum class TaskFilters(val value: String, val displayName: String = value) {
+    TODAY("today", "Today"),
+    TOMORROW("tomorrow", "Tomorrow"),
+    NEXT_WEEK("next_week", "Next Week"),
+    THIS_MONTH("this_month", "This Month"),
+    NO_DUE_DATE("no_due_date", "No Due Date"),
+    ALL("all", "All"),;
 
     override fun toString(): String {
-        return value
+        return displayName
     }
 
     fun getDateRangeByFilter(): Pair<String?, String?> {

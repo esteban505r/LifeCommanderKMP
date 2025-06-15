@@ -11,8 +11,10 @@ import androidx.navigation.toRoute
 import com.esteban.ruano.lifecommander.ui.navigation.CategoryKeywordMapperDestination
 import com.esteban.ruano.lifecommander.ui.components.AppLayout
 import com.esteban.ruano.lifecommander.ui.navigation.CalendarScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.HabitsScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.PomodorosScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.SettingsScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.TasksScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimerListDetailDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimersScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.routes.BudgetTransactionsRoute
@@ -45,6 +47,8 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object CategoryKeywordMapper : Screen("category_keyword_mapper")
     object Pomodoros : Screen("pomodoros")
+    object Tasks : Screen("tasks")
+    object Habits : Screen("habits")
     object BudgetTransactions : Screen("budget_transactions/{budgetId}") {
         fun createRoute(budgetId: String) = "budget_transactions/$budgetId"
     }
@@ -133,10 +137,18 @@ fun AppNavHost(
                 
                 composable(Screen.Dashboard.route) {
                     HomeScreen(
-                        onTaskClick = {},
-                        onHabitClick = {},
-                        tasksViewModel = taskViewModel,
-                        habitsViewModel = habitViewModel,
+                        onNavigateToTasks = {
+                            navController.navigate(Screen.Tasks.route)
+                        },
+                        onNavigateToHabits = {
+                            navController.navigate(Screen.Habits.route)
+                        },
+                        onTaskClick = {
+
+                        },
+                        onHabitClick = {
+
+                        },
                     )
                 }
 
@@ -239,6 +251,22 @@ fun AppNavHost(
                         timersViewModel = timersViewModel,
                         onBack = {
                             navController.navigateUp()
+                        }
+                    )
+                }
+
+                composable(Screen.Tasks.route) {
+                    TasksScreenDestination(
+                        tasksViewModel = taskViewModel,
+                        onTaskClick = { taskId ->
+
+                        })
+                }
+
+                composable(Screen.Habits.route) {
+                    HabitsScreenDestination(
+                        habitsViewModel = habitViewModel,
+                        onHabitClick = { habitId ->
                         }
                     )
                 }

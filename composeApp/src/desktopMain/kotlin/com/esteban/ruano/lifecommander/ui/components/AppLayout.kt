@@ -151,128 +151,288 @@ fun AppLayout(
             // Sidebar
             Column(
                 modifier = Modifier
-                    .width(72.dp)
+                    .width(200.dp)
                     .fillMaxHeight()
                     .background(MaterialTheme.colors.surface)
                     .padding(vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                IconButton(
-                    onClick = { navController.navigate(Screen.Dashboard.route) },
+                Row(
                     modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            color = if (navController.currentDestination?.route == Screen.Dashboard.route)
-                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                            else Color.Transparent,
-                            shape = MaterialTheme.shapes.medium
-                        )
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Home,
-                        contentDescription = "Dashboard",
-                        tint = if (navController.currentDestination?.route == Screen.Dashboard.route)
+                    IconButton(
+                        onClick = { navController.navigate(Screen.Dashboard.route) },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Dashboard.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Dashboard",
+                            tint = if (navController.currentDestination?.route == Screen.Dashboard.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Dashboard",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Dashboard.route)
                             MaterialTheme.colors.primary
                         else MaterialTheme.colors.onSurface
                     )
                 }
 
-                IconButton(
-                    onClick = { navController.navigate(Screen.Calendar.route) },
+                Row(
                     modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            color = if (navController.currentDestination?.route == Screen.Calendar.route)
-                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                            else Color.Transparent,
-                            shape = MaterialTheme.shapes.medium
-                        )
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = "Calendar",
-                        tint = if (navController.currentDestination?.route == Screen.Calendar.route)
+                    IconButton(
+                        onClick = { navController.navigate(Screen.Tasks.route) },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Tasks.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Tasks",
+                            tint = if (navController.currentDestination?.route == Screen.Tasks.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Tasks",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Tasks.route)
                             MaterialTheme.colors.primary
                         else MaterialTheme.colors.onSurface
                     )
                 }
 
-                IconButton(
-                    onClick = { navController.navigate(Screen.Finance.route) },
+                Row(
                     modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            color = if (navController.currentDestination?.route == Screen.Finance.route)
-                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                            else Color.Transparent,
-                            shape = MaterialTheme.shapes.medium
-                        )
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountBalance,
-                        contentDescription = "Financial",
-                        tint = if (navController.currentDestination?.route == Screen.Finance.route)
+                    IconButton(
+                        onClick = { navController.navigate(Screen.Habits.route) },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Habits.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Repeat,
+                            contentDescription = "Habits",
+                            tint = if (navController.currentDestination?.route == Screen.Habits.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Habits",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Habits.route)
                             MaterialTheme.colors.primary
                         else MaterialTheme.colors.onSurface
                     )
                 }
 
-                IconButton(
-                    onClick = { navController.navigate(Screen.Timers.route) },
+                Row(
                     modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            color = if (navController.currentDestination?.route == Screen.Settings.route)
-                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                            else Color.Transparent,
-                            shape = MaterialTheme.shapes.medium
-                        )
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Timer,
-                        contentDescription = "Timers",
-                        tint = if (navController.currentDestination?.route == Screen.Settings.route)
+                    IconButton(
+                        onClick = { navController.navigate(Screen.Calendar.route) },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Calendar.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarToday,
+                            contentDescription = "Calendar",
+                            tint = if (navController.currentDestination?.route == Screen.Calendar.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Calendar",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Calendar.route)
                             MaterialTheme.colors.primary
                         else MaterialTheme.colors.onSurface
                     )
                 }
 
-                IconButton(
-                    onClick = { navController.navigate(Screen.Settings.route) },
+                Row(
                     modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            color = if (navController.currentDestination?.route == Screen.Settings.route)
-                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                            else Color.Transparent,
-                            shape = MaterialTheme.shapes.medium
-                        )
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        tint = if (navController.currentDestination?.route == Screen.Settings.route)
+                    IconButton(
+                        onClick = { navController.navigate(Screen.Finance.route) },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Finance.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountBalance,
+                            contentDescription = "Financial",
+                            tint = if (navController.currentDestination?.route == Screen.Finance.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Financial",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Finance.route)
                             MaterialTheme.colors.primary
                         else MaterialTheme.colors.onSurface
                     )
                 }
 
-                IconButton(
-                    onClick = { navController.navigate(Screen.Pomodoros.route) },
+                Row(
                     modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            color = if (navController.currentDestination?.route == Screen.Pomodoros.route)
-                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                            else Color.Transparent,
-                            shape = MaterialTheme.shapes.medium
-                        )
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.LockClock,
-                        contentDescription = "Pomodoros",
-                        tint = if (navController.currentDestination?.route == Screen.Pomodoros.route)
+                    IconButton(
+                        onClick = { navController.navigate(Screen.Timers.route) },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Settings.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = "Timers",
+                            tint = if (navController.currentDestination?.route == Screen.Settings.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Timers",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Settings.route)
+                            MaterialTheme.colors.primary
+                        else MaterialTheme.colors.onSurface
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = { navController.navigate(Screen.Settings.route) },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Settings.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = if (navController.currentDestination?.route == Screen.Settings.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Settings",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Settings.route)
+                            MaterialTheme.colors.primary
+                        else MaterialTheme.colors.onSurface
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = { navController.navigate(Screen.Pomodoros.route) },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Pomodoros.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LockClock,
+                            contentDescription = "Pomodoros",
+                            tint = if (navController.currentDestination?.route == Screen.Pomodoros.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Pomodoros",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Pomodoros.route)
                             MaterialTheme.colors.primary
                         else MaterialTheme.colors.onSurface
                     )

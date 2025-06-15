@@ -84,8 +84,6 @@ fun HabitList(
     onDelete: (Habit) -> Unit,
     itemWrapper: @Composable (content: @Composable () -> Unit, Habit) -> Unit
 ) {
-    var habitList by remember { mutableStateOf(habitList) }
-
     val pullRefreshState =
         rememberPullRefreshState(refreshing = isRefreshing, onRefresh = onPullRefresh)
 
@@ -110,27 +108,14 @@ fun HabitList(
                     ) < 0
                 },
                 onHabitClick = onHabitClick,
-                onCheckedChange = { task, checked, onComplete ->
-                    onCheckedChange(
-                        task,
-                        checked,
-                        onComplete
-                    )
-                },
+                onCheckedChange = onCheckedChange,
                 onComplete = { habit, checked ->
-                    habitList = habitList.map {
-                        if (it.id == habit.id) {
-                            it.copy(done = checked)
-                        } else {
-                            it
-                        }
-                    }
+                    onCheckedChange(habit, checked) { }
                 },
                 onEdit = onEdit,
                 onDelete = onDelete,
                 itemWrapper = itemWrapper
             )
-            // Pending habits
             habitListSection(
                 habitList = habitList.filter {
                     it.done == false
@@ -140,45 +125,20 @@ fun HabitList(
                     ) > 0
                 },
                 onHabitClick = onHabitClick,
-                onCheckedChange = { task, checked, onComplete ->
-                    onCheckedChange(
-                        task,
-                        checked,
-                        onComplete
-                    )
-                },
+                onCheckedChange = onCheckedChange,
                 onComplete = { habit, checked ->
-                    habitList = habitList.map {
-                        if (it.id == habit.id) {
-                            it.copy(done = checked)
-                        } else {
-                            it
-                        }
-                    }
+                    onCheckedChange(habit, checked) { }
                 },
                 onEdit = onEdit,
                 onDelete = onDelete,
                 itemWrapper = itemWrapper
             )
-            // Done habits
             habitListSection(
                 habitList = habitList.filter { it.done == true },
                 onHabitClick = onHabitClick,
-                onCheckedChange = { task, checked, onComplete ->
-                    onCheckedChange(
-                        task,
-                        checked,
-                        onComplete
-                    )
-                },
+                onCheckedChange = onCheckedChange,
                 onComplete = { habit, checked ->
-                    habitList = habitList.map {
-                        if (it.id == habit.id) {
-                            it.copy(done = checked)
-                        } else {
-                            it
-                        }
-                    }
+                    onCheckedChange(habit, checked) { }
                 },
                 textDecoration = TextDecoration.LineThrough,
                 onEdit = onEdit,
@@ -190,7 +150,7 @@ fun HabitList(
             }
         }
         if (!isDesktop()) {
-        PullRefreshIndicator(isRefreshing, pullRefreshState, Modifier.align(Alignment.TopCenter))
+            PullRefreshIndicator(isRefreshing, pullRefreshState, Modifier.align(Alignment.TopCenter))
         }
     }
 } 

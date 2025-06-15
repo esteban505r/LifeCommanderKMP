@@ -22,7 +22,7 @@ fun PostResponse.toDTO(): PostDTO {
 }
 
 fun Post.toDTO(passwordProvided: String? = null): PostDTO {
-    val hasPassword = this.password != null || this.category.password != null
+    val hasPassword = this.password.isNullOrEmpty().not() || this.category.password.isNullOrEmpty().not()
     val hasCorrectPassword = if (hasPassword) this.verifyPassword(passwordProvided) else true
     
     return PostDTO(
@@ -58,7 +58,11 @@ fun Post.isPasswordProtected(): Boolean {
 }
 
 fun Post.getEffectivePassword(): String? {
-    return this.password ?: this.category.password
+    return when {
+        this.password.isNullOrEmpty().not() -> this.password
+        this.category.password.isNullOrEmpty().not() -> this.category.password
+        else -> null
+    }
 }
 
 fun Post.verifyPassword(providedPassword: String?): Boolean {
@@ -66,6 +70,6 @@ fun Post.verifyPassword(providedPassword: String?): Boolean {
     return when {
         effectivePassword == null -> true
         providedPassword == null -> false
-        else -> SecurityUtils.checkPassword(providedPassword, effectivePassword) // Secure BCrypt verification
+        else -> SecurityUtils.checkPassword(providedPassword, effectivePassword)
     }
 }

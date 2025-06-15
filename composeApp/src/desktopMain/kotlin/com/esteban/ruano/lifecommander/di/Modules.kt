@@ -30,11 +30,13 @@ import com.esteban.ruano.lifecommander.websocket.TimerWebSocketClient
 import io.ktor.client.plugins.websocket.WebSockets
 import org.koin.core.qualifier.named
 import services.dailyjournal.PomodoroService
+import services.dashboard.DashboardService
 import services.habits.HabitService
 import services.tasks.TaskService
 import ui.ui.viewmodels.AuthViewModel
 import ui.viewmodels.AppViewModel
 import ui.viewmodels.DailyJournalViewModel
+import ui.viewmodels.DashboardViewModel
 import ui.viewmodels.HabitsViewModel
 import ui.viewmodels.TasksViewModel
 import utils.BackgroundServiceManager
@@ -103,6 +105,7 @@ val servicesModule = module {
     single { DailyJournalService(BASE_URL, get(), get()) }
     single { CategoryKeywordService(BASE_URL, get(),get()) }
     single { PomodoroService(BASE_URL, get(), get()) }
+    single { DashboardService(BASE_URL,get(),get()) }
 }
 
 // ViewModels Module
@@ -116,6 +119,9 @@ val viewModelsModule = module {
     viewModel { FinanceViewModel(get()) }
     viewModel { TimersViewModel(get(),get(), get(),get(),get(),get())}
     viewModel { CategoryKeywordMapperViewModel(get()) }
+    viewModel { DashboardViewModel(
+        get(),
+    ) }
 }
 
 // Combine all modules

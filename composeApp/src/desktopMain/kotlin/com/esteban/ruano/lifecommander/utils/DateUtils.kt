@@ -1,5 +1,10 @@
 package utils
 
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toJavaZoneOffset
 import models.TimeTypes
 import java.time.Duration
 import java.time.LocalDate
@@ -89,6 +94,21 @@ object DateUtils {
         return when {
             hours > 0 -> String.format("%02d:%02d:%02d", hours, minutes, seconds)
             else -> String.format("%02d:%02d", minutes, seconds)
+        }
+    }
+
+
+    fun kotlinx.datetime.LocalDateTime.calculateTimeRemaining(currentTimeMillis: Long): String {
+        val userTimeZone = TimeZone.currentSystemDefault()
+        val targetTime = this.toInstant(userTimeZone)
+        val diffMillis = targetTime.toEpochMilliseconds() - currentTimeMillis
+
+        return when {
+            diffMillis < 0 -> "Overdue"
+            diffMillis < 60_000 -> "Less than a minute"
+            diffMillis < 3_600_000 -> "${diffMillis / 60_000} minutes"
+            diffMillis < 86_400_000 -> "${diffMillis / 3_600_000} hours"
+            else -> "${diffMillis / 86_400_000} days"
         }
     }
 }
