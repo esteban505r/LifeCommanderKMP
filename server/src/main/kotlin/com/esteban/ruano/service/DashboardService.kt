@@ -24,7 +24,7 @@ class DashboardService(
     private val journalService: DailyJournalService
 ) {
 
-    suspend fun getDashboardData(userId: Int, dateTime: String): DashboardResponseDTO {
+    fun getDashboardData(userId: Int, dateTime: String): DashboardResponseDTO {
         val currentDateTime = dateTime.toLocalDateTime()
         val today = currentDateTime.date
         val dayOfWeek = today.dayOfWeek.value
@@ -146,7 +146,7 @@ class DashboardService(
         total / 7f
     }
 
-    private suspend fun calculateWorkoutStreak(userId: Int, currentDate: LocalDate): Int {
+    private fun calculateWorkoutStreak(userId: Int, currentDate: LocalDate): Int {
         var streak = 0
         var checkDate = currentDate
         while (true) {
@@ -158,7 +158,7 @@ class DashboardService(
         return streak
     }
 
-    private suspend fun calculateJournalStreak(userId: Int, currentDate: LocalDate): Int {
+    private fun calculateJournalStreak(userId: Int, currentDate: LocalDate): Int {
         var streak = 0
         var checkDate = currentDate
         while (true) {

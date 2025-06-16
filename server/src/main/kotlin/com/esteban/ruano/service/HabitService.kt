@@ -14,6 +14,7 @@ import com.esteban.ruano.models.habits.CreateHabitDTO
 import com.esteban.ruano.models.habits.HabitDTO
 import com.esteban.ruano.models.habits.UpdateHabitDTO
 import com.esteban.ruano.models.reminders.UpdateReminderDTO
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.HabitUtils
 import com.esteban.ruano.utils.parseDate
 import com.esteban.ruano.utils.parseDateTime
@@ -191,7 +192,7 @@ class HabitService(
 
             val habit = Habit.findById(UUID.fromString(id)) ?: throw BadRequestException("Habit not found")
 
-            val isDone = HabitUtils.isDone(habit.toHabitDTO(), tracking, parseDateTime(doneDateTime).date)
+            val isDone = HabitUtils.isDone(habit.toHabitDTO(), tracking, doneDateTime.toLocalDateTime().date)
 
             if (!isDone) {
                 val insertedRow = HabitTracks.insertOperation(
@@ -219,7 +220,7 @@ class HabitService(
 
             val habit = Habit.findById(UUID.fromString(id)) ?: throw BadRequestException("Habit not found")
 
-            val isDone = HabitUtils.isDone(habit.toHabitDTO(), tracking, parseDateTime(unDoneDate).date)
+            val isDone = HabitUtils.isDone(habit.toHabitDTO(), tracking, unDoneDate.toLocalDateTime().date)
             if (isDone) {
                 val updatedRow = HabitTracks.updateOperation(
                     userId){

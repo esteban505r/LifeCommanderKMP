@@ -1,10 +1,17 @@
 package com.esteban.ruano.lifecommander.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.multiplatform.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.multiplatform.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.multiplatform.cartesian.axis.VerticalAxis
@@ -13,9 +20,14 @@ import com.patrykandpatrick.vico.multiplatform.cartesian.axis.rememberAxisLabelC
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.multiplatform.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.multiplatform.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.multiplatform.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.multiplatform.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.multiplatform.common.Fill
+import com.patrykandpatrick.vico.multiplatform.common.component.LineComponent
 import com.patrykandpatrick.vico.multiplatform.common.data.ExtraStore
+import com.patrykandpatrick.vico.multiplatform.common.shape.CorneredShape
 import kotlinx.datetime.*
 
 data class ChartSeries(
@@ -39,55 +51,89 @@ fun StatsChart(
             .minus(DatePeriod(days = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.value - 1))
     }
 
-    LaunchedEffect(series) {
+    // Build the lines with each series' color
+    val chartLines = series.map { chartSeries ->
+        LineCartesianLayer.rememberLine(
+            fill = LineCartesianLayer.LineFill.single(Fill(chartSeries.color)),
+            stroke = LineCartesianLayer.LineStroke.Continuous(),
+            pointProvider = LineCartesianLayer.PointProvider.single(
+                LineCartesianLayer.Point(
+                    component = LineComponent(
+                        fill = Fill(chartSeries.color),
+                        thickness = 4.dp,
+                        shape = CorneredShape(),
+                        strokeThickness = 1.dp
+                    ),
+                    size = 8.dp
+                )
+            )
+        )
+    }
+
+    LaunchedEffect(series.flatMap { it.data }) {
         cartesianChartModelProducer.runTransaction {
             // Create the date mapping for x-axis formatting
             val xToDates = (0..6).associate { index ->
                 index.toFloat() to weekStart.plus(DatePeriod(days = index))
             }
-            
-            // Add each series
-            series.forEach { chartSeries ->
-                // Ensure we have 7 data points (one for each day of the week)
-                val data = if (chartSeries.data.isEmpty()) {
-                    List(7) { 0 } // Fallback to zeros if data is empty
-                } else {
-                    chartSeries.data
-                }
-                
-                lineSeries {
-                    series(data)
+
+            lineSeries {
+                series.forEach { chartSeries ->
+                    series(chartSeries.data.ifEmpty { List(7) { 0 } })
                 }
             }
-            
-            // Store the date mapping for x-axis formatting
             extras { extraStore ->
                 extraStore[xToDateMapKey] = xToDates
             }
         }
     }
 
-    CartesianChartHost(
-        chart = rememberCartesianChart(
-            rememberLineCartesianLayer(),
-            startAxis = VerticalAxis.rememberStart(
-                valueFormatter = CartesianValueFormatter { _, value, _ -> 
-                    value.toInt().toString() 
-                },
-                label = rememberAxisLabelComponent(),
-                guideline = rememberAxisGuidelineComponent()
+    Column(modifier = modifier) {
+        // Optional: Add a legend
+        Row(modifier = Modifier.padding(bottom = 8.dp, top = 16.dp)) {
+            series.forEach { chartSeries ->
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
+                    Box(
+                        Modifier
+                            .size(12.dp)
+                            .background(chartSeries.color, shape = CircleShape)
+                    )
+                    Text(chartSeries.name, color = Color.White, modifier = Modifier.padding(start = 4.dp))
+                }
+            }
+        }
+        CartesianChartHost(
+            chart = rememberCartesianChart(
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(chartLines)
+                ),
+                startAxis = VerticalAxis.rememberStart(
+                    valueFormatter = CartesianValueFormatter { _, value, _ ->
+                        value.toInt().toString()
+                    },
+                    label = rememberAxisLabelComponent(
+                        style = TextStyle(
+                            color = Color.White,
+                        )
+                    ),
+                    guideline = rememberAxisGuidelineComponent()
+                ),
+                bottomAxis = HorizontalAxis.rememberBottom(
+                    valueFormatter = CartesianValueFormatter { context, x, _ ->
+                        val dateMap = context.model.extraStore.getOrNull(xToDateMapKey)
+                        val date = dateMap?.get(x.toFloat()) ?: weekStart.plus(DatePeriod(days = x.toInt()))
+                        date.dayOfWeek.name.take(3)
+                    },
+                    label = rememberAxisLabelComponent(
+                        style = TextStyle(
+                            color = Color.White,
+                        )
+                    ),
+                    guideline = rememberAxisGuidelineComponent()
+                )
             ),
-            bottomAxis = HorizontalAxis.rememberBottom(
-                valueFormatter = CartesianValueFormatter { context, x, _ ->
-                    val dateMap = context.model.extraStore.getOrNull(xToDateMapKey)
-                    val date = dateMap?.get(x.toFloat()) ?: weekStart.plus(DatePeriod(days = x.toInt()))
-                    date.dayOfWeek.name.take(3)
-                },
-                label = rememberAxisLabelComponent(),
-                guideline = rememberAxisGuidelineComponent()
-            )
-        ),
-        modelProducer = cartesianChartModelProducer,
-        modifier = modifier
-    )
+            modelProducer = cartesianChartModelProducer,
+            modifier = Modifier.fillMaxWidth().height(220.dp)
+        )
+    }
 } 

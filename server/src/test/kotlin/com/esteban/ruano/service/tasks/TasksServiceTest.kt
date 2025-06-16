@@ -23,7 +23,7 @@ import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 
-class TasksDBTest {
+class TasksServiceTest {
 
 
     private lateinit var service : TaskService

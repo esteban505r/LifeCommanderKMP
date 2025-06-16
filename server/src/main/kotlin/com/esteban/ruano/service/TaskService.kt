@@ -234,7 +234,6 @@ class TaskService(
             }
 
             if (updatedRow != null) {
-                // Mark the latest task track entry as inactive
                 TaskTrack.find { TaskTracks.taskId eq id }
                     .orderBy(TaskTracks.doneDateTime to SortOrder.DESC)
                     .firstOrNull()?.let { track ->

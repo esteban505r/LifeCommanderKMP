@@ -16,6 +16,7 @@ import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.koin.ktor.ext.inject
 import kotlin.time.Duration.Companion.seconds
 
 fun main() {
@@ -29,12 +30,13 @@ fun Application.module() {
     configureWebSockets()
     configureSecurity()
     configureSerialization()
+    configureKoin()
     configureRouting()
     connectToPostgres()
 
-    // Initialize services
-    val timerService = TimerService()
-    val timerCheckerService = TimerCheckerService(timerService)
+/*    // Get services from Koin
+    val timerService: TimerService by inject()
+    val timerCheckerService: TimerCheckerService by inject()*/
 
     // Start background tasks
 //    timerCheckerService.start()
@@ -69,20 +71,19 @@ fun Application.connectToPostgres() {
     val env = configs?.property("services.postgres.environment.POSTGRES_ENV")?.getString()
     val host = configs?.property("services.postgres.environment.POSTGRES_HOST")?.getString()
 
-
     if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
-        throw Exception("No user or password detected");
+        throw Exception("No user or password detected")
     }
-
 
     Flyway
         .configure()
-        .baselineOnMigrate(true).validateMigrationNaming(true).dataSource(
+        .baselineOnMigrate(true)
+        .validateMigrationNaming(true)
+        .dataSource(
             "jdbc:postgresql://$host:5432/$db",
             user,
             password
         ).load().migrate()
-
 
     Database.connect(
         "jdbc:postgresql://$host:5432/$db",
@@ -102,5 +103,4 @@ fun Application.connectToPostgres() {
             Timers, UserSettings, DeviceTokens, CategoryKeywords, Portfolios
         )
     }
-
 }

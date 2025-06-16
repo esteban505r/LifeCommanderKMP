@@ -93,20 +93,6 @@ class DashboardViewModel(
 
     private var timerJob: Job? = null
 
-    init {
-        startTimer()
-        refreshDashboard()
-    }
-
-    private fun startTimer() {
-        timerJob = viewModelScope.launch {
-            while (true) {
-                _currentTime.value = System.currentTimeMillis()
-                refreshDashboard()
-                delay(60000) // Refresh every minute
-            }
-        }
-    }
 
     fun refreshDashboard() {
         viewModelScope.launch {

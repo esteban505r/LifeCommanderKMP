@@ -14,6 +14,7 @@ import com.esteban.ruano.routing.portfolioRouting
 import com.esteban.ruano.service.DashboardService
 import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
+import org.koin.ktor.ext.inject
 
 
 inline fun <reified T : Any> Application.validateParameters(parameters: Parameters): String? {
@@ -33,57 +34,29 @@ inline fun <reified T : Any> Application.validateParameters(parameters: Paramete
 }
 
 fun Application.configureRouting() {
-    val habitService = HabitService(
-        ReminderService()
-    )
-    val authService = AuthService()
-    val workoutService = WorkoutService()
-    val taskService = TaskService(
-        ReminderService()
-    )
-    val syncService = SyncService(
-        taskService,
-        habitService,
-        workoutService
-    )
-    val nutritionService = NutritionService()
-    val blogService = BlogService()
-    val postCategoryService = PostCategoryService()
-    val timerService = TimerService()
-    val dailyJournalService = DailyJournalService(
-        PomodoroService(),
-        QuestionAnswerService()
-    )
-    val accountService = AccountService()
-    val transactionService = TransactionService()
-
-
-    val workoutRepository = WorkoutRepository(workoutService)
-    val taskRepository = TaskRepository(taskService)
-    val habitRepository = HabitRepository(habitService)
-    val syncRepository = SyncRepository(syncService)
-    val nutritionRepository = NutritionRepository(nutritionService)
-    val blogRepository = BlogRepository(blogService)
-    val questionRepository = QuestionRepository(QuestionService())
-    val questionAnswerRepository = QuestionAnswerRepository(QuestionAnswerService())
-    val pomodoroRepository = PomodoroRepository(PomodoroService())
-    val dailyJournalRepository = DailyJournalRepository(DailyJournalService(PomodoroService(), QuestionAnswerService()))
-    val accountRepository = AccountRepository(AccountService())
-    val budgetRepository = BudgetRepository(BudgetService())
-    val transactionRepository = TransactionRepository(TransactionService())
-    val savingsGoalRepository = SavingsGoalRepository(SavingsGoalService())
-    val categoryKeywordRepository = CategoryKeywordRepository(CategoryKeywordService())
-    val scheduledTransactionRepository = ScheduledTransactionRepository(ScheduledTransactionService())
-    val portfolioRepository = PortfolioRepository(PortfolioService())
-    val dashboardService = DashboardService(
-        taskService = taskService,
-        habitService = habitService,
-        transactionService =  transactionService,
-        accountService = accountService,
-        nutritionService = nutritionService,
-        workoutService = workoutService,
-        journalService = dailyJournalService
-    )
+    val habitRepository: HabitRepository by inject()
+    val taskRepository: TaskRepository by inject()
+    val workoutRepository: WorkoutRepository by inject()
+    val syncRepository: SyncRepository by inject()
+    val nutritionRepository: NutritionRepository by inject()
+    val blogRepository: BlogRepository by inject()
+    val questionRepository: QuestionRepository by inject()
+    val questionAnswerRepository: QuestionAnswerRepository by inject()
+    val pomodoroRepository: PomodoroRepository by inject()
+    val dailyJournalRepository: DailyJournalRepository by inject()
+    val accountRepository: AccountRepository by inject()
+    val budgetRepository: BudgetRepository by inject()
+    val transactionRepository: TransactionRepository by inject()
+    val savingsGoalRepository: SavingsGoalRepository by inject()
+    val categoryKeywordRepository: CategoryKeywordRepository by inject()
+    val scheduledTransactionRepository: ScheduledTransactionRepository by inject()
+    val portfolioRepository: PortfolioRepository by inject()
+    
+    // Inject services
+    val authService: AuthService by inject()
+    val timerService: TimerService by inject()
+    val postCategoryService: PostCategoryService by inject()
+    val dashboardService: DashboardService by inject()
 
     routing {
         get("/") {
@@ -92,27 +65,16 @@ fun Application.configureRouting() {
 
         route("/api/$VERSION") {
             authenticate {
-
                 habitsRouting(habitRepository)
-
                 tasksRouting(taskRepository)
-
                 workoutRouting(workoutRepository)
-
                 syncRouting(syncRepository)
-
                 nutritionRouting(nutritionRepository)
-
                 questionRouting(questionRepository)
-
                 questionAnswerRouting(questionAnswerRepository)
-
                 pomodoroRouting(pomodoroRepository)
-
                 dailyJournalRouting(dailyJournalRepository)
-
                 timerRouting(timerService)
-
                 financeRouting(
                     accountRepository = accountRepository,
                     transactionRepository = transactionRepository,
@@ -124,16 +86,9 @@ fun Application.configureRouting() {
             }
 
             blogRouting(blogRepository, postCategoryService)
-
             portfolioRouting(portfolioRepository)
-
-
             authRouting(authService)
-
-            dashboardRouting(
-                dashboardService
-            )
-
+            dashboardRouting(dashboardService)
         }
     }
 }

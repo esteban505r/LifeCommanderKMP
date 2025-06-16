@@ -171,6 +171,7 @@ fun TasksScreen(
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         ToggleChipsButtons(
+                            Modifier,
                             state.dateRangeSelectedIndex,
                             buttons = filters,
                             onGetStrings = {

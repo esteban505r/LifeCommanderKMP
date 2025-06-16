@@ -28,7 +28,6 @@ import com.esteban.ruano.ui.components.HabitList
 import com.esteban.ruano.ui.components.TaskList
 import com.lifecommander.models.Habit
 import com.lifecommander.models.Task
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -107,12 +106,12 @@ fun HomeScreen(
 
 
     // Check for Night Block activation every minute
-    LaunchedEffect(Unit) {
+    /*LaunchedEffect(Unit) {
         while (true) {
             nightBlockService.checkAndActivateNightBlock()
             delay(60000) // 1 minute
         }
-    }
+    }*/
 
     if(error){
         AlertDialog(
@@ -132,6 +131,7 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         habitsViewModel.getHabits()
         tasksViewModel.getTasksByFilter()
+        dashboardViewModel.refreshDashboard()
     }
 
     TokenDialog(

@@ -27,7 +27,8 @@ class DashboardService(
                 appHeaders(tokenStorageImpl.getToken())
             }
             if (response.status.isSuccess()) {
-                return response.body<DashboardResponse>()
+                val response = response.body<DashboardResponse>()
+                return response
             } else {
                 throw Exception("Failed to fetch dashboard data: ${response.status.description}")
             }

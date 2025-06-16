@@ -38,6 +38,9 @@ dependencies {
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
 
+    testImplementation(libs.koin.testing)
+    testImplementation(libs.koin.testing.junit)
+
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
