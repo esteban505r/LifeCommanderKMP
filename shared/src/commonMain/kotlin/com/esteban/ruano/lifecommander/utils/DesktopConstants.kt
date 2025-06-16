@@ -15,7 +15,7 @@ const val APP_NAME_BASE = "Life Commander"
 const val VERSION = "0.0.0.1"
 
 
-const val VARIANT = DEV_VARIANT
+const val VARIANT = PROD_VARIANT
 //const val VARIANT = PROD_VARIANT
 
 
