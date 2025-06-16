@@ -4,6 +4,8 @@ import kotlinx.datetime.*
 import com.esteban.ruano.database.converters.toDTO
 import com.esteban.ruano.database.entities.Task
 import com.esteban.ruano.database.entities.Tasks
+import com.esteban.ruano.database.entities.TaskTrack
+import com.esteban.ruano.database.entities.TaskTracks
 import com.esteban.ruano.database.models.Priority.Companion.toPriority
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.reminders.UpdateReminderDTO
@@ -194,25 +196,54 @@ class TaskService(
 
     fun completeTask(userId: Int, id: UUID, dateTime: String): Boolean {
         return transaction {
+            val task = Task.findById(id) ?: return@transaction false
+            if (task.user.id.value != userId) return@transaction false
+
+            val doneDateTime = parseDateTime(dateTime)
             val updatedRow = Tasks.updateOperation(userId) {
                 val updatedRows = update({ (Tasks.id eq id) }) {
-                    it[doneDateTime] = parseDateTime(dateTime)
+                    it[this.doneDateTime] = doneDateTime
                 }
                 if (updatedRows > 0) id else null
             }
-            updatedRow != null
+
+            if (updatedRow != null) {
+                // Create a new task track entry
+                TaskTrack.new {
+                    this.task = task
+                    this.doneDateTime = doneDateTime
+                    this.status = Status.ACTIVE
+                }
+                true
+            } else {
+                false
+            }
         }
     }
 
     fun unCompleteTask(userId: Int, id: UUID): Boolean {
         return transaction {
+            val task = Task.findById(id) ?: return@transaction false
+            if (task.user.id.value != userId) return@transaction false
+
             val updatedRow = Tasks.updateOperation(userId) {
                 val updatedRows = update({ (Tasks.id eq id) }) {
                     it[doneDateTime] = null
                 }
                 if (updatedRows > 0) id else null
             }
-            updatedRow != null
+
+            if (updatedRow != null) {
+                // Mark the latest task track entry as inactive
+                TaskTrack.find { TaskTracks.taskId eq id }
+                    .orderBy(TaskTracks.doneDateTime to SortOrder.DESC)
+                    .firstOrNull()?.let { track ->
+                        track.status = Status.INACTIVE
+                    }
+                true
+            } else {
+                false
+            }
         }
     }
 
@@ -234,19 +265,17 @@ class TaskService(
         val startOfWeek = today.minus((today.dayOfWeek.ordinal).toLong(), DateTimeUnit.DAY)
         val endOfWeek = startOfWeek.plus(6, DateTimeUnit.DAY)
         val completedPerDay = IntArray(7) { 0 }
+        
         transaction {
-            Task.find {
-                (Tasks.user eq userId) and
-                (Tasks.status eq Status.ACTIVE) and
-                (Tasks.doneDateTime.isNotNull()) and
-                (Tasks.doneDateTime.date() greaterEq startOfWeek) and
-                (Tasks.doneDateTime.date() lessEq endOfWeek)
-            }.forEach { task ->
-                val doneDate = task.doneDate?.date
-                if (doneDate != null) {
+            TaskTrack.find {
+                (TaskTracks.status eq Status.ACTIVE) and
+                (TaskTracks.doneDateTime.date() greaterEq startOfWeek) and
+                (TaskTracks.doneDateTime.date() lessEq endOfWeek) and
+                (TaskTracks.taskId inSubQuery Tasks.slice(Tasks.id).select { Tasks.user eq userId })
+            }.forEach { track ->
+                val doneDate = track.doneDateTime.date
                     val dayIdx = doneDate.dayOfWeek.ordinal // 0=Mon, 6=Sun
                     completedPerDay[dayIdx]++
-                }
             }
         }
         return completedPerDay.toList()

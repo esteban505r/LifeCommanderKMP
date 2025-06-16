@@ -51,11 +51,16 @@ fun Route.dailyJournalRouting(dailyJournalRepository: DailyJournalRepository) {
                 return@post
             }
 
-            val wasCreated = dailyJournalRepository.create(userId, journal)
-            if (wasCreated != null) {
-                call.respond(HttpStatusCode.Created)
-            } else {
-                call.respond(HttpStatusCode.InternalServerError)
+            try {
+                val wasCreated = dailyJournalRepository.create(userId, journal)
+                if (wasCreated != null) {
+                    call.respond(HttpStatusCode.Created)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+            catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, "Error creating daily journal: ${e.message}")
             }
         }
 

@@ -132,10 +132,10 @@ class DashboardViewModel(
                 _weeklyHabitCompletion.value = response.weeklyHabitCompletion
                 _weeklyWorkoutCompletion.value = response.weeklyWorkoutCompletion
                 _weeklyMealLogging.value = response.weeklyMealLogging
-                _tasksCompletedPerDayThisWeek.value = response.tasksCompletedPerDayThisWeek
-                _habitsCompletedPerDayThisWeek.value = response.habitsCompletedPerDayThisWeek
-                _workoutsCompletedPerDayThisWeek.value = response.workoutsCompletedPerDayThisWeek
-                _mealsLoggedPerDayThisWeek.value = response.mealsLoggedPerDayThisWeek
+                _tasksCompletedPerDayThisWeek.value = response.tasksCompletedPerDayThisWeek ?: emptyList()
+                _habitsCompletedPerDayThisWeek.value = response.habitsCompletedPerDayThisWeek ?: emptyList()
+                _workoutsCompletedPerDayThisWeek.value = response.workoutsCompletedPerDayThisWeek ?: emptyList()
+                _mealsLoggedPerDayThisWeek.value = response.mealsLoggedPerDayThisWeek ?: emptyList()
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {

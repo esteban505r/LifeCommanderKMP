@@ -1,7 +1,9 @@
 package com.esteban.ruano.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Schedule
@@ -9,6 +11,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.utils.DateUIUtils.getColorByPriority
@@ -79,12 +82,20 @@ fun TaskItem(
                         )
                     }
                 }
-                Icon(
-                    imageVector = getIconByPriority(task.priority),
-                    contentDescription = null,
-                    tint = priorityColor,
-                    modifier = Modifier.size(24.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(priorityColor.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = getIconByPriority(task.priority),
+                        contentDescription = null,
+                        tint = priorityColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         },
         bottomContent = {
@@ -93,7 +104,6 @@ fun TaskItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-
                 if (task.dueDateTime != null) {
                     Text(
                         text = "Due: ${task.dueDateTime.toLocalDateTime().toResourceStringBasedOnNow().first.localized()}",

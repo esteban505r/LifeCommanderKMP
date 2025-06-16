@@ -10,6 +10,7 @@ import com.esteban.ruano.models.workout.exercise.ExerciseDTO
 import com.esteban.ruano.models.workout.WorkoutDashboardDTO
 import com.esteban.ruano.utils.toDayOfWeek
 import com.esteban.ruano.utils.toLocalTime
+import kotlinx.datetime.LocalDate
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
@@ -224,5 +225,35 @@ class WorkoutService : BaseService() {
             }
         }
     }
+
+    /*fun getWorkoutDaysByDateRange(userId: Int, startDate: LocalDate, endDate: LocalDate) {
+        if (startDate > endDate) {
+            throw Exception("Start date must be before end date")
+        }
+        return transaction {
+            val workoutDays = WorkoutDay.find((WorkoutDays.user eq userId) and (WorkoutDays.date between startDate..endDate)).toList()
+            if (workoutDays.isEmpty()) {
+                return@transaction emptyList<WorkoutDayDTO>()
+            }
+            val exercisesWithWorkoutDays = ExerciseWithWorkoutDay.find((ExercisesWithWorkoutDays.user eq userId)
+                .and (ExercisesWithWorkoutDays.workoutDay inList workoutDays.map { it.id })).toList()
+
+            val exerciseIds = exercisesWithWorkoutDays.map { it.exercise.id.value }
+            val exercises = Exercise.find { Exercises.id inList exerciseIds }.toList()
+
+            //val equipment = Equipment.find { Equipments.exercise inList exerciseIds }.groupBy { it.exercise.id.value }
+
+            workoutDays.map {
+                it.toDTO(
+                    exercises = exercises.map { e ->
+                        e.toDTO(
+                          //  equipmentDTO = equipment[e.id.value]?.map { it.toDTO() } ?: emptyList(),
+                            equipmentDTO = emptyList()
+                        )
+                    }
+                )
+            }
+        }
+    }*/
 
 }

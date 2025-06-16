@@ -1,16 +1,10 @@
 package com.esteban.ruano.lifecommander.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.multiplatform.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.multiplatform.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.multiplatform.cartesian.axis.VerticalAxis
@@ -87,7 +81,7 @@ fun StatsChart(
                 valueFormatter = CartesianValueFormatter { context, x, _ ->
                     val dateMap = context.model.extraStore.getOrNull(xToDateMapKey)
                     val date = dateMap?.get(x.toFloat()) ?: weekStart.plus(DatePeriod(days = x.toInt()))
-                    date.dayOfWeek.name.take(3) // Show abbreviated day name
+                    date.dayOfWeek.name.take(3)
                 },
                 label = rememberAxisLabelComponent(),
                 guideline = rememberAxisGuidelineComponent()

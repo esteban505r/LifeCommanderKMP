@@ -108,14 +108,14 @@ fun ApplicationScope.AppWindow() {
             )
         }
 
-        LaunchedEffect(Unit) {
+    /*    LaunchedEffect(Unit) {
             backgroundServiceManager.startPeriodicTask(
                 "nightBlockCheck",
                 Duration.ofMinutes(1),
             ) {
                 appViewModel.checkNightBlock()
             }
-        }
+        }*/
 
 
         if (appState.isOpen) {

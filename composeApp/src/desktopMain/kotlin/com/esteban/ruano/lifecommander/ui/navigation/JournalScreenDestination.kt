@@ -9,16 +9,29 @@ import com.esteban.ruano.lifecommander.ui.screens.JournalScreen
 fun JournalScreenDestination() {
     val viewModel: DailyJournalViewModel = koinViewModel()
     val state by viewModel.state.collectAsState()
-    var answers by remember { mutableStateOf(mutableMapOf<String, String>()) }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadQuestions()
+        viewModel.checkIfCompleted()
+    }
 
     JournalScreen(
         state = state,
-        answers = answers,
+        answers = state.questionAnswers,
         onAnswerChange = { questionId, ans ->
-            answers = answers.toMutableMap().apply { put(questionId, ans) }
             viewModel.addAnswer(questionId, ans)
         },
         onComplete = { viewModel.completeDailyJournal() },
-        onLoadQuestions = { viewModel.loadQuestions() }
+        onLoadQuestions = { viewModel.loadQuestions() },
+        onAddQuestion = { question ->
+            viewModel.addQuestion(question)
+        },
+        onDeleteQuestion = { questionId ->
+            viewModel.deleteQuestion(questionId)
+        },
+        onEditQuestion = { id, question ->
+            viewModel.updateQuestion(id, question)
+        },
+        isCompleted = state.isCompleted
     )
 } 

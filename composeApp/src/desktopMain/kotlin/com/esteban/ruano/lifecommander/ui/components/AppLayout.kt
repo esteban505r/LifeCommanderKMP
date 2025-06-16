@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -155,7 +157,8 @@ fun AppLayout(
                     .width(200.dp)
                     .fillMaxHeight()
                     .background(MaterialTheme.colors.surface)
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 8.dp)
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -350,7 +353,7 @@ fun AppLayout(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
-                                color = if (navController.currentDestination?.route == Screen.Settings.route)
+                                color = if (navController.currentDestination?.route == Screen.Timers.route)
                                     MaterialTheme.colors.primary.copy(alpha = 0.1f)
                                 else Color.Transparent,
                                 shape = MaterialTheme.shapes.medium
@@ -360,7 +363,7 @@ fun AppLayout(
                         Icon(
                             imageVector = Icons.Default.Timer,
                             contentDescription = "Timers",
-                            tint = if (navController.currentDestination?.route == Screen.Settings.route)
+                            tint = if (navController.currentDestination?.route == Screen.Timers.route)
                                 MaterialTheme.colors.primary
                             else MaterialTheme.colors.onSurface
                         )
@@ -369,7 +372,7 @@ fun AppLayout(
                     Text(
                         text = "Timers",
                         style = MaterialTheme.typography.subtitle1,
-                        color = if (navController.currentDestination?.route == Screen.Settings.route)
+                        color = if (navController.currentDestination?.route == Screen.Timers.route)
                             MaterialTheme.colors.primary
                         else MaterialTheme.colors.onSurface
                     )

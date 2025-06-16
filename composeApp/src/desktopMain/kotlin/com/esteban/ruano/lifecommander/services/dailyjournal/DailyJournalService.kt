@@ -48,11 +48,31 @@ class DailyJournalService(
         date: String,
         summary: String,
         questionAnswers: List<QuestionAnswerDTO>
-    ): DailyJournalResponse {
+    ) {
         val response = httpClient.post("$baseUrl/daily-journals") {
             header("Authorization", "Bearer ${tokenStorageImpl.getToken()}")
             contentType(ContentType.Application.Json)
             setBody(CreateDailyJournalDTO(date, summary, questionAnswers))
+        }
+        if(response.status != HttpStatusCode.Created) {
+            throw Exception("Failed to create daily journal: ${response.status}")
+        }
+    }
+
+    suspend fun getByDateRange(
+        startDate : String,
+        endDate : String,
+        limit: Int = 10,
+        offset: Long = 0): List<DailyJournalResponse> {
+        val response = httpClient.get("$baseUrl/daily-journals/byDateRange"){
+            header("Authorization", "Bearer ${tokenStorageImpl.getToken()}")
+            parameter("startDate", startDate)
+            parameter("endDate", endDate)
+            parameter("limit", limit)
+            parameter("offset", offset)
+        }
+        if (response.status != HttpStatusCode.OK) {
+            throw Exception("Failed to fetch daily journals: ${response.status}")
         }
         return response.body()
     }

@@ -9,6 +9,7 @@ import com.esteban.ruano.models.dailyjournal.CreateDailyJournalDTO
 import com.esteban.ruano.models.dailyjournal.DailyJournalDTO
 import com.esteban.ruano.models.dailyjournal.UpdateDailyJournalDTO
 import com.esteban.ruano.models.questions.CreateQuestionAnswerDTO
+import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.kotlin.datetime.date
@@ -78,7 +79,7 @@ class DailyJournalService(
         limit: Int,
         offset: Long
     ): List<DailyJournalDTO> {
-        return transaction {
+        val journals =  transaction {
             DailyJournal.find {
                 (DailyJournals.user eq userId) and
                 (DailyJournals.status eq Status.ACTIVE) and
@@ -86,6 +87,13 @@ class DailyJournalService(
                 (DailyJournals.date lessEq endDate)
             }.limit(limit, offset).toList().map { it.toDTO() }
         }
+
+        val result = journals.map {
+            val questionAnswers = questionAnswerService.getByDailyJournalId(UUID.fromString(it.id))
+            it.copy(questionAnswers = questionAnswers)
+        }
+
+        return result
     }
 
     fun getByIdAndUserId(id: UUID, userId: Int): DailyJournalDTO? {

@@ -2,6 +2,8 @@ package ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +35,26 @@ class DailyJournalViewModel(
 
     private val _state = MutableStateFlow(DailyJournalState())
     val state: StateFlow<DailyJournalState> = _state.asStateFlow()
+
+    fun checkIfCompleted() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+            try {
+                val today = getCurrentDateTime().date.formatDefault()
+                val journals = dailyJournalService.getByDateRange(today, today)
+                _state.value = _state.value.copy(
+                    isCompleted = journals.isNotEmpty(),
+                    questionAnswers = journals.flatMap { it.questionAnswers },
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false
+                )
+            }
+        }
+    }
 
     fun loadQuestions() {
         viewModelScope.launch {
@@ -109,9 +131,10 @@ class DailyJournalViewModel(
         }
     }
 
-
     fun addAnswer(questionId: String, answer: String) {
-        val currentAnswers = _state.value.questionAnswers.toMutableList()
+        val currentAnswers = _state.value.questionAnswers.filterNot {
+            it.questionId == questionId
+        }.toMutableList()
         currentAnswers.add(QuestionAnswerDTO(questionId, answer))
         _state.value = _state.value.copy(questionAnswers = currentAnswers)
     }
@@ -121,7 +144,7 @@ class DailyJournalViewModel(
             _state.value = _state.value.copy(isLoading = true)
             try {
                 dailyJournalService.createDailyJournal(
-                    date = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE),
+                    date = getCurrentDateTime().date.formatDefault(),
                     summary = "Night Block Reflection",
                     questionAnswers = _state.value.questionAnswers
                 )
@@ -144,5 +167,4 @@ class DailyJournalViewModel(
     fun resetError() {
         _state.value = _state.value.copy(error = null)
     }
-
 } 

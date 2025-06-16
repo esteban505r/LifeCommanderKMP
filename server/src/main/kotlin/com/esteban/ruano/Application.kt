@@ -96,7 +96,7 @@ fun Application.connectToPostgres() {
             Resources, WorkoutTracks, Exercises,
             Equipments, WorkoutDays, ExercisesWithWorkoutDays,
             ExercisesWithWorkoutTracks, Users, Habits,
-            Tasks, HistoryTracks, HabitTracks, Reminders, Recipes, Posts,
+            Tasks, HistoryTracks, HabitTracks, TaskTracks, Reminders, Recipes, Posts,
             DailyJournals, Pomodoros, Questions, QuestionAnswers,
             Transactions, ScheduledTransactions, Accounts, Budgets, SavingsGoals, TimerLists,
             Timers, UserSettings, DeviceTokens, CategoryKeywords, Portfolios
