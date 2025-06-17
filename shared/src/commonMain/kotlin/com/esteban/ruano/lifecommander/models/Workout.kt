@@ -25,4 +25,18 @@ data class Exercise(
     val muscleGroup: String? = null,
     val equipment: List<String>? = emptyList(),
     val resource: String? = null
+)
+
+@Serializable
+data class WorkoutTrack(
+    val id: String,
+    val workoutDayId: String,
+    val doneDateTime: String,
+    val status: String = "ACTIVE"
+)
+
+@Serializable
+data class CreateWorkoutTrack(
+    val workoutDayId: String,
+    val doneDateTime: String
 ) 

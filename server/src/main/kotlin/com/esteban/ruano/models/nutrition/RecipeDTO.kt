@@ -12,4 +12,6 @@ data class RecipeDTO(
     val image: String? = null,
     val day: Int? = null,
     val mealTag: String? = null,
+    val consumed: Boolean = false,
+    val consumedDateTime: String? = null
 )

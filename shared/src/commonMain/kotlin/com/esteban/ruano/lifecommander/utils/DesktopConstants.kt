@@ -5,8 +5,8 @@ import io.ktor.http.*
 
 const val BASE_URL_PROD = "http://ec2-3-91-21-254.compute-1.amazonaws.com:8080/api/v1"
 
-const val BASE_URL_DEV = "http://ec2-3-91-21-254.compute-1.amazonaws.com:8080/api/v1" //FOR DEBUGGING PROD
-//const val BASE_URL_DEV = "http://localhost:8080/api/v1"
+//const val BASE_URL_DEV = "http://ec2-3-91-21-254.compute-1.amazonaws.com:8080/api/v1" //FOR DEBUGGING PROD
+const val BASE_URL_DEV = "http://localhost:8080/api/v1"
 const val SOCKETS_HOST_DEV = "localhost"
 const val SOCKETS_HOST_PROD = "ec2-3-91-21-254.compute-1.amazonaws.com"
 const val PROD_VARIANT = "prod"
@@ -15,7 +15,7 @@ const val APP_NAME_BASE = "Life Commander"
 const val VERSION = "0.0.0.1"
 
 
-const val VARIANT = PROD_VARIANT
+const val VARIANT = DEV_VARIANT
 //const val VARIANT = PROD_VARIANT
 
 

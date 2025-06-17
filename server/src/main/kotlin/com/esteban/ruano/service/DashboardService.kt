@@ -5,6 +5,7 @@ import HabitStatsDTO
 import TaskStatsDTO
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.DBActions
+import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.habits.HabitDTO
 import com.esteban.ruano.models.tasks.TaskDTO
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
@@ -13,6 +14,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 
 class DashboardService(
     private val taskService: TaskService,
@@ -77,9 +79,12 @@ class DashboardService(
 
         val weeklyTaskCompletion = calculateTaskCompletionFromTracks(weekStart, TaskTracks.doneDateTime, TaskTrack.Companion::find)
         val weeklyHabitCompletion = calculateHabitCompletionFromTracks(weekStart, HabitTracks.doneDateTime, HabitTrack.Companion::find)
+        val weeklyRecipeCompletion = calculateRecipeCompletionFromTracks(weekStart, RecipeTracks.consumedDateTime, RecipeTrack.Companion::find)
 
         val tasksCompletedPerDayThisWeek = getTrackCountsPerDay(weekStart, TaskTracks.doneDateTime, TaskTrack.Companion::find)
         val habitsCompletedPerDayThisWeek = getTrackCountsPerDay(weekStart, HabitTracks.doneDateTime, HabitTrack.Companion::find)
+        val recipesConsumedPerDayThisWeek = getTrackCountsPerDay(weekStart, RecipeTracks.consumedDateTime, RecipeTrack.Companion::find)
+        val workoutsCompletedPerDayThisWeek = getWorkoutTrackCountsPerDay(userId, weekStart)
 
         return DashboardResponseDTO(
             nextTask = nextTask,
@@ -100,11 +105,11 @@ class DashboardService(
             weeklyTaskCompletion = weeklyTaskCompletion,
             weeklyHabitCompletion = weeklyHabitCompletion,
             weeklyWorkoutCompletion = weeklyWorkoutCompletion,
-            weeklyMealLogging = weeklyMealLogging,
+            weeklyMealLogging = weeklyRecipeCompletion,
             tasksCompletedPerDayThisWeek = tasksCompletedPerDayThisWeek,
             habitsCompletedPerDayThisWeek = habitsCompletedPerDayThisWeek,
-            workoutsCompletedPerDayThisWeek = emptyList(),
-            mealsLoggedPerDayThisWeek = emptyList()
+            workoutsCompletedPerDayThisWeek = workoutsCompletedPerDayThisWeek,
+            mealsLoggedPerDayThisWeek = recipesConsumedPerDayThisWeek
         )
     }
 
@@ -136,6 +141,17 @@ class DashboardService(
     }
 
     private fun calculateHabitCompletionFromTracks(
+        weekStart: LocalDate,
+        column: org.jetbrains.exposed.sql.Column<LocalDateTime>,
+        finder: (org.jetbrains.exposed.sql.Op<Boolean>) -> Iterable<*>
+    ): Float = transaction {
+        val start = weekStart.atTime(0, 0)
+        val end = weekStart.plus(DatePeriod(days = 6)).atTime(23, 59)
+        val total = finder(column greaterEq start and (column lessEq end)).count()
+        total / 7f
+    }
+
+    private fun calculateRecipeCompletionFromTracks(
         weekStart: LocalDate,
         column: org.jetbrains.exposed.sql.Column<LocalDateTime>,
         finder: (org.jetbrains.exposed.sql.Op<Boolean>) -> Iterable<*>
@@ -189,4 +205,21 @@ class DashboardService(
         completed = habits.count { it.done },
         currentStreak = habits.maxOfOrNull { it.streak } ?: 0
     )
+
+    private fun getWorkoutTrackCountsPerDay(userId: Int, weekStart: LocalDate): List<Int> {
+        return transaction {
+            (0..6).map { i ->
+                val day = weekStart.plus(DatePeriod(days = i))
+                val start = day.atTime(0, 0)
+                val end = day.atTime(23, 59)
+
+                WorkoutTrack.find { 
+                    (WorkoutTracks.workoutDayId inList WorkoutDay.find { WorkoutDays.user eq userId }.map { it.id }) and
+                    (WorkoutTracks.doneDateTime greaterEq start) and 
+                    (WorkoutTracks.doneDateTime lessEq end) and
+                    (WorkoutTracks.status eq Status.ACTIVE)
+                }.count().toInt()
+            }
+        }
+    }
 }

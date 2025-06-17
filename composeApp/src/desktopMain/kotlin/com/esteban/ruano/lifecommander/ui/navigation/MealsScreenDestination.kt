@@ -7,6 +7,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.esteban.ruano.lifecommander.ui.screens.RecipesScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.RecipesViewModel
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.plus
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -19,16 +22,37 @@ fun MealsScreenDestination(
 ) {
     val state by recipesViewModel.state.collectAsState()
 
-    LaunchedEffect(Unit){
-        recipesViewModel.getRecipesByDay(1)
+    LaunchedEffect(Unit) {
+        val now = kotlinx.datetime.Clock.System.now()
+        val currentDay = now.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.dayOfWeek.value
+        recipesViewModel.getRecipesByDay(currentDay)
+        
+        // Load recipe tracks for the current week
+        val startOfWeek = now.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.minus(
+            kotlinx.datetime.DatePeriod(days = currentDay - 1)
+        )
+        val endOfWeek = startOfWeek.plus(kotlinx.datetime.DatePeriod(days = 6))
+        recipesViewModel.getRecipeTracksByDateRange(
+            startDate = startOfWeek.toString(),
+            endDate = endOfWeek.toString()
+        )
     }
 
     RecipesScreen(
+        state = state,
         onNewRecipe = onNewRecipe,
         onDetailRecipe = onDetailRecipe,
-        state = state,
-        onGetRecipesByDay = {
-            recipesViewModel.getRecipesByDay(it)
+        onGetRecipesByDay = { day ->
+            recipesViewModel.getRecipesByDay(day)
+        },
+        onEditRecipe = { recipe ->
+            recipesViewModel.updateRecipe(recipe)
+        },
+        onDeleteRecipe = { recipeId ->
+            recipesViewModel.deleteRecipe(recipeId)
+        },
+        onConsumeRecipe = { recipeId ->
+            recipesViewModel.consumeRecipe(recipeId)
         }
     )
 } 

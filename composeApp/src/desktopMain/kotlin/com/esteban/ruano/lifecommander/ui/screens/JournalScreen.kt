@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import services.dailyjournal.models.QuestionAnswerDTO
 import services.dailyjournal.models.QuestionDTO
 import ui.viewmodels.DailyJournalState
+import ui.composables.NewEditQuestionDialog
 
 @Composable
 fun JournalScreen(
@@ -52,8 +53,14 @@ fun JournalScreen(
                 fontWeight = FontWeight.Bold
             )
             if (!isCompleted) {
-                IconButton(onClick = { showAddQuestionDialog = true }) {
+                Button(
+                    onClick = { showAddQuestionDialog = true },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
+                    modifier = Modifier.height(40.dp)
+                ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Question")
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Add Question")
                 }
             }
         }
@@ -148,7 +155,8 @@ fun JournalScreen(
 
     // Add Question Dialog
     if (showAddQuestionDialog) {
-        QuestionDialog(
+        NewEditQuestionDialog(
+            show = showAddQuestionDialog,
             title = "Add New Question",
             initialQuestion = "",
             existingQuestions = state.questions.map { it.question },
@@ -162,12 +170,11 @@ fun JournalScreen(
 
     // Edit Question Dialog
     showEditQuestionDialog?.let { question ->
-        QuestionDialog(
+        NewEditQuestionDialog(
+            show = true,
             title = "Edit Question",
             initialQuestion = question.question,
-            existingQuestions = state.questions
-                .filter { it.id != question.id }
-                .map { it.question },
+            existingQuestions = state.questions.filter { it.id != question.id }.map { it.question },
             onDismiss = { showEditQuestionDialog = null },
             onConfirm = { newQuestion ->
                 onEditQuestion(question.id, newQuestion)
@@ -276,59 +283,4 @@ fun JournalQuestionCard(
             }
         }
     }
-}
-
-@Composable
-private fun QuestionDialog(
-    title: String,
-    initialQuestion: String,
-    existingQuestions: List<String>,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var question by remember { mutableStateOf(initialQuestion) }
-    var error by remember { mutableStateOf<String?>(null) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = question,
-                    onValueChange = { 
-                        question = it
-                        error = if (it.isBlank()) {
-                            "Question cannot be empty"
-                        } else if (existingQuestions.contains(it)) {
-                            "This question already exists"
-                        } else {
-                            null
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Enter question...") },
-                    singleLine = true,
-                    isError = error != null
-                )
-                if (error != null) {
-                    Text(
-                        text = error!!,
-                        color = MaterialTheme.colors.error,
-                        style = MaterialTheme.typography.caption,
-                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onConfirm(question) },
-                enabled = question.isNotBlank() && error == null
-            ) { Text("Save") }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Cancel") }
-        }
-    )
 } 

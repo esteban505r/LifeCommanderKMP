@@ -40,4 +40,20 @@ class NutritionRepository(private val nutritionService: NutritionService) {
         return nutritionService.deleteRecipe(userId,id)
     }
 
+    // Recipe Tracking Methods
+    fun trackRecipeConsumption(userId: Int, recipeTrack: CreateRecipeTrackDTO): UUID? {
+        return nutritionService.trackRecipeConsumption(userId, recipeTrack)
+    }
+
+    fun getRecipeTracksByDateRange(userId: Int, startDate: String, endDate: String): List<RecipeTrackDTO> {
+        return nutritionService.getRecipeTracksByDateRange(userId, startDate, endDate)
+    }
+
+    fun getRecipeTracksByRecipe(userId: Int, recipeId: String): List<RecipeTrackDTO> {
+        return nutritionService.getRecipeTracksByRecipe(userId, recipeId)
+    }
+
+    fun deleteRecipeTrack(userId: Int, trackId: String): Boolean {
+        return nutritionService.deleteRecipeTrack(userId, trackId)
+    }
 }

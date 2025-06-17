@@ -14,7 +14,7 @@ import ui.composables.NewEditHabitDialog
 import ui.composables.NewEditTaskDialog
 
 @Composable
-fun FloatingActionButtons(
+fun GeneralFloatingActionButtons(
     onAddTask: (String, String, List<Reminder>, String?, String?, Int?) -> Unit = { _, _, _, _, _, _ -> },
     onAddHabit: (String, String, String, Frequency) -> Unit = { _, _, _, _ -> },
     onError: (String) -> Unit = {},

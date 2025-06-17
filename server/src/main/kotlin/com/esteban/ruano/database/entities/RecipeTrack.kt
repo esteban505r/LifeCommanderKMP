@@ -9,16 +9,16 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime
 import java.util.UUID
 
-object WorkoutTracks : UUIDTable() {
-    val workoutDayId = reference("workout_day_id", WorkoutDays.id, onDelete = ReferenceOption.CASCADE)
-    val doneDateTime = datetime("done_date_time")
+object RecipeTracks : UUIDTable() {
+    val recipeId = reference("recipe_id", Recipes.id, onDelete = ReferenceOption.CASCADE)
+    val consumedDateTime = datetime("consumed_date_time")
     val status = enumerationByName("status", 10, Status::class).default(Status.ACTIVE)
 }
 
-class WorkoutTrack(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<WorkoutTrack>(WorkoutTracks)
+class RecipeTrack(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<RecipeTrack>(RecipeTracks)
 
-    var workoutDay by WorkoutDay referencedOn WorkoutTracks.workoutDayId
-    var doneDateTime by WorkoutTracks.doneDateTime
-    var status by WorkoutTracks.status
-}
+    var recipe by Recipe referencedOn RecipeTracks.recipeId
+    var consumedDateTime by RecipeTracks.consumedDateTime
+    var status by RecipeTracks.status
+} 

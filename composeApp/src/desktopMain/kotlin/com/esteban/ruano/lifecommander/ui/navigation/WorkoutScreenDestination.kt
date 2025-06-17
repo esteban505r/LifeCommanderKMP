@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import com.esteban.ruano.lifecommander.ui.screens.WorkoutScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.WorkoutViewModel
 import kotlinx.datetime.Clock
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -17,18 +19,38 @@ fun WorkoutScreenDestination() {
 
     LaunchedEffect(Unit){
         val now = Clock.System.now()
-        val currentDay = now.toLocalDateTime(
-            kotlinx.datetime.TimeZone.currentSystemDefault()
-        ).dayOfWeek.value
+        val currentDay = now.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.dayOfWeek.value
         viewModel.getExercisesByDay(currentDay)
+        viewModel.getWorkoutsCompletedPerDayThisWeek()
+        
+        // Load workout tracks for the current week
+        val startOfWeek = now.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.minus(
+            kotlinx.datetime.DatePeriod(days = currentDay - 1)
+        )
+        val endOfWeek = startOfWeek.plus(kotlinx.datetime.DatePeriod(days = 6))
+        viewModel.getWorkoutTracksByDateRange(
+            startDate = startOfWeek.toString(),
+            endDate = endOfWeek.toString()
+        )
     }
 
     WorkoutScreen(
         state = state,
-        onAdd = viewModel::addExercise,
-        onUpdate = viewModel::updateExercise,
-        onDelete = viewModel::deleteExercise,
-        onDaySelected = viewModel::getExercisesByDay
+        onAdd = { exercise ->
+            viewModel.addExercise(exercise)
+        },
+        onUpdate = { exercise ->
+            viewModel.updateExercise(exercise)
+        },
+        onDelete = { id ->
+            viewModel.deleteExercise(id)
+        },
+        onDaySelected = { day ->
+            viewModel.getExercisesByDay(day)
+        },
+        onCompleteWorkout = { workoutDayId ->
+            viewModel.completeWorkout(workoutDayId)
+        }
     )
 }
 

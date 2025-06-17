@@ -78,27 +78,45 @@ fun TasksScreen(
                 )
             }
 
-            // Filter and Sort Controls
+            // Filter, Sort, and Add Task Controls
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedButton(
                     onClick = { /* TODO: Implement filter */ },
-                    modifier = Modifier.height(40.dp)
+                    modifier = Modifier.height(40.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colors.primary
+                    )
                 ) {
                     Icon(Icons.Default.FilterList, contentDescription = "Filter")
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text("Filter")
                 }
 
                 OutlinedButton(
                     onClick = { /* TODO: Implement sort */ },
-                    modifier = Modifier.height(40.dp)
+                    modifier = Modifier.height(40.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colors.primary
+                    )
                 ) {
                     Icon(Icons.Default.Sort, contentDescription = "Sort")
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text("Sort")
+                }
+
+                Button(
+                    onClick = { showNewTaskDialog = true },
+                    modifier = Modifier.height(40.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = MaterialTheme.colors.primary
+                    )
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Task")
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Add Task")
                 }
             }
         }

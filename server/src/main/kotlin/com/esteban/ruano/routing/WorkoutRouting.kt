@@ -8,6 +8,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import com.esteban.ruano.models.users.LoggedUserDTO
+import com.esteban.ruano.models.workout.CreateWorkoutTrackDTO
 import com.esteban.ruano.models.workout.day.UpdateWorkoutDayDTO
 import com.esteban.ruano.models.workout.day.WorkoutDayDTO
 import com.esteban.ruano.models.workout.exercise.ExerciseDTO
@@ -67,6 +68,54 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
                     call.respond(HttpStatusCode.Created)
                 } else {
                     call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+        }
+
+        // Workout Tracking Endpoints
+        route("/tracking") {
+            post("/complete") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val trackRequest = call.receive<CreateWorkoutTrackDTO>()
+                val success = workoutRepository.completeWorkout(userId, trackRequest.workoutDayId, trackRequest.doneDateTime)
+                if (success) {
+                    call.respond(HttpStatusCode.Created)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest)
+                }
+            }
+
+            delete("/{trackId}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val trackId = call.parameters["trackId"]!!
+                val success = workoutRepository.unCompleteWorkout(userId, trackId)
+                if (success) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest)
+                }
+            }
+
+            get("/week") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                call.respond(workoutRepository.getWorkoutsCompletedPerDayThisWeek(userId))
+            }
+
+            get("/range") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val startDate = call.request.queryParameters["startDate"]!!
+                val endDate = call.request.queryParameters["endDate"]!!
+                call.respond(workoutRepository.getWorkoutTracksByDateRange(userId, startDate, endDate))
+            }
+
+            delete("/track/{trackId}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val trackId = call.parameters["trackId"]!!
+                val success = workoutRepository.deleteWorkoutTrack(userId, trackId)
+                if (success) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest)
                 }
             }
         }

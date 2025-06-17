@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
-import com.esteban.ruano.lifecommander.ui.composables.FloatingActionButtons
+import com.esteban.ruano.lifecommander.ui.composables.GeneralFloatingActionButtons
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import com.esteban.ruano.lifecommander.utils.APP_NAME
 import com.esteban.ruano.utils.DateUtils.formatDefault
@@ -31,7 +31,6 @@ import ui.viewmodels.HabitsViewModel
 import ui.viewmodels.TasksViewModel
 import java.time.LocalDateTime
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun AppLayout(
@@ -59,17 +58,17 @@ fun AppLayout(
 
     Scaffold(
         floatingActionButton = {
-            if (currentRoute != Screen.Finance.route && currentRoute != Screen.FinanceImporter.route) {
-                FloatingActionButtons(
+           /* if (currentRoute != Screen.Finance.route && currentRoute != Screen.FinanceImporter.route) {
+                GeneralFloatingActionButtons(
                     onAddTask = { name, notes, reminders, dueDate, scheduledDate, priority ->
                         taskViewModel.addTask(name, dueDate, scheduledDate, notes, priority ?: Priority.NONE.value)
                     },
                     onAddHabit = { name, notes, dateTime, frequency ->
                         habitViewModel.addHabit(name, notes, frequency.value, dateTime)
                     },
-                    onError = { /* Handle error */ }
+                    onError = { *//* Handle error *//* }
                 )
-            }
+            }*/
         },
         topBar = {
             TopAppBar(

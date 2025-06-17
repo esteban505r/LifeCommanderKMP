@@ -3,13 +3,16 @@ package com.esteban.ruano.lifecommander.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.esteban.ruano.lifecommander.models.Exercise
-import com.esteban.ruano.lifecommander.models.workout.day.UpdateWorkoutDay
+import com.esteban.ruano.lifecommander.models.WorkoutTrack
 import com.esteban.ruano.lifecommander.services.workout.WorkoutService
 import com.esteban.ruano.lifecommander.ui.state.WorkoutState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class WorkoutViewModel(
     private val service: WorkoutService
@@ -81,7 +84,109 @@ class WorkoutViewModel(
         }
     }
 
+    // Workout Tracking Methods
+    fun completeWorkout(workoutDayId: String) {
+        viewModelScope.launch {
+            try {
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val doneDateTime = "${now.date}T${now.hour.toString().padStart(2, '0')}:${now.minute.toString().padStart(2, '0')}:${now.second.toString().padStart(2, '0')}"
+                
+                val success = service.completeWorkout(workoutDayId, doneDateTime)
+                if (success) {
+                    // Refresh the current day's exercises to show updated state
+                    getExercisesByDay(_state.value.daySelected)
+                } else {
+                    _state.value = _state.value.copy(
+                        isError = true,
+                        errorMessage = "Failed to complete workout"
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
 
+    fun unCompleteWorkout(trackId: String) {
+        viewModelScope.launch {
+            try {
+                val success = service.unCompleteWorkout(trackId)
+                if (success) {
+                    // Refresh the current day's exercises to show updated state
+                    getExercisesByDay(_state.value.daySelected)
+                } else {
+                    _state.value = _state.value.copy(
+                        isError = true,
+                        errorMessage = "Failed to uncomplete workout"
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
 
+    fun getWorkoutsCompletedPerDayThisWeek() {
+        viewModelScope.launch {
+            try {
+                val weeklyData = service.getWorkoutsCompletedPerDayThisWeek()
+                _state.value = _state.value.copy(
+                    weeklyWorkoutsCompleted = weeklyData,
+                    isError = false,
+                    errorMessage = ""
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
 
+    fun getWorkoutTracksByDateRange(startDate: String, endDate: String) {
+        viewModelScope.launch {
+            try {
+                val tracks = service.getWorkoutTracksByDateRange(startDate, endDate)
+                _state.value = _state.value.copy(
+                    workoutTracks = tracks,
+                    isError = false,
+                    errorMessage = ""
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
+
+    fun deleteWorkoutTrack(trackId: String) {
+        viewModelScope.launch {
+            try {
+                val success = service.deleteWorkoutTrack(trackId)
+                if (success) {
+                    // Refresh the current day's exercises to show updated state
+                    getExercisesByDay(_state.value.daySelected)
+                } else {
+                    _state.value = _state.value.copy(
+                        isError = true,
+                        errorMessage = "Failed to delete workout track"
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
 } 

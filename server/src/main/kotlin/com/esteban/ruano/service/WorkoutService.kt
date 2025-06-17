@@ -4,21 +4,24 @@ import com.esteban.ruano.database.converters.toDTO
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.MuscleGroup
 import com.esteban.ruano.database.models.Status
+import com.esteban.ruano.models.workout.WorkoutDashboardDTO
+import com.esteban.ruano.models.workout.WorkoutTrackDTO
 import com.esteban.ruano.models.workout.day.UpdateWorkoutDayDTO
 import com.esteban.ruano.models.workout.day.WorkoutDayDTO
 import com.esteban.ruano.models.workout.exercise.ExerciseDTO
-import com.esteban.ruano.models.workout.WorkoutDashboardDTO
+import com.esteban.ruano.utils.fromDateToLong
 import com.esteban.ruano.utils.toDayOfWeek
 import com.esteban.ruano.utils.toLocalTime
-import kotlinx.datetime.LocalDate
+import kotlinx.datetime.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
-import java.util.UUID
+import java.util.*
 
 class WorkoutService : BaseService() {
 
@@ -226,7 +229,106 @@ class WorkoutService : BaseService() {
         }
     }
 
-    /*fun getWorkoutDaysByDateRange(userId: Int, startDate: LocalDate, endDate: LocalDate) {
+    // Workout Tracking Methods
+    fun completeWorkout(userId: Int, workoutDayId: String, doneDateTime: String): Boolean {
+        return transaction {
+            // Verify the workout day belongs to the user
+            val workoutDay = WorkoutDay.find { 
+                (WorkoutDays.id eq UUID.fromString(workoutDayId)) and
+                (WorkoutDays.user eq userId) and 
+                (WorkoutDays.status eq Status.ACTIVE) 
+            }.firstOrNull()
+            
+            if (workoutDay != null) {
+                val id = WorkoutTracks.insertOperation(userId, doneDateTime.fromDateToLong()) {
+                    insert {
+                        it[WorkoutTracks.workoutDayId] = workoutDay.id
+                        it[this.doneDateTime] = doneDateTime.toLocalDateTime()!!
+                        it[status] = Status.ACTIVE
+                    }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
+                }
+                id != null
+            } else {
+                false
+            }
+        }
+    }
+
+    fun unCompleteWorkout(userId: Int, trackId: String): Boolean = transaction {
+        val trackUUID = UUID.fromString(trackId)
+
+        // Subquery using modern DSL: select only id
+        val activeWorkoutDays = WorkoutDays
+            .select(WorkoutDays.id)
+            .where { (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) }
+
+        // Update active tracks linked to those workout days
+        val updatedRows = WorkoutTracks.update({
+            (WorkoutTracks.id eq trackUUID) and
+                    (WorkoutTracks.status eq Status.ACTIVE) and
+                    (WorkoutTracks.workoutDayId inSubQuery activeWorkoutDays)
+        }) {
+            it[status] = Status.INACTIVE
+        }
+
+        updatedRows > 0
+    }
+
+
+
+    fun getWorkoutsCompletedPerDayThisWeek(userId: Int): List<Int> {
+        return transaction {
+            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val weekStart = today.minus((today.dayOfWeek.ordinal).toLong(), DateTimeUnit.DAY)
+            
+            (0..6).map { i ->
+                val day = weekStart.plus(i, DateTimeUnit.DAY)
+                val start = day.atTime(0, 0)
+                val end = day.atTime(23, 59)
+                
+                WorkoutTrack.find { 
+                    (WorkoutTracks.doneDateTime greaterEq start) and 
+                    (WorkoutTracks.doneDateTime lessEq end) and 
+                    (WorkoutTracks.status eq Status.ACTIVE) and
+                    (WorkoutTracks.workoutDayId inSubQuery WorkoutDays.slice(WorkoutDays.id).select { 
+                        (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) 
+                    })
+                }.count().toInt()
+            }
+        }
+    }
+
+    fun getWorkoutTracksByDateRange(userId: Int, startDate: String, endDate: String): List<WorkoutTrackDTO> {
+        return transaction {
+            WorkoutTrack.find {
+                (WorkoutTracks.doneDateTime greaterEq startDate.toLocalDateTime()!!) and
+                (WorkoutTracks.doneDateTime lessEq endDate.toLocalDateTime()!!) and
+                (WorkoutTracks.status eq Status.ACTIVE) and
+                (WorkoutTracks.workoutDayId inSubQuery WorkoutDays.slice(WorkoutDays.id).select { 
+                    (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) 
+                })
+            }.toList().map { it.toDTO() }
+        }
+    }
+
+    fun deleteWorkoutTrack(userId: Int, trackId: String): Boolean {
+        return transaction {
+            val deletedRow = WorkoutTracks.deleteOperation(userId) {
+                val updatedRows = WorkoutTracks.update({ 
+                    (WorkoutTracks.id eq UUID.fromString(trackId)) and
+                    (WorkoutTracks.workoutDayId inSubQuery WorkoutDays.slice(WorkoutDays.id).select { 
+                        (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) 
+                    })
+                }) {
+                    it[status] = Status.DELETED
+                }
+                if (updatedRows > 0) UUID.fromString(trackId) else null
+            }
+            deletedRow != null
+        }
+    }
+
+    /*fun getWorkoutDaysByDateRange(userId: Int, startDate: LocalDate, endDate: LocalDate): List<WorkoutDayDTO> {
         if (startDate > endDate) {
             throw Exception("Start date must be before end date")
         }
@@ -255,5 +357,4 @@ class WorkoutService : BaseService() {
             }
         }
     }*/
-
 }

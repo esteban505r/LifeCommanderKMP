@@ -26,8 +26,8 @@ class Recipe(id: EntityID<UUID>) :  UUIDEntity(id) {
     var note by Recipes.note
     var protein by Recipes.protein
     var image by Recipes.image
-    var user by User referencedOn Tasks.user
-    var status by Tasks.status
+    var user by User referencedOn Recipes.user
+    var status by Recipes.status
     var day by Recipes.day
     var mealTag by Recipes.mealTag
 }

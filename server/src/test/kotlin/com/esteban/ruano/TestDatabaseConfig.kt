@@ -26,7 +26,7 @@ object TestDatabaseConfig {
         TimerLists, Timers, UserSettings, DeviceTokens,
         CategoryKeywords, Portfolios, Resources, Exercises,
         Equipments, ExercisesWithWorkoutDays, ExercisesWithWorkoutTracks,
-        Reminders, Posts, Pomodoros, Questions, QuestionAnswers,
+        Reminders, Posts, Pomodoros, Questions, QuestionAnswers, RecipeTracks,
         ScheduledTransactions
     )
 

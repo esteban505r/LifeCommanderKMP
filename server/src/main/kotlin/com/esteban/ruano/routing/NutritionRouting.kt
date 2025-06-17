@@ -7,6 +7,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import com.esteban.ruano.models.nutrition.CreateRecipeDTO
+import com.esteban.ruano.models.nutrition.CreateRecipeTrackDTO
 import com.esteban.ruano.models.nutrition.UpdateRecipeDTO
 import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.repository.NutritionRepository
@@ -85,6 +86,44 @@ fun Route.nutritionRouting(nutritionRepository: NutritionRepository) {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
 
                 call.respond(nutritionRepository.getDashboard(userId, date))
+            }
+        }
+
+        // Recipe Tracking Endpoints
+        route("/tracking") {
+            post("/consume") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val trackRequest = call.receive<CreateRecipeTrackDTO>()
+                val trackId = nutritionRepository.trackRecipeConsumption(userId, trackRequest)
+                if (trackId != null) {
+                    call.respond(HttpStatusCode.Created)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest)
+                }
+            }
+
+            get("/range") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val startDate = call.request.queryParameters["startDate"]!!
+                val endDate = call.request.queryParameters["endDate"]!!
+                call.respond(nutritionRepository.getRecipeTracksByDateRange(userId, startDate, endDate))
+            }
+
+            get("/recipe/{recipeId}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val recipeId = call.parameters["recipeId"]!!
+                call.respond(nutritionRepository.getRecipeTracksByRecipe(userId, recipeId))
+            }
+
+            delete("/track/{trackId}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val trackId = call.parameters["trackId"]!!
+                val success = nutritionRepository.deleteRecipeTrack(userId, trackId)
+                if (success) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest)
+                }
             }
         }
     }

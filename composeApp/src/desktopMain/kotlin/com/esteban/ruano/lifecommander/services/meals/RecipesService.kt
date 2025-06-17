@@ -1,6 +1,8 @@
 package com.esteban.ruano.lifecommander.services.meals
 
 import com.esteban.ruano.lifecommander.models.Recipe
+import com.esteban.ruano.lifecommander.models.RecipeTrack
+import com.esteban.ruano.lifecommander.models.CreateRecipeTrack
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -45,5 +47,36 @@ class RecipesService(
         httpClient.delete("$baseUrl/nutrition/recipes/$id") {
             appHeaders(tokenStorageImpl.getToken())
         }
+    }
+
+    // Recipe Tracking Methods
+    suspend fun trackRecipeConsumption(recipeId: String, consumedDateTime: String): Boolean {
+        val response = httpClient.post("$baseUrl/nutrition/tracking/consume") {
+            contentType(ContentType.Application.Json)
+            appHeaders(tokenStorageImpl.getToken())
+            setBody(CreateRecipeTrack(recipeId, consumedDateTime))
+        }
+        return response.status == HttpStatusCode.Created
+    }
+
+    suspend fun getRecipeTracksByDateRange(startDate: String, endDate: String): List<RecipeTrack> {
+        return httpClient.get("$baseUrl/nutrition/tracking/range") {
+            parameter("startDate", startDate)
+            parameter("endDate", endDate)
+            appHeaders(tokenStorageImpl.getToken())
+        }.body()
+    }
+
+    suspend fun getRecipeTracksByRecipe(recipeId: String): List<RecipeTrack> {
+        return httpClient.get("$baseUrl/nutrition/tracking/recipe/$recipeId") {
+            appHeaders(tokenStorageImpl.getToken())
+        }.body()
+    }
+
+    suspend fun deleteRecipeTrack(trackId: String): Boolean {
+        val response = httpClient.delete("$baseUrl/nutrition/tracking/track/$trackId") {
+            appHeaders(tokenStorageImpl.getToken())
+        }
+        return response.status == HttpStatusCode.OK
     }
 } 

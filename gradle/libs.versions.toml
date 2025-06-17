@@ -10,7 +10,7 @@ app-version-name = "1.0.0"
 
 # Kotlin
 kotlin = "2.2.0-RC"
-kotlinx-datetime = "0.6.0"
+kotlinx-datetime = "0.6.2"
 kotlin-test = "2.1.21"
 kotlinx-coroutines-test = "1.10.1"
 kotlin-serialization = "2.2.0-RC"

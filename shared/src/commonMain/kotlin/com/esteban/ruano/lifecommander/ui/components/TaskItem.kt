@@ -1,6 +1,7 @@
 package com.esteban.ruano.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.utils.DateUIUtils.getColorByPriority
@@ -21,6 +23,7 @@ import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUtils.toResourceStringBasedOnNow
 import com.lifecommander.models.Task
 import dev.icerock.moko.resources.compose.localized
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun TaskItem(
@@ -47,7 +50,12 @@ fun TaskItem(
             )
 
     val showContextMenu = remember { mutableStateOf(false) }
-    val priorityColor = getColorByPriority(task.priority)
+    val priorityColor = when (task.priority) {
+        3, 4, 5 -> Color(0xFFD32F2F) // High
+        2 -> Color(0xFFFFA000) // Medium
+        1 -> Color(0xFF388E3C) // Low
+        else -> MaterialTheme.colors.primary
+    }
 
     CommonItem(
         modifier = modifier,
@@ -65,7 +73,7 @@ fun TaskItem(
         rightContent = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 if (overdue && onReschedule != null) {
                     IconButton(
@@ -82,20 +90,14 @@ fun TaskItem(
                         )
                     }
                 }
-                Box(
+                Icon(
+                    imageVector = getIconByPriority(task.priority),
+                    contentDescription = null,
+                    tint = priorityColor,
                     modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(priorityColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = getIconByPriority(task.priority),
-                        contentDescription = null,
-                        tint = priorityColor,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                        .size(22.dp)
+                        .padding(end = 2.dp)
+                )
             }
         },
         bottomContent = {

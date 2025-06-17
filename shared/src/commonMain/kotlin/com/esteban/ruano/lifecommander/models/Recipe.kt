@@ -11,4 +11,20 @@ data class Recipe(
     val image: String? = null,
     val day: Int? = null,
     val mealTag: String? = null,
+    val consumed: Boolean = false,
+    val consumedDateTime: String? = null
+)
+
+@Serializable
+data class RecipeTrack(
+    val id: String,
+    val recipeId: String,
+    val consumedDateTime: String,
+    val status: String = "ACTIVE"
+)
+
+@Serializable
+data class CreateRecipeTrack(
+    val recipeId: String,
+    val consumedDateTime: String
 )
