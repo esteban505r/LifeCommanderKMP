@@ -94,7 +94,7 @@ class WorkoutTrackServiceTest : BaseTest() {
         
         // Get the created track ID
         val trackId = transaction {
-            WorkoutTrack.find { WorkoutTracks.doneDateTime eq doneDateTime }.firstOrNull()?.id?.value
+            WorkoutTrack.find { WorkoutTracks.doneDateTime eq doneDateTime.formatDefault().toLocalDateTimeUI() }.firstOrNull()?.id?.value
         }
         assertNotNull(trackId)
         
@@ -140,7 +140,7 @@ class WorkoutTrackServiceTest : BaseTest() {
         
         // Get the created track ID
         val trackId = transaction {
-            WorkoutTrack.find { WorkoutTracks.doneDateTime eq doneDateTime }.firstOrNull()?.id?.value
+            WorkoutTrack.find { WorkoutTracks.doneDateTime eq doneDateTime.formatDefault().toLocalDateTimeUI() }.firstOrNull()?.id?.value
         }
         assertNotNull(trackId)
         
@@ -167,6 +167,7 @@ class WorkoutTrackServiceTest : BaseTest() {
             
             // Create a test exercise and associate it with the workout day
             val exercise = Exercise.new {
+                user = com.esteban.ruano.database.entities.User[userId]
                 name = "Test Exercise ${UUID.randomUUID()}"
                 description = "This is a test exercise"
                 restSecs = 60

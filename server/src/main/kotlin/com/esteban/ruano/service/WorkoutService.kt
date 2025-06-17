@@ -9,14 +9,24 @@ import com.esteban.ruano.models.workout.WorkoutTrackDTO
 import com.esteban.ruano.models.workout.day.UpdateWorkoutDayDTO
 import com.esteban.ruano.models.workout.day.WorkoutDayDTO
 import com.esteban.ruano.models.workout.exercise.ExerciseDTO
+import com.esteban.ruano.utils.DateUIUtils.toLocalDate
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUtils.toLocalTime
 import com.esteban.ruano.utils.fromDateToLong
 import com.esteban.ruano.utils.toDayOfWeek
-import com.esteban.ruano.utils.toLocalTime
-import kotlinx.datetime.*
+import com.esteban.ruano.utils.toLocalDateTime
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime as toLocalDateTimeKt
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -278,7 +288,7 @@ class WorkoutService : BaseService() {
 
     fun getWorkoutsCompletedPerDayThisWeek(userId: Int): List<Int> {
         return transaction {
-            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val today = Clock.System.now().toLocalDateTimeKt(TimeZone.currentSystemDefault()).date
             val weekStart = today.minus((today.dayOfWeek.ordinal).toLong(), DateTimeUnit.DAY)
             
             (0..6).map { i ->
@@ -301,8 +311,8 @@ class WorkoutService : BaseService() {
     fun getWorkoutTracksByDateRange(userId: Int, startDate: String, endDate: String): List<WorkoutTrackDTO> {
         return transaction {
             WorkoutTrack.find {
-                (WorkoutTracks.doneDateTime greaterEq startDate.toLocalDateTime()!!) and
-                (WorkoutTracks.doneDateTime lessEq endDate.toLocalDateTime()!!) and
+                (WorkoutTracks.doneDateTime.date() greaterEq startDate.toLocalDate()) and
+                (WorkoutTracks.doneDateTime.date() lessEq endDate.toLocalDate()) and
                 (WorkoutTracks.status eq Status.ACTIVE) and
                 (WorkoutTracks.workoutDayId inSubQuery WorkoutDays.slice(WorkoutDays.id).select { 
                     (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) 

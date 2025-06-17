@@ -4,6 +4,8 @@ import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.plugins.*
 import com.esteban.ruano.service.TimerCheckerService
 import com.esteban.ruano.service.TimerService
+import com.esteban.ruano.utils.X_CATEGORY_PASSWORD_HEADER
+import com.esteban.ruano.utils.X_POST_PASSWORD_HEADER
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.config.yaml.*
@@ -50,7 +52,20 @@ fun Application.configureCORS() {
         allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Patch)
         allowHeader(HttpHeaders.Authorization)
+        allowMethod(HttpMethod.Get)
+        allowHeader(HttpHeaders.Authorization)
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.Accept)
+        allowHeader(HttpHeaders.UserAgent)
+        allowHeader(X_POST_PASSWORD_HEADER)
+        allowHeader(X_CATEGORY_PASSWORD_HEADER)
+        allowHeader("X-Requested-With")
+        allowCredentials = true
         allowHost("localhost:3000", schemes = listOf("http", "https"))
+        allowHost("127.0.0.1:3000", schemes = listOf("http", "https"))
+        allowHost("localhost", schemes = listOf("http", "https"))
+        allowHost("estebanruano.com", schemes = listOf("https"))
+        allowHost("www.estebanruano.com", schemes = listOf("https"))
     }
 }
 
