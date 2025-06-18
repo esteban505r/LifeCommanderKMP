@@ -32,7 +32,7 @@ fun FinanceScreen(
     onOpenCategoryKeywordMapper: () -> Unit = {},
     isDesktop: Boolean = false
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+    val selectedTab = state.selectedTab
     var showTransactionForm by remember { mutableStateOf(false) }
     var showScheduledTransactionForm by remember { mutableStateOf(false) }
     var showSavingsGoalForm by remember { mutableStateOf(false) }
@@ -147,7 +147,9 @@ fun FinanceScreen(
         ) {
             FinanceTabRow(
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
+                onTabSelected = { tabIndex -> 
+                    actions.setSelectedTab(tabIndex)
+                },
                 actions = tabItems,
                 isDesktop = isDesktop
             )

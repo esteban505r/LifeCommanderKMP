@@ -58,7 +58,9 @@ fun NewEditHabitDialog(
     LaunchedEffect(habitToEdit) {
         name = habitToEdit?.name ?: ""
         notes = habitToEdit?.note ?: ""
-        dateTime = habitToEdit?.dateTime?.toLocalDateTime() ?: getCurrentDateTime()
+        dateTime = habitToEdit?.dateTime?.toLocalDateTime() ?: getCurrentDateTime(
+            TimeZone.currentSystemDefault()
+        )
         frequencySelected = habitToEdit?.frequency?.let { Frequency.fromString(it) } ?: Frequency.DAILY
     }
 
@@ -385,7 +387,9 @@ fun NewEditHabitDialog(
                 }
 
                 CustomDatePicker(
-                    selectedDate = dateTime?.date ?: getCurrentDateTime().date,
+                    selectedDate = dateTime?.date ?: getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date,
                     onDateSelected = { dateTime = it.atTime(dateTime?.time ?: LocalTime(0, 0)) },
                     modifier = Modifier.fillMaxWidth(),
                     onDismiss = { showDatePicker = false }

@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import com.esteban.ruano.lifecommander.ui.components.ErrorScreen
+import com.esteban.ruano.lifecommander.ui.components.LoadingScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
 import kotlinx.datetime.toKotlinLocalDate
 import org.koin.compose.viewmodel.koinViewModel
@@ -19,7 +21,24 @@ fun CalendarScreen(
     val tasks by calendarViewModel.tasks.collectAsState()
     val habits by calendarViewModel.habits.collectAsState()
     val transactions by calendarViewModel.transactions.collectAsState()
+    val isLoading by calendarViewModel.isLoading.collectAsState()
+    val error by calendarViewModel.error.collectAsState()
 
+    when {
+        isLoading -> {
+            LoadingScreen(
+                message = "Loading calendar data...",
+                modifier = modifier
+            )
+        }
+        error != null -> {
+            ErrorScreen(
+                message = error ?: "Failed to load calendar data",
+                onRetry = { calendarViewModel.refresh() },
+                modifier = modifier
+            )
+        }
+        else -> {
     CalendarComposable(
         onTaskClick = onTaskClick,
         onHabitClick = onHabitClick,
@@ -30,7 +49,9 @@ fun CalendarScreen(
             startDate = startDate.toKotlinLocalDate(),
             endDate = endDate.toKotlinLocalDate()
         ) },
-        isLoading = calendarViewModel.isLoading,
-        error = calendarViewModel.error,
+                isLoading = isLoading,
+                error = error,
     )
+        }
+    }
 } 

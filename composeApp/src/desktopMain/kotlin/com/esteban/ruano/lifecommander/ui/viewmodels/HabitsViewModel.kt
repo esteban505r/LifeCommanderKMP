@@ -14,6 +14,9 @@ import utils.DateUtils.parseDateTime
 import java.time.LocalDateTime
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.asStateFlow
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import kotlinx.datetime.TimeZone
 
 class HabitsViewModel(
     private val tokenStorageImpl: TokenStorageImpl,
@@ -28,6 +31,9 @@ class HabitsViewModel(
 
     val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
+    val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     private val _currentTime = MutableStateFlow(System.currentTimeMillis())
     val currentTime: StateFlow<Long> = _currentTime.asStateFlow()
@@ -162,6 +168,28 @@ class HabitsViewModel(
                     token = tokenStorageImpl.getToken() ?: "",
                     id = id
                 )
+                getHabits()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    fun markHabitDone(habit: Habit) {
+        viewModelScope.launch {
+            _loading.value = true
+            try {
+                habitService.run {
+                    completeHabit(
+                                token = tokenStorageImpl.getToken() ?: "",
+                                id = habit.id,
+                                dateTime = habit.dateTime ?: getCurrentDateTime(
+                                    TimeZone.currentSystemDefault()
+                                ).formatDefault()
+                            )
+                }
                 getHabits()
             } catch (e: Exception) {
                 e.printStackTrace()

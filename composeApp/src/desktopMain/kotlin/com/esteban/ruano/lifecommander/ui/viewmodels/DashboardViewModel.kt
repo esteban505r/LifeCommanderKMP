@@ -28,6 +28,18 @@ class DashboardViewModel(
     private val _habitStats = MutableStateFlow<HabitStats?>(null)
     val habitStats: StateFlow<HabitStats?> = _habitStats.asStateFlow()
 
+    private val _overdueTasks = MutableStateFlow(0)
+    val overdueTasks: StateFlow<Int> = _overdueTasks.asStateFlow()
+
+    private val _overdueHabits = MutableStateFlow(0)
+    val overdueHabits: StateFlow<Int> = _overdueHabits.asStateFlow()
+
+    private val _overdueTasksList = MutableStateFlow<List<Task>>(emptyList())
+    val overdueTasksList: StateFlow<List<Task>> = _overdueTasksList.asStateFlow()
+
+    private val _overdueHabitsList = MutableStateFlow<List<Habit>>(emptyList())
+    val overdueHabitsList: StateFlow<List<Habit>> = _overdueHabitsList.asStateFlow()
+
     private val _recentTransactions = MutableStateFlow<List<TransactionDTO>>(emptyList())
     val recentTransactions: StateFlow<List<TransactionDTO>> = _recentTransactions.asStateFlow()
 
@@ -103,6 +115,10 @@ class DashboardViewModel(
                 _nextHabit.value = response.nextHabit
                 _taskStats.value = response.taskStats
                 _habitStats.value = response.habitStats
+                _overdueTasks.value = response.overdueTasks
+                _overdueHabits.value = response.overdueHabits
+                _overdueTasksList.value = response.overdueTasksList ?: emptyList()
+                _overdueHabitsList.value = response.overdueHabitsList ?: emptyList()
                 _recentTransactions.value = response.recentTransactions ?: emptyList()
                 _accountBalance.value = response.accountBalance
                 _todayCalories.value = response.todayCalories

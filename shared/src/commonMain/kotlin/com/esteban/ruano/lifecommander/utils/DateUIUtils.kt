@@ -111,16 +111,26 @@ object DateUIUtils {
             .toLocalDateTime(TimeZone.UTC)
     }
 
-    fun getCurrentTimeFormatted(): String {
-        return Clock.System.now().toLocalDateTime(TimeZone.UTC).formatToTimeString()
+    fun getCurrentTimeFormatted(
+        timeZone: TimeZone = TimeZone.currentSystemDefault()
+    ): String {
+        return Clock.System.now().toLocalDateTime(timeZone).formatToTimeString()
     }
 
-    fun getCurrentDateTime(): LocalDateTime {
-        return Clock.System.now().toLocalDateTime(TimeZone.UTC)
+    fun getCurrentDateTime(
+        timeZone: TimeZone
+    ): LocalDateTime {
+        return Clock.System.now().toLocalDateTime(
+            timeZone
+        )
     }
 
-    fun LocalDate.toMillis(): Long {
-        return this.atTime(0, 0).toInstant(TimeZone.UTC).toEpochMilliseconds()
+    fun LocalDate.toMillis(
+        timeZone: TimeZone = TimeZone.UTC
+    ): Long {
+        return this.atTime(0, 0).toInstant(
+            timeZone
+        ).toEpochMilliseconds()
     }
 
     fun LocalDateTime.toMillis(): Long {

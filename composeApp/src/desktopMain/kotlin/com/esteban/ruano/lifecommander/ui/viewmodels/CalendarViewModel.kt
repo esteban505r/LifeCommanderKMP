@@ -37,11 +37,11 @@ class CalendarViewModel(
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
 
-    var isLoading by mutableStateOf(false)
-        private set
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    var error by mutableStateOf<String?>(null)
-        private set
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     init {
         loadData()
@@ -53,8 +53,8 @@ class CalendarViewModel(
     ) {
         viewModelScope.launch {
             try {
-                isLoading = true
-                error = null
+                _isLoading.value = true
+                _error.value = null
                 
                 val token = tokenStorageImpl.getToken() ?: throw Exception("No token available")
                 val currentMonth = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.yearMonth
@@ -97,10 +97,10 @@ class CalendarViewModel(
                 )
                 _transactions.value = transactions.transactions
             } catch (e: Exception) {
-                error = "Failed to load data"
+                _error.value = "Failed to load data"
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _isLoading.value = false
             }
         }
     }

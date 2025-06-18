@@ -148,6 +148,7 @@ kotlin {
             implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.json)
             implementation(compose.components.uiToolingPreview)
+            implementation(libs.kotlinx.datetime)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(projects.shared)
@@ -171,6 +172,8 @@ kotlin {
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.coroutines.swing)
+
+            implementation(libs.kotlinx.datetime)
 
             implementation(libs.datastore)
             implementation(libs.datastore.preferences)

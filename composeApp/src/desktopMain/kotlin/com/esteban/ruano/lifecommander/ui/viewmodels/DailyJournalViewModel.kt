@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
 import services.dailyjournal.DailyJournalService
 import services.dailyjournal.models.PomodoroResponse
 import services.dailyjournal.models.QuestionAnswerDTO
@@ -36,11 +37,47 @@ class DailyJournalViewModel(
     private val _state = MutableStateFlow(DailyJournalState())
     val state: StateFlow<DailyJournalState> = _state.asStateFlow()
 
+    fun initializeJournal() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+            try {
+                // Load questions first
+                val questions = dailyJournalService.getQuestions()
+                
+                // Check if completed for today
+                val today = getCurrentDateTime(
+                    TimeZone.currentSystemDefault()
+                ).date.formatDefault()
+                val journals = dailyJournalService.getByDateRange(today, today)
+                val isCompleted = journals.isNotEmpty()
+                val questionAnswers = journals.flatMap { it.questionAnswers }
+                
+                _state.value = _state.value.copy(
+                    questions = questions,
+                    questionAnswers = questionAnswers,
+                    isLoading = false,
+                    isCompleted = isCompleted,
+                    showQuestions = questions.isNotEmpty() && !isCompleted,
+                    error = null
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoading = false,
+                    isCompleted = false,
+                    showQuestions = false
+                )
+            }
+        }
+    }
+
     fun checkIfCompleted() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
             try {
-                val today = getCurrentDateTime().date.formatDefault()
+                val today = getCurrentDateTime(
+                    TimeZone.currentSystemDefault()
+                ).date.formatDefault()
                 val journals = dailyJournalService.getByDateRange(today, today)
                 _state.value = _state.value.copy(
                     isCompleted = journals.isNotEmpty(),
@@ -83,7 +120,7 @@ class DailyJournalViewModel(
             _state.value = _state.value.copy(isLoading = true)
             try {
                 dailyJournalService.addQuestion(text)
-                loadQuestions()
+                initializeJournal()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
@@ -118,8 +155,10 @@ class DailyJournalViewModel(
             _state.value = _state.value.copy(isLoading = true)
             try {
                 dailyJournalService.deleteQuestion(id)
+                val updatedQuestions = _state.value.questions.filter { it.id != id }
                 _state.value = _state.value.copy(
-                    questions = _state.value.questions.filter { it.id != id },
+                    questions = updatedQuestions,
+                    showQuestions = updatedQuestions.isNotEmpty() && !_state.value.isCompleted,
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -144,7 +183,9 @@ class DailyJournalViewModel(
             _state.value = _state.value.copy(isLoading = true)
             try {
                 dailyJournalService.createDailyJournal(
-                    date = getCurrentDateTime().date.formatDefault(),
+                    date = getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date.formatDefault(),
                     summary = "Night Block Reflection",
                     questionAnswers = _state.value.questionAnswers
                 )

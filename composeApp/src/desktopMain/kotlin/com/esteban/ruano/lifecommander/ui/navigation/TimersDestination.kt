@@ -5,6 +5,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import com.esteban.ruano.lifecommander.ui.components.ErrorScreen
+import com.esteban.ruano.lifecommander.ui.components.LoadingScreen
 import com.esteban.ruano.lifecommander.ui.screens.TimersScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -19,11 +21,28 @@ fun TimersScreenDestination(
     val timerPlaybackState by timersViewModel.timerPlaybackState.collectAsState()
     val connectionState by timersViewModel.connectionState.collectAsState()
     val notifications by timersViewModel.notifications.collectAsState()
+    val timersLoading by timersViewModel.timersLoading.collectAsState()
+    val timersError by timersViewModel.timersError.collectAsState()
 
     LaunchedEffect(Unit){
         timersViewModel.loadTimerLists()
     }
 
+    when {
+        timersLoading -> {
+            LoadingScreen(
+                message = "Loading timers...",
+                modifier = modifier
+            )
+        }
+        timersError != null -> {
+            ErrorScreen(
+                message = timersError ?: "Failed to load timers",
+                onRetry = { timersViewModel.loadTimerLists() },
+                modifier = modifier
+            )
+        }
+        else -> {
     TimersScreen(
         timerLists = timerLists,
         timerPlaybackState = timerPlaybackState,
@@ -69,4 +88,6 @@ fun TimersScreenDestination(
             timersViewModel.stopTimer()
         }
     )
+        }
+    }
 } 

@@ -16,6 +16,9 @@ import com.esteban.ruano.lifecommander.utils.TimeBasedItemUtils
 import com.lifecommander.models.Task
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import kotlinx.datetime.TimeZone
 
 class TasksViewModel(
     private val tokenStorageImpl: TokenStorageImpl,
@@ -37,9 +40,13 @@ class TasksViewModel(
     val _loading = MutableStateFlow(false)
     val loading = _loading.asStateFlow()
 
+    val _error = MutableStateFlow<String?>(null)
+    val error = _error.asStateFlow()
+
     private fun getTasks() {
         viewModelScope.launch {
             _loading.value = true
+            _error.value = null
             try{
                 val response = taskService.getAll(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -48,6 +55,7 @@ class TasksViewModel(
                 )
                 _tasks.value = response.sortedByDefault()
             }catch (e: Exception){
+                _error.value = e.message ?: "Failed to load tasks"
                 e.printStackTrace()
             }
             finally {
@@ -59,6 +67,7 @@ class TasksViewModel(
     fun getNoDueDateTasks() {
         viewModelScope.launch {
             _loading.value = true
+            _error.value = null
             try {
                 val response = taskService.getNoDueDateTasks(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -68,6 +77,7 @@ class TasksViewModel(
                 _tasks.value = response.sortedByDefault()
             }
             catch (e: Exception) {
+                _error.value = e.message ?: "Failed to load tasks"
                 e.printStackTrace()
             }
             finally {
@@ -79,6 +89,7 @@ class TasksViewModel(
     fun changeCheckHabit(id:String, checked: Boolean) {
         viewModelScope.launch {
             _loading.value = true
+            _error.value = null
             try {
                 if (checked) {
                     taskService.completeTask(
@@ -102,6 +113,7 @@ class TasksViewModel(
                 }
             }
             catch (e: Exception) {
+                _error.value = e.message ?: "Failed to update task"
                 e.printStackTrace()
             }
             finally {
@@ -113,6 +125,7 @@ class TasksViewModel(
     fun getTasksByFilter() {
         viewModelScope.launch {
             _loading.value = true
+            _error.value = null
             try {
                 if (_selectedFilter.value == TaskFilters.ALL) {
                     getTasks()
@@ -141,6 +154,7 @@ class TasksViewModel(
                 }
             }
             catch (e: Exception) {
+                _error.value = e.message ?: "Failed to load tasks"
                 e.printStackTrace()
             }
             finally {
@@ -152,6 +166,7 @@ class TasksViewModel(
     fun addTask(name: String, dueDate: String?, scheduledDate: String?, note: String?, priority: Int) {
         viewModelScope.launch {
             _loading.value = true
+            _error.value = null
             try {
                 taskService.addTask(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -164,6 +179,7 @@ class TasksViewModel(
                 getTasksByFilter()
             }
             catch (e: Exception) {
+                _error.value = e.message ?: "Failed to add task"
                 e.printStackTrace()
             }
             finally {
@@ -175,6 +191,7 @@ class TasksViewModel(
     fun updateTask(id: String, task: Task) {
         viewModelScope.launch {
             _loading.value = true
+            _error.value = null
             try {
                 taskService.updateTask(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -184,6 +201,7 @@ class TasksViewModel(
                 getTasksByFilter()
             }
             catch (e: Exception) {
+                _error.value = e.message ?: "Failed to update task"
                 e.printStackTrace()
             }
             finally {
@@ -195,6 +213,7 @@ class TasksViewModel(
     fun deleteTask(id: String) {
         viewModelScope.launch {
             _loading.value = true
+            _error.value = null
             try {
                 taskService.deleteTask(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -203,6 +222,7 @@ class TasksViewModel(
                 getTasksByFilter()
             }
             catch (e: Exception) {
+                _error.value = e.message ?: "Failed to delete task"
                 e.printStackTrace()
             }
             finally {
@@ -219,6 +239,7 @@ class TasksViewModel(
     fun rescheduleTask(task: Task) {
         viewModelScope.launch {
             _loading.value = true
+            _error.value = null
             try {
                 // Get the current time
                 val now = LocalDateTime.now()
@@ -248,6 +269,7 @@ class TasksViewModel(
                     getTasksByFilter()
                 }
             } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to reschedule task"
                 e.printStackTrace()
             } finally {
                 _loading.value = false
@@ -259,5 +281,25 @@ class TasksViewModel(
         val filter = TaskFilters.entries.getOrNull(indexOf) ?: TaskFilters.TODAY
         _selectedFilter.value = filter
         getTasksByFilter()
+    }
+
+    fun markTaskDone(task: Task) {
+        viewModelScope.launch {
+            _loading.value = true
+            try {
+                taskService.completeTask(
+                    token = tokenStorageImpl.getToken() ?: "",
+                    id = task.id,
+                    dateTime = task.dueDateTime ?: getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).formatDefault()
+                )
+                getTasksByFilter()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _loading.value = false
+            }
+        }
     }
 }

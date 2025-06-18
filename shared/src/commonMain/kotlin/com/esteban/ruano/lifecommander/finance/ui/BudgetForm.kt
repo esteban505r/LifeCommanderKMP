@@ -16,6 +16,7 @@ import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.models.Frequency
 import com.lifecommander.ui.components.CustomDatePicker
+import kotlinx.datetime.TimeZone
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -53,7 +54,9 @@ fun BudgetForm(
         {
             Surface {
                 CustomDatePicker(
-                    selectedDate = ( if (editingStartDate) startDate else endDate ) ?: getCurrentDateTime().date,
+                    selectedDate = ( if (editingStartDate) startDate else endDate ) ?: getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date,
                     onDateSelected = {
                         if (
                             editingStartDate

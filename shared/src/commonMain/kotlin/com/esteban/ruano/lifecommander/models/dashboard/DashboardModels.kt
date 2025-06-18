@@ -10,6 +10,10 @@ data class DashboardResponse(
     val nextHabit: Habit?,
     val taskStats: TaskStats,
     val habitStats: HabitStats,
+    val overdueTasks: Int = 0,
+    val overdueHabits: Int = 0,
+    val overdueTasksList: List<Task> = emptyList(),
+    val overdueHabitsList: List<Habit> = emptyList(),
     // Finance
     val recentTransactions: List<TransactionDTO>? = emptyList(),
     val accountBalance: Double = 0.0,

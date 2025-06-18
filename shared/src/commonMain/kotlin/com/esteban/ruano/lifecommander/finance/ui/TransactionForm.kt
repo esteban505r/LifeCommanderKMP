@@ -189,7 +189,9 @@ fun TransactionForm(
             {
                 Surface {
                     CustomDatePicker(
-                        selectedDate = dateTime?.date ?: getCurrentDateTime().date,
+                        selectedDate = dateTime?.date ?: getCurrentDateTime(
+                            TimeZone.currentSystemDefault()
+                        ).date,
                         onDateSelected = { dateTime = it.atTime(dateTime?.time ?: LocalTime(0, 0)) },
                         modifier = Modifier.fillMaxWidth(),
                         onDismiss = { showDatePicker = false }

@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.esteban.ruano.lifecommander.ui.components.ErrorScreen
+import com.esteban.ruano.lifecommander.ui.components.LoadingScreen
 import com.esteban.ruano.lifecommander.ui.screens.WorkoutScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.WorkoutViewModel
 import kotlinx.datetime.Clock
@@ -34,6 +36,26 @@ fun WorkoutScreenDestination() {
         )
     }
 
+    when {
+        state.isLoading -> {
+            LoadingScreen(
+                message = "Loading workout data...",
+                modifier = androidx.compose.ui.Modifier
+            )
+        }
+        state.isError -> {
+            ErrorScreen(
+                message = state.errorMessage ?: "Failed to load workout data",
+                onRetry = {
+                    val now = Clock.System.now()
+                    val currentDay = now.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.dayOfWeek.value
+                    viewModel.getExercisesByDay(currentDay)
+                    viewModel.getWorkoutsCompletedPerDayThisWeek()
+                },
+                modifier = androidx.compose.ui.Modifier
+            )
+        }
+        else -> {
     WorkoutScreen(
         state = state,
         onAdd = { exercise ->
@@ -52,5 +74,7 @@ fun WorkoutScreenDestination() {
             viewModel.completeWorkout(workoutDayId)
         }
     )
+        }
+    }
 }
 

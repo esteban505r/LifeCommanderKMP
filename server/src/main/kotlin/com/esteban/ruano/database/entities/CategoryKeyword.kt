@@ -3,6 +3,7 @@ package com.esteban.ruano.database.entities
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import kotlinx.datetime.TimeZone
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -20,8 +21,12 @@ object CategoryKeywords : UUIDTable("category_keywords") {
     val keyword = varchar("keyword", 255)
     val user = reference("user", Users)
     val status = enumerationByName("status", 50, Status::class).default(Status.ACTIVE)
-    val createdAt = datetime("created_at").default(getCurrentDateTime())
-    val updatedAt = datetime("updated_at").default(getCurrentDateTime())
+    val createdAt = datetime("created_at").default(getCurrentDateTime(
+        TimeZone.currentSystemDefault()
+    ))
+    val updatedAt = datetime("updated_at").default(getCurrentDateTime(
+        TimeZone.currentSystemDefault()
+    ))
 }
 
 class CategoryKeyword(id: EntityID<UUID>) : UUIDEntity(id) {

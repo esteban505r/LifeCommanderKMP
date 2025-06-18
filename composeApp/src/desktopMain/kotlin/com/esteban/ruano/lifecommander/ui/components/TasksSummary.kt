@@ -3,11 +3,16 @@ package com.esteban.ruano.lifecommander.ui.components
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,17 +22,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalTime
 import com.lifecommander.models.Task
 import com.lifecommander.models.dashboard.TaskStats
 import ui.components.NextActionCard
 import ui.components.StatItem
 import ui.components.StatsCard
 import utils.DateUtils.calculateTimeRemaining
+import androidx.compose.foundation.HorizontalScrollbar
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
 
 @Composable
 fun TasksSummary(
     nextTask: Task?,
     taskStats: TaskStats?,
+    overdueTasks: List<Task>,
+    onMarkTaskDone: (Task) -> Unit,
     onViewAllClick: () -> Unit,
     isExpanded: Boolean,
     currentTime: Long
@@ -49,6 +63,9 @@ fun TasksSummary(
             },
             modifier = Modifier.fillMaxWidth()
         )
+
+        // Minimalist overdue slider above stats
+        MinimalOverdueSliderTasks(overdueTasks, onMarkTaskDone)
 
         // Stats Card
         StatsCard(
@@ -229,5 +246,98 @@ private fun PriorityBadge(priority: Int) {
             style = MaterialTheme.typography.caption,
             color = color
         )
+    }
+}
+
+@Composable
+fun MinimalOverdueSliderTasks(
+    overdueTasks: List<Task>,
+    onMarkTaskDone: (Task) -> Unit
+) {
+    if (overdueTasks.isNotEmpty()) {
+        val state = rememberLazyListState()
+        Text(
+            "Overdue Tasks",
+            style = MaterialTheme.typography.subtitle2,
+            color = MaterialTheme.colors.error,
+            modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colors.surface.copy(alpha = 0.7f), shape = RoundedCornerShape(8.dp))
+                .padding(vertical = 4.dp)
+        ) {
+            LazyRow(
+                state = state,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                items(overdueTasks.size) { idx ->
+                    val task = overdueTasks[idx]
+                    MinimalOverdueTaskCard(task, onMarkTaskDone)
+                }
+            }
+            HorizontalScrollbar(
+                adapter = rememberScrollbarAdapter(state),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
+            )
+        }
+    }
+}
+
+@Composable
+fun MinimalOverdueTaskCard(task: Task, onMarkDone: (Task) -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Surface(
+        modifier = Modifier
+            .padding(end = 8.dp)
+            .width(180.dp)
+            .height(70.dp)
+            .hoverable(interactionSource),
+        shape = RoundedCornerShape(10.dp),
+        elevation = 2.dp,
+        color =  MaterialTheme.colors.surface
+    ) {
+        Row(
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.ErrorOutline,
+                        contentDescription = "Overdue",
+                        tint = MaterialTheme.colors.error,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        " Overdue",
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Text(task.name, style = MaterialTheme.typography.body2, maxLines = 1)
+                Text(
+                    task.dueDateTime?.toLocalDateTime()?.toLocalTime()?.toString() ?: "-",
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                )
+            }
+            Icon(
+                Icons.Default.Check,
+                contentDescription = "Mark as done",
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { onMarkDone(task) },
+                tint = MaterialTheme.colors.primary
+            )
+        }
     }
 } 

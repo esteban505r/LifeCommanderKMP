@@ -3,6 +3,7 @@ package com.esteban.ruano.service
 import io.ktor.server.plugins.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.DatePeriod
 import com.esteban.ruano.database.converters.toDTO
 import com.esteban.ruano.database.converters.toHabitDTO
 import com.esteban.ruano.database.entities.Habit
@@ -19,6 +20,7 @@ import com.esteban.ruano.utils.HabitUtils
 import com.esteban.ruano.utils.parseDate
 import com.esteban.ruano.utils.parseDateTime
 import com.lifecommander.models.Frequency
+import kotlinx.datetime.plus
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
@@ -155,28 +157,64 @@ class HabitService(
         excludeDaily: Boolean = false
     ): List<HabitDTO> {
         return transaction {
-            val query = if (excludeDaily) {
+            // Get all habits created before or on the end date (similar to fetchAll with date)
+            val baseQuery = if (excludeDaily) {
                 (Habits.user eq userId) and 
                 (Habits.name.lowerCase() like "%${pattern.lowercase()}%") and 
-                (Habits.baseDateTime.date() greaterEq startDate) and
                 (Habits.baseDateTime.date() lessEq endDate) and
                 (Habits.status eq Status.ACTIVE) and
                 (Habits.frequency neq Frequency.DAILY.value)
             } else {
                 (Habits.user eq userId) and 
                 (Habits.name.lowerCase() like "%${pattern.lowercase()}%") and 
-                (Habits.baseDateTime.date() greaterEq startDate) and
                 (Habits.baseDateTime.date() lessEq endDate) and
                 (Habits.status eq Status.ACTIVE)
             }
 
-            val habits = Habit.find(query)
+            val habits = Habit.find(baseQuery)
                 .orderBy(Habits.baseDateTime.minute() to SortOrder.ASC)
                 .limit(limit, offset)
                 .toList()
-                .map { it.toHabitDTO() }
 
-            habits.map {
+            val result = mutableListOf<HabitDTO>()
+            
+            // For each habit, check if it's relevant for any day in the date range
+            for (habit in habits) {
+                var isRelevantForRange = false
+                
+                // Check each day in the range to see if this habit is relevant
+                var currentDate = startDate
+                while (currentDate <= endDate) {
+                    val tracking = HabitTrack.find {
+                        (HabitTracks.habitId eq habit.id) and (HabitTracks.status eq Status.ACTIVE)
+                    }.orderBy(HabitTracks.doneDateTime to SortOrder.DESC).firstOrNull()
+
+                    val dto = habit.toHabitDTO()
+                    val isDone = HabitUtils.isDone(dto, tracking, currentDate)
+                    
+                    // If the habit is not done for this date, it's relevant for the range
+                    if (!isDone) {
+                        isRelevantForRange = true
+                        break
+                    }
+                    
+                    currentDate = currentDate.plus(DatePeriod(days = 1))
+                }
+                
+                // Only include habits that are relevant for the date range
+                if (isRelevantForRange) {
+                    // Use the start date to determine the completion status for the result
+                    val tracking = HabitTrack.find {
+                        (HabitTracks.habitId eq habit.id) and (HabitTracks.status eq Status.ACTIVE)
+                    }.orderBy(HabitTracks.doneDateTime to SortOrder.DESC).firstOrNull()
+
+                    val dto = habit.toHabitDTO()
+                    val isDone = HabitUtils.isDone(dto, tracking, startDate)
+                    result.add(dto.copy(done = isDone))
+                }
+            }
+
+            result.map {
                 val reminders = reminderService.getByHabitID(UUID.fromString(it.id))
                 it.copy(reminders = reminders.map { it.toDTO() })
             }

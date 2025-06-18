@@ -10,8 +10,10 @@ import com.lifecommander.finance.model.SavingsGoal
 import com.lifecommander.finance.model.ScheduledTransaction
 import com.lifecommander.finance.model.Transaction
 import com.lifecommander.finance.model.TransactionImportPreview
+import kotlinx.datetime.TimeZone
 
 data class FinanceState(
+    val selectedTab: Int = 0,
     val accounts: List<Account> = emptyList(),
     val transactions: List<Transaction> = emptyList(),
     val totalTransactions: Long = 0,
@@ -27,6 +29,8 @@ data class FinanceState(
     val pageSize: Int = 50,
     val transactionFilters: TransactionFilters = TransactionFilters(),
     val budgetFilters: BudgetFilters = BudgetFilters(),
-    val budgetBaseDate: String = getCurrentDateTime().date.formatDefault(),
+    val budgetBaseDate: String = getCurrentDateTime(
+        TimeZone.currentSystemDefault()
+    ).date.formatDefault(),
     val importPreview: TransactionImportPreview? = null,
 )

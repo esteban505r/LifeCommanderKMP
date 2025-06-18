@@ -7,6 +7,13 @@ import com.esteban.ruano.lifecommander.ui.state.FinanceState as DesktopFinanceSt
 object FinanceStateConverter {
     fun toDesktopState(mobileState: FinanceState): DesktopFinanceState {
         return DesktopFinanceState(
+            selectedTab = when (mobileState.selectedTab) {
+                FinanceTab.OVERVIEW -> 0
+                FinanceTab.TRANSACTIONS -> 1
+                FinanceTab.BUDGETS -> 3
+                FinanceTab.SAVINGS -> 4
+                FinanceTab.SCHEDULED -> 2
+            },
             accounts = mobileState.accounts,
             transactions = mobileState.transactions,
             scheduledTransactions = mobileState.scheduledTransactions,

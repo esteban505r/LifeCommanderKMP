@@ -338,7 +338,9 @@ fun NewEditTaskDialog(
                                 window.size = Dimension(datePickerDimensionWith, datePickerDimensionHeight)
                             }
                             CustomDatePicker(
-                                selectedDate = dueDate?.date ?: getCurrentDateTime().date,
+                                selectedDate = dueDate?.date ?: getCurrentDateTime(
+                                    TimeZone.currentSystemDefault()
+                                ).date,
                                 onDateSelected = { dueDate = it.atTime(dueDate?.time ?: LocalTime(0, 0)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 onDismiss = { showDatePicker = false }

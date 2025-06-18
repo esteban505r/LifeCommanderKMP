@@ -3,7 +3,6 @@ package com.esteban.ruano.lifecommander.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.esteban.ruano.lifecommander.models.Recipe
-import com.esteban.ruano.lifecommander.models.RecipeTrack
 import com.esteban.ruano.lifecommander.services.meals.RecipesService
 import com.esteban.ruano.lifecommander.ui.state.RecipesState
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
@@ -137,8 +136,8 @@ class RecipesViewModel(
                 
                 val success = service.trackRecipeConsumption(recipeId, consumedDateTime)
                 if (success) {
-                    // Refresh the recipes to show updated state
-                    getRecipes()
+                    // Refresh only the current day's recipes to show updated state
+                    getRecipesByDay(_state.value.daySelected)
                 } else {
                     _state.value = _state.value.copy(
                         isError = true,

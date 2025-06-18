@@ -33,10 +33,6 @@ fun JournalScreen(
     var showEditQuestionDialog by remember { mutableStateOf<QuestionDTO?>(null) }
     var showDeleteQuestionDialog by remember { mutableStateOf<QuestionDTO?>(null) }
 
-    LaunchedEffect(Unit) {
-        onLoadQuestions()
-    }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -65,18 +61,8 @@ fun JournalScreen(
             }
         }
 
-        when {
-            state.isLoading -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            state.error != null -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Error: ${state.error}", color = MaterialTheme.colors.error)
-                }
-            }
-            isCompleted -> {
+        if (isCompleted) {
+            // Show completed journal with answers
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -105,8 +91,8 @@ fun JournalScreen(
                         }
                     }
                 }
-            }
-            state.showQuestions -> {
+        } else {
+            // Show questions to answer
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -130,7 +116,6 @@ fun JournalScreen(
                     enabled = state.questions.all { question -> answers.firstOrNull{it.questionId == question.id}?.answer?.isNotBlank() == true },
                 ) {
                     Text("Complete Journal")
-                }
             }
         }
     }

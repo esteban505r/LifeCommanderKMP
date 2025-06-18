@@ -28,6 +28,7 @@ import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.finance.model.Transaction
 import com.lifecommander.models.Task
+import kotlinx.datetime.TimeZone
 import org.koin.compose.viewmodel.koinViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -195,7 +196,9 @@ fun CalendarComposable(
                         if (showHabits) habits else emptyList(),
                         if (showTransactions) {
                             if (showFutureTransactions) transactions
-                            else transactions.filter { it.date.toLocalDateTime().date <= getCurrentDateTime().date }
+                            else transactions.filter { it.date.toLocalDateTime().date <= getCurrentDateTime(
+                                TimeZone.currentSystemDefault()
+                            ).date }
                         } else emptyList(),
                         selectedDate == day.date.toJavaLocalDate()
                     ) { selectedDate = it }
@@ -225,7 +228,9 @@ fun CalendarComposable(
                         transactionDate == selectedDate?.toKotlinLocalDate()
                     } else {
                         transactionDate == selectedDate?.toKotlinLocalDate() && 
-                        transactionDate <= getCurrentDateTime().date
+                        transactionDate <= getCurrentDateTime(
+                            TimeZone.currentSystemDefault()
+                        ).date
                     }
                 }
             } else emptyList()
@@ -374,7 +379,9 @@ private fun Day(
                     isSelected -> MaterialTheme.colors.primary.copy(alpha = 0.2f)
                     day.position == DayPosition.MonthDate -> {
                         when {
-                            getCurrentDateTime().date == kotlinDate ->
+                            getCurrentDateTime(
+                                TimeZone.currentSystemDefault()
+                            ).date == kotlinDate ->
                                 MaterialTheme.colors.secondary.copy(alpha = 0.1f)
                             dayTasks.isNotEmpty() && dayHabits.isNotEmpty() -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
                             dayTasks.isNotEmpty() -> MaterialTheme.colors.primary.copy(alpha = 0.05f)

@@ -188,7 +188,9 @@ fun ScheduledTransactionForm(
             ) {
                 Surface {
                     CustomDatePicker(
-                        selectedDate = startDate?.date ?: getCurrentDateTime().date,
+                        selectedDate = startDate?.date ?: getCurrentDateTime(
+                            TimeZone.currentSystemDefault()
+                        ).date,
                         onDateSelected = { startDate = it.atTime(startDate?.time ?: LocalTime(0, 0)) },
                         modifier = Modifier.fillMaxWidth(),
                         onDismiss = { showDatePicker = false }

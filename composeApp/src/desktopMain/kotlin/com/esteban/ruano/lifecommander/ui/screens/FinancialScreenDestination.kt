@@ -5,6 +5,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import com.esteban.ruano.lifecommander.ui.components.ErrorScreen
+import com.esteban.ruano.lifecommander.ui.components.LoadingScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
 import com.lifecommander.finance.ui.FinanceScreen
 import org.koin.compose.viewmodel.koinViewModel
@@ -23,12 +25,30 @@ fun FinancialScreenDestination(
         financialViewModel.getAccounts()
     }
 
+    when {
+        state.isLoading -> {
+            LoadingScreen(
+                message = "Loading financial data...",
+                modifier = modifier
+            )
+        }
+        state.error != null -> {
+            ErrorScreen(
+                message = state.error ?: "Failed to load financial data",
+                onRetry = { financialViewModel.getAccounts() },
+                modifier = modifier
+            )
+        }
+        else -> {
     FinanceScreen(
-        modifier = modifier,
         state = state,
         actions = financialViewModel,
         onOpenImporter = onOpenImporter,
         onOpenBudgetTransactions = onOpenBudgetTransactions,
         onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
+                isDesktop = true,
+                modifier = modifier
     )
+        }
+    }
 } 

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 
 class FinanceViewModel(
     private val service: FinanceService
@@ -94,7 +95,9 @@ class FinanceViewModel(
             try {
                 _state.value = _state.value.copy(isLoading = true, error = null)
                 service.categorizeAllTransactions(
-                    referenceDate = getCurrentDateTime().date.formatDefault()
+                    referenceDate = getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date.formatDefault()
                 )
                 getBudgets()
             } catch (e: Exception) {
@@ -111,7 +114,9 @@ class FinanceViewModel(
             try {
                 _state.value = _state.value.copy(isLoading = true, error = null)
                 service.categorizeUnbudgeted(
-                    referenceDate = getCurrentDateTime().date.formatDefault()
+                    referenceDate = getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date.formatDefault()
                 )
                 getBudgets()
             } catch (e: Exception) {
@@ -482,7 +487,9 @@ class FinanceViewModel(
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(isLoading = true, error = null)
-                val transactions = service.getBudgetTransactions(budgetId, referenceDate = getCurrentDateTime().date.formatDefault(), filters = _state.value.transactionFilters)
+                val transactions = service.getBudgetTransactions(budgetId, referenceDate = getCurrentDateTime(
+                    TimeZone.currentSystemDefault()
+                ).date.formatDefault(), filters = _state.value.transactionFilters)
                 _state.value = _state.value.copy(
                     transactions = transactions,
                     isLoading = false
@@ -569,6 +576,14 @@ class FinanceViewModel(
                 )
             }
         }
+    }
+
+    fun resetError() {
+        _state.value = _state.value.copy(error = null)
+    }
+    
+    override fun setSelectedTab(tabIndex: Int) {
+        _state.value = _state.value.copy(selectedTab = tabIndex)
     }
 
 }

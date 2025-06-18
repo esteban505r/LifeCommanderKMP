@@ -66,11 +66,36 @@ class TimersViewModel(
         MutableStateFlow<TimerWebSocketClient.ConnectionState>(TimerWebSocketClient.ConnectionState.Disconnected)
     val connectionState: StateFlow<TimerWebSocketClient.ConnectionState> = _connectionState.asStateFlow()
 
-    var isLoading by mutableStateOf(false)
-        private set
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    var error by mutableStateOf<String?>(null)
-        private set
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    // Additional loading and error states for specific features
+    private val _timersLoading = MutableStateFlow(false)
+    val timersLoading: StateFlow<Boolean> = _timersLoading.asStateFlow()
+
+    private val _timersError = MutableStateFlow<String?>(null)
+    val timersError: StateFlow<String?> = _timersError.asStateFlow()
+
+    private val _pomodorosLoading = MutableStateFlow(false)
+    val pomodorosLoading: StateFlow<Boolean> = _pomodorosLoading.asStateFlow()
+
+    private val _pomodorosError = MutableStateFlow<String?>(null)
+    val pomodorosError: StateFlow<String?> = _pomodorosError.asStateFlow()
+
+    private val _settingsLoading = MutableStateFlow(false)
+    val settingsLoading: StateFlow<Boolean> = _settingsLoading.asStateFlow()
+
+    private val _settingsError = MutableStateFlow<String?>(null)
+    val settingsError: StateFlow<String?> = _settingsError.asStateFlow()
+
+    private val _timerDetailLoading = MutableStateFlow(false)
+    val timerDetailLoading: StateFlow<Boolean> = _timerDetailLoading.asStateFlow()
+
+    private val _timerDetailError = MutableStateFlow<String?>(null)
+    val timerDetailError: StateFlow<String?> = _timerDetailError.asStateFlow()
 
     fun connectWebSocket() {
         webSocketClient.connect()
@@ -117,7 +142,7 @@ class TimersViewModel(
 
             if (updatedList == null) {
                 println("[Client] Timer list not found for ID: $listId")
-                error = "Unable to refresh timer list"
+                _error.value = "Unable to refresh timer list"
                 return@launch
             }
 
@@ -125,7 +150,7 @@ class TimersViewModel(
 
             if (timerIndex == -1) {
                 println("[Client] Timer ${timer.id} not found in list. Maybe out of sync?")
-                error = "Timer not found in list"
+                _error.value = "Timer not found in list"
                 return@launch
             }
 
@@ -215,7 +240,8 @@ class TimersViewModel(
 
     fun createTimerList(name: String, loopTimers: Boolean, pomodoroGrouped: Boolean) {
         viewModelScope.launch {
-            isLoading = true
+            _isLoading.value = true
+            _error.value = null
             try {
                 val response = timerService.createTimerList(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -225,10 +251,10 @@ class TimersViewModel(
                 )
                 loadTimerLists()
             } catch (e: Exception) {
-                error = e.message
+                _error.value = e.message
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _isLoading.value = false
             }
         }
     }
@@ -240,7 +266,8 @@ class TimersViewModel(
         pomodoroGrouped: Boolean
     ) {
         viewModelScope.launch {
-            isLoading = true
+            _isLoading.value = true
+            _error.value = null
             try {
                 timerService.updateTimerList(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -251,17 +278,18 @@ class TimersViewModel(
                 )
                 loadTimerLists()
             } catch (e: Exception) {
-                error = e.message
+                _error.value = e.message
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _isLoading.value = false
             }
         }
     }
 
     fun deleteTimerList(listId: String) {
         viewModelScope.launch {
-            isLoading = true
+            _isLoading.value = true
+            _error.value = null
             try {
                 timerService.deleteTimerList(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -269,10 +297,10 @@ class TimersViewModel(
                 )
                 loadTimerLists()
             } catch (e: Exception) {
-                error = e.message
+                _error.value = e.message
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _isLoading.value = false
             }
         }
     }
@@ -287,7 +315,8 @@ class TimersViewModel(
         onSuccess: () -> Unit = {}
     ) {
         viewModelScope.launch {
-            isLoading = true
+            _isLoading.value = true
+            _error.value = null
             try {
                 timerService.createTimer(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -300,10 +329,10 @@ class TimersViewModel(
                 )
                 onSuccess()
             } catch (e: Exception) {
-                error = e.message
+                _error.value = e.message
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _isLoading.value = false
             }
         }
     }
@@ -318,7 +347,8 @@ class TimersViewModel(
         onSuccess: () -> Unit = {}
     ) {
         viewModelScope.launch {
-            isLoading = true
+            _isLoading.value = true
+            _error.value = null
             try {
                 timerService.updateTimer(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -331,17 +361,18 @@ class TimersViewModel(
                 )
                 onSuccess()
             } catch (e: Exception) {
-                error = e.message
+                _error.value = e.message
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _isLoading.value = false
             }
         }
     }
 
     fun deleteTimer(timerId: String, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
-            isLoading = true
+            _isLoading.value = true
+            _error.value = null
             try {
                 timerService.deleteTimer(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -349,10 +380,10 @@ class TimersViewModel(
                 )
                 onSuccess()
             } catch (e: Exception) {
-                error = e.message
+                _error.value = e.message
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _isLoading.value = false
             }
         }
     }
@@ -363,7 +394,8 @@ class TimersViewModel(
         notificationsEnabled: Boolean
     ) {
         viewModelScope.launch {
-            isLoading = true
+            _isLoading.value = true
+            _error.value = null
             try {
                 timerService.updateUserSettings(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -373,17 +405,18 @@ class TimersViewModel(
                 )
                 loadUserSettings()
             } catch (e: Exception) {
-                error = e.message
+                _error.value = e.message
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _isLoading.value = false
             }
         }
     }
 
     fun loadTimerListByID(listId: String) {
         viewModelScope.launch {
-            isLoading = true
+            _timerDetailLoading.value = true
+            _timerDetailError.value = null
             try {
                 val response = timerService.getTimerList(
                     token = tokenStorageImpl.getToken() ?: "",
@@ -391,10 +424,10 @@ class TimersViewModel(
                 )
                 _timerDetailList.value = response
             } catch (e: Exception) {
-                error = e.message
+                _timerDetailError.value = e.message ?: "Failed to load timer list details"
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _timerDetailLoading.value = false
             }
         }
     }
@@ -408,34 +441,36 @@ class TimersViewModel(
 
     fun loadTimerLists() {
         viewModelScope.launch {
-            isLoading = true
+            _timersLoading.value = true
+            _timersError.value = null
             try {
                 val response = timerService.getTimerLists(
                     token = tokenStorageImpl.getToken() ?: ""
                 )
                 _timerLists.value = response
             } catch (e: Exception) {
-                error = e.message
+                _timersError.value = e.message ?: "Failed to load timer lists"
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _timersLoading.value = false
             }
         }
     }
 
     fun loadUserSettings() {
         viewModelScope.launch {
-            isLoading = true
+            _settingsLoading.value = true
+            _settingsError.value = null
             try {
                 val response = timerService.getUserSettings(
                     token = tokenStorageImpl.getToken() ?: ""
                 )
                 _userSettings.value = response
             } catch (e: Exception) {
-                error = e.message
+                _settingsError.value = e.message ?: "Failed to load user settings"
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _settingsLoading.value = false
             }
         }
     }
@@ -472,15 +507,42 @@ class TimersViewModel(
                     loadPomodoros()
                 }
             } catch (e: Exception) {
-                error = "Failed to create pomodoro: ${e.message}"
+                _error.value = "Failed to create pomodoro: ${e.message}"
                 e.printStackTrace()
             }
         }
     }
 
+    fun loadPomodorosByDateRange(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        limit: Int = 100
+    ) {
+        viewModelScope.launch {
+            _pomodorosLoading.value = true
+            _pomodorosError.value = null
+            try {
+                val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                val result = pomodoroService.getPomodoros(
+                    startDate = startDate.format(formatter),
+                    endDate = endDate.format(formatter),
+                    limit = limit
+                )
+                _pomodoros.value = result
+                statusBarService.updatePomodoroCount(result.size)
+            } catch (e: Exception) {
+                _pomodorosError.value = e.message ?: "Failed to load pomodoros"
+                e.printStackTrace()
+            } finally {
+                _pomodorosLoading.value = false
+            }
+        }
+    }
 
     fun loadPomodoros() {
         viewModelScope.launch {
+            _pomodorosLoading.value = true
+            _pomodorosError.value = null
             try {
                 val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
                 val result = pomodoroService.getPomodoros(
@@ -491,10 +553,10 @@ class TimersViewModel(
                 _pomodoros.value = result
                 statusBarService.updatePomodoroCount(result.size)
             } catch (e: Exception) {
-                error = e.message
+                _pomodorosError.value = e.message ?: "Failed to load pomodoros"
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _pomodorosLoading.value = false
             }
         }
     }
@@ -509,45 +571,63 @@ class TimersViewModel(
                 pomodoroService.createPomodoro(pomodoro)
                 loadPomodoros()
             } catch (e: Exception) {
-                error = e.message
+                _error.value = e.message
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _isLoading.value = false
             }
         }
     }
 
     fun removeLastPomodoro() {
         viewModelScope.launch {
-            isLoading = true
+            _isLoading.value = true
+            _error.value = null
             try {
                 if (_pomodoros.value.isNotEmpty()) {
                     val lastPomodoro = _pomodoros.value.last()
                     pomodoroService.removePomodoro(lastPomodoro.id)
                     loadPomodoros()
                 } else {
-                    error = "No pomodoros to remove"
+                    _error.value = "No pomodoros to remove"
                 }
             } catch (e: Exception) {
-                error = e.message
+                _error.value = e.message
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _isLoading.value = false
             }
         }
     }
 
     fun removePomodoro(pomodoroId: String) {
         viewModelScope.launch {
-            isLoading = true
+            _isLoading.value = true
+            _error.value = null
             try {
                 pomodoroService.removePomodoro(pomodoroId)
                 loadPomodoros()
             } catch (e: Exception) {
-                error = e.message
+                _error.value = e.message
                 e.printStackTrace()
             } finally {
-                isLoading = false
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun loadSettings() {
+        viewModelScope.launch {
+            _settingsLoading.value = true
+            _settingsError.value = null
+            try {
+                loadTimerLists()
+                loadUserSettings()
+            } catch (e: Exception) {
+                _settingsError.value = e.message ?: "Failed to load settings"
+                e.printStackTrace()
+            } finally {
+                _settingsLoading.value = false
             }
         }
     }

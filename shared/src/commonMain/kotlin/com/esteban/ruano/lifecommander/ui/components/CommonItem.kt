@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -43,13 +44,13 @@ fun CommonItem(
         Card(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .padding(horizontal = 12.dp, vertical = 6.dp)
                 .then(
                     if (isDesktop()) Modifier
                         .hoverable(interactionSource)
                         .background(
-                            if (isHovered) MaterialTheme.colors.primary.copy(alpha = 0.07f) else Color.Transparent,
-                            shape = MaterialTheme.shapes.medium
+                            if (isHovered) MaterialTheme.colors.primary.copy(alpha = 0.05f) else Color.Transparent,
+                            shape = RoundedCornerShape(16.dp)
                         )
                     else Modifier
                 )
@@ -58,14 +59,18 @@ fun CommonItem(
                     else Modifier
                 )
                 .clickable(enabled = isEnabled) { onClick() },
-            elevation = if (!isEnabled) 1.dp else 4.dp,
-            shape = RoundedCornerShape(14.dp),
+            elevation = when {
+                !isEnabled -> 1.dp
+                isHovered && isDesktop() -> 8.dp
+                else -> 4.dp
+            },
+            shape = RoundedCornerShape(16.dp),
             border = BorderStroke(
                 1.dp,
                 when {
                     !isEnabled -> MaterialTheme.colors.onSurface.copy(alpha = 0.08f)
-                    isHovered && isDesktop() -> MaterialTheme.colors.primary.copy(alpha = 0.18f)
-                    else -> borderColor.copy(alpha = 0.18f)
+                    isHovered && isDesktop() -> MaterialTheme.colors.primary.copy(alpha = 0.25f)
+                    else -> borderColor.copy(alpha = 0.15f)
                 }
             ),
             backgroundColor = when {
@@ -80,31 +85,32 @@ fun CommonItem(
                     .padding(0.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Accent bar
+                // Accent bar with improved styling
                 Box(
                     modifier = Modifier
-                        .width(5.dp)
+                        .width(6.dp)
                         .fillMaxHeight()
                         .background(
-                            if (isDone) MaterialTheme.colors.onSurface.copy(alpha = 0.15f)
-                            else MaterialTheme.colors.primary.copy(alpha = 0.7f),
-                            shape = RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp)
+                            if (isDone) MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
+                            else borderColor.copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp)
                         )
                 )
-                Spacer(modifier = Modifier.width(16.dp))
-                // Main content
+                
+                // Main content with consistent height
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(vertical = 16.dp),
+                        .padding(vertical = 20.dp, horizontal = 16.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
+                        // Left icon or checkbox with improved styling
                         Box(
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(28.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             if (leftIcon != null) {
@@ -118,30 +124,34 @@ fun CommonItem(
                                         uncheckedColor = MaterialTheme.colors.onSurface.copy(alpha = 0.4f),
                                         checkmarkColor = MaterialTheme.colors.surface
                                     ),
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(28.dp)
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.width(14.dp))
+                        
+                        Spacer(modifier = Modifier.width(16.dp))
+                        
+                        // Title with improved typography
                         Text(
                             text = title,
                             style = MaterialTheme.typography.subtitle1.copy(
-                                fontWeight = if (isDone) FontWeight.Normal else FontWeight.Medium,
+                                fontWeight = if (isDone) FontWeight.Normal else FontWeight.SemiBold,
                                 textDecoration = if (isDone) TextDecoration.LineThrough else textDecoration
                             ),
                             color = when {
                                 !isEnabled -> MaterialTheme.colors.onSurface.copy(alpha = 0.4f)
-                                isDone -> MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
-                                else -> MaterialTheme.colors.onSurface.copy(alpha = 0.92f)
+                                isDone -> MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                else -> MaterialTheme.colors.onSurface.copy(alpha = 0.95f)
                             },
                             maxLines = 2,
                             modifier = Modifier.weight(1f)
                         )
-                        // Right content
+                        
+                        // Right content with improved spacing
                         Box(
                             modifier = Modifier
-                                .padding(start = 16.dp, end = 16.dp)
-                                .defaultMinSize(minWidth = 24.dp),
+                                .padding(start = 16.dp, end = 8.dp)
+                                .defaultMinSize(minWidth = 32.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             CompositionLocalProvider(LocalTextStyle provides rightContentTextStyle) {
@@ -149,9 +159,10 @@ fun CommonItem(
                             }
                         }
                     }
-                    // Bottom content
+                    
+                    // Bottom content with improved spacing
                     if (bottomContent != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         Box(
                             modifier = Modifier.fillMaxWidth(),
                             contentAlignment = Alignment.CenterStart
@@ -161,6 +172,7 @@ fun CommonItem(
                     }
                 }
             }
+            
             if (!isDesktop()) {
                 DropdownMenu(
                     expanded = showContextMenu,

@@ -1,11 +1,14 @@
 package com.esteban.ruano.lifecommander.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -23,11 +28,16 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.LocalDining
+import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.esteban.ruano.lifecommander.models.Recipe
 import com.esteban.ruano.lifecommander.ui.state.RecipesState
 import java.time.DayOfWeek
@@ -51,6 +61,7 @@ fun RecipesScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     val daysOfWeek = DayOfWeek.values()
     val selectedDay = state.daySelected
+    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -64,7 +75,9 @@ fun RecipesScreen(
         ) {
             Text(
                 text = "Meals by Day",
-                style = MaterialTheme.typography.h4
+                style = MaterialTheme.typography.h4.copy(
+                    fontWeight = FontWeight.Bold
+                )
             )
             Button(
                 onClick = {
@@ -72,13 +85,15 @@ fun RecipesScreen(
                     showRecipeDialog = true
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
-                modifier = Modifier.height(40.dp)
+                modifier = Modifier.height(40.dp),
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Recipe")
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("Add Recipe")
             }
         }
+        
         // Chips Row
         Row(
             modifier = Modifier
@@ -94,120 +109,246 @@ fun RecipesScreen(
                     colors = ChipDefaults.filterChipColors(
                         backgroundColor = if (selectedDay == day.value) MaterialTheme.colors.primary.copy(alpha = 0.15f) else MaterialTheme.colors.surface,
                         contentColor = MaterialTheme.colors.primary
-                    )
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Text(day.name)
                 }
             }
         }
+        
         if (state.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         } else if (state.recipes.isEmpty()) {
-            Text("No meals found.", style = MaterialTheme.typography.body1)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "No meals found for this day.",
+                    style = MaterialTheme.typography.body1.copy(
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                    )
+                )
+            }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 items(state.recipes.size) { index ->
                     val recipe = state.recipes[index]
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        elevation = 2.dp,
-                        backgroundColor = if (recipe.consumed) MaterialTheme.colors.surface else MaterialTheme.colors.surface
+                            .height(140.dp),
+                        elevation = 6.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        backgroundColor = if (recipe.consumed) 
+                            MaterialTheme.colors.surface.copy(alpha = 0.8f) 
+                        else 
+                            MaterialTheme.colors.surface
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Recipe icon with improved styling
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        when (recipe.mealTag?.uppercase()) {
+                                            "BREAKFAST" -> Color(0xFFFFB74D)
+                                            "LUNCH" -> Color(0xFF81C784)
+                                            "DINNER" -> Color(0xFF64B5F6)
+                                            "SNACK" -> Color(0xFFFF8A65)
+                                            else -> Color(0xFFE0E0E0)
+                                        }.copy(alpha = 0.2f)
+                                    ),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Column(modifier = Modifier.weight(1f).clickable { onDetailRecipe(recipe.id) }) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(recipe.name, style = MaterialTheme.typography.subtitle1)
+                                Icon(
+                                    imageVector = when (recipe.mealTag?.uppercase()) {
+                                        "BREAKFAST" -> Icons.Default.Restaurant
+                                        "LUNCH" -> Icons.Default.LocalDining
+                                        "DINNER" -> Icons.Default.Fastfood
+                                        else -> Icons.Default.Fastfood
+                                    },
+                                    contentDescription = "Food",
+                                    tint = when (recipe.mealTag?.uppercase()) {
+                                        "BREAKFAST" -> Color(0xFFFF8F00)
+                                        "LUNCH" -> Color(0xFF4CAF50)
+                                        "DINNER" -> Color(0xFF2196F3)
+                                        "SNACK" -> Color(0xFFFF5722)
+                                        else -> Color(0xFF757575)
+                                    },
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.width(16.dp))
+                            
+                            // Main content
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                // Recipe name and status
+                                Column {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            recipe.name,
+                                            style = MaterialTheme.typography.h6.copy(
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = if (recipe.consumed) 
+                                                    MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                                else 
+                                                    MaterialTheme.colors.onSurface.copy(alpha = 0.95f)
+                                            ),
+                                            maxLines = 1
+                                        )
                                         if (recipe.consumed) {
-                                            Spacer(modifier = Modifier.width(8.dp))
                                             Icon(
                                                 Icons.Default.CheckCircle,
                                                 contentDescription = "Consumed",
-                                                tint = MaterialTheme.colors.secondary,
-                                                modifier = Modifier.size(16.dp)
+                                                tint = Color(0xFF4CAF50),
+                                                modifier = Modifier.size(20.dp)
                                             )
                                         }
                                     }
+                                    
                                     if (!recipe.note.isNullOrBlank()) {
-                                        Text(recipe.note!!, style = MaterialTheme.typography.body2)
-                                    }
-                                    if (recipe.mealTag != null) {
-                                        Text("Type: ${recipe.mealTag}", style = MaterialTheme.typography.caption)
-                                    }
-                                    if (recipe.consumed && !recipe.consumedDateTime.isNullOrBlank()) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                Icons.Default.Schedule,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                                                modifier = Modifier.size(12.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(
-                                                "Consumed: ${recipe.consumedDateTime}",
-                                                style = MaterialTheme.typography.caption,
-                                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                                            )
-                                        }
-                                    }
-                                }
-                                Row {
-                                    // Consume Recipe Button
-                                    IconButton(
-                                        onClick = { onConsumeRecipe(recipe.id) },
-                                        modifier = Modifier.size(40.dp),
-                                        enabled = !recipe.consumed
-                                    ) {
-                                        Icon(
-                                            Icons.Default.CheckCircle,
-                                            contentDescription = if (recipe.consumed) "Already Consumed" else "Consume Recipe",
-                                            tint = if (recipe.consumed) MaterialTheme.colors.onSurface.copy(alpha = 0.3f) else MaterialTheme.colors.secondary
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            recipe.note!!,
+                                            style = MaterialTheme.typography.body2.copy(
+                                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                                            ),
+                                            maxLines = 1
                                         )
                                     }
-                                    IconButton(onClick = {
-                                        recipeToEdit = recipe
-                                        showRecipeDialog = true
-                                    }) {
-                                        Icon(Icons.Default.Edit, contentDescription = "Edit Recipe")
+                                }
+                                
+                                // Bottom row with badges and actions
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Badges row
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        // Protein badge
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(Color(0xFF4CAF50).copy(alpha = 0.15f))
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = "${recipe.protein ?: 0}g protein",
+                                                style = MaterialTheme.typography.caption.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color(0xFF4CAF50),
+                                                    fontSize = 11.sp
+                                                )
+                                            )
+                                        }
+                                        
+                                        // Meal type badge
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(
+                                                    when (recipe.mealTag?.uppercase()) {
+                                                        "BREAKFAST" -> Color(0xFFFFB74D).copy(alpha = 0.15f)
+                                                        "LUNCH" -> Color(0xFF81C784).copy(alpha = 0.15f)
+                                                        "DINNER" -> Color(0xFF64B5F6).copy(alpha = 0.15f)
+                                                        "SNACK" -> Color(0xFFFF8A65).copy(alpha = 0.15f)
+                                                        else -> Color(0xFFE0E0E0).copy(alpha = 0.15f)
+                                                    }
+                                                )
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = recipe.mealTag ?: "Unknown",
+                                                style = MaterialTheme.typography.caption.copy(
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = when (recipe.mealTag?.uppercase()) {
+                                                        "BREAKFAST" -> Color(0xFFFF8F00)
+                                                        "LUNCH" -> Color(0xFF4CAF50)
+                                                        "DINNER" -> Color(0xFF2196F3)
+                                                        "SNACK" -> Color(0xFFFF5722)
+                                                        else -> Color(0xFF757575)
+                                                    },
+                                                    fontSize = 11.sp
+                                                )
+                                            )
+                                        }
                                     }
-                                    IconButton(onClick = {
-                                        recipeToDelete = recipe
-                                        showDeleteDialog = true
-                                    }) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Delete Recipe")
+                                    
+                                    // Action buttons
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        // Consume Recipe Button
+                                        IconButton(
+                                            onClick = { onConsumeRecipe(recipe.id) },
+                                            modifier = Modifier.size(36.dp),
+                                            enabled = !recipe.consumed
+                                        ) {
+                                            Icon(
+                                                Icons.Default.CheckCircle,
+                                                contentDescription = if (recipe.consumed) "Already Consumed" else "Consume Recipe",
+                                                tint = if (recipe.consumed) 
+                                                    MaterialTheme.colors.onSurface.copy(alpha = 0.3f) 
+                                                else 
+                                                    Color(0xFF4CAF50)
+                                            )
+                                        }
+                                        IconButton(
+                                            onClick = {
+                                                recipeToEdit = recipe
+                                                showRecipeDialog = true
+                                            },
+                                            modifier = Modifier.size(36.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Edit,
+                                                contentDescription = "Edit Recipe",
+                                                tint = MaterialTheme.colors.primary
+                                            )
+                                        }
+                                        IconButton(
+                                            onClick = {
+                                                recipeToDelete = recipe
+                                                showDeleteDialog = true
+                                            },
+                                            modifier = Modifier.size(36.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = "Delete Recipe",
+                                                tint = MaterialTheme.colors.error
+                                            )
+                                        }
                                     }
                                 }
-                            }
-                            
-                            // Recipe stats row
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Default.Restaurant,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colors.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        "Protein: ${recipe.protein ?: 0}g",
-                                        style = MaterialTheme.typography.caption
-                                    )
-                                }
-                                Text(
-                                    "Day ${recipe.day ?: 0}",
-                                    style = MaterialTheme.typography.caption,
-                                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
-                                )
                             }
                         }
                     }
@@ -238,31 +379,29 @@ fun RecipesScreen(
     // Delete Warning Dialog
     if (showDeleteDialog && recipeToDelete != null) {
         AlertDialog(
-            onDismissRequest = { 
-                showDeleteDialog = false
-                recipeToDelete = null
-            },
+            onDismissRequest = { showDeleteDialog = false },
             title = { Text("Delete Recipe") },
-            text = { Text("Are you sure you want to delete '${recipeToDelete!!.name}'? This action cannot be undone.") },
+            text = { Text("Are you sure you want to delete '${recipeToDelete!!.name}'?") },
             confirmButton = {
-                Button(
+                TextButton(
                     onClick = {
                         onDeleteRecipe(recipeToDelete!!.id)
                         showDeleteDialog = false
                         recipeToDelete = null
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = MaterialTheme.colors.error
-                    )
-                ) { Text("Delete") }
+                    }
+                ) {
+                    Text("Delete")
+                }
             },
             dismissButton = {
-                OutlinedButton(
-                    onClick = { 
+                TextButton(
+                    onClick = {
                         showDeleteDialog = false
                         recipeToDelete = null
                     }
-                ) { Text("Cancel") }
+                ) {
+                    Text("Cancel")
+                }
             }
         )
     }

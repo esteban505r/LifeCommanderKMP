@@ -16,6 +16,7 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.datetime.TimeZone
 import services.auth.TokenStorageImpl
 
 
@@ -37,7 +38,9 @@ class FinanceService(
             val params = mutableListOf<String>()
 
             if(withFutureTransactions) {
-                params.add("scheduledBaseDate=${getCurrentDateTime().date.formatDefault()}")
+                params.add("scheduledBaseDate=${getCurrentDateTime(
+                    TimeZone.currentSystemDefault()
+                ).date.formatDefault()}")
             }
 
             params.add("limit=$limit")

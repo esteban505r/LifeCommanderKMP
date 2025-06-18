@@ -10,6 +10,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.datetime.TimeZone
 import services.auth.TokenStorageImpl
 
 class DashboardService(
@@ -20,7 +21,9 @@ class DashboardService(
     suspend fun getDashboardData(): DashboardResponse {
         try{
             val parameters = Parameters.build {
-                append("dateTime", getCurrentDateTime().formatDefault())
+                append("dateTime", getCurrentDateTime(
+                    TimeZone.currentSystemDefault()
+                ).formatDefault())
             }
             val encodedUrl = encodeUrlWithSpaces("${baseUrl}/dashboard", parameters)
             val response: HttpResponse = httpClient.get(encodedUrl) {

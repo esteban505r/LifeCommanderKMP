@@ -23,6 +23,9 @@ import com.esteban.ruano.lifecommander.ui.navigation.routes.BudgetTransactionsRo
 import com.esteban.ruano.lifecommander.ui.navigation.routes.TimerListDetailRoute
 import com.esteban.ruano.lifecommander.ui.screens.BudgetTransactionsScreen
 import com.esteban.ruano.lifecommander.ui.screens.FinancialScreenDestination
+import com.esteban.ruano.lifecommander.ui.screens.FinanceImporterPlaceholderScreen
+import com.esteban.ruano.lifecommander.ui.screens.BudgetTransactionsPlaceholderScreen
+import com.esteban.ruano.lifecommander.ui.screens.CategoryKeywordMapperPlaceholderScreen
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import services.auth.AuthService
@@ -177,25 +180,20 @@ fun AppNavHost(
                 }
 
                 composable(Screen.FinanceImporter.route) {
-                    TransactionImportScreen(
-                        onImportComplete = {
-                            navController.navigateUp()
-                        },
+                    FinanceImporterPlaceholderScreen(
+                        modifier = modifier
                     )
                 }
 
                 composable<BudgetTransactionsRoute>(
                 ) { backStackEntry ->
                     val args = backStackEntry.toRoute<BudgetTransactionsRoute>()
-                    val viewModel = koinViewModel<FinanceViewModel>()
-
-                    BudgetTransactionsScreen(
+                    BudgetTransactionsPlaceholderScreen(
                         budgetId = args.budgetId,
                         onBack = {
                             navController.navigateUp()
                         },
-                        financeActions = viewModel,
-                        state = viewModel.state.collectAsState().value,
+                        modifier = modifier
                     )
                 }
 
@@ -244,10 +242,11 @@ fun AppNavHost(
                 }
 
                 composable(Screen.CategoryKeywordMapper.route) {
-                    CategoryKeywordMapperDestination (
+                    CategoryKeywordMapperPlaceholderScreen(
                         onNavigateBack = {
                             navController.navigateUp()
-                        }
+                        },
+                        modifier = modifier
                     )
                 }
 

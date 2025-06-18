@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -20,12 +22,16 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.models.TaskFilters
 import com.esteban.ruano.lifecommander.ui.components.*
-import com.esteban.ruano.lifecommander.ui.components.ChartSeries
+import com.esteban.ruano.lifecommander.ui.viewmodels.*
 import com.esteban.ruano.ui.components.HabitList
 import com.esteban.ruano.ui.components.TaskList
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalTime
 import com.lifecommander.models.Habit
 import com.lifecommander.models.Task
 import kotlinx.coroutines.launch
@@ -35,6 +41,13 @@ import services.NightBlockService
 import ui.components.*
 import ui.composables.*
 import ui.viewmodels.*
+import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaPeriod
+import kotlinx.datetime.toLocalDateTime as toLocalDateTimeKt
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
@@ -78,6 +91,37 @@ fun HomeScreen(
 
     val coroutineScope = rememberCoroutineScope()
 
+    val timersViewModel: TimersViewModel = koinViewModel()
+    val pomodoros by timersViewModel.pomodoros.collectAsState()
+
+
+    LaunchedEffect(
+        Unit
+    ){
+        val now = kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
+        timersViewModel.loadPomodorosByDateRange(
+            startOfWeek.toJavaLocalDate(),
+            startOfWeek.plus(DatePeriod(days = 6)).toJavaLocalDate()
+        )
+    }
+
+    val pomodorosPerDayThisWeek = remember(pomodoros) {
+        val now = kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
+        val counts = MutableList(7) {
+            startOfWeek.plus(DatePeriod(days = it))
+        }
+        counts.map { date ->
+            val count = pomodoros.count {
+                println("Comparing  ${it.startDateTime.toLocalDateTime().date} with $date")
+                it.startDateTime.toLocalDateTime().date == date
+            }
+            println(count)
+            count
+        }
+    }
+
     // Define sections
     val sections = remember {
         listOf(
@@ -102,8 +146,8 @@ fun HomeScreen(
     // Compute weekly tasks completed (placeholder: use tasksViewModel.tasks if available)
     val tasksCompletedPerDayThisWeek by dashboardViewModel.tasksCompletedPerDayThisWeek.collectAsState()
 
-    // --- Toolbar for toggling sections ---
-
+    val overdueHabits by dashboardViewModel.overdueHabitsList.collectAsState()
+    val overdueTasks by dashboardViewModel.overdueTasksList.collectAsState()
 
     // Check for Night Block activation every minute
     /*LaunchedEffect(Unit) {
@@ -174,14 +218,47 @@ fun HomeScreen(
         }
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize()
+    ) { padding ->
         if (isNightBlockActive) {
             NightBlockQuestionsComposable(dailyJournalViewModel)
         } else {
+            Row(
+        modifier = Modifier
+            .fillMaxSize()
+                    .padding(padding)
+            ) {
+                // Main content area (left side)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+            .padding(16.dp)
+    ) {
+                    // Header
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Dashboard",
+                                style = MaterialTheme.typography.h4,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Welcome back! Here's your overview for today.",
+                                style = MaterialTheme.typography.subtitle1,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+
+                    // Main content sections with grid layout
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -189,9 +266,15 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
+                        // Weekly Overview and Pomodoro charts side by side
                 item(span = { GridItemSpan(maxLineSpan) }) {
-                    Column(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-                        Text("Weekly Overview", style = MaterialTheme.typography.h5, fontWeight = FontWeight.Bold)
+                            Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        "Weekly Overview", 
+                                        style = MaterialTheme.typography.h5, 
+                                        fontWeight = FontWeight.Bold
+                                    )
                         StatsChart(
                             series = listOf(
                                 ChartSeries(
@@ -203,12 +286,42 @@ fun HomeScreen(
                                     name = "Habits",
                                     data = dashboardViewModel.habitsCompletedPerDayThisWeek.collectAsState().value,
                                     color = Color(0xFF9C27B0)
+                                            )
                                 ),
+                                        modifier = Modifier.height(220.dp).fillMaxWidth()
+                                    )
+                                }
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        "Pomodoros", 
+                                        style = MaterialTheme.typography.h5, 
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    StatsChart(
+                                        series = listOf(
                                 ChartSeries(
-                                    name = "Workouts",
-                                    data = dashboardViewModel.workoutsCompletedPerDayThisWeek.collectAsState().value,
-                                    color = Color(0xFF4CAF50)
-                                ),
+                                                name = "Pomodoros",
+                                                data = pomodorosPerDayThisWeek,
+                                                color = Color(0xFFE53935)
+                                            )
+                                        ),
+                                        modifier = Modifier.height(220.dp).fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+
+                        // Meals and Workout charts below, side by side
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        "Meals", 
+                                        style = MaterialTheme.typography.h5, 
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    StatsChart(
+                                        series = listOf(
                                 ChartSeries(
                                     name = "Meals",
                                     data = dashboardViewModel.mealsLoggedPerDayThisWeek.collectAsState().value,
@@ -218,36 +331,27 @@ fun HomeScreen(
                             modifier = Modifier.height(220.dp).fillMaxWidth()
                         )
                     }
-                }
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        sections.forEach { section ->
-                            FilterChip(
-                                selected = expandedSections[section] == true,
-                                onClick = { expandedSections[section] = !(expandedSections[section] ?: true) },
-                                colors = ChipDefaults.filterChipColors(
-                                    backgroundColor = if (expandedSections[section] == true) MaterialTheme.colors.primary.copy(alpha = 0.15f) else MaterialTheme.colors.surface,
-                                    contentColor = MaterialTheme.colors.primary
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        "Workout", 
+                                        style = MaterialTheme.typography.h5, 
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    StatsChart(
+                                        series = listOf(
+                                            ChartSeries(
+                                                name = "Workouts",
+                                                data = dashboardViewModel.workoutsCompletedPerDayThisWeek.collectAsState().value,
+                                                color = Color(0xFF4CAF50)
+                                            )
                                 ),
-                                modifier = Modifier.height(36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = section.icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.height(220.dp).fillMaxWidth()
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(section.title)
+                                }
                             }
                         }
-                    }
-                }
+
+                        // Summary sections in grid
                 items(sections) { section ->
                     AnimatedVisibility(
                         visible = expandedSections[section] == true,
@@ -277,6 +381,13 @@ fun HomeScreen(
                                     HomeSection.Tasks -> TasksSummary(
                                         nextTask = nextTask,
                                         taskStats = taskStats,
+                                                overdueTasks = overdueTasks,
+                                                onMarkTaskDone = { task ->
+                                                    coroutineScope.launch {
+                                                        tasksViewModel.markTaskDone(task)
+                                                        dashboardViewModel.refreshDashboard()
+                                                    }
+                                                },
                                         onViewAllClick = onNavigateToTasks,
                                         isExpanded = true,
                                         currentTime = currentTime
@@ -284,6 +395,13 @@ fun HomeScreen(
                                     HomeSection.Habits -> HabitsSummary(
                                         nextHabit = nextHabit,
                                         habitStats = habitStats,
+                                                overdueHabits = overdueHabits,
+                                                onMarkHabitDone = { habit ->
+                                                    coroutineScope.launch {
+                                                        habitsViewModel.markHabitDone(habit)
+                                                        dashboardViewModel.refreshDashboard()
+                                                    }
+                                                },
                                         onViewAllClick = onNavigateToHabits,
                                         isExpanded = true,
                                         currentTime = currentTime
@@ -312,6 +430,254 @@ fun HomeScreen(
                                 }
                             }
                         )
+                            }
+                        }
+                    }
+                }
+
+                // Right sidebar with toggle buttons
+                Card(
+                    modifier = Modifier
+                        .width(280.dp)
+                        .fillMaxHeight()
+                        .padding(16.dp),
+                    elevation = 4.dp,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        // Sidebar header
+                        Text(
+                            text = "Quick Actions",
+                            style = MaterialTheme.typography.h6,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        // Section toggles
+                        Text(
+                            text = "Show/Hide Sections",
+                            style = MaterialTheme.typography.subtitle2,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(bottom = 24.dp)
+                        ) {
+                            sections.forEach { section ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (expandedSections[section] == true)
+                                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                            else
+                                                MaterialTheme.colors.surface
+                                        )
+                                        .clickable { 
+                                            expandedSections[section] = !(expandedSections[section] ?: true)
+                                        }
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = section.icon,
+                                            contentDescription = null,
+                                            tint = if (expandedSections[section] == true)
+                                                MaterialTheme.colors.primary
+                                            else
+                                                MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Text(
+                                            text = section.title,
+                                            style = MaterialTheme.typography.body2,
+                                            fontWeight = if (expandedSections[section] == true) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (expandedSections[section] == true)
+                                                MaterialTheme.colors.primary
+                                            else
+                                                MaterialTheme.colors.onSurface
+                                        )
+                                    }
+                                    
+                                    Icon(
+                                        imageVector = if (expandedSections[section] == true) 
+                                            Icons.Default.Visibility 
+                                        else 
+                                            Icons.Default.VisibilityOff,
+                                        contentDescription = if (expandedSections[section] == true) "Hide" else "Show",
+                                        tint = if (expandedSections[section] == true)
+                                            MaterialTheme.colors.primary
+                                        else
+                                            MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Quick action buttons
+                        Text(
+                            text = "Quick Actions",
+                            style = MaterialTheme.typography.subtitle2,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = { showNewTaskDialog = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    backgroundColor = MaterialTheme.colors.primary
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("New Task")
+                            }
+
+                            Button(
+                                onClick = { showNewHabitDialog = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    backgroundColor = MaterialTheme.colors.secondary
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("New Habit")
+                            }
+
+                            OutlinedButton(
+                                onClick = { /* TODO: Implement refresh */ },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Refresh")
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        // Stats summary
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = MaterialTheme.colors.surface,
+                            elevation = 2.dp,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Today's Progress",
+                                    style = MaterialTheme.typography.subtitle2,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "${taskStats?.completed ?: 0}",
+                                            style = MaterialTheme.typography.h6,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colors.primary
+                                        )
+                                        Text(
+                                            text = "Tasks Done",
+                                            style = MaterialTheme.typography.caption,
+                                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                        )
+                                    }
+                                    
+                                    Column {
+                                        Text(
+                                            text = "${habitStats?.completed ?: 0}",
+                                            style = MaterialTheme.typography.h6,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colors.secondary
+                                        )
+                                        Text(
+                                            text = "Habits Done",
+                                            style = MaterialTheme.typography.caption,
+                                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                        )
+                                    }
+                                }
+
+                                // Overdue section
+                                if (dashboardViewModel.overdueTasks.collectAsState().value > 0 || 
+                                    dashboardViewModel.overdueHabits.collectAsState().value > 0) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Divider(color = MaterialTheme.colors.onSurface.copy(alpha = 0.1f))
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    
+                                    Text(
+                                        text = "Overdue Items",
+                                        style = MaterialTheme.typography.subtitle2,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colors.error
+                                    )
+                                    
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = "${dashboardViewModel.overdueTasks.collectAsState().value}",
+                                                style = MaterialTheme.typography.h6,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colors.error
+                                            )
+                                            Text(
+                                                text = "Overdue Tasks",
+                                                style = MaterialTheme.typography.caption,
+                                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                            )
+                                        }
+                                        
+                                        Column {
+                                            Text(
+                                                text = "${dashboardViewModel.overdueHabits.collectAsState().value}",
+                                                style = MaterialTheme.typography.h6,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colors.error
+                                            )
+                                            Text(
+                                                text = "Overdue Habits",
+                                                style = MaterialTheme.typography.caption,
+                                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -323,16 +689,8 @@ fun HomeScreen(
             onDismissRequest = { showNightBlockDialog = false },
             title = { Text("Night Block") },
             text = {
-                NightBlockComposable(
-                    dailyJournalViewModel = dailyJournalViewModel,
-                    nightBlockService = nightBlockService,
-                    habits = habits,
-                    onOverride = { reason ->
-                        coroutineScope.launch{
-                            nightBlockService.overrideNightBlock(reason)
-                        }
-                        showNightBlockDialog = false
-                    }
+                NightBlockQuestionsComposable(
+                    viewModel = dailyJournalViewModel,
                 )
             },
             confirmButton = {
@@ -1216,6 +1574,74 @@ enum class HomeSection(
     Workout("Workout", Icons.Default.FitnessCenter),
     Finances("Finances", Icons.Default.AccountBalance),
     Journal("Journal", Icons.Default.Book)
+}
+
+@Composable
+fun OverdueItemsSlider(
+    overdueHabits: List<Habit>,
+    overdueTasks: List<Task>,
+    onMarkHabitDone: (Habit) -> Unit,
+    onMarkTaskDone: (Task) -> Unit
+) {
+    if (overdueHabits.isNotEmpty()) {
+        Text("Overdue Habits", style = MaterialTheme.typography.h6)
+        LazyRow {
+            items(overdueHabits.size) { habit ->
+                val habit = overdueHabits[habit]
+                OverdueHabitCard(habit, onMarkHabitDone)
+            }
+        }
+    }
+    if (overdueTasks.isNotEmpty()) {
+        Text("Overdue Tasks", style = MaterialTheme.typography.h6)
+        LazyRow {
+            items(overdueTasks.size) { task ->
+                val task = overdueTasks[task]
+                OverdueTaskCard(task, onMarkTaskDone)
+            }
+        }
+    }
+}
+
+@Composable
+fun OverdueHabitCard(habit: Habit, onMarkDone: (Habit) -> Unit) {
+    Card(
+        modifier = Modifier.padding(8.dp).width(220.dp).height(120.dp),
+        backgroundColor = MaterialTheme.colors.error.copy(alpha = 0.1f)
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Text(habit.name, style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.Bold)
+            Text("Time: " + (habit.dateTime?.toLocalDateTime()?.toLocalTime()?.toString() ?: "-"))
+            Text("Frequency: ${habit.frequency}")
+            Spacer(Modifier.height(8.dp))
+            Button(
+                onClick = { onMarkDone(habit) },
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
+            ) {
+                Text("Mark as done")
+            }
+        }
+    }
+}
+
+@Composable
+fun OverdueTaskCard(task: Task, onMarkDone: (Task) -> Unit) {
+    Card(
+        modifier = Modifier.padding(8.dp).width(220.dp).height(120.dp),
+        backgroundColor = MaterialTheme.colors.error.copy(alpha = 0.1f)
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Text(task.name, style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.Bold)
+            Text("Due: " + (task.dueDateTime?.toLocalDateTime()?.toLocalTime()?.toString() ?: "-"))
+            Spacer(Modifier.height(8.dp))
+            Button(
+                onClick = { onMarkDone(task) },
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
+            ) {
+                Text("Mark as done")
+            }
+        }
+    }
 }
 
 

@@ -5,6 +5,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import com.esteban.ruano.lifecommander.ui.components.ErrorScreen
+import com.esteban.ruano.lifecommander.ui.components.LoadingScreen
 import com.esteban.ruano.lifecommander.ui.screens.RecipesScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.RecipesViewModel
 import kotlinx.datetime.minus
@@ -38,21 +40,42 @@ fun MealsScreenDestination(
         )
     }
 
-    RecipesScreen(
-        state = state,
-        onNewRecipe = onNewRecipe,
-        onDetailRecipe = onDetailRecipe,
-        onGetRecipesByDay = { day ->
-            recipesViewModel.getRecipesByDay(day)
-        },
-        onEditRecipe = { recipe ->
-            recipesViewModel.updateRecipe(recipe)
-        },
-        onDeleteRecipe = { recipeId ->
-            recipesViewModel.deleteRecipe(recipeId)
-        },
-        onConsumeRecipe = { recipeId ->
-            recipesViewModel.consumeRecipe(recipeId)
+    when {
+        state.isLoading -> {
+            LoadingScreen(
+                message = "Loading recipes...",
+                modifier = modifier
+            )
         }
-    )
+        state.isError -> {
+            ErrorScreen(
+                message = state.errorMessage ?: "Failed to load recipes",
+                onRetry = {
+                    val now = kotlinx.datetime.Clock.System.now()
+                    val currentDay = now.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.dayOfWeek.value
+                    recipesViewModel.getRecipesByDay(currentDay)
+                },
+                modifier = modifier
+            )
+        }
+        else -> {
+            RecipesScreen(
+                state = state,
+                onNewRecipe = onNewRecipe,
+                onDetailRecipe = onDetailRecipe,
+                onGetRecipesByDay = { day ->
+                    recipesViewModel.getRecipesByDay(day)
+                },
+                onEditRecipe = { recipe ->
+                    recipesViewModel.updateRecipe(recipe)
+                },
+                onDeleteRecipe = { recipeId ->
+                    recipesViewModel.deleteRecipe(recipeId)
+                },
+                onConsumeRecipe = { recipeId ->
+                    recipesViewModel.consumeRecipe(recipeId)
+                }
+            )
+        }
+    }
 } 

@@ -24,6 +24,7 @@ import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.lifecommander.models.Task
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.desc.StringDesc
+import kotlinx.datetime.TimeZone
 
 @Composable
 expect fun isDesktop(): Boolean
@@ -91,7 +92,7 @@ fun TaskList(
     onDelete: (Task) -> Unit,
     onReschedule: (Task) -> Unit,
     modifier: Modifier = Modifier,
-    itemWrapper : @Composable (content: @Composable () -> Unit, Task) -> Unit,
+    itemWrapper: @Composable (content: @Composable () -> Unit, Task) -> Unit,
 ) {
     val pullRefreshState =
         rememberPullRefreshState(refreshing = isRefreshing, onRefresh = onPullRefresh)
@@ -112,9 +113,17 @@ fun TaskList(
             // Overdue tasks
             taskListSection(
                 taskList = taskList.filter { item ->
-                    (item.done == false && item.dueDateTime?.let { it.toLocalDateTime() < getCurrentDateTime() } ?: false)
+                    (item.done == false && item.dueDateTime?.let {
+                        it.toLocalDateTime() < getCurrentDateTime(
+                            TimeZone.currentSystemDefault()
+                        )
+                    } ?: false)
                             ||
-                            (item.done == false && item.scheduledDateTime?.let { it.toLocalDateTime() < getCurrentDateTime() } ?: false)
+                            (item.done == false && item.scheduledDateTime?.let {
+                                it.toLocalDateTime() < getCurrentDateTime(
+                                    TimeZone.currentSystemDefault()
+                                )
+                            } ?: false)
                 },
                 onTaskClick = onTaskClick,
                 onCheckedChange = { task, checked ->
@@ -128,9 +137,17 @@ fun TaskList(
             // Pending tasks
             taskListSection(
                 taskList = taskList.filter {
-                    (it.done == false && it.dueDateTime?.let { it.toLocalDateTime() >= getCurrentDateTime() } ?: false)
+                    (it.done == false && it.dueDateTime?.let {
+                        it.toLocalDateTime() >= getCurrentDateTime(
+                            TimeZone.currentSystemDefault()
+                        )
+                    } ?: false)
                             ||
-                            (it.done == false && it.scheduledDateTime?.let { it.toLocalDateTime() >= getCurrentDateTime() } ?: false)
+                            (it.done == false && it.scheduledDateTime?.let {
+                                it.toLocalDateTime() >= getCurrentDateTime(
+                                    TimeZone.currentSystemDefault()
+                                )
+                            } ?: false)
                             || it.done == false && it.dueDateTime == null && it.scheduledDateTime == null
                 },
                 onTaskClick = onTaskClick,
@@ -156,7 +173,7 @@ fun TaskList(
             }
         }
         if (!isDesktop()) {
-        PullRefreshIndicator(isRefreshing, pullRefreshState, Modifier.align(Alignment.TopCenter))
+            PullRefreshIndicator(isRefreshing, pullRefreshState, Modifier.align(Alignment.TopCenter))
         }
     }
 } 

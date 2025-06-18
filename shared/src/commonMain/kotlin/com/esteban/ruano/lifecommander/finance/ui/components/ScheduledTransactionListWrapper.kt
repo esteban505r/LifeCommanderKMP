@@ -288,7 +288,9 @@ fun ScheduledTransactionListWrapper(
         Dialog(onDismissRequest = { showstartDateTimePicker = false }) {
             Surface {
                 CustomDatePicker(
-                    selectedDate = startDateTime?.date ?: getCurrentDateTime().date,
+                    selectedDate = startDateTime?.date ?: getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date,
                     onDateSelected = { 
                         startDateTime = it.atTime(startDateTime?.time ?: LocalTime(0, 0))
                         onFiltersChange(currentFilters.copy(
@@ -326,7 +328,9 @@ fun ScheduledTransactionListWrapper(
         Dialog(onDismissRequest = { showendDateTimePicker = false }) {
             Surface {
                 CustomDatePicker(
-                    selectedDate = endDateTime?.date ?: getCurrentDateTime().date,
+                    selectedDate = endDateTime?.date ?: getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date,
                     onDateSelected = { 
                         endDateTime = it.atTime(endDateTime?.time ?: LocalTime(0, 0))
                         onFiltersChange(currentFilters.copy(

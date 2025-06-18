@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.kotlin.datetime)
+    implementation(libs.kotlinx.datetime)
     implementation(libs.exposed.json)
     implementation(libs.ktor.cors)
 

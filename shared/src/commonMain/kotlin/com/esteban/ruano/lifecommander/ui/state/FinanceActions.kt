@@ -8,6 +8,9 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
 interface FinanceActions {
+    // Tab selection
+    fun setSelectedTab(tabIndex: Int)
+    
     // Account actions
     fun addAccount(account: Account)
     fun updateAccount(account: Account)
