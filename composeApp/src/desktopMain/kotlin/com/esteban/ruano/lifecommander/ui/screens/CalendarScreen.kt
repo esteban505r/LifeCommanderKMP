@@ -24,34 +24,17 @@ fun CalendarScreen(
     val isLoading by calendarViewModel.isLoading.collectAsState()
     val error by calendarViewModel.error.collectAsState()
 
-    when {
-        isLoading -> {
-            LoadingScreen(
-                message = "Loading calendar data...",
-                modifier = modifier
-            )
-        }
-        error != null -> {
-            ErrorScreen(
-                message = error ?: "Failed to load calendar data",
-                onRetry = { calendarViewModel.refresh() },
-                modifier = modifier
-            )
-        }
-        else -> {
-            CalendarComposable(
-                onTaskClick = onTaskClick,
-                onHabitClick = onHabitClick,
-                tasks = tasks,
-                habits = habits,
-                transactions = transactions,
-                onRefresh = { startDate, endDate -> calendarViewModel.refresh(
-                    startDate = startDate.toKotlinLocalDate(),
-                    endDate = endDate.toKotlinLocalDate()
-                ) },
-                isLoading = isLoading,
-                error = error,
-            )
-        }
-    }
+    CalendarComposable(
+        onTaskClick = onTaskClick,
+        onHabitClick = onHabitClick,
+        tasks = tasks,
+        habits = habits,
+        transactions = transactions,
+        onRefresh = { startDate, endDate -> calendarViewModel.refresh(
+            startDate = startDate.toKotlinLocalDate(),
+            endDate = endDate.toKotlinLocalDate()
+        ) },
+        isLoading = isLoading,
+        error = error,
+    )
 } 

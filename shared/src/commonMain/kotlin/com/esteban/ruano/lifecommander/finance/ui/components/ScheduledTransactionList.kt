@@ -41,13 +41,13 @@ fun ScheduledTransactionList(
 ) {
     val listState = rememberLazyListState()
     
-    LaunchedEffect(listState) {
+    /*LaunchedEffect(listState) {
         val lastItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
         if (lastItem != null && lastItem.index >= transactions.size - 5) {
             onLoadMore()
         }
     }
-
+*/
     Box(
         modifier = modifier
             .fillMaxSize()

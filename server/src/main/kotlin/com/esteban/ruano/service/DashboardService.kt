@@ -408,16 +408,16 @@ class DashboardService(
     }
 
     private fun calculateTaskStats(tasks: List<TaskDTO>): TaskStatsDTO = TaskStatsDTO(
-        total = tasks.size,
-        completed = tasks.count { it.done == true },
-        highPriority = tasks.count { it.priority > 2 }
-    )
+            total = tasks.size,
+            completed = tasks.count { it.done == true },
+            highPriority = tasks.count { it.priority > 2 }
+        )
 
     private fun calculateHabitStats(habits: List<HabitDTO>): HabitStatsDTO = HabitStatsDTO(
-        total = habits.size,
-        completed = habits.count { it.done },
-        currentStreak = habits.maxOfOrNull { it.streak } ?: 0
-    )
+            total = habits.size,
+            completed = habits.count { it.done },
+            currentStreak = habits.maxOfOrNull { it.streak } ?: 0
+        )
 
     private fun getWorkoutTrackCountsPerDay(userId: Int, weekStart: LocalDate): List<Int> {
         return transaction {

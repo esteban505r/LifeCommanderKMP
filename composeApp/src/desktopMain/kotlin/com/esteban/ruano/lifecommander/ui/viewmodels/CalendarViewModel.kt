@@ -43,10 +43,6 @@ class CalendarViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    init {
-        loadData()
-    }
-
     fun loadData(
         startDate: LocalDate? = null,
         endDate: LocalDate? = null

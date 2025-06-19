@@ -170,18 +170,34 @@ class NutritionService() : BaseService() {
         }
     }
 
-    fun getRecipeTracksByDateRange(userId: Int, startDate: String, endDate: String): List<RecipeTrackDTO> {
-        return transaction {
-            RecipeTrack.find {
-                (RecipeTracks.recipeId inSubQuery Recipes.slice(Recipes.id).select { 
-                    (Recipes.user eq userId) and (Recipes.status eq Status.ACTIVE) 
-                }) and
-                (RecipeTracks.consumedDateTime greaterEq startDate.toLocalDateTimeUI()!!) and
-                (RecipeTracks.consumedDateTime lessEq endDate.toLocalDateTimeUI()!!) and
-                (RecipeTracks.status eq Status.ACTIVE)
-            }.toList().map { it.toDTO() }
+    fun getRecipeTracksByDateRange(
+        userId: Int,
+        startDateStr: String,
+        endDateStr: String
+    ): List<RecipeTrackDTO> {
+        val startDateTime = startDateStr.toLocalDateTimeUI()
+        val endDateTime = endDateStr.toLocalDateTimeUI()
+        try{
+            return transaction {
+                val activeRecipeIds = Recipe
+                    .find { (Recipes.user eq userId) and (Recipes.status eq Status.ACTIVE) }
+                    .map { it.id }
+
+                RecipeTrack.find {
+                    (RecipeTracks.recipeId inList activeRecipeIds) and
+                            (RecipeTracks.consumedDateTime greaterEq startDateTime) and
+                            (RecipeTracks.consumedDateTime lessEq endDateTime) and
+                            (RecipeTracks.status eq Status.ACTIVE)
+                }.map { it.toDTO() }
+            }
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+            return emptyList()
         }
     }
+
+
 
     fun getRecipeTracksByRecipe(userId: Int, recipeId: String): List<RecipeTrackDTO> {
         return transaction {

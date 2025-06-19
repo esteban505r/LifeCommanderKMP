@@ -71,7 +71,8 @@ fun CalendarComposable(
     LaunchedEffect(state.firstVisibleMonth.yearMonth) {
         onRefresh(
             LocalDate.of(state.firstVisibleMonth.yearMonth.year, state.firstVisibleMonth.yearMonth.monthNumber, 1),
-            LocalDate.of(state.firstVisibleMonth.yearMonth.year, state.firstVisibleMonth.yearMonth.monthNumber, state.firstVisibleMonth.yearMonth.lengthOfMonth())
+            LocalDate.of(state.firstVisibleMonth.yearMonth.year,
+                state.firstVisibleMonth.yearMonth.monthNumber, state.firstVisibleMonth.yearMonth.lengthOfMonth())
         )
     }
 
