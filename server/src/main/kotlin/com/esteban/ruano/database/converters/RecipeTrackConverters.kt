@@ -10,6 +10,8 @@ fun RecipeTrack.toDTO(): RecipeTrackDTO {
         id = this.id.toString(),
         recipeId = this.recipe.id.toString(),
         consumedDateTime = formatDateTime(this.consumedDateTime),
-        status = this.status.name
+        skipped = this.skipped,
+        alternativeRecipeId = this.alternativeRecipe?.id?.toString(),
+        alternativeMealName = this.alternativeMealName
     )
 }

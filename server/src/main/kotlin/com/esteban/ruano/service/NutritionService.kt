@@ -131,6 +131,17 @@ class NutritionService() : BaseService() {
         }
     }
 
+    fun getRecipesNotAssignedToDay(userId: Int, filter: String, limit: Int, offset: Long): List<RecipeDTO> {
+        return transaction {
+            Recipe.find{
+                (Recipes.user eq userId) and 
+                (Recipes.day.isNull()) and 
+                (Recipes.name.lowerCase() like "%${filter.lowercase()}%") and 
+                (Recipes.status eq Status.ACTIVE)
+            }.limit(limit, offset).toList().map { it.toDTO() }
+        }
+    }
+
     // Recipe Tracking Methods
     fun trackRecipeConsumption(userId: Int, recipeTrack: CreateRecipeTrackDTO): UUID? {
         return transaction {
@@ -147,6 +158,9 @@ class NutritionService() : BaseService() {
                         it[recipeId] = UUID.fromString(recipeTrack.recipeId)
                         it[consumedDateTime] = recipeTrack.consumedDateTime.toLocalDateTimeUI()
                         it[status] = Status.ACTIVE
+                        it[skipped] = recipeTrack.skipped
+                        it[alternativeRecipeId] = recipeTrack.alternativeRecipeId?.let { UUID.fromString(it) }
+                        it[alternativeMealName] = recipeTrack.alternativeMealName
                     }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
                 }
                 id

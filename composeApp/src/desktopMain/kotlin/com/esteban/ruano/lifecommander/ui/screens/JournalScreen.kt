@@ -63,59 +63,59 @@ fun JournalScreen(
 
         if (isCompleted) {
             // Show completed journal with answers
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(state.questions.size) { idx ->
-                        val question = state.questions[idx]
-                        val answer = answers.firstOrNull { it.questionId == question.id }?.answer ?: ""
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            elevation = 2.dp
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(state.questions.size) { idx ->
+                    val question = state.questions[idx]
+                    val answer = answers.firstOrNull { it.questionId == question.id }?.answer ?: ""
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = 2.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = question.question,
-                                    style = MaterialTheme.typography.subtitle1,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = answer,
-                                    style = MaterialTheme.typography.body1
-                                )
-                            }
+                            Text(
+                                text = question.question,
+                                style = MaterialTheme.typography.subtitle1,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = answer,
+                                style = MaterialTheme.typography.body1
+                            )
                         }
                     }
                 }
+            }
         } else {
             // Show questions to answer
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(state.questions.size) { idx ->
-                        val question = state.questions[idx]
-                        JournalQuestionCard(
-                            question = question,
-                            answer = answers.firstOrNull { it.questionId == question.id }?.answer ?: "",
-                            onAnswerChange = { newAnswer ->
-                                onAnswerChange(question.id, newAnswer)
-                            },
-                            onEdit = { showEditQuestionDialog = question },
-                            onDelete = { showDeleteQuestionDialog = question }
-                        )
-                    }
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(state.questions.size) { idx ->
+                    val question = state.questions[idx]
+                    JournalQuestionCard(
+                        question = question,
+                        answer = answers.firstOrNull { it.questionId == question.id }?.answer ?: "",
+                        onAnswerChange = { newAnswer ->
+                            onAnswerChange(question.id, newAnswer)
+                        },
+                        onEdit = { showEditQuestionDialog = question },
+                        onDelete = { showDeleteQuestionDialog = question }
+                    )
                 }
-                Spacer(Modifier.height(24.dp))
-                Button(
-                    onClick = { showCompleteDialog = true },
-                    enabled = state.questions.all { question -> answers.firstOrNull{it.questionId == question.id}?.answer?.isNotBlank() == true },
-                ) {
-                    Text("Complete Journal")
+            }
+            Spacer(Modifier.height(24.dp))
+            Button(
+                onClick = { showCompleteDialog = true },
+                enabled = state.questions.all { question -> answers.firstOrNull{it.questionId == question.id}?.answer?.isNotBlank() == true },
+            ) {
+                Text("Complete Journal")
             }
         }
     }

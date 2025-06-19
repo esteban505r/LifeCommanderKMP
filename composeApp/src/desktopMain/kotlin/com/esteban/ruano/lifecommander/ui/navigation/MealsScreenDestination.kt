@@ -64,7 +64,16 @@ fun MealsScreenDestination(
                 onNewRecipe = onNewRecipe,
                 onDetailRecipe = onDetailRecipe,
                 onGetRecipesByDay = { day ->
-                    recipesViewModel.getRecipesByDay(day)
+                    val now = kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+                    val todayIndex = now.dayOfWeek.value
+                    if (day < todayIndex) {
+                        recipesViewModel.getConsumedMealsForDay(day)
+                    } else {
+                        recipesViewModel.getRecipesByDay(day)
+                    }
+                },
+                onGetAllRecipes = {
+                    recipesViewModel.getAllRecipes()
                 },
                 onEditRecipe = { recipe ->
                     recipesViewModel.updateRecipe(recipe)
@@ -74,6 +83,12 @@ fun MealsScreenDestination(
                 },
                 onConsumeRecipe = { recipeId ->
                     recipesViewModel.consumeRecipe(recipeId)
+                },
+                onSkipRecipe = { recipeId ->
+                    recipesViewModel.skipRecipe(recipeId)
+                },
+                onSkipRecipeWithAlternative = { recipeId, alternativeRecipeId, alternativeMealName ->
+                    recipesViewModel.skipRecipeWithAlternative(recipeId, alternativeRecipeId, alternativeMealName)
                 }
             )
         }

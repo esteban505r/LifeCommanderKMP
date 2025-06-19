@@ -37,21 +37,21 @@ fun SettingsScreenDestination(
             )
         }
         else -> {
-    SettingsScreen(
-        userSettings = userSettings ?: UserSettings(
-            dailyPomodoroGoal = 0,
-            notificationsEnabled = false
-        ),
-        timerLists = timerLists,
-        onUpdateSettings = { settings ->
-            timersViewModel.updateUserSettings(
-                defaultTimerListId = settings.defaultTimerListId,
-                dailyPomodoroGoal = settings.dailyPomodoroGoal,
-                notificationsEnabled = settings.notificationsEnabled
+            SettingsScreen(
+                userSettings = userSettings ?: UserSettings(
+                    dailyPomodoroGoal = 0,
+                    notificationsEnabled = false
+                ),
+                timerLists = timerLists,
+                onUpdateSettings = { settings ->
+                    timersViewModel.updateUserSettings(
+                        defaultTimerListId = settings.defaultTimerListId,
+                        dailyPomodoroGoal = settings.dailyPomodoroGoal,
+                        notificationsEnabled = settings.notificationsEnabled
+                    )
+                },
+                onNavigateToTimers = onNavigateToTimers
             )
-        },
-        onNavigateToTimers = onNavigateToTimers
-    )
         }
     }
 } 

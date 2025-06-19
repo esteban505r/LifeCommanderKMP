@@ -2,7 +2,7 @@ package com.esteban.ruano.nutrition_domain.use_cases
 
 
 data class RecipeUseCases(
-    val getAll: GetRecipes,
+    val getAll: GetAllRecipes,
     val getByDay: GetRecipesByDay,
     val getRecipe: GetRecipe,
     val addRecipe: AddRecipe,

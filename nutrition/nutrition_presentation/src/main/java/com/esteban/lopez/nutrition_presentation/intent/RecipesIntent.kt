@@ -7,6 +7,7 @@ import com.esteban.ruano.core_ui.view_model.UserIntent
 sealed class RecipesIntent : UserIntent {
     data object GetRecipes : RecipesIntent()
     data class GetRecipesByDay(val day: Int) : RecipesIntent()
+    data object GetAllRecipes : RecipesIntent()
 }
 
 sealed class RecipesEffect : Effect {

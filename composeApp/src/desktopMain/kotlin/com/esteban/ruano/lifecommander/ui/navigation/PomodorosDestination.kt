@@ -34,17 +34,17 @@ fun PomodorosScreenDestination(
             )
         }
         else -> {
-    PomodorosScreen(
-        pomodoros = pomodoros,
-        onBack = onBack,
-        onRemovePomodoro = { pomodoroId ->
-            timersViewModel.removePomodoro(pomodoroId)
-        },
-        onAddSamplePomodoro = {
-            timersViewModel.addSamplePomodoro()
-        },
-        modifier = modifier
-    )
+            PomodorosScreen(
+                pomodoros = pomodoros,
+                onBack = onBack,
+                onRemovePomodoro = { pomodoroId ->
+                    timersViewModel.removePomodoro(pomodoroId)
+                },
+                onAddSamplePomodoro = {
+                    timersViewModel.addSamplePomodoro()
+                },
+                modifier = modifier
+            )
         }
     }
 } 

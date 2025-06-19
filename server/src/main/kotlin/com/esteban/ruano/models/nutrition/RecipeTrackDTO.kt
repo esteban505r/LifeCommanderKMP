@@ -7,5 +7,7 @@ data class RecipeTrackDTO(
     val id: String,
     val recipeId: String,
     val consumedDateTime: String,
-    val status: String = "ACTIVE"
+    val skipped: Boolean = false,
+    val alternativeRecipeId: String? = null,
+    val alternativeMealName: String? = null
 ) 

@@ -23,8 +23,8 @@ data class Exercise(
     val baseSets: Int? = null,
     val baseReps: Int? = null,
     val muscleGroup: String? = null,
-    val equipment: List<String>? = emptyList(),
-    val resource: String? = null
+//    val equipment: List<String>? = emptyList(),
+//    val resource: String? = null
 )
 
 @Serializable

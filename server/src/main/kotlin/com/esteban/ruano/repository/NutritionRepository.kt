@@ -16,6 +16,15 @@ class NutritionRepository(private val nutritionService: NutritionService) {
         )
     }
 
+    fun getRecipesNotAssignedToDay(userId: Int, filter: String, limit: Int, offset: Long): List<RecipeDTO> {
+        return nutritionService.getRecipesNotAssignedToDay(
+            userId,
+            filter,
+            limit,
+            offset,
+        )
+    }
+
     fun getRecipe(userId: Int, id: UUID): RecipeDTO? {
         return nutritionService.getRecipesByIdAndUserId(userId, id)
     }

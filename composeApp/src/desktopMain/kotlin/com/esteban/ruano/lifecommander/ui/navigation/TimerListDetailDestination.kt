@@ -47,54 +47,54 @@ fun TimerListDetailDestination(
             )
         }
         timerList != null -> {
-    timerList?.let { list ->
-        TimerListDetailScreen(
-            timerList = list,
-            timerPlaybackState = timerPlaybackState,
-            listNotifications = listNotifications,
-            onBack = onBack,
-            onAddTimer = { listId, name, duration, enabled, countsAsPomodoro, order ->
-                timersViewModel.createTimer(listId, name, duration, enabled, countsAsPomodoro, order, onSuccess = {
-                    timersViewModel.loadTimerListByID(listId)
-                })
-            },
-            onUpdateTimer = { timerId, name, duration, enabled, countsAsPomodoro, order ->
-                timersViewModel.updateTimer(timerId, name, duration, enabled, countsAsPomodoro, order, onSuccess = {
-                    timersViewModel.loadTimerListByID(timerListId)
-                })
-            },
-            onDeleteTimer = { timerId ->
-                timersViewModel.deleteTimer(timerId, onSuccess = {
-                    timersViewModel.loadTimerListByID(timerListId)
-                })
-            },
-            onReorderTimers = { timers ->
-                // TODO: Implement timer reordering
-            },
-            onGetTimerNotifications = { timerId ->
-                timersViewModel.getTimerNotifications(timerId)
-            },
-            onStartTimer = { timerList ->
-                timersViewModel.startTimer(timerList)
-            },
-            onPauseTimer = {
-                timersViewModel.pauseTimer()
-            },
-            onResumeTimer = {
-                timersViewModel.resumeTimer()
-            },
-            onStopTimer = {
-                timersViewModel.stopTimer()
-            },
-            onUpdateListSettings = {
-                timersViewModel.updateTimerList(
-                    listId = it.id,
-                    name = it.name,
-                    loopTimers = it.loopTimers,
-                    pomodoroGrouped = it.pomodoroGrouped,
+            timerList?.let { list ->
+                TimerListDetailScreen(
+                    timerList = list,
+                    timerPlaybackState = timerPlaybackState,
+                    listNotifications = listNotifications,
+                    onBack = onBack,
+                    onAddTimer = { listId, name, duration, enabled, countsAsPomodoro, order ->
+                        timersViewModel.createTimer(listId, name, duration, enabled, countsAsPomodoro, order, onSuccess = {
+                            timersViewModel.loadTimerListByID(listId)
+                        })
+                    },
+                    onUpdateTimer = { timerId, name, duration, enabled, countsAsPomodoro, order ->
+                        timersViewModel.updateTimer(timerId, name, duration, enabled, countsAsPomodoro, order, onSuccess = {
+                            timersViewModel.loadTimerListByID(timerListId)
+                        })
+                    },
+                    onDeleteTimer = { timerId ->
+                        timersViewModel.deleteTimer(timerId, onSuccess = {
+                            timersViewModel.loadTimerListByID(timerListId)
+                        })
+                    },
+                    onReorderTimers = { timers ->
+                        // TODO: Implement timer reordering
+                    },
+                    onGetTimerNotifications = { timerId ->
+                        timersViewModel.getTimerNotifications(timerId)
+                    },
+                    onStartTimer = { timerList ->
+                        timersViewModel.startTimer(timerList)
+                    },
+                    onPauseTimer = {
+                        timersViewModel.pauseTimer()
+                    },
+                    onResumeTimer = {
+                        timersViewModel.resumeTimer()
+                    },
+                    onStopTimer = {
+                        timersViewModel.stopTimer()
+                    },
+                    onUpdateListSettings = {
+                        timersViewModel.updateTimerList(
+                            listId = it.id,
+                            name = it.name,
+                            loopTimers = it.loopTimers,
+                            pomodoroGrouped = it.pomodoroGrouped,
+                        )
+                    }
                 )
-            }
-        )
             }
         }
         else -> {

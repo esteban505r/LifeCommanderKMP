@@ -39,19 +39,19 @@ fun CalendarScreen(
             )
         }
         else -> {
-    CalendarComposable(
-        onTaskClick = onTaskClick,
-        onHabitClick = onHabitClick,
-        tasks = tasks,
-        habits = habits,
-        transactions = transactions,
-        onRefresh = { startDate, endDate -> calendarViewModel.refresh(
-            startDate = startDate.toKotlinLocalDate(),
-            endDate = endDate.toKotlinLocalDate()
-        ) },
+            CalendarComposable(
+                onTaskClick = onTaskClick,
+                onHabitClick = onHabitClick,
+                tasks = tasks,
+                habits = habits,
+                transactions = transactions,
+                onRefresh = { startDate, endDate -> calendarViewModel.refresh(
+                    startDate = startDate.toKotlinLocalDate(),
+                    endDate = endDate.toKotlinLocalDate()
+                ) },
                 isLoading = isLoading,
                 error = error,
-    )
+            )
         }
     }
 } 

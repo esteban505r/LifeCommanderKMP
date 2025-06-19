@@ -30,6 +30,10 @@ class RecipesViewModel @Inject constructor(
                 is RecipesIntent.GetRecipesByDay -> {
                     fetchRecipesByDay(it.day)
                 }
+
+                is RecipesIntent.GetAllRecipes -> {
+                    fetchAllRecipes()
+                }
             }
         }
     }
@@ -122,6 +126,45 @@ class RecipesViewModel @Inject constructor(
                 }
             )
 
+        }
+    }
+
+    private fun fetchAllRecipes(
+        page: Int? = null,
+        limit: Int = 30,
+    ) {
+        viewModelScope.launch {
+            emitState {
+                currentState.copy(
+                    isLoading = true,
+                )
+            }
+            val result = recipeUseCases.getAll(
+                filter = currentState.filter,
+                page = page,
+                limit = limit,
+            )
+            result.fold(
+                onFailure = {
+                    emitState {
+                        currentState.copy(
+                            isLoading = false,
+                        )
+                    }
+                    sendEffect {
+                        RecipesEffect.ShowSnackBar("Error", SnackbarType.ERROR)
+                    }
+                },
+                onSuccess = {
+                    emitState {
+                        currentState.copy(
+                            recipes = it,
+                            isLoading = false,
+                            daySelected = -1 // -1 indicates database view
+                        )
+                    }
+                }
+            )
         }
     }
 

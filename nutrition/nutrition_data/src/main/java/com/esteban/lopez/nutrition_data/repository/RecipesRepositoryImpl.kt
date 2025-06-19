@@ -77,6 +77,34 @@ class RecipesRepositoryImpl (
         )
     }
 
+    override suspend fun getAllRecipes(
+        filter: String?,
+        page: Int?,
+        limit: Int?
+    ): Result<List<Recipe>> {
+        return doRequest(
+            offlineModeEnabled = preferences.loadOfflineMode().first(),
+            remoteFetch = {
+                val result = remoteDataSource.getAllRecipes(
+                    filter = filter ?: "",
+                    page = page?: DEFAULT_PAGE,
+                    limit = limit?: DEFAULT_LIMIT,
+                )
+                result
+            },
+            localFetch = {
+                val result = localDataSource.getAllRecipes(
+                    filter = filter ?: "",
+                    page = page?: DEFAULT_PAGE,
+                    limit = limit?: DEFAULT_LIMIT,
+                )
+                result
+            },
+            lastFetchTime = preferences.loadLastFetchTime().first(),
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            forceRefresh = false
+        )
+    }
 
     override suspend fun getRecipe(recipeId: String): Result<Recipe> =
         doRequest(

@@ -43,51 +43,51 @@ fun TimersScreenDestination(
             )
         }
         else -> {
-    TimersScreen(
-        timerLists = timerLists,
-        timerPlaybackState = timerPlaybackState,
-        connectionState = connectionState,
-        onReconnectToSocket = {
-            timersViewModel.connectWebSocket()
-        },
-        notifications = notifications,
-        onAddTimerList = { name, loopTimers, pomodoroGrouped ->
-            timersViewModel.createTimerList(name, loopTimers, pomodoroGrouped)
-        },
-        onUpdateTimerList = { listId, name, loopTimers, pomodoroGrouped ->
-            timersViewModel.updateTimerList(listId, name, loopTimers, pomodoroGrouped)
-        },
-        onDeleteTimerList = { listId ->
-            timersViewModel.deleteTimerList(listId)
-        },
-        onAddTimer = { listId, name, duration, enabled, countsAsPomodoro, order ->
-            timersViewModel.createTimer(listId, name, duration, enabled, countsAsPomodoro, order)
-        },
-        onUpdateTimer = { timerId, name, duration, enabled, countsAsPomodoro, order ->
-            timersViewModel.updateTimer(timerId, name, duration, enabled, countsAsPomodoro, order)
-        },
-        onDeleteTimer = { timerId ->
-            timersViewModel.deleteTimer(timerId)
-        },
-        onReorderTimers = { listId, timers ->
-            // TODO: Implement timer reordering
-        },
-        onNavigateToDetail = { timerList ->
-            onNavigateToDetail(timerList.id)
-        },
-        onStartTimer = { timerList ->
-            timersViewModel.startTimer(timerList)
-        },
-        onPauseTimer = {
-            timersViewModel.pauseTimer()
-        },
-        onResumeTimer = {
-            timersViewModel.resumeTimer()
-        },
-        onStopTimer = {
-            timersViewModel.stopTimer()
-        }
-    )
+            TimersScreen(
+                timerLists = timerLists,
+                timerPlaybackState = timerPlaybackState,
+                connectionState = connectionState,
+                onReconnectToSocket = {
+                    timersViewModel.connectWebSocket()
+                },
+                notifications = notifications,
+                onAddTimerList = { name, loopTimers, pomodoroGrouped ->
+                    timersViewModel.createTimerList(name, loopTimers, pomodoroGrouped)
+                },
+                onUpdateTimerList = { listId, name, loopTimers, pomodoroGrouped ->
+                    timersViewModel.updateTimerList(listId, name, loopTimers, pomodoroGrouped)
+                },
+                onDeleteTimerList = { listId ->
+                    timersViewModel.deleteTimerList(listId)
+                },
+                onAddTimer = { listId, name, duration, enabled, countsAsPomodoro, order ->
+                    timersViewModel.createTimer(listId, name, duration, enabled, countsAsPomodoro, order)
+                },
+                onUpdateTimer = { timerId, name, duration, enabled, countsAsPomodoro, order ->
+                    timersViewModel.updateTimer(timerId, name, duration, enabled, countsAsPomodoro, order)
+                },
+                onDeleteTimer = { timerId ->
+                    timersViewModel.deleteTimer(timerId)
+                },
+                onReorderTimers = { listId, timers ->
+                    // TODO: Implement timer reordering
+                },
+                onNavigateToDetail = { timerList ->
+                    onNavigateToDetail(timerList.id)
+                },
+                onStartTimer = { timerList ->
+                    timersViewModel.startTimer(timerList)
+                },
+                onPauseTimer = {
+                    timersViewModel.pauseTimer()
+                },
+                onResumeTimer = {
+                    timersViewModel.resumeTimer()
+                },
+                onStopTimer = {
+                    timersViewModel.stopTimer()
+                }
+            )
         }
     }
 } 

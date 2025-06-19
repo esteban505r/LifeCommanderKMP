@@ -27,12 +27,12 @@ fun NewEditRecipeDialog(
     var name by remember { mutableStateOf(recipeToEdit?.name ?: "") }
     var note by remember { mutableStateOf(recipeToEdit?.note ?: "") }
     var protein by remember { mutableStateOf(recipeToEdit?.protein?.toString() ?: "") }
-    var selectedDay by remember { mutableStateOf(recipeToEdit?.day ?: 1) }
+    var selectedDay by remember { mutableStateOf(recipeToEdit?.day) }
     var selectedMealTag by remember { mutableStateOf(recipeToEdit?.mealTag ?: "BREAKFAST") }
     var nameError by remember { mutableStateOf<String?>(null) }
 
     val mealTags = listOf("BREAKFAST", "LUNCH", "DINNER", "SNACK")
-    val daysOfWeek = DayOfWeek.values()
+    val daysOfWeek = DayOfWeek.entries.toTypedArray()
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -42,7 +42,7 @@ fun NewEditRecipeDialog(
     ) {
         Card(
             modifier = Modifier
-                .size(600.dp, 700.dp)
+                .size(600.dp, 750.dp)
                 .padding(16.dp),
             elevation = 8.dp
         ) {
@@ -180,6 +180,11 @@ fun NewEditRecipeDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            FilterChip(
+                                selected = selectedDay == null,
+                                onClick = { selectedDay = null },
+                                content = { Text("No day") },
+                            )
                             daysOfWeek.forEach { day ->
                                 FilterChip(
                                     selected = selectedDay == day.value,

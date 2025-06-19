@@ -56,24 +56,39 @@ fun WorkoutScreenDestination() {
             )
         }
         else -> {
-    WorkoutScreen(
-        state = state,
-        onAdd = { exercise ->
-            viewModel.addExercise(exercise)
-        },
-        onUpdate = { exercise ->
-            viewModel.updateExercise(exercise)
-        },
-        onDelete = { id ->
-            viewModel.deleteExercise(id)
-        },
-        onDaySelected = { day ->
-            viewModel.getExercisesByDay(day)
-        },
-        onCompleteWorkout = { workoutDayId ->
-            viewModel.completeWorkout(workoutDayId)
-        }
-    )
+            WorkoutScreen(
+                state = state,
+                onAdd = { exercise ->
+                    viewModel.addExercise(exercise)
+                },
+                onUpdate = { exercise ->
+                    viewModel.updateExercise(exercise)
+                },
+                onDelete = { id ->
+                    viewModel.deleteExercise(id)
+                },
+                onDaySelected = { day ->
+                    viewModel.getExercisesByDay(day)
+                },
+                onCompleteWorkout = { workoutDayId ->
+                    viewModel.completeWorkout(workoutDayId)
+                },
+                onCompleteExercise = { exerciseId, workoutDayId ->
+                    viewModel.completeExercise(exerciseId, workoutDayId)
+                },
+                onGetAllExercises = {
+                    viewModel.getAllExercises()
+                },
+                onChangeAllExercisesMode = { value ->
+                    viewModel.changeAllExercisesMode(value)
+                },
+                onBindExerciseToDay = { exerciseId, day, onResult ->
+                    viewModel.bindExerciseToDay(exerciseId, day, onResult)
+                },
+                onUnbindExerciseFromDay = { exerciseId, day, onResult ->
+                    viewModel.unbindExerciseFromDay(exerciseId, day, onResult)
+                }
+            )
         }
     }
 }

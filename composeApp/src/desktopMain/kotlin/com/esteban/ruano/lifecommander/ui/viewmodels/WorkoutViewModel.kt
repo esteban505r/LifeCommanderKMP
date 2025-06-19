@@ -24,13 +24,27 @@ class WorkoutViewModel(
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
             try {
-                val exercises = service.getExercisesByDay(day)
+                val workoutDays = service.getExercisesByDay(day)
+                val exercises = workoutDays.flatMap { it.exercises ?: emptyList() }
+                val exerciseDayMap = fetchExerciseDayMap()
+                
+                // Get completed exercises for the current workout day
+                val completedExercises = if (workoutDays.isNotEmpty()) {
+                    val workoutDayId = workoutDays.first().id
+                    service.getCompletedExercisesForDay(workoutDayId)
+                } else {
+                    emptyList()
+                }
+                
                 _state.value = _state.value.copy(
                     exercises = exercises,
+                    workoutDays = workoutDays,
+                    completedExercises = completedExercises.toSet(),
                     isLoading = false,
                     isError = false,
                     errorMessage = "",
-                    daySelected = day
+                    daySelected = day,
+                    exerciseDayMap = exerciseDayMap
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
@@ -181,6 +195,162 @@ class WorkoutViewModel(
                         errorMessage = "Failed to delete workout track"
                     )
                 }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
+
+    fun getAllExercises() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+            try {
+                val exercises = service.getExercises()
+                val exerciseDayMap = fetchExerciseDayMap()
+                _state.value = _state.value.copy(
+                    exercises = exercises,
+                    isLoading = false,
+                    isError = false,
+                    errorMessage = "",
+                    exerciseDayMap = exerciseDayMap
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
+
+    fun bindExerciseToDay(exerciseId: String, workoutDayId: Int, onResult: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                val success = service.bindExerciseToDay(exerciseId, workoutDayId)
+                onResult(success)
+                // Optionally refresh exercises for the day or all
+            } catch (e: Exception) {
+                onResult(false)
+            }
+        }
+    }
+
+    fun unbindExerciseFromDay(exerciseId: String, workoutDayId: Int, onResult: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                val success = service.unbindExerciseFromDay(exerciseId, workoutDayId)
+                onResult(success)
+                // Optionally refresh exercises for the day or all
+            } catch (e: Exception) {
+                onResult(false)
+            }
+        }
+    }
+
+    private suspend fun fetchExerciseDayMap(): Map<String, Set<Int>> {
+        return try {
+            val days = service.getAllWorkoutDays()
+            val map = mutableMapOf<String, MutableSet<Int>>()
+            days.forEach { day ->
+                day.day?.let { d ->
+                    day.exercises?.forEach { ex ->
+                        map.getOrPut(ex.id) { mutableSetOf() }.add(d)
+                    }
+                }
+            }
+            map
+        } catch (_: Exception) {
+            emptyMap()
+        }
+    }
+
+    fun changeAllExercisesMode(
+        value: Boolean = !_state.value.allExerciseMode
+    ) {
+        _state.value = _state.value.copy(
+            allExerciseMode = value
+        )
+    }
+
+    // Exercise Tracking Methods
+    fun completeExercise(exerciseId: String, workoutDayId: String) {
+        viewModelScope.launch {
+            try {
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val doneDateTime = "${now.date}T${now.hour.toString().padStart(2, '0')}:${now.minute.toString().padStart(2, '0')}:${now.second.toString().padStart(2, '0')}"
+                
+                val success = service.completeExercise(exerciseId, workoutDayId, doneDateTime)
+                if (success) {
+                    // Refresh the current day's exercises to show updated state
+                    getExercisesByDay(_state.value.daySelected)
+                } else {
+                    _state.value = _state.value.copy(
+                        isError = true,
+                        errorMessage = "Failed to complete exercise"
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
+
+    fun unCompleteExercise(trackId: String) {
+        viewModelScope.launch {
+            try {
+                val success = service.unCompleteExercise(trackId)
+                if (success) {
+                    // Refresh the current day's exercises to show updated state
+                    getExercisesByDay(_state.value.daySelected)
+                } else {
+                    _state.value = _state.value.copy(
+                        isError = true,
+                        errorMessage = "Failed to uncomplete exercise"
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
+
+    fun getExerciseTracksByDateRange(startDate: String, endDate: String) {
+        viewModelScope.launch {
+            try {
+                val tracks = service.getExerciseTracksByDateRange(startDate, endDate)
+                _state.value = _state.value.copy(
+                    exerciseTracks = tracks,
+                    isError = false,
+                    errorMessage = ""
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
+
+    fun getCompletedExercisesForDay(workoutDayId: String) {
+        viewModelScope.launch {
+            try {
+                val completedIds = service.getCompletedExercisesForDay(workoutDayId)
+                _state.value = _state.value.copy(
+                    completedExercises = completedIds.toSet(),
+                    isError = false,
+                    errorMessage = ""
+                )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isError = true,

@@ -21,6 +21,14 @@ class RecipesRemoteDataSource(
         return api.getRecipesByDay(day, filter, page, limit).map { it.toDomainModel() }
     }
 
+    override suspend fun getAllRecipes(
+        filter: String,
+        page: Int,
+        limit: Int
+    ): List<Recipe> {
+        return api.getAllRecipes(filter, page, limit).map { it.toDomainModel() }
+    }
+
     override suspend fun getRecipe(recipeId: String): Recipe {
         return api.getRecipe(recipeId).toDomainModel()
     }

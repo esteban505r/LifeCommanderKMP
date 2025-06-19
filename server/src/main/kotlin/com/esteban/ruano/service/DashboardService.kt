@@ -81,10 +81,12 @@ class DashboardService(
         val accountBalance = accountService.getTotalBalance(userId)
 
         val todayMeals = nutritionService.getRecipesByDay(userId, dayOfWeek)
-        val todayCalories = todayMeals.sumOf { 0 }
-        val mealsLogged = todayMeals.size
-        val nextMeal = todayMeals.firstOrNull()
-        val weeklyMealLogging = todayMeals.size / 7f
+        val unexpectedMeals = nutritionService.getRecipesNotAssignedToDay(userId, "", 100, 0)
+        val allTodayMeals = todayMeals + unexpectedMeals
+        val todayCalories = allTodayMeals.sumOf { 0 }
+        val mealsLogged = allTodayMeals.size
+        val nextMeal = allTodayMeals.firstOrNull()
+        val weeklyMealLogging = allTodayMeals.size / 7f
 
         val todayWorkout = workoutService.getWorkoutDayById(userId, dayOfWeek)
         val caloriesBurned = todayWorkout.exercises.sumOf { 0 }
@@ -111,6 +113,10 @@ class DashboardService(
         val habitsCompletedPerDayThisWeek = getTrackCountsPerDay(weekStart, HabitTracks.doneDateTime, HabitTrack.Companion::find)
         val recipesConsumedPerDayThisWeek = getTrackCountsPerDay(weekStart, RecipeTracks.consumedDateTime, RecipeTrack.Companion::find)
         val workoutsCompletedPerDayThisWeek = getWorkoutTrackCountsPerDay(userId, weekStart)
+        
+        // Calculate planned vs unexpected meals per day
+        val plannedMealsPerDayThisWeek = getPlannedMealsPerDay(userId, weekStart)
+        val unexpectedMealsPerDayThisWeek = getUnexpectedMealsPerDay(userId, weekStart)
 
         return DashboardResponseDTO(
             nextTask = nextTask,
@@ -139,7 +145,9 @@ class DashboardService(
             tasksCompletedPerDayThisWeek = tasksCompletedPerDayThisWeek,
             habitsCompletedPerDayThisWeek = habitsCompletedPerDayThisWeek,
             workoutsCompletedPerDayThisWeek = workoutsCompletedPerDayThisWeek,
-            mealsLoggedPerDayThisWeek = recipesConsumedPerDayThisWeek
+            mealsLoggedPerDayThisWeek = recipesConsumedPerDayThisWeek,
+            plannedMealsPerDayThisWeek = plannedMealsPerDayThisWeek,
+            unexpectedMealsPerDayThisWeek = unexpectedMealsPerDayThisWeek
         )
     }
 
@@ -415,16 +423,50 @@ class DashboardService(
         return transaction {
             (0..6).map { i ->
                 val day = weekStart.plus(DatePeriod(days = i))
-                val start = day.atTime(0, 0)
-                val end = day.atTime(23, 59)
-
-                WorkoutTrack.find { 
-                    (WorkoutTracks.workoutDayId inList WorkoutDay.find { WorkoutDays.user eq userId }.map { it.id }) and
-                    (WorkoutTracks.doneDateTime greaterEq start) and 
-                    (WorkoutTracks.doneDateTime lessEq end) and
-                    (WorkoutTracks.status eq Status.ACTIVE)
-                }.count().toInt()
+                val workout = workoutService.getWorkoutDayById(userId, day.dayOfWeek.value)
+                workout.exercises.size
             }
+        }
+    }
+
+    private fun getPlannedMealsPerDay(userId: Int, weekStart: LocalDate): List<Int> {
+        return transaction {
+            (0..6).map { i ->
+                val day = weekStart.plus(DatePeriod(days = i))
+                val dayOfWeek = day.dayOfWeek.value
+                val recipes = Recipe.find {
+                    (Recipes.user eq userId) and
+                    (Recipes.day eq dayOfWeek) and
+                    (Recipes.status eq Status.ACTIVE)
+                }.toList()
+                recipes.count { recipe ->
+                    // Check if there is a RecipeTrack for this recipe on this day (not skipped)
+                    RecipeTrack.find {
+                        (RecipeTracks.recipeId eq recipe.id.value) and
+                        (RecipeTracks.consumedDateTime greaterEq day.atTime(0, 0)) and
+                        (RecipeTracks.consumedDateTime lessEq day.atTime(23, 59)) and
+                        (RecipeTracks.status eq Status.ACTIVE) and
+                        (RecipeTracks.skipped eq false)
+                    }.any()
+                }
+            }
+        }
+    }
+
+    private fun getUnexpectedMealsPerDay(userId: Int, weekStart: LocalDate): List<Int> {
+        return transaction {
+            val unexpectedMeals = Recipe.find { 
+                (Recipes.user eq userId) and 
+                (Recipes.day.isNull()) and 
+                (Recipes.status eq Status.ACTIVE) 
+            }.toList()
+            
+            // Distribute unexpected meals across the week (for now, show them on the first day)
+            val result = MutableList(7) { 0 }
+            if (unexpectedMeals.isNotEmpty()) {
+                result[0] = unexpectedMeals.size
+            }
+            result
         }
     }
 

@@ -43,33 +43,33 @@ fun TasksScreenDestination(
             )
         }
         else -> {
-    TasksScreen(
-        selectedFilter = selectedFilter,
-        tasks = tasks,
-        tasksLoading = tasksLoading,
-        onReschedule = { task ->
-            tasksViewModel.rescheduleTask(task)
-        },
-        onCheckedTask = { task, checked ->
-            tasksViewModel.changeCheckHabit(task.id, checked)
-        },
-        onFilterChange = {
-            tasksViewModel.changeFilter(it)
-        },
-        onTaskClick = onTaskClick,
-        onReload = {
-            tasksViewModel.getTasksByFilter()
-        },
-        onAddTask = { name, note, reminders, dueDate, scheduledDate, priority ->
-            tasksViewModel.addTask(name, dueDate, scheduledDate, note, priority)
-        },
-        onUpdateTask = {  id, task ->
-            tasksViewModel.updateTask(id, task)
-        },
-        onDelete = { task ->
-            tasksViewModel.deleteTask(task.id)
-        },
-    )
+            TasksScreen(
+                selectedFilter = selectedFilter,
+                tasks = tasks,
+                tasksLoading = tasksLoading,
+                onReschedule = { task ->
+                    tasksViewModel.rescheduleTask(task)
+                },
+                onCheckedTask = { task, checked ->
+                    tasksViewModel.changeCheckHabit(task.id, checked)
+                },
+                onFilterChange = {
+                    tasksViewModel.changeFilter(it)
+                },
+                onTaskClick = onTaskClick,
+                onReload = {
+                    tasksViewModel.getTasksByFilter()
+                },
+                onAddTask = { name, note, reminders, dueDate, scheduledDate, priority ->
+                    tasksViewModel.addTask(name, dueDate, scheduledDate, note, priority)
+                },
+                onUpdateTask = {  id, task ->
+                    tasksViewModel.updateTask(id, task)
+                },
+                onDelete = { task ->
+                    tasksViewModel.deleteTask(task.id)
+                },
+            )
         }
     }
 } 

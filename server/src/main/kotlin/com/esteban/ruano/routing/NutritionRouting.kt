@@ -26,6 +26,15 @@ fun Route.nutritionRouting(nutritionRepository: NutritionRepository) {
                 call.respond(nutritionRepository.getAllRecipes(userId, filter, limit, offset))
             }
 
+            get("/all") {
+                val filter = call.request.queryParameters["filter"] ?: ""
+                val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
+                val offset = call.request.queryParameters["offset"]?.toLong() ?: 0
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+
+                call.respond(nutritionRepository.getAllRecipes(userId, filter, limit, offset))
+            }
+
             get("/{id}") {
                 val id = UUID.fromString(call.parameters["id"]!!)
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id

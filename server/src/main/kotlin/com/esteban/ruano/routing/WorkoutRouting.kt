@@ -9,6 +9,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.models.workout.CreateWorkoutTrackDTO
+import com.esteban.ruano.models.workout.CreateExerciseTrackDTO
 import com.esteban.ruano.models.workout.day.UpdateWorkoutDayDTO
 import com.esteban.ruano.models.workout.day.WorkoutDayDTO
 import com.esteban.ruano.models.workout.exercise.ExerciseDTO
@@ -70,6 +71,36 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             }
+            post("/bind") {
+                try{
+                    val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                    val params = call.receive<Map<String, String>>()
+                    val exerciseId = params["exerciseId"]
+                    val workoutDayId = params["workoutDayId"]?.toIntOrNull()
+                    if (exerciseId != null && workoutDayId != null) {
+                        val success = workoutRepository.bindExerciseToDay(userId, exerciseId, workoutDayId)
+                        if (success) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.InternalServerError)
+                    } else {
+                        call.respond(HttpStatusCode.BadRequest)
+                    }
+                }
+                catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.BadRequest, "Invalid request format")
+                }
+            }
+            delete("/bind") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val params = call.receive<Map<String, String>>()
+                val exerciseId = params["exerciseId"]
+                val workoutDayId = params["workoutDayId"]?.toIntOrNull()
+                if (exerciseId != null && workoutDayId != null) {
+                    val success = workoutRepository.unbindExerciseFromDay(userId, exerciseId, workoutDayId)
+                    if (success) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.InternalServerError)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest)
+                }
+            }
         }
 
         // Workout Tracking Endpoints
@@ -117,6 +148,44 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
                 } else {
                     call.respond(HttpStatusCode.BadRequest)
                 }
+            }
+        }
+
+        // Exercise Tracking Endpoints
+        route("/exercise-tracking") {
+            post("/complete") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val trackRequest = call.receive<CreateExerciseTrackDTO>()
+                val success = workoutRepository.completeExercise(userId, trackRequest.exerciseId, trackRequest.workoutDayId, trackRequest.doneDateTime)
+                if (success) {
+                    call.respond(HttpStatusCode.Created)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest)
+                }
+            }
+
+            delete("/{trackId}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val trackId = call.parameters["trackId"]!!
+                val success = workoutRepository.unCompleteExercise(userId, trackId)
+                if (success) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest)
+                }
+            }
+
+            get("/range") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val startDate = call.request.queryParameters["startDate"]!!
+                val endDate = call.request.queryParameters["endDate"]!!
+                call.respond(workoutRepository.getExerciseTracksByDateRange(userId, startDate, endDate))
+            }
+
+            get("/completed/{workoutDayId}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val workoutDayId = call.parameters["workoutDayId"]!!
+                call.respond(workoutRepository.getCompletedExercisesForDay(userId, workoutDayId))
             }
         }
     }

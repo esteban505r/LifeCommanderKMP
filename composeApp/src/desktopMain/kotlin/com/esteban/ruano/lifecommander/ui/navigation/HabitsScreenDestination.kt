@@ -42,26 +42,26 @@ fun HabitsScreenDestination(
             )
         }
         else -> {
-    HabitsScreen(
-        habits = habits,
-        habitsLoading = habitsLoading,
-        onHabitClick = onHabitClick,
-        onReload = {
-            habitsViewModel.getHabits()
-        },
-        onAddHabit = { name, note, frequency, dateTime ->
-            habitsViewModel.addHabit(name, note, frequency, dateTime)
-        },
-        onUpdateHabit = { id, habit ->
-            habitsViewModel.updateHabit(id, habit)
-        },
-        onDelete = { habit ->
-            habitsViewModel.deleteHabit(habit.id)
-        },
-        onCheckedHabit = { habit, checked, onComplete ->
-            habitsViewModel.changeCheckHabit(habit.id, checked)
-        }
-    )
+            HabitsScreen(
+                habits = habits,
+                habitsLoading = habitsLoading,
+                onHabitClick = onHabitClick,
+                onReload = {
+                    habitsViewModel.getHabits()
+                },
+                onAddHabit = { name, note, frequency, dateTime ->
+                    habitsViewModel.addHabit(name, note, frequency, dateTime)
+                },
+                onUpdateHabit = { id, habit ->
+                    habitsViewModel.updateHabit(id, habit)
+                },
+                onDelete = { habit ->
+                    habitsViewModel.deleteHabit(habit.id)
+                },
+                onCheckedHabit = { habit, checked, onComplete ->
+                    habitsViewModel.changeCheckHabit(habit.id, checked)
+                }
+            )
         }
     }
 } 

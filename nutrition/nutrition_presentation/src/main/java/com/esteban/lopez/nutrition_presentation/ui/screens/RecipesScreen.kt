@@ -75,15 +75,20 @@ fun RecipesScreen(
             item{
                 ToggleChipsButtons(
                     state.daySelected,
-                    buttons = listOf(stringResource(R.string.all)).plus(DayOfWeek.entries.toList().map {
+                    buttons = listOf(stringResource(R.string.all), stringResource(R.string.database)).plus(DayOfWeek.entries.toList().map {
                         it.value.toDayOfTheWeekString(LocalContext.current)
                     }),
                     onCheckedChange = {
-                        if(it == context.getString(R.string.all)){
-                            userIntent(RecipesIntent.GetRecipes)
-                        }
-                        else{
-                            userIntent(RecipesIntent.GetRecipesByDay(it.toDayNumber()))
+                        when {
+                            it == context.getString(R.string.all) -> {
+                                userIntent(RecipesIntent.GetRecipes)
+                            }
+                            it == context.getString(R.string.database) -> {
+                                userIntent(RecipesIntent.GetAllRecipes)
+                            }
+                            else -> {
+                                userIntent(RecipesIntent.GetRecipesByDay(it.toDayNumber()))
+                            }
                         }
                     })
             }
@@ -94,7 +99,7 @@ fun RecipesScreen(
                 items(state.recipes.size) { index ->
                     RecipeComposable(
                         recipe = state.recipes[index],
-                        showDay = state.daySelected == 0,
+                        showDay = state.daySelected == 0 || state.daySelected == -1,
                         onClick = {
                             onDetailRecipe(state.recipes[index].id)
                         }

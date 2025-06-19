@@ -29,14 +29,27 @@ import com.patrykandpatrick.vico.multiplatform.common.component.LineComponent
 import com.patrykandpatrick.vico.multiplatform.common.data.ExtraStore
 import com.patrykandpatrick.vico.multiplatform.common.shape.CorneredShape
 import kotlinx.datetime.*
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.plus
+import kotlinx.datetime.minus
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 data class ChartSeries(
     val name: String,
-    val data: List<Int>,
-    val color: Color
+    val data: List<Int> = emptyList(),
+    val color: Color,
+    val dateMap: Map<LocalDate, Int>? = null // If not null, use date-based X axis
 )
 
 private val xToDateMapKey = ExtraStore.Key<Map<Float, LocalDate>>()
+
+private fun LocalDate.toEpochDay(): Long = this.toJavaLocalDate().toEpochDay()
 
 @Composable
 fun StatsChart(
@@ -45,13 +58,20 @@ fun StatsChart(
 ) {
     val cartesianChartModelProducer = remember { CartesianChartModelProducer() }
 
+    // If any series uses dateMap, use date-based X axis
+    val isDateBased = series.any { it.dateMap != null }
+
     // Calculate the start of the current week
     val weekStart = remember {
         Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             .minus(DatePeriod(days = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.value - 1))
     }
 
-    // Build the lines with each series' color
+    // For date-based: build x/y lists and xToDates map
+    val xToDates: Map<Float, LocalDate> = if (isDateBased) {
+        series.firstOrNull { it.dateMap != null }?.dateMap?.keys?.associateBy { it.toEpochDay().toFloat() } ?: emptyMap()
+    } else emptyMap()
+
     val chartLines = series.map { chartSeries ->
         LineCartesianLayer.rememberLine(
             fill = LineCartesianLayer.LineFill.single(Fill(chartSeries.color)),
@@ -70,20 +90,26 @@ fun StatsChart(
         )
     }
 
-    LaunchedEffect(series.flatMap { it.data }) {
+    LaunchedEffect(series) {
         cartesianChartModelProducer.runTransaction {
-            // Create the date mapping for x-axis formatting
-            val xToDates = (0..6).associate { index ->
-                index.toFloat() to weekStart.plus(DatePeriod(days = index))
-            }
-
-            lineSeries {
-                series.forEach { chartSeries ->
-                    series(chartSeries.data.ifEmpty { List(7) { 0 } })
+            if (isDateBased) {
+                // Use date-based X axis
+                val xVals = xToDates.keys.sorted()
+                val yVals = xVals.map { x ->
+                    val date = xToDates[x]!!
+                    series.first { it.dateMap != null }.dateMap!![date]?.toFloat() ?: 0f
                 }
-            }
-            extras { extraStore ->
-                extraStore[xToDateMapKey] = xToDates
+                lineSeries {
+                    series(xVals, yVals)
+                }
+                extras { it[xToDateMapKey] = xToDates }
+            } else {
+                // Use index-based X axis
+                lineSeries {
+                    series.forEach { chartSeries ->
+                        series(chartSeries.data.ifEmpty { List(7) { 0 } })
+                    }
+                }
             }
         }
     }

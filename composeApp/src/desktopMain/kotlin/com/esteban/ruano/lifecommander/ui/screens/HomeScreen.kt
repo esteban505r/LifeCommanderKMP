@@ -42,12 +42,15 @@ import ui.components.*
 import ui.composables.*
 import ui.viewmodels.*
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
-import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaPeriod
 import kotlinx.datetime.toLocalDateTime as toLocalDateTimeKt
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
@@ -94,6 +97,15 @@ fun HomeScreen(
     val timersViewModel: TimersViewModel = koinViewModel()
     val pomodoros by timersViewModel.pomodoros.collectAsState()
 
+    // Helper: Meals per day this week as dateMap
+    val mealsPerDayDateMap = remember(dashboardViewModel.mealsLoggedPerDayThisWeek.collectAsState().value) {
+        val now = kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
+        (0..6).associate { offset ->
+            val date = startOfWeek.plus(DatePeriod(days = offset))
+            date to (dashboardViewModel.mealsLoggedPerDayThisWeek.value.getOrNull(offset) ?: 0)
+        }
+    }
 
     LaunchedEffect(
         Unit
@@ -225,8 +237,8 @@ fun HomeScreen(
             NightBlockQuestionsComposable(dailyJournalViewModel)
         } else {
             Row(
-        modifier = Modifier
-            .fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
                     .padding(padding)
             ) {
                 // Main content area (left side)
@@ -234,8 +246,8 @@ fun HomeScreen(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-            .padding(16.dp)
-    ) {
+                        .padding(16.dp)
+                ) {
                     // Header
                     Row(
                         modifier = Modifier
@@ -259,15 +271,15 @@ fun HomeScreen(
                     }
 
                     // Main content sections with grid layout
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
                         // Weekly Overview and Pomodoro charts side by side
-                item(span = { GridItemSpan(maxLineSpan) }) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
                             Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                 Column(Modifier.weight(1f)) {
                                     Text(
@@ -275,19 +287,19 @@ fun HomeScreen(
                                         style = MaterialTheme.typography.h5, 
                                         fontWeight = FontWeight.Bold
                                     )
-                        StatsChart(
-                            series = listOf(
-                                ChartSeries(
-                                    name = "Tasks",
-                                    data = dashboardViewModel.tasksCompletedPerDayThisWeek.collectAsState().value,
-                                    color = Color(0xFF2196F3)
-                                ),
-                                ChartSeries(
-                                    name = "Habits",
-                                    data = dashboardViewModel.habitsCompletedPerDayThisWeek.collectAsState().value,
-                                    color = Color(0xFF9C27B0)
+                                    StatsChart(
+                                        series = listOf(
+                                            ChartSeries(
+                                                name = "Tasks",
+                                                data = dashboardViewModel.tasksCompletedPerDayThisWeek.collectAsState().value,
+                                                color = Color(0xFF2196F3)
+                                            ),
+                                            ChartSeries(
+                                                name = "Habits",
+                                                data = dashboardViewModel.habitsCompletedPerDayThisWeek.collectAsState().value,
+                                                color = Color(0xFF9C27B0)
                                             )
-                                ),
+                                        ),
                                         modifier = Modifier.height(220.dp).fillMaxWidth()
                                     )
                                 }
@@ -299,7 +311,7 @@ fun HomeScreen(
                                     )
                                     StatsChart(
                                         series = listOf(
-                                ChartSeries(
+                                            ChartSeries(
                                                 name = "Pomodoros",
                                                 data = pomodorosPerDayThisWeek,
                                                 color = Color(0xFFE53935)
@@ -322,15 +334,20 @@ fun HomeScreen(
                                     )
                                     StatsChart(
                                         series = listOf(
-                                ChartSeries(
-                                    name = "Meals",
-                                    data = dashboardViewModel.mealsLoggedPerDayThisWeek.collectAsState().value,
-                                    color = Color(0xFFFFA726)
-                                )
-                            ),
-                            modifier = Modifier.height(220.dp).fillMaxWidth()
-                        )
-                    }
+                                            ChartSeries(
+                                                name = "Planned Meals",
+                                                data = dashboardViewModel.plannedMealsPerDayThisWeek.collectAsState().value,
+                                                color = Color(0xFFFFA726)
+                                            ),
+                                            ChartSeries(
+                                                name = "Unexpected Meals",
+                                                data = dashboardViewModel.unexpectedMealsPerDayThisWeek.collectAsState().value,
+                                                color = Color(0xFFFF5722)
+                                            )
+                                        ),
+                                        modifier = Modifier.height(220.dp).fillMaxWidth()
+                                    )
+                                }
                                 Column(Modifier.weight(1f)) {
                                     Text(
                                         "Workout", 
@@ -344,43 +361,43 @@ fun HomeScreen(
                                                 data = dashboardViewModel.workoutsCompletedPerDayThisWeek.collectAsState().value,
                                                 color = Color(0xFF4CAF50)
                                             )
-                                ),
+                                        ),
                                         modifier = Modifier.height(220.dp).fillMaxWidth()
-                                )
+                                    )
                                 }
                             }
                         }
 
                         // Summary sections in grid
-                items(sections) { section ->
-                    AnimatedVisibility(
-                        visible = expandedSections[section] == true,
-                        enter = expandVertically(
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow
-                            )
-                        ) + fadeIn(
-                            animationSpec = tween(durationMillis = 300)
-                        ),
-                        exit = shrinkVertically(
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow
-                            )
-                        ) + fadeOut(
-                            animationSpec = tween(durationMillis = 300)
-                        )
-                    ) {
-                        HomeSectionCard(
-                            section = section,
-                            isExpanded = true,
-                            onToggleExpand = { expandedSections[section] = false },
-                            content = {
-                                when (section) {
-                                    HomeSection.Tasks -> TasksSummary(
-                                        nextTask = nextTask,
-                                        taskStats = taskStats,
+                        items(sections) { section ->
+                            AnimatedVisibility(
+                                visible = expandedSections[section] == true,
+                                enter = expandVertically(
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    )
+                                ) + fadeIn(
+                                    animationSpec = tween(durationMillis = 300)
+                                ),
+                                exit = shrinkVertically(
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    )
+                                ) + fadeOut(
+                                    animationSpec = tween(durationMillis = 300)
+                                )
+                            ) {
+                                HomeSectionCard(
+                                    section = section,
+                                    isExpanded = true,
+                                    onToggleExpand = { expandedSections[section] = false },
+                                    content = {
+                                        when (section) {
+                                            HomeSection.Tasks -> TasksSummary(
+                                                nextTask = nextTask,
+                                                taskStats = taskStats,
                                                 overdueTasks = overdueTasks,
                                                 onMarkTaskDone = { task ->
                                                     coroutineScope.launch {
@@ -388,13 +405,13 @@ fun HomeScreen(
                                                         dashboardViewModel.refreshDashboard()
                                                     }
                                                 },
-                                        onViewAllClick = onNavigateToTasks,
-                                        isExpanded = true,
-                                        currentTime = currentTime
-                                    )
-                                    HomeSection.Habits -> HabitsSummary(
-                                        nextHabit = nextHabit,
-                                        habitStats = habitStats,
+                                                onViewAllClick = onNavigateToTasks,
+                                                isExpanded = true,
+                                                currentTime = currentTime
+                                            )
+                                            HomeSection.Habits -> HabitsSummary(
+                                                nextHabit = nextHabit,
+                                                habitStats = habitStats,
                                                 overdueHabits = overdueHabits,
                                                 onMarkHabitDone = { habit ->
                                                     coroutineScope.launch {
@@ -402,34 +419,36 @@ fun HomeScreen(
                                                         dashboardViewModel.refreshDashboard()
                                                     }
                                                 },
-                                        onViewAllClick = onNavigateToHabits,
-                                        isExpanded = true,
-                                        currentTime = currentTime
-                                    )
-                                    HomeSection.Meals -> MealsSummary(
-                                        todayCalories = dashboardViewModel.todayCalories.collectAsState().value,
-                                        mealsLogged = dashboardViewModel.mealsLogged.collectAsState().value,
-                                        nextMeal = dashboardViewModel.nextMeal.collectAsState().value,
-                                        weeklyMealLogging = dashboardViewModel.weeklyMealLogging.collectAsState().value
-                                    )
-                                    HomeSection.Workout -> WorkoutSummary(
-                                        todayWorkout = dashboardViewModel.todayWorkout.collectAsState().value,
-                                        caloriesBurned = dashboardViewModel.caloriesBurned.collectAsState().value,
-                                        workoutStreak = dashboardViewModel.workoutStreak.collectAsState().value,
-                                        weeklyWorkoutCompletion = dashboardViewModel.weeklyWorkoutCompletion.collectAsState().value
-                                    )
-                                    HomeSection.Finances -> FinanceSummary(
-                                        recentTransactions = dashboardViewModel.recentTransactions.collectAsState().value,
-                                        accountBalance = dashboardViewModel.accountBalance.collectAsState().value
-                                    )
-                                    HomeSection.Journal -> JournalSummary(
-                                        journalCompleted = dashboardViewModel.journalCompleted.collectAsState().value,
-                                        journalStreak = dashboardViewModel.journalStreak.collectAsState().value,
-                                        recentJournalEntries = dashboardViewModel.recentJournalEntries.collectAsState().value
-                                    )
-                                }
-                            }
-                        )
+                                                onViewAllClick = onNavigateToHabits,
+                                                isExpanded = true,
+                                                currentTime = currentTime
+                                            )
+                                            HomeSection.Meals -> MealsSummary(
+                                                todayCalories = dashboardViewModel.todayCalories.collectAsState().value,
+                                                mealsLogged = dashboardViewModel.mealsLogged.collectAsState().value,
+                                                nextMeal = dashboardViewModel.nextMeal.collectAsState().value,
+                                                weeklyMealLogging = dashboardViewModel.weeklyMealLogging.collectAsState().value,
+                                                plannedMeals = dashboardViewModel.plannedMealsPerDayThisWeek.collectAsState().value.sum(),
+                                                unexpectedMeals = dashboardViewModel.unexpectedMealsPerDayThisWeek.collectAsState().value.sum()
+                                            )
+                                            HomeSection.Workout -> WorkoutSummary(
+                                                todayWorkout = dashboardViewModel.todayWorkout.collectAsState().value,
+                                                caloriesBurned = dashboardViewModel.caloriesBurned.collectAsState().value,
+                                                workoutStreak = dashboardViewModel.workoutStreak.collectAsState().value,
+                                                weeklyWorkoutCompletion = dashboardViewModel.weeklyWorkoutCompletion.collectAsState().value
+                                            )
+                                            HomeSection.Finances -> FinanceSummary(
+                                                recentTransactions = dashboardViewModel.recentTransactions.collectAsState().value,
+                                                accountBalance = dashboardViewModel.accountBalance.collectAsState().value
+                                            )
+                                            HomeSection.Journal -> JournalSummary(
+                                                journalCompleted = dashboardViewModel.journalCompleted.collectAsState().value,
+                                                journalStreak = dashboardViewModel.journalStreak.collectAsState().value,
+                                                recentJournalEntries = dashboardViewModel.recentJournalEntries.collectAsState().value
+                                            )
+                                        }
+                                    }
+                                )
                             }
                         }
                     }

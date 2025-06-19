@@ -40,15 +40,15 @@ fun FinancialScreenDestination(
             )
         }
         else -> {
-    FinanceScreen(
-        state = state,
-        actions = financialViewModel,
-        onOpenImporter = onOpenImporter,
-        onOpenBudgetTransactions = onOpenBudgetTransactions,
-        onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
+            FinanceScreen(
+                state = state,
+                actions = financialViewModel,
+                onOpenImporter = onOpenImporter,
+                onOpenBudgetTransactions = onOpenBudgetTransactions,
+                onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
                 isDesktop = true,
                 modifier = modifier
-    )
+            )
         }
     }
 } 

@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -30,18 +31,29 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.LocalDining
 import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.esteban.ruano.lifecommander.models.Recipe
 import com.esteban.ruano.lifecommander.ui.state.RecipesState
 import java.time.DayOfWeek
 import ui.composables.NewEditRecipeDialog
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -50,15 +62,22 @@ fun RecipesScreen(
     onNewRecipe: () -> Unit,
     onDetailRecipe: (String) -> Unit,
     onGetRecipesByDay: (Int) -> Unit,
+    onGetAllRecipes: () -> Unit = {},
     onEditRecipe: (Recipe) -> Unit = {},
     onDeleteRecipe: (String) -> Unit = {},
     onConsumeRecipe: (String) -> Unit = {},
+    onSkipRecipe: (String) -> Unit = {},
+    onSkipRecipeWithAlternative: (String, String?, String?) -> Unit ,
     modifier: Modifier = Modifier
 ) {
     var showRecipeDialog by remember { mutableStateOf(false) }
     var recipeToEdit by remember { mutableStateOf<Recipe?>(null) }
     var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showSkipDialog by remember { mutableStateOf<Recipe?>(null) }
+    var showAlternativeDialog by remember { mutableStateOf<Recipe?>(null) }
+    var alternativeMealName by remember { mutableStateOf(TextFieldValue("")) }
+    
     val daysOfWeek = DayOfWeek.values()
     val selectedDay = state.daySelected
     
@@ -74,7 +93,11 @@ fun RecipesScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Meals by Day",
+                text = when (selectedDay) {
+                    -1 -> "Recipe Database"
+                    0 -> "All Meals"
+                    else -> "Meals by Day"
+                },
                 style = MaterialTheme.typography.h4.copy(
                     fontWeight = FontWeight.Bold
                 )
@@ -94,7 +117,7 @@ fun RecipesScreen(
             }
         }
         
-        // Chips Row
+        // Enhanced Chips Row with Database option
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -102,6 +125,22 @@ fun RecipesScreen(
                 .padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Database chip
+            FilterChip(
+                selected = selectedDay == -1,
+                onClick = { onGetAllRecipes() },
+                colors = ChipDefaults.filterChipColors(
+                    backgroundColor = if (selectedDay == -1) MaterialTheme.colors.secondary.copy(alpha = 0.15f) else MaterialTheme.colors.surface,
+                    contentColor = MaterialTheme.colors.secondary
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Icon(Icons.Default.Storage, contentDescription = "Database", modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Database")
+            }
+            
+            // Day chips
             daysOfWeek.forEach { day ->
                 FilterChip(
                     selected = selectedDay == day.value,
@@ -129,12 +168,27 @@ fun RecipesScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "No meals found for this day.",
-                    style = MaterialTheme.typography.body1.copy(
-                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        Icons.Default.Restaurant,
+                        contentDescription = "No meals",
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colors.onSurface.copy(alpha = 0.3f)
                     )
-                )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        when (selectedDay) {
+                            -1 -> "No recipes in database"
+                            0 -> "No meals found"
+                            else -> "No meals found for this day"
+                        },
+                        style = MaterialTheme.typography.body1.copy(
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                    )
+                }
             }
         } else {
             LazyColumn(
@@ -146,7 +200,7 @@ fun RecipesScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(140.dp),
+                            .height(if (selectedDay == -1) 120.dp else 160.dp),
                         elevation = 6.dp,
                         shape = RoundedCornerShape(16.dp),
                         backgroundColor = if (recipe.consumed) 
@@ -241,6 +295,18 @@ fun RecipesScreen(
                                             maxLines = 1
                                         )
                                     }
+                                    
+                                    // Show day assignment for database recipes
+                                    if (selectedDay == -1 && recipe.day != null) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            "Assigned to ${DayOfWeek.of(recipe.day!!).name}",
+                                            style = MaterialTheme.typography.caption.copy(
+                                                color = MaterialTheme.colors.primary,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        )
+                                    }
                                 }
                                 
                                 // Bottom row with badges and actions
@@ -306,21 +372,46 @@ fun RecipesScreen(
                                     Row(
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        // Consume Recipe Button
-                                        IconButton(
-                                            onClick = { onConsumeRecipe(recipe.id) },
-                                            modifier = Modifier.size(36.dp),
-                                            enabled = !recipe.consumed
-                                        ) {
-                                            Icon(
-                                                Icons.Default.CheckCircle,
-                                                contentDescription = if (recipe.consumed) "Already Consumed" else "Consume Recipe",
-                                                tint = if (recipe.consumed) 
-                                                    MaterialTheme.colors.onSurface.copy(alpha = 0.3f) 
-                                                else 
-                                                    Color(0xFF4CAF50)
-                                            )
+                                        // Only show meal tracking buttons for day-specific views (not database)
+                                        if (selectedDay != -1 && selectedDay != 0 && selectedDay > 0) {
+                                            val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                            val todayIndex = now.dayOfWeek.value
+                                            if (selectedDay == todayIndex) {
+                                                // Show action buttons (consume, skip, edit, delete) ONLY for today
+                                                // Consume Recipe Button
+                                                IconButton(
+                                                    onClick = { onConsumeRecipe(recipe.id) },
+                                                    modifier = Modifier.size(36.dp),
+                                                    enabled = !recipe.consumed
+                                                ) {
+                                                    Icon(
+                                                        Icons.Default.CheckCircle,
+                                                        contentDescription = if (recipe.consumed) "Already Consumed" else "Consume Recipe",
+                                                        tint = if (recipe.consumed) 
+                                                            MaterialTheme.colors.onSurface.copy(alpha = 0.3f) 
+                                                        else 
+                                                            Color(0xFF4CAF50)
+                                                    )
+                                                }
+                                                
+                                                // Skip Recipe Button
+                                                IconButton(
+                                                    onClick = { showSkipDialog = recipe },
+                                                    modifier = Modifier.size(36.dp),
+                                                    enabled = !recipe.consumed
+                                                ) {
+                                                    Icon(
+                                                        Icons.Default.SkipNext,
+                                                        contentDescription = "Skip Recipe",
+                                                        tint = if (recipe.consumed) 
+                                                            MaterialTheme.colors.onSurface.copy(alpha = 0.3f) 
+                                                        else 
+                                                            Color(0xFFFF9800)
+                                                    )
+                                                }
+                                            }
                                         }
+                                        
                                         IconButton(
                                             onClick = {
                                                 recipeToEdit = recipe
@@ -398,6 +489,102 @@ fun RecipesScreen(
                     onClick = {
                         showDeleteDialog = false
                         recipeToDelete = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Skip Recipe Dialog
+    showSkipDialog?.let { recipe ->
+        var searchQuery by remember { mutableStateOf("") }
+        var filteredRecipes = state.recipes.filter {
+            it.id != recipe.id && (it.name.contains(searchQuery, ignoreCase = true) || searchQuery.isBlank())
+        }
+        var expanded by remember { mutableStateOf(false) }
+        var selectedReplacement: Recipe? by remember { mutableStateOf(null) }
+        AlertDialog(
+            onDismissRequest = { showSkipDialog = null },
+            title = { Text("Skip ${recipe.name}") },
+            text = {
+                Column {
+                    Text("You must specify what you ate instead.")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text("Search recipes") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box {
+                        OutlinedButton(
+                            onClick = { expanded = true },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(selectedReplacement?.name ?: "Select replacement recipe")
+                        }
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            filteredRecipes.forEach { r ->
+                                DropdownMenuItem(onClick = {
+                                    selectedReplacement = r
+                                    alternativeMealName = TextFieldValue("")
+                                    expanded = false
+                                }) {
+                                    Text(r.name)
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Divider()
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Or enter a custom meal name:")
+                    TextField(
+                        value = alternativeMealName,
+                        onValueChange = {
+                            alternativeMealName = it
+                            if (it.text.isNotBlank()) selectedReplacement = null
+                        },
+                        label = { Text("Replacement meal name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = alternativeMealName.text.isBlank() && selectedReplacement == null
+                    )
+                    if (alternativeMealName.text.isBlank() && selectedReplacement == null) {
+                        Text("Replacement meal is required", color = MaterialTheme.colors.error, style = MaterialTheme.typography.caption)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onSkipRecipeWithAlternative(
+                            recipe.id,
+                            selectedReplacement?.id,
+                            if (selectedReplacement == null) alternativeMealName.text else null
+                        )
+                        showSkipDialog = null
+                        alternativeMealName = TextFieldValue("")
+                        selectedReplacement = null
+                        searchQuery = ""
+                    },
+                    enabled = selectedReplacement != null || alternativeMealName.text.isNotBlank()
+                ) {
+                    Text("Skip")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showSkipDialog = null
+                        alternativeMealName = TextFieldValue("")
+                        selectedReplacement = null
+                        searchQuery = ""
                     }
                 ) {
                     Text("Cancel")

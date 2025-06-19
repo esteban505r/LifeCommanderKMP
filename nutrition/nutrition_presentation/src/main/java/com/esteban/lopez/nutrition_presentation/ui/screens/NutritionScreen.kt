@@ -71,6 +71,18 @@ fun NutritionScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
             item {
+                Card(
+                    modifier = Modifier.clickable { /* TODO: Navigate to meal tracking */ }
+                ) {
+                   Box(
+                          modifier = Modifier.fillMaxWidth()
+                   ){
+                       Text(text = "Track Today's Meals",
+                           modifier = Modifier.align(Alignment.Center).padding(16.dp))
+                   }
+                }
+            }
+            item {
                 TitleH3(
                     text = "Today's recipes",
                 )

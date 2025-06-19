@@ -66,23 +66,23 @@ fun JournalScreenDestination() {
         }
         state.showQuestions -> {
             // Show questions to answer
-    JournalScreen(
-        state = state,
-        answers = state.questionAnswers,
-        onAnswerChange = { questionId, ans ->
-            viewModel.addAnswer(questionId, ans)
-        },
-        onComplete = { viewModel.completeDailyJournal() },
-        onLoadQuestions = { viewModel.loadQuestions() },
-        onAddQuestion = { question ->
-            viewModel.addQuestion(question)
-        },
-        onDeleteQuestion = { questionId ->
-            viewModel.deleteQuestion(questionId)
-        },
-        onEditQuestion = { id, question ->
-            viewModel.updateQuestion(id, question)
-        },
+            JournalScreen(
+                state = state,
+                answers = state.questionAnswers,
+                onAnswerChange = { questionId, ans ->
+                    viewModel.addAnswer(questionId, ans)
+                },
+                onComplete = { viewModel.completeDailyJournal() },
+                onLoadQuestions = { viewModel.loadQuestions() },
+                onAddQuestion = { question ->
+                    viewModel.addQuestion(question)
+                },
+                onDeleteQuestion = { questionId ->
+                    viewModel.deleteQuestion(questionId)
+                },
+                onEditQuestion = { id, question ->
+                    viewModel.updateQuestion(id, question)
+                },
                 isCompleted = false
             )
         }

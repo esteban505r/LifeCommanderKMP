@@ -38,7 +38,9 @@ data class DashboardResponse(
     val tasksCompletedPerDayThisWeek: List<Int>? = emptyList(),
     val habitsCompletedPerDayThisWeek: List<Int>? = emptyList(),
     val workoutsCompletedPerDayThisWeek: List<Int>? = emptyList(),
-    val mealsLoggedPerDayThisWeek: List<Int>? = emptyList()
+    val mealsLoggedPerDayThisWeek: List<Int>? = emptyList(),
+    val plannedMealsPerDayThisWeek: List<Int>? = emptyList(),
+    val unexpectedMealsPerDayThisWeek: List<Int>? = emptyList()
 )
 
 @Serializable

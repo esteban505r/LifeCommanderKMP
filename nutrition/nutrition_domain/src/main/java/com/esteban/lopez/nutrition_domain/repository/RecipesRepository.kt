@@ -14,6 +14,11 @@ interface RecipesRepository {
         page: Int?,
         limit: Int?
     ): Result<List<Recipe>>
+    suspend fun getAllRecipes(
+        filter: String?,
+        page: Int?,
+        limit: Int?
+    ): Result<List<Recipe>>
 
     suspend fun getRecipe(recipeId: String): Result<Recipe>
     suspend fun addRecipe(recipe: Recipe): Result<Unit>

@@ -4,6 +4,8 @@ import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.Workout
 import com.esteban.ruano.lifecommander.models.WorkoutTrack
 import com.esteban.ruano.lifecommander.models.CreateWorkoutTrack
+import com.esteban.ruano.lifecommander.models.ExerciseTrack
+import com.esteban.ruano.lifecommander.models.CreateExerciseTrack
 import com.esteban.ruano.lifecommander.models.workout.day.UpdateWorkoutDay
 import com.esteban.ruano.lifecommander.models.workout.day.WorkoutDay
 import io.ktor.client.*
@@ -91,26 +93,32 @@ class WorkoutService(
         return response.status == HttpStatusCode.Created
     }
 
-    suspend fun getExercisesByDay(day: Int): List<Exercise> {
+    suspend fun getExercisesByDay(day: Int): List<WorkoutDay> {
         return httpClient.get("$baseUrl/workout/byDay/$day") {
             appHeaders(tokenStorageImpl.getToken())
-        }.body()
+        }.body<List<WorkoutDay>>()
     }
 
-    suspend fun addExercise(exercise: Exercise): Exercise {
-        return httpClient.post("$baseUrl/workout/exercises") {
+    suspend fun addExercise(exercise: Exercise) {
+        val response = httpClient.post("$baseUrl/workout/exercises") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
             setBody(exercise)
-        }.body()
+        }
+        if (response.status != HttpStatusCode.Created) {
+            throw Exception("Failed to add exercise: ${response.status}")
+        }
     }
 
-    suspend fun updateExercise(exercise: Exercise): Exercise {
-        return httpClient.patch("$baseUrl/workout/exercises/${exercise.id}") {
+    suspend fun updateExercise(exercise: Exercise) {
+        val response = httpClient.patch("$baseUrl/workout/exercises/${exercise.id}") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
             setBody(exercise)
-        }.body()
+        }
+        if (response.status != HttpStatusCode.OK) {
+            throw Exception("Failed to update exercise: ${response.status}")
+        }
     }
 
     suspend fun deleteExercise(id: String) {
@@ -155,5 +163,54 @@ class WorkoutService(
             appHeaders(tokenStorageImpl.getToken())
         }
         return response.status == HttpStatusCode.OK
+    }
+
+    suspend fun bindExerciseToDay(exerciseId: String, workoutDayId: Int): Boolean {
+        val response = httpClient.post("$baseUrl/workout/exercises/bind") {
+            contentType(ContentType.Application.Json)
+            appHeaders(tokenStorageImpl.getToken())
+            setBody(mapOf("exerciseId" to exerciseId, "workoutDayId" to workoutDayId.toString()))
+        }
+        return response.status == HttpStatusCode.OK
+    }
+
+    suspend fun unbindExerciseFromDay(exerciseId: String, workoutDayId: Int): Boolean {
+        val response = httpClient.delete("$baseUrl/workout/exercises/bind") {
+            contentType(ContentType.Application.Json)
+            appHeaders(tokenStorageImpl.getToken())
+            setBody(mapOf("exerciseId" to exerciseId, "workoutDayId" to workoutDayId.toString()))
+        }
+        return response.status == HttpStatusCode.OK
+    }
+
+    // Exercise Tracking Methods
+    suspend fun completeExercise(exerciseId: String, workoutDayId: String, doneDateTime: String): Boolean {
+        val response = httpClient.post("$baseUrl/workout/exercise-tracking/complete") {
+            contentType(ContentType.Application.Json)
+            appHeaders(tokenStorageImpl.getToken())
+            setBody(CreateExerciseTrack(exerciseId, workoutDayId, doneDateTime))
+        }
+        return response.status == HttpStatusCode.Created
+    }
+
+    suspend fun unCompleteExercise(trackId: String): Boolean {
+        val response = httpClient.delete("$baseUrl/workout/exercise-tracking/$trackId") {
+            appHeaders(tokenStorageImpl.getToken())
+        }
+        return response.status == HttpStatusCode.OK
+    }
+
+    suspend fun getExerciseTracksByDateRange(startDate: String, endDate: String): List<ExerciseTrack> {
+        return httpClient.get("$baseUrl/workout/exercise-tracking/range") {
+            parameter("startDate", startDate)
+            parameter("endDate", endDate)
+            appHeaders(tokenStorageImpl.getToken())
+        }.body()
+    }
+
+    suspend fun getCompletedExercisesForDay(workoutDayId: String): List<String> {
+        return httpClient.get("$baseUrl/workout/exercise-tracking/completed/$workoutDayId") {
+            appHeaders(tokenStorageImpl.getToken())
+        }.body()
     }
 } 

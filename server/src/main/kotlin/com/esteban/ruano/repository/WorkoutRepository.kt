@@ -3,6 +3,7 @@ package com.esteban.ruano.repository
 import com.esteban.ruano.models.tasks.TaskDTO
 import com.esteban.ruano.models.workout.WorkoutDashboardDTO
 import com.esteban.ruano.models.workout.WorkoutTrackDTO
+import com.esteban.ruano.models.workout.ExerciseTrackDTO
 import com.esteban.ruano.models.workout.day.UpdateWorkoutDayDTO
 import com.esteban.ruano.models.workout.day.WorkoutDayDTO
 import com.esteban.ruano.models.workout.exercise.ExerciseDTO
@@ -80,5 +81,30 @@ class WorkoutRepository(private val workoutService: WorkoutService) {
 
     fun deleteWorkoutTrack(userId: Int, trackId: String): Boolean {
         return workoutService.deleteWorkoutTrack(userId, trackId)
+    }
+
+    fun unbindExerciseFromDay(userId: Int, exerciseId: String, workoutDayDay: Int): Boolean {
+        return workoutService.unbindExerciseFromDay(userId, exerciseId, workoutDayDay)
+    }
+
+    fun bindExerciseToDay(userId: Int, exerciseId: String, workoutDayDay: Int): Boolean {
+        return workoutService.bindExerciseToDay(userId, exerciseId, workoutDayDay)
+    }
+
+    // Exercise Tracking Methods
+    fun completeExercise(userId: Int, exerciseId: String, workoutDayId: String, doneDateTime: String): Boolean {
+        return workoutService.completeExercise(userId, exerciseId, workoutDayId, doneDateTime)
+    }
+
+    fun unCompleteExercise(userId: Int, trackId: String): Boolean {
+        return workoutService.unCompleteExercise(userId, trackId)
+    }
+
+    fun getExerciseTracksByDateRange(userId: Int, startDate: String, endDate: String): List<ExerciseTrackDTO> {
+        return workoutService.getExerciseTracksByDateRange(userId, startDate, endDate)
+    }
+
+    fun getCompletedExercisesForDay(userId: Int, workoutDayId: String): List<String> {
+        return workoutService.getCompletedExercisesForDay(userId, workoutDayId)
     }
 }

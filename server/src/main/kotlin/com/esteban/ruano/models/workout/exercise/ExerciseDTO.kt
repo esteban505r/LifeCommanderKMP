@@ -14,6 +14,6 @@ data class ExerciseDTO(
     val baseSets: Int,
     val baseReps: Int,
     val muscleGroup: String,
-    val equipment: List<EquipmentDTO>,
-    val resource: ResourceDTO?
+    val equipment: List<EquipmentDTO>? = emptyList(),
+    val resource: ResourceDTO? = null
 )

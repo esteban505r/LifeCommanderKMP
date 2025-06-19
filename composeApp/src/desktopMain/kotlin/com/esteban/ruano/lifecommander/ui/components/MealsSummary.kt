@@ -16,7 +16,9 @@ fun MealsSummary(
     todayCalories: Int,
     mealsLogged: Int,
     nextMeal: MealDTO?,
-    weeklyMealLogging: Float
+    weeklyMealLogging: Float,
+    plannedMeals: Int = 0,
+    unexpectedMeals: Int = 0
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -40,6 +42,24 @@ fun MealsSummary(
                 )
             }
             Divider()
+            
+            // Show planned vs unexpected meals breakdown
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Planned: $plannedMeals",
+                    style = MaterialTheme.typography.body2,
+                    color = Color(0xFFFFA726)
+                )
+                Text(
+                    text = "Unexpected: $unexpectedMeals",
+                    style = MaterialTheme.typography.body2,
+                    color = Color(0xFFFF5722)
+                )
+            }
+            
             if (nextMeal != null) {
                 Text("Next Meal: ${nextMeal.name} at ${nextMeal.time} (${nextMeal.calories} kcal)", style = MaterialTheme.typography.body2)
             } else {

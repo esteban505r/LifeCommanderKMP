@@ -14,6 +14,11 @@ interface RecipesDataSource {
         page: Int?,
         limit: Int?
     ): List<Recipe>
+    suspend fun getAllRecipes(
+        filter: String,
+        page: Int,
+        limit: Int
+    ): List<Recipe>
     suspend fun getRecipe(recipeId: String): Recipe
     suspend fun addRecipe(recipe: Recipe)
     suspend fun deleteRecipe(recipeId: String)

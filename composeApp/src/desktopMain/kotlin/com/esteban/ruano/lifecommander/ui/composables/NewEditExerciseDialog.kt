@@ -38,8 +38,8 @@ fun NewEditExerciseDialog(
     var baseSets by remember { mutableStateOf(exerciseToEdit?.baseSets?.toString() ?: "3") }
     var baseReps by remember { mutableStateOf(exerciseToEdit?.baseReps?.toString() ?: "10") }
     var muscleGroup by remember { mutableStateOf(exerciseToEdit?.muscleGroup ?: "FULL_BODY") }
-    var equipment by remember { mutableStateOf(exerciseToEdit?.equipment?.joinToString(", ") ?: "") }
-    var resource by remember { mutableStateOf(exerciseToEdit?.resource ?: "") }
+//    var equipment by remember { mutableStateOf(exerciseToEdit?.equipment?.joinToString(", ") ?: "") }
+//    var resource by remember { mutableStateOf(exerciseToEdit?.resource ?: "") }
     var error by remember { mutableStateOf<String?>(null) }
 
     val muscleGroups = listOf("FULL_BODY", "CORE", "LEGS", "UPPER_BODY", "LOWER_BODY", "ARMS", "BACK", "CHEST", "SHOULDERS")
@@ -203,7 +203,7 @@ fun NewEditExerciseDialog(
                                 )
                             }
                             // Equipment
-                            Column {
+                           /* Column {
                                 Text("Equipment (comma separated)", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.Medium, color = MaterialTheme.colors.onSurface)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 OutlinedTextField(
@@ -217,9 +217,9 @@ fun NewEditExerciseDialog(
                                     ),
                                     leadingIcon = { Icon(Icons.Default.FitnessCenter, contentDescription = null) }
                                 )
-                            }
+                            }*/
                             // Resource (optional)
-                            Column {
+                           /* Column {
                                 Text("Resource (optional)", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.Medium, color = MaterialTheme.colors.onSurface)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 OutlinedTextField(
@@ -232,7 +232,7 @@ fun NewEditExerciseDialog(
                                         unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = 0.2f)
                                     )
                                 )
-                            }
+                            }*/
                             if (error != null) {
                                 Text(error!!, color = MaterialTheme.colors.error, style = MaterialTheme.typography.caption)
                             }
@@ -267,8 +267,8 @@ fun NewEditExerciseDialog(
                                             baseSets = baseSets.toIntOrNull() ?: 3,
                                             baseReps = baseReps.toIntOrNull() ?: 10,
                                             muscleGroup = muscleGroup,
-                                            equipment = equipment.split(",").map { it.trim() }.filter { it.isNotEmpty() },
-                                            resource = resource
+//                                             equipment = equipment.split(",").map { it.trim() }.filter { it.isNotEmpty() },
+//                                            resource = resource
                                         )
                                     )
                                     onDismiss()

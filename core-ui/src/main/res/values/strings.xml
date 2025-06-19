@@ -248,4 +248,10 @@
     <string name="youvebeen_doing_this_for">You\'ve been doing this for %s</string>
     <string name="youllstart_doing_this_in">You\'ll start doing this in %s</string>
     <string name="youdidnt_do_this_at">You didn\'t do this at %s</string>
+    <string name="database">Database</string>
+    <string name="todays_meals">Today\'s Meals</string>
+    <string name="no_meals_today">No meals scheduled for today</string>
+    <string name="consumed">Consumed</string>
+    <string name="skipped">Skipped</string>
+    <string name="refresh">Refresh</string>
 </resources>

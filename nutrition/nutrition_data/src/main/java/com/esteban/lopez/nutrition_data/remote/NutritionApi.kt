@@ -24,6 +24,13 @@ interface NutritionApi {
         @Query("limit") limit: Int?
     ): List<RecipeResponse>
 
+    @GET("nutrition/recipes/all")
+    suspend fun getAllRecipes(
+        @Query("filter") filter: String?,
+        @Query("page") page: Int?,
+        @Query("limit") limit: Int?
+    ): List<RecipeResponse>
+
     @GET("nutrition/recipes/{id}")
     suspend fun getRecipe(@Path("id") id: String): RecipeResponse
 

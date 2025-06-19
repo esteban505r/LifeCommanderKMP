@@ -27,6 +27,12 @@ class RecipesService(
         }.body()
     }
 
+    suspend fun getAllRecipes(): List<Recipe> {
+        return httpClient.get("$baseUrl/nutrition/recipes/all") {
+            appHeaders(tokenStorageImpl.getToken())
+        }.body()
+    }
+
     suspend fun addRecipe(recipe: Recipe): Recipe {
         return httpClient.post("$baseUrl/nutrition/recipes") {
             contentType(ContentType.Application.Json)
@@ -55,6 +61,35 @@ class RecipesService(
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
             setBody(CreateRecipeTrack(recipeId, consumedDateTime))
+        }
+        return response.status == HttpStatusCode.Created
+    }
+
+    suspend fun trackRecipeSkipped(recipeId: String, consumedDateTime: String): Boolean {
+        val response = httpClient.post("$baseUrl/nutrition/tracking/consume") {
+            contentType(ContentType.Application.Json)
+            appHeaders(tokenStorageImpl.getToken())
+            setBody(CreateRecipeTrack(recipeId, consumedDateTime, skipped = true))
+        }
+        return response.status == HttpStatusCode.Created
+    }
+
+    suspend fun trackRecipeSkippedWithAlternative(
+        recipeId: String, 
+        consumedDateTime: String, 
+        alternativeRecipeId: String?, 
+        alternativeMealName: String?
+    ): Boolean {
+        val response = httpClient.post("$baseUrl/nutrition/tracking/consume") {
+            contentType(ContentType.Application.Json)
+            appHeaders(tokenStorageImpl.getToken())
+            setBody(CreateRecipeTrack(
+                recipeId, 
+                consumedDateTime, 
+                skipped = true,
+                alternativeRecipeId = alternativeRecipeId,
+                alternativeMealName = alternativeMealName
+            ))
         }
         return response.status == HttpStatusCode.Created
     }
