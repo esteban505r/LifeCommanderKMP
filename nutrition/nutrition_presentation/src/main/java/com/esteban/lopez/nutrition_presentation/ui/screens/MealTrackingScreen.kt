@@ -13,7 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.text.TitleH3
-import com.esteban.ruano.nutrition_domain.model.Recipe
+import com.esteban.ruano.lifecommander.models.Recipe
 import com.esteban.ruano.nutrition_presentation.intent.MealTrackingIntent
 import com.esteban.ruano.nutrition_presentation.ui.composables.RecipeComposable
 import com.esteban.ruano.nutrition_presentation.ui.viewmodel.state.MealTrackingState

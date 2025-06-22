@@ -63,7 +63,8 @@ fun HomeScreen(
     onTaskClick: (Task) -> Unit,
     onHabitClick: (Habit) -> Unit,
     onNavigateToTasks: () -> Unit,
-    onNavigateToHabits: () -> Unit
+    onNavigateToHabits: () -> Unit,
+    onNavigateToStatistics: () -> Unit = {}
 ) {
     var showTokenDialog by remember { mutableStateOf(false) }
     var showNewTaskDialog by remember { mutableStateOf(false) }
@@ -278,92 +279,140 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
+                        // Statistics navigation button
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                                backgroundColor = MaterialTheme.colors.primary,
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            "Detailed Statistics",
+                                            style = MaterialTheme.typography.h6,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colors.onPrimary
+                                        )
+                                        Text(
+                                            "View comprehensive charts and analytics",
+                                            style = MaterialTheme.typography.body2,
+                                            color = MaterialTheme.colors.onPrimary.copy(alpha = 0.8f)
+                                        )
+                                    }
+                                    Button(
+                                        onClick = onNavigateToStatistics,
+                                        colors = ButtonDefaults.buttonColors(
+                                            backgroundColor = MaterialTheme.colors.onPrimary,
+                                            contentColor = MaterialTheme.colors.primary
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Analytics,
+                                            contentDescription = "Statistics",
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("View Statistics")
+                                    }
+                                }
+                            }
+                        }
+
                         // Weekly Overview and Pomodoro charts side by side
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                Column(Modifier.weight(1f)) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                                backgroundColor = MaterialTheme.colors.surface,
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
                                     Text(
-                                        "Weekly Overview", 
-                                        style = MaterialTheme.typography.h5, 
-                                        fontWeight = FontWeight.Bold
+                                        "Quick Overview",
+                                        style = MaterialTheme.typography.h6,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colors.onSurface
                                     )
-                                    StatsChart(
-                                        series = listOf(
-                                            ChartSeries(
-                                                name = "Tasks",
-                                                data = dashboardViewModel.tasksCompletedPerDayThisWeek.collectAsState().value,
-                                                color = Color(0xFF2196F3)
-                                            ),
-                                            ChartSeries(
-                                                name = "Habits",
-                                                data = dashboardViewModel.habitsCompletedPerDayThisWeek.collectAsState().value,
-                                                color = Color(0xFF9C27B0)
-                                            )
-                                        ),
-                                        modifier = Modifier.height(220.dp).fillMaxWidth()
-                                    )
-                                }
-                                Column(Modifier.weight(1f)) {
-                                    Text(
-                                        "Pomodoros", 
-                                        style = MaterialTheme.typography.h5, 
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    StatsChart(
-                                        series = listOf(
-                                            ChartSeries(
-                                                name = "Pomodoros",
-                                                data = pomodorosPerDayThisWeek,
-                                                color = Color(0xFFE53935)
-                                            )
-                                        ),
-                                        modifier = Modifier.height(220.dp).fillMaxWidth()
-                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                    ) {
+                                        QuickStatItem(
+                                            label = "Tasks Completed",
+                                            value = "${taskStats?.completed ?: 0}/${taskStats?.total ?: 0}",
+                                            icon = Icons.Default.CheckCircle,
+                                            color = Color(0xFF2196F3)
+                                        )
+                                        QuickStatItem(
+                                            label = "Habits Completed",
+                                            value = "${habitStats?.completed ?: 0}/${habitStats?.total ?: 0}",
+                                            icon = Icons.Default.TrendingUp,
+                                            color = Color(0xFF9C27B0)
+                                        )
+                                        QuickStatItem(
+                                            label = "Pomodoros Today",
+                                            value = "${pomodorosPerDayThisWeek.lastOrNull() ?: 0}",
+                                            icon = Icons.Default.Timer,
+                                            color = Color(0xFFE53935)
+                                        )
+                                    }
                                 }
                             }
                         }
 
                         // Meals and Workout charts below, side by side
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                Column(Modifier.weight(1f)) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                                backgroundColor = MaterialTheme.colors.surface,
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
                                     Text(
-                                        "Meals", 
-                                        style = MaterialTheme.typography.h5, 
-                                        fontWeight = FontWeight.Bold
+                                        "Today's Activity",
+                                        style = MaterialTheme.typography.h6,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colors.onSurface
                                     )
-                                    StatsChart(
-                                        series = listOf(
-                                            ChartSeries(
-                                                name = "Planned Meals",
-                                                data = dashboardViewModel.plannedMealsPerDayThisWeek.collectAsState().value,
-                                                color = Color(0xFFFFA726)
-                                            ),
-                                            ChartSeries(
-                                                name = "Unexpected Meals",
-                                                data = dashboardViewModel.unexpectedMealsPerDayThisWeek.collectAsState().value,
-                                                color = Color(0xFFFF5722)
-                                            )
-                                        ),
-                                        modifier = Modifier.height(220.dp).fillMaxWidth()
-                                    )
-                                }
-                                Column(Modifier.weight(1f)) {
-                                    Text(
-                                        "Workout", 
-                                        style = MaterialTheme.typography.h5, 
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    StatsChart(
-                                        series = listOf(
-                                            ChartSeries(
-                                                name = "Workouts",
-                                                data = dashboardViewModel.workoutsCompletedPerDayThisWeek.collectAsState().value,
-                                                color = Color(0xFF4CAF50)
-                                            )
-                                        ),
-                                        modifier = Modifier.height(220.dp).fillMaxWidth()
-                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                    ) {
+                                        QuickStatItem(
+                                            label = "Meals Logged",
+                                            value = "${dashboardViewModel.mealsLogged.collectAsState().value}",
+                                            icon = Icons.Default.Restaurant,
+                                            color = Color(0xFFFFA726)
+                                        )
+                                        QuickStatItem(
+                                            label = "Workouts",
+                                            value = "${dashboardViewModel.workoutsCompletedPerDayThisWeek.collectAsState().value.lastOrNull() ?: 0}",
+                                            icon = Icons.Default.FitnessCenter,
+                                            color = Color(0xFF4CAF50)
+                                        )
+                                        QuickStatItem(
+                                            label = "Calories Burned",
+                                            value = "${dashboardViewModel.caloriesBurned.collectAsState().value}",
+                                            icon = Icons.Default.LocalFireDepartment,
+                                            color = Color(0xFFFF5722)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -1660,6 +1709,37 @@ fun OverdueTaskCard(task: Task, onMarkDone: (Task) -> Unit) {
                 Text("Mark as done")
             }
         }
+    }
+}
+
+@Composable
+private fun QuickStatItem(
+    label: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.h6,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colors.onSurface
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.caption,
+            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+        )
     }
 }
 

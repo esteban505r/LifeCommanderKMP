@@ -11,5 +11,6 @@ android {
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":shared"))
     implementation(libs.kotlinx.coroutines.core)
 }

@@ -9,8 +9,11 @@ import com.esteban.ruano.models.dailyjournal.CreateDailyJournalDTO
 import com.esteban.ruano.models.dailyjournal.UpdateDailyJournalDTO
 import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.repository.DailyJournalRepository
+import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.esteban.ruano.utils.Validator
 import java.util.*
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 fun Route.dailyJournalRouting(dailyJournalRepository: DailyJournalRepository) {
 
@@ -39,6 +42,48 @@ fun Route.dailyJournalRouting(dailyJournalRepository: DailyJournalRepository) {
                 call.respond(journals)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, "Invalid date")
+            }
+        }
+
+        get("/entry/{date}") {
+            val dateString = call.parameters["date"]
+            val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+
+            if (dateString == null) {
+                call.respond(HttpStatusCode.BadRequest, "Missing date parameter")
+                return@get
+            }
+
+            try {
+                val date = dateString.toLocalDate()
+                val entry = dailyJournalRepository.getJournalEntryByDate(userId, date)
+                if (entry != null) {
+                    call.respond(entry)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "No journal entry found for this date")
+                }
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid date format")
+            }
+        }
+
+        get("/entries") {
+            val startDate = call.request.queryParameters["startDate"]
+            val endDate = call.request.queryParameters["endDate"]
+            val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+
+            if (startDate == null || endDate == null) {
+                call.respond(HttpStatusCode.BadRequest, "Missing start date or end date")
+                return@get
+            }
+
+            try {
+                val start = startDate.toLocalDate()
+                val end = endDate.toLocalDate()
+                val entries = dailyJournalRepository.getJournalEntriesInRange(userId, start, end)
+                call.respond(entries)
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid date format")
             }
         }
 

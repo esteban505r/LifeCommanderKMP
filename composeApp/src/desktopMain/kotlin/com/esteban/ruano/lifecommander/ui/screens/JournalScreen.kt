@@ -1,19 +1,30 @@
 package com.esteban.ruano.lifecommander.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.esteban.ruano.lifecommander.ui.components.JournalQuestionCard
+import services.dailyjournal.models.MoodType
 import services.dailyjournal.models.QuestionAnswerDTO
 import services.dailyjournal.models.QuestionDTO
-import ui.viewmodels.DailyJournalState
+import services.dailyjournal.models.QuestionType
 import ui.composables.NewEditQuestionDialog
+import ui.viewmodels.DailyJournalState
 
 @Composable
 fun JournalScreen(
@@ -22,9 +33,10 @@ fun JournalScreen(
     onAnswerChange: (String, String) -> Unit,
     onComplete: () -> Unit,
     onLoadQuestions: () -> Unit,
-    onAddQuestion: (String) -> Unit,
-    onEditQuestion: (String, String) -> Unit,
+    onAddQuestion: (String, QuestionType) -> Unit,
+    onEditQuestion: (String, String, QuestionType) -> Unit,
     onDeleteQuestion: (String) -> Unit,
+    onViewHistory: () -> Unit,
     isCompleted: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -36,86 +48,217 @@ fun JournalScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(MaterialTheme.colors.background)
     ) {
-        Row(
+        // Header
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = 4.dp,
+            color = MaterialTheme.colors.surface
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f),
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Default.Book,
+                                    contentDescription = "Journal",
+                                    tint = MaterialTheme.colors.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.width(16.dp))
+                        
+                        Column {
             Text(
                 text = "Daily Journal",
                 style = MaterialTheme.typography.h4,
-                fontWeight = FontWeight.Bold
-            )
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colors.onSurface
+                            )
+                            Text(
+                                text = if (isCompleted) "Completed for today" else "Reflect on your day",
+                                style = MaterialTheme.typography.body1,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                    
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // History button
+                        OutlinedButton(
+                            onClick = onViewHistory,
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                MaterialTheme.colors.primary
+                            )
+                        ) {
+                            Icon(
+                                Icons.Default.History,
+                                contentDescription = "View History",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("History")
+                        }
+                        
             if (!isCompleted) {
                 Button(
                     onClick = { showAddQuestionDialog = true },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    backgroundColor = MaterialTheme.colors.primary
+                                ),
                     modifier = Modifier.height(40.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Question")
-                    Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "Add Question",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
                     Text("Add Question")
                 }
             }
         }
+                }
+                
+                // Progress indicator
+                if (!isCompleted && state.questions.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    val answeredCount = state.questions.count { question ->
+                        answers.firstOrNull { it.questionId == question.id }?.answer?.isNotBlank() == true
+                    }
+                    val progress = answeredCount.toFloat() / state.questions.size
+                    
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                text = "Progress",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                                )
+                                Text(
+                                text = "$answeredCount/${state.questions.size}",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        LinearProgressIndicator(
+                            progress = progress,
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = MaterialTheme.colors.onSurface.copy(alpha = 0.1f),
+                            color = MaterialTheme.colors.primary
+                        )
+                    }
+                }
+            }
+        }
 
+        // Content
         if (isCompleted) {
             // Show completed journal with answers
             LazyColumn(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(state.questions.size) { idx ->
-                    val question = state.questions[idx]
-                    val answer = answers.firstOrNull { it.questionId == question.id }?.answer ?: ""
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = 2.dp
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = question.question,
-                                style = MaterialTheme.typography.subtitle1,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = answer,
-                                style = MaterialTheme.typography.body1
-                            )
-                        }
-                    }
+                items(state.questionAnswers) { question ->
+                    CompletedJournalCard(
+                        question = question,
+                        answer = answers.firstOrNull { it.questionId == question.questionId }?.answer ?: ""
+                    )
                 }
             }
         } else {
             // Show questions to answer
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(state.questions.size) { idx ->
-                    val question = state.questions[idx]
-                    JournalQuestionCard(
-                        question = question,
-                        answer = answers.firstOrNull { it.questionId == question.id }?.answer ?: "",
-                        onAnswerChange = { newAnswer ->
-                            onAnswerChange(question.id, newAnswer)
-                        },
-                        onEdit = { showEditQuestionDialog = question },
-                        onDelete = { showDeleteQuestionDialog = question }
-                    )
+            if (state.questions.isEmpty()) {
+                EmptyState(
+                    onAddQuestion = { showAddQuestionDialog = true }
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(state.questions) { question ->
+                        JournalQuestionCard(
+                            question = question,
+                            answer = answers.firstOrNull { it.questionId == question.id }?.answer ?: "",
+                            onAnswerChanged = { newAnswer ->
+                                onAnswerChange(question.id, newAnswer)
+                            },
+                            onEdit = { showEditQuestionDialog = question },
+                            onDelete = { showDeleteQuestionDialog = question }
+                        )
+                    }
                 }
-            }
-            Spacer(Modifier.height(24.dp))
-            Button(
-                onClick = { showCompleteDialog = true },
-                enabled = state.questions.all { question -> answers.firstOrNull{it.questionId == question.id}?.answer?.isNotBlank() == true },
-            ) {
-                Text("Complete Journal")
+                
+                // Complete button
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    elevation = 4.dp,
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colors.surface
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        val allAnswered = state.questions.all { question ->
+                            answers.firstOrNull { it.questionId == question.id }?.answer?.isNotBlank() == true
+                        }
+                        
+                        Button(
+                            onClick = { showCompleteDialog = true },
+                            enabled = allAnswered,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = if (allAnswered) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = "Complete",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (allAnswered) "Complete Journal" else "Answer all questions to complete",
+                                style = MaterialTheme.typography.body1,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -124,16 +267,40 @@ fun JournalScreen(
     if (showCompleteDialog) {
         AlertDialog(
             onDismissRequest = { showCompleteDialog = false },
-            title = { Text("Submit Journal") },
-            text = { Text("Are you sure you want to submit your journal for today?") },
+            shape = RoundedCornerShape(16.dp),
+            title = {
+                Text(
+                    "Complete Journal",
+                    style = MaterialTheme.typography.h6,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    "Are you sure you want to submit your journal for today? This action cannot be undone.",
+                    style = MaterialTheme.typography.body1
+                )
+            },
             confirmButton = {
-                Button(onClick = {
+                Button(
+                    onClick = {
                     onComplete()
                     showCompleteDialog = false
-                }) { Text("Submit") }
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Submit")
+                }
             },
             dismissButton = {
-                OutlinedButton(onClick = { showCompleteDialog = false }) { Text("Cancel") }
+                OutlinedButton(
+                    onClick = { showCompleteDialog = false },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Cancel")
+                }
             }
         )
     }
@@ -146,8 +313,8 @@ fun JournalScreen(
             initialQuestion = "",
             existingQuestions = state.questions.map { it.question },
             onDismiss = { showAddQuestionDialog = false },
-            onConfirm = { question ->
-                onAddQuestion(question)
+            onConfirm = { question, type ->
+                onAddQuestion(question, type)
                 showAddQuestionDialog = false
             }
         )
@@ -161,8 +328,8 @@ fun JournalScreen(
             initialQuestion = question.question,
             existingQuestions = state.questions.filter { it.id != question.id }.map { it.question },
             onDismiss = { showEditQuestionDialog = null },
-            onConfirm = { newQuestion ->
-                onEditQuestion(question.id, newQuestion)
+            onConfirm = { newQuestion, type ->
+                onEditQuestion(question.id, newQuestion, type)
                 showEditQuestionDialog = null
             }
         )
@@ -172,8 +339,20 @@ fun JournalScreen(
     showDeleteQuestionDialog?.let { question ->
         AlertDialog(
             onDismissRequest = { showDeleteQuestionDialog = null },
-            title = { Text("Delete Question") },
-            text = { Text("Are you sure you want to delete this question?") },
+            shape = RoundedCornerShape(16.dp),
+            title = {
+                Text(
+                    "Delete Question",
+                    style = MaterialTheme.typography.h6,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    "Are you sure you want to delete \"${question.question}\"? This action cannot be undone.",
+                    style = MaterialTheme.typography.body1
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {
@@ -182,90 +361,234 @@ fun JournalScreen(
                     },
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = MaterialTheme.colors.error
-                    )
-                ) { Text("Delete") }
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Delete")
+                }
             },
             dismissButton = {
-                OutlinedButton(onClick = { showDeleteQuestionDialog = null }) { Text("Cancel") }
+                OutlinedButton(
+                    onClick = { showDeleteQuestionDialog = null },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Cancel")
+                }
             }
         )
     }
 }
 
 @Composable
-fun JournalQuestionCard(
-    question: QuestionDTO,
-    answer: String,
-    onAnswerChange: (String) -> Unit,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
+fun CompletedJournalCard(
+    question: QuestionAnswerDTO,
+    answer: String
 ) {
-    var tempAnswer by remember { mutableStateOf(answer) }
-    var showUpdateButton by remember { mutableStateOf(false) }
-
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = 2.dp
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(4.dp, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        elevation = 0.dp,
+        backgroundColor = MaterialTheme.colors.surface
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Surface(
+                    shape = CircleShape,
+                    color = getQuestionTypeColor(question.type ?: QuestionType.TEXT
+                    ).copy(alpha = 0.1f),
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = getQuestionTypeIcon(question.type?: QuestionType.TEXT),
+                            contentDescription = question.type?.name,
+                            tint = getQuestionTypeColor(question.type ?: QuestionType.TEXT),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
                 Text(
                     text = question.question,
                     style = MaterialTheme.typography.subtitle1,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
+                    color = MaterialTheme.colors.onSurface
                 )
-                Row {
-                    IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit Question")
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete Question")
+            }
+            
+            when (question.type) {
+                QuestionType.TEXT -> {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colors.background,
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            MaterialTheme.colors.onSurface.copy(alpha = 0.08f)
+                        )
+                    ) {
+                        Text(
+                            text = answer,
+                            style = MaterialTheme.typography.body1,
+                            modifier = Modifier.padding(12.dp),
+                            color = MaterialTheme.colors.onSurface
+                        )
                     }
                 }
-            }
-            OutlinedTextField(
-                value = tempAnswer,
-                onValueChange = { 
-                    tempAnswer = it
-                    showUpdateButton = it != answer
-                },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Your answer...") },
-                maxLines = 3
-            )
-            if (showUpdateButton) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    OutlinedButton(
-                        onClick = { 
-                            tempAnswer = answer
-                            showUpdateButton = false
-                        },
-                        modifier = Modifier.padding(end = 8.dp)
-                    ) {
-                        Text("Cancel")
+                QuestionType.MOOD -> {
+                    if (answer.isNotBlank()) {
+                        val mood = try {
+                            MoodType.valueOf(answer)
+                        } catch (e: IllegalArgumentException) {
+                            MoodType.NEUTRAL
+                        }
+                        
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = getMoodCategoryColor(mood.category).copy(alpha = 0.1f),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                getMoodCategoryColor(mood.category).copy(alpha = 0.3f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = mood.emoji,
+                                    fontSize = 24.sp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = mood.label,
+                                        style = MaterialTheme.typography.body1,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colors.onSurface
+                                    )
+                                    Text(
+                                        text = mood.category,
+                                        style = MaterialTheme.typography.caption,
+                                        color = getMoodCategoryColor(mood.category)
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "No mood selected",
+                            style = MaterialTheme.typography.body1,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
                     }
-                    Button(
-                        onClick = { 
-                            onAnswerChange(tempAnswer)
-                            showUpdateButton = false
-                        },
-                        enabled = tempAnswer.isNotBlank()
-                    ) {
-                        Text(if (answer.isBlank()) "Add Answer" else "Update Answer")
-                    }
+                }
+                else -> {
+                    Text(
+                        text = "Unsupported question type",
+                        style = MaterialTheme.typography.body2,
+                        color = MaterialTheme.colors.error
+                    )
                 }
             }
         }
     }
-} 
+}
+
+@Composable
+fun EmptyState(
+    onAddQuestion: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colors.primary.copy(alpha = 0.1f),
+            modifier = Modifier.size(80.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Default.Book,
+                    contentDescription = "Empty Journal",
+                    tint = MaterialTheme.colors.primary,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Text(
+            text = "No Questions Yet",
+            style = MaterialTheme.typography.h5,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colors.onSurface
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = "Add your first question to start journaling. You can create text questions or mood tracking questions.",
+            style = MaterialTheme.typography.body1,
+            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Button(
+            onClick = onAddQuestion,
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = MaterialTheme.colors.primary
+            )
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Add Question", modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Add Your First Question")
+        }
+    }
+}
+
+@Composable
+fun getQuestionTypeColor(type: QuestionType): Color {
+    return when (type) {
+        QuestionType.TEXT -> Color(0xFF2196F3) // Blue
+        QuestionType.MOOD -> Color(0xFFE91E63) // Pink
+    }
+}
+
+@Composable
+fun getQuestionTypeIcon(type: QuestionType): androidx.compose.ui.graphics.vector.ImageVector {
+    return when (type) {
+        QuestionType.TEXT -> Icons.Default.Edit
+        QuestionType.MOOD -> Icons.Default.Psychology
+    }
+}
+
+@Composable
+fun getMoodCategoryColor(category: String): Color {
+    return when (category) {
+        "Positive" -> Color(0xFF4CAF50) // Green
+        "Neutral" -> Color(0xFF9E9E9E)  // Grey
+        "Negative" -> Color(0xFFF44336) // Red
+        "Physical" -> Color(0xFFFF9800) // Orange
+        "Complex" -> Color(0xFF9C27B0)  // Purple
+        else -> MaterialTheme.colors.primary
+    }
+}

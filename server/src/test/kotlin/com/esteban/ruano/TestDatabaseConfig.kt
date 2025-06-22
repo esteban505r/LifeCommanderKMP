@@ -27,7 +27,7 @@ object TestDatabaseConfig {
         CategoryKeywords, Portfolios, Resources, Exercises,
         Equipments, ExercisesWithWorkoutDays, ExercisesWithWorkoutTracks,
         Reminders, Posts, Pomodoros, Questions, QuestionAnswers, RecipeTracks,
-        ScheduledTransactions
+        ScheduledTransactions, RecipeDays
     )
 
     fun init() {

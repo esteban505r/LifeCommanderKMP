@@ -96,7 +96,7 @@ fun WorkoutScreen(
         }
 
         // Day selection chips
-        Card(
+            Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 24.dp),
@@ -116,8 +116,8 @@ fun WorkoutScreen(
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
                 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     FilterChip(
@@ -147,11 +147,11 @@ fun WorkoutScreen(
                                 selectedBackgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.12f),
                                 selectedContentColor = MaterialTheme.colors.primary
                             )
-                        )
-                    }
-                }
-            }
-        }
+                                        )
+                                    }
+                                }
+                            }
+                        }
 
         if (state.exercises.isEmpty()) {
             Card(
@@ -189,7 +189,7 @@ fun WorkoutScreen(
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(
+                    Text(
                             if (allExercisesMode) "No exercises in database." else "No exercises for this day.",
                             style = MaterialTheme.typography.h6.copy(
                                 color = MaterialTheme.colors.onSurface,
@@ -216,16 +216,16 @@ fun WorkoutScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                items(state.exercises.size) { idx ->
-                    val exercise = state.exercises[idx]
+                    items(state.exercises.size) { idx ->
+                        val exercise = state.exercises[idx]
                     val boundDays = state.exerciseDayMap[exercise.id] ?: emptySet()
                     
-                    ExerciseCard(
-                        exercise = exercise,
-                        onUpdate = {
-                            exerciseToEdit = it
-                            showExerciseDialog = true
-                        },
+                        ExerciseCard(
+                            exercise = exercise,
+                            onUpdate = {
+                                exerciseToEdit = it
+                                showExerciseDialog = true
+                            },
                         onDelete = onDelete,
                         boundDays = boundDays.toList(),
                         onUnbindDay = { day ->
@@ -295,7 +295,7 @@ fun WorkoutScreen(
                         ) {
                             dayNames.forEachIndexed { idx, name ->
                                 val day = idx + 1
-                                FilterChip(
+            FilterChip(
                                     selected = selectedDays.contains(day),
                                     onClick = {
                                         selectedDays = if (selectedDays.contains(day)) {

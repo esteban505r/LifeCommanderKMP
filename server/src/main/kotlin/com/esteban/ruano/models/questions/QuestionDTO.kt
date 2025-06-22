@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class QuestionDTO(
     val id: String,
     val question: String,
+    val type: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null
 ) 

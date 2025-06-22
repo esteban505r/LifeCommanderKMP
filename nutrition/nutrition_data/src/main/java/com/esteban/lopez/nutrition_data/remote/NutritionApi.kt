@@ -1,5 +1,6 @@
 package com.esteban.ruano.nutrition_data.remote
 
+import com.esteban.ruano.lifecommander.models.nutrition.RecipesResponse
 import com.esteban.ruano.nutrition_data.remote.model.NutritionDashboardResponse
 import com.esteban.ruano.nutrition_data.remote.model.RecipeResponse
 import retrofit2.http.Body
@@ -22,14 +23,14 @@ interface NutritionApi {
         @Query("filter") filter: String?,
         @Query("page") page: Int?,
         @Query("limit") limit: Int?
-    ): List<RecipeResponse>
+    ): RecipesResponse
 
     @GET("nutrition/recipes/all")
     suspend fun getAllRecipes(
         @Query("filter") filter: String?,
         @Query("page") page: Int?,
         @Query("limit") limit: Int?
-    ): List<RecipeResponse>
+    ): RecipesResponse
 
     @GET("nutrition/recipes/{id}")
     suspend fun getRecipe(@Path("id") id: String): RecipeResponse
@@ -51,6 +52,6 @@ interface NutritionApi {
         @Query("filter") filter: String?,
         @Query("page") page: Int?,
         @Query("limit") limit: Int?
-    ): List<RecipeResponse>
+    ): RecipesResponse
 
 }

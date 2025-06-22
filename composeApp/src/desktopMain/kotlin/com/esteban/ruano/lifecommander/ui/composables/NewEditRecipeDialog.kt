@@ -1,18 +1,36 @@
-package ui.composables
+package com.esteban.ruano.lifecommander.ui.composables
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindow
+import androidx.compose.ui.window.rememberDialogState
+import com.esteban.ruano.lifecommander.models.Ingredient
+import com.esteban.ruano.lifecommander.models.Instruction
 import com.esteban.ruano.lifecommander.models.Recipe
 import java.time.DayOfWeek
+import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -22,215 +40,180 @@ fun NewEditRecipeDialog(
     onDismiss: () -> Unit,
     onSave: (Recipe) -> Unit
 ) {
-    if (!show) return
-
-    var name by remember { mutableStateOf(recipeToEdit?.name ?: "") }
-    var note by remember { mutableStateOf(recipeToEdit?.note ?: "") }
-    var protein by remember { mutableStateOf(recipeToEdit?.protein?.toString() ?: "") }
-    var selectedDay by remember { mutableStateOf(recipeToEdit?.day) }
-    var selectedMealTag by remember { mutableStateOf(recipeToEdit?.mealTag ?: "BREAKFAST") }
+    var name by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.name ?: "") }
+    var note by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.note ?: "") }
+    var protein by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.protein?.toString() ?: "") }
+    var calories by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.calories?.toString() ?: "") }
+    var carbs by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.carbs?.toString() ?: "") }
+    var fat by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.fat?.toString() ?: "") }
+    var fiber by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.fiber?.toString() ?: "") }
+    var sugar by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.sugar?.toString() ?: "") }
+    var selectedDays by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.days ?: emptyList()) }
+    var selectedMealTag by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.mealTag ?: "BREAKFAST") }
+    var ingredients by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.ingredients?.takeIf { it.isNotEmpty() } ?: listOf(Ingredient(name = "", quantity = 0.0, unit = ""))) }
+    var instructions by remember(recipeToEdit) { mutableStateOf(recipeToEdit?.instructions?.takeIf { it.isNotEmpty() } ?: listOf(Instruction(stepNumber = 1, description = ""))) }
     var nameError by remember { mutableStateOf<String?>(null) }
 
-    val mealTags = listOf("BREAKFAST", "LUNCH", "DINNER", "SNACK")
-    val daysOfWeek = DayOfWeek.entries.toTypedArray()
+    val dialogState = rememberDialogState(width = 800.dp, height = 900.dp)
 
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false
-        )
-    ) {
-        Card(
-            modifier = Modifier
-                .size(600.dp, 750.dp)
-                .padding(16.dp),
-            elevation = 8.dp
+    if (show) {
+        DialogWindow(
+            onCloseRequest = onDismiss,
+            state = dialogState,
+            visible = show,
+            title = if (recipeToEdit == null) "Create New Recipe" else "Edit Recipe"
         ) {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Header
+                    TopAppBar(
+                        title = { Text(if (recipeToEdit == null) "Create New Recipe" else "Edit Recipe") },
+                        actions = {
+                            IconButton(onClick = onDismiss) {
+                                Icon(Icons.Default.Close, contentDescription = "Close Dialog")
+                            }
+                        },
+                        elevation = 4.dp
+                    )
+
+                    // Main Content
+                    Box(modifier = Modifier.weight(1f)) {
+                        val scrollState = rememberScrollState()
             Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                // Header
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colors.primary,
-                    elevation = 0.dp
-                ) {
+                        modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 24.dp, vertical = 16.dp)
+                                .verticalScroll(scrollState),
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            // General Info Section
+                            Section(title = "General Information") {
+                                OutlinedTextField(value = name, onValueChange = { name = it; nameError = null }, label = { Text("Recipe Name*") }, modifier = Modifier.fillMaxWidth(), isError = nameError != null, singleLine = true)
+                                if (nameError != null) {
+                                    Text(nameError!!, color = MaterialTheme.colors.error, style = MaterialTheme.typography.caption)
+                                }
+                                OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("Note") }, modifier = Modifier.fillMaxWidth().height(100.dp))
+                            }
+                            
+                            // Nutritional Info Section
+                            Section(title = "Nutritional Information") {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    OutlinedTextField(value = calories, onValueChange = { calories = it }, label = { Text("Calories (kcal)") }, modifier = Modifier.weight(1f))
+                                    OutlinedTextField(value = protein, onValueChange = { protein = it }, label = { Text("Protein (g)") }, modifier = Modifier.weight(1f))
+                                }
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    OutlinedTextField(value = carbs, onValueChange = { carbs = it }, label = { Text("Carbs (g)") }, modifier = Modifier.weight(1f))
+                                    OutlinedTextField(value = fat, onValueChange = { fat = it }, label = { Text("Fat (g)") }, modifier = Modifier.weight(1f))
+                                }
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    OutlinedTextField(value = fiber, onValueChange = { fiber = it }, label = { Text("Fiber (g)") }, modifier = Modifier.weight(1f))
+                                    OutlinedTextField(value = sugar, onValueChange = { sugar = it }, label = { Text("Sugar (g)") }, modifier = Modifier.weight(1f))
+                                }
+                            }
+                            
+                            // Ingredients Section
+                            Section(title = "Ingredients") {
+                                ingredients.forEachIndexed { index, ingredient ->
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
+                                        OutlinedTextField(value = ingredient.name, onValueChange = { newName -> ingredients = ingredients.toMutableList().also { it[index] = ingredient.copy(name = newName) } }, label = { Text("Name") }, modifier = Modifier.weight(2.5f))
+                                        OutlinedTextField(value = ingredient.quantity.toString(), onValueChange = { newQty -> ingredients = ingredients.toMutableList().also { it[index] = ingredient.copy(quantity = newQty.toDoubleOrNull() ?: 0.0) } }, label = { Text("Qty") }, modifier = Modifier.weight(1f))
+                                        OutlinedTextField(value = ingredient.unit, onValueChange = { newUnit -> ingredients = ingredients.toMutableList().also { it[index] = ingredient.copy(unit = newUnit) } }, label = { Text("Unit") }, modifier = Modifier.weight(1f))
+                                        IconButton(onClick = { ingredients = ingredients.toMutableList().also { it.removeAt(index) } }) {
+                                            Icon(Icons.Default.RemoveCircleOutline, contentDescription = "Remove Ingredient", tint = MaterialTheme.colors.error)
+                                        }
+                                    }
+                                }
+                                Button(onClick = { ingredients = ingredients + Ingredient(name = "", quantity = 0.0, unit = "") }, modifier = Modifier.align(Alignment.End)) { Text("Add Ingredient") }
+                            }
+
+                            // Instructions Section
+                            Section(title = "Instructions") {
+                                instructions.forEachIndexed { index, instruction ->
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
+                                        Text("${index + 1}.", style = MaterialTheme.typography.h6)
+                                        OutlinedTextField(value = instruction.description, onValueChange = { newDesc -> instructions = instructions.toMutableList().also { it[index] = instruction.copy(description = newDesc) } }, label = { Text("Step description") }, modifier = Modifier.weight(1f))
+                                        IconButton(onClick = { instructions = instructions.toMutableList().also { it.removeAt(index) }.mapIndexed { i, inst -> inst.copy(stepNumber = i + 1) } }) {
+                                            Icon(Icons.Default.RemoveCircleOutline, contentDescription = "Remove Instruction", tint = MaterialTheme.colors.error)
+                                        }
+                                    }
+                                }
+                                Button(onClick = { val newStepNumber = (instructions.lastOrNull()?.stepNumber ?: 0) + 1; instructions = instructions + Instruction(stepNumber = newStepNumber, description = "") }, modifier = Modifier.align(Alignment.End)) { Text("Add Step") }
+                            }
+
+                            // Scheduling Section
+                            Section(title = "Scheduling") {
+                                // Meal Tag Dropdown
+                                var expanded by remember { mutableStateOf(false) }
+                                val mealTags = listOf("BREAKFAST", "LUNCH", "DINNER", "SNACK")
+                                ExposedDropdownMenuBox(
+                                    expanded = expanded,
+                                    onExpandedChange = { expanded = !expanded }
+                                ) {
+                                    OutlinedTextField(
+                                        value = selectedMealTag,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        label = { Text("Meal Tag") },
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false }
+                        ) {
+                            mealTags.forEach { tag ->
+                                            DropdownMenuItem(
+                                                onClick = {
+                                                    selectedMealTag = tag
+                                                    expanded = false
+                                                }
+                                            ) {
+                                                Text(text = tag)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Day of Week Chips
+                                Text("Assign to Days", style = MaterialTheme.typography.body1, modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    DayOfWeek.entries.forEach { day ->
+                                        val isSelected = selectedDays.contains(day.value)
+                                FilterChip(
+                                            selected = isSelected,
+                                            onClick = {
+                                                selectedDays = if (isSelected) {
+                                                    selectedDays - day.value
+                                                } else {
+                                                    selectedDays + day.value
+                                                }
+                                            },
+                                            content = { Text(day.name.take(3).uppercase()) },
+                                            leadingIcon = if (isSelected) {
+                                                { Icon(Icons.Default.Check, contentDescription = "Selected") }
+                                            } else {
+                                                null
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        VerticalScrollbar(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(), adapter = rememberScrollbarAdapter(scrollState))
+                    }
+
+                    // Footer with actions
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                            .background(MaterialTheme.colors.surface)
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(
-                                text = if (recipeToEdit == null) "Add Recipe" else "Edit Recipe",
-                                style = MaterialTheme.typography.h5,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colors.onPrimary
-                            )
-                            Text(
-                                text = if (recipeToEdit == null) "Create a new recipe" else "Update recipe details",
-                                style = MaterialTheme.typography.subtitle2,
-                                color = MaterialTheme.colors.onPrimary.copy(alpha = 0.8f)
-                            )
-                        }
-                        IconButton(
-                            onClick = onDismiss,
-                        ) {
-                            Icon(Icons.Default.Close, contentDescription = "Close")
-                        }
-                    }
-                }
-
-                // Content
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Recipe Name
-                    Column {
-                        Text(
-                            text = "Recipe Name *",
-                            style = MaterialTheme.typography.subtitle2,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colors.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = { 
-                                name = it
-                                nameError = if (it.isBlank()) "Recipe name is required" else null
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Enter recipe name") },
-                            isError = nameError != null,
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = MaterialTheme.colors.primary,
-                                unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
-                            )
-                        )
-                        if (nameError != null) {
-                            Text(
-                                text = nameError!!,
-                                style = MaterialTheme.typography.caption,
-                                color = MaterialTheme.colors.error,
-                                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                            )
-                        }
-                    }
-
-                    // Notes
-                    Column {
-                        Text(
-                            text = "Notes",
-                            style = MaterialTheme.typography.subtitle2,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colors.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = note,
-                            onValueChange = { note = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Add notes about the recipe") },
-                            minLines = 3,
-                            maxLines = 5,
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = MaterialTheme.colors.primary,
-                                unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
-                            )
-                        )
-                    }
-
-                    // Protein
-                    Column {
-                        Text(
-                            text = "Protein (g)",
-                            style = MaterialTheme.typography.subtitle2,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colors.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = protein,
-                            onValueChange = { protein = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Enter protein content") },
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = MaterialTheme.colors.primary,
-                                unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
-                            )
-                        )
-                    }
-
-                    // Day Selection
-                    Column {
-                        Text(
-                            text = "Day of Week",
-                            style = MaterialTheme.typography.subtitle2,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colors.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                selected = selectedDay == null,
-                                onClick = { selectedDay = null },
-                                content = { Text("No day") },
-                            )
-                            daysOfWeek.forEach { day ->
-                                FilterChip(
-                                    selected = selectedDay == day.value,
-                                    onClick = { selectedDay = day.value },
-                                    content = { Text(day.name.take(3)) },
-                                )
-                            }
-                        }
-                    }
-
-                    // Meal Tag
-                    Column {
-                        Text(
-                            text = "Meal Type",
-                            style = MaterialTheme.typography.subtitle2,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colors.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            mealTags.forEach { tag ->
-                                FilterChip(
-                                    selected = selectedMealTag == tag,
-                                    onClick = { selectedMealTag = tag },
-                                    content = { Text(tag.capitalize()) },
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Action Buttons
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        OutlinedButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.padding(end = 8.dp)
-                        ) {
-                            Text("Cancel")
-                        }
+                        OutlinedButton(onClick = onDismiss) { Text("Cancel") }
+                        Spacer(modifier = Modifier.width(16.dp))
                         Button(
                             onClick = {
                                 if (name.isNotBlank()) {
@@ -239,17 +222,24 @@ fun NewEditRecipeDialog(
                                         name = name.trim(),
                                         note = note.takeIf { it.isNotBlank() },
                                         protein = protein.toDoubleOrNull(),
-                                        day = selectedDay,
-                                        mealTag = selectedMealTag
+                                        calories = calories.toDoubleOrNull(),
+                                        carbs = carbs.toDoubleOrNull(),
+                                        fat = fat.toDoubleOrNull(),
+                                        fiber = fiber.toDoubleOrNull(),
+                                        sugar = sugar.toDoubleOrNull(),
+                                        days = selectedDays,
+                                        mealTag = selectedMealTag,
+                                        ingredients = ingredients.filter { it.name.isNotBlank() },
+                                        instructions = instructions.filter { it.description.isNotBlank() }
                                     )
                                     onSave(recipe)
+                                    onDismiss()
                                 } else {
                                     nameError = "Recipe name is required"
                                 }
-                            },
-                            enabled = name.isNotBlank()
+                            }
                         ) {
-                            Text(if (recipeToEdit == null) "Add Recipe" else "Update Recipe")
+                            Text(if (recipeToEdit == null) "Create Recipe" else "Save Changes")
                         }
                     }
                 }
@@ -257,3 +247,4 @@ fun NewEditRecipeDialog(
         }
     }
 } 
+

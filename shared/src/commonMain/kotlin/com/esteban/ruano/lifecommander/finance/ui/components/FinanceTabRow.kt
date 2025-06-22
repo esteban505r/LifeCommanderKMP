@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.ui.state.FinanceState
+import com.esteban.ruano.lifecommander.ui.state.FinanceTab
 import kotlinx.coroutines.launch
 
 expect object PlatformConfiguration {
@@ -25,7 +26,7 @@ data class FinanceTabItem(
 @Composable
 fun FinanceTabRow(
     selectedTab: Int,
-    onTabSelected: (Int) -> Unit,
+    onTabSelected: (FinanceTab) -> Unit,
     actions: List<FinanceTabItem>,
     isDesktop: Boolean = false
 ) {
@@ -49,7 +50,7 @@ fun FinanceTabRow(
                 Tab(
                     selected = selectedTab == index,
                     onClick = {
-                        onTabSelected(index)
+                        onTabSelected(FinanceTab.fromIndex(index))
                         scope.launch {
                             item.action()
                         }
@@ -89,7 +90,7 @@ fun FinanceTabRow(
                 Tab(
                     selected = selectedTab == index,
                     onClick = {
-                        onTabSelected(index)
+                        onTabSelected(FinanceTab.fromIndex(index))
                         scope.launch {
                             item.action()
                         }

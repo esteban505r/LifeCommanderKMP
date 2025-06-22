@@ -4,7 +4,9 @@ import kotlinx.datetime.*
 import com.esteban.ruano.models.dailyjournal.CreateDailyJournalDTO
 import com.esteban.ruano.models.dailyjournal.DailyJournalDTO
 import com.esteban.ruano.models.dailyjournal.UpdateDailyJournalDTO
+import com.esteban.ruano.models.dailyjournal.JournalHistoryEntry
 import com.esteban.ruano.service.DailyJournalService
+import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.esteban.ruano.utils.parseDate
 import java.util.UUID
 
@@ -23,11 +25,19 @@ class DailyJournalRepository(private val dailyJournalService: DailyJournalServic
     ): List<DailyJournalDTO> {
         return dailyJournalService.getByDateRange(
             userId,
-            parseDate(startDate),
+            startDate.toLocalDate(),
             parseDate(endDate),
             limit,
             offset
         )
+    }
+
+    fun getJournalEntryByDate(userId: Int, date: LocalDate): JournalHistoryEntry? {
+        return dailyJournalService.getJournalEntryByDate(userId, date)
+    }
+
+    fun getJournalEntriesInRange(userId: Int, startDate: LocalDate, endDate: LocalDate): List<JournalHistoryEntry> {
+        return dailyJournalService.getJournalEntriesInRange(userId, startDate, endDate)
     }
 
     fun create(userId: Int, journal: CreateDailyJournalDTO): UUID? {

@@ -51,13 +51,13 @@ fun TransactionList(
 ) {
     val listState = rememberLazyListState()
     
-    // Handle pagination
+    /*// Handle pagination
     LaunchedEffect(listState) {
         val lastItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
         if (lastItem != null && lastItem.index >= transactions.size - 5) {
             onLoadMore()
         }
-    }
+    }*/
 
     Column(
         modifier = modifier

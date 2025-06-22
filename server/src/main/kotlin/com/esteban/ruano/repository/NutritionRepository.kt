@@ -6,14 +6,26 @@ import java.util.*
 
 class NutritionRepository(private val nutritionService: NutritionService) {
 
-    fun getAllRecipes(userId: Int, filter: String, limit: Int, offset: Long): List<RecipeDTO> {
-
+    fun getAllRecipes(userId: Int, filter: String, limit: Int, offset: Long, sortBy: String = "name", sortOrder: String = "asc", mealTagFilter: String? = null, nutritionFilters: Map<String, Pair<Double?, Double?>> = emptyMap()): List<RecipeDTO> {
         return nutritionService.fetchAllRecipes(
             userId,
             filter,
             limit,
             offset,
+            sortBy,
+            sortOrder,
+            mealTagFilter,
+            nutritionFilters
         )
+    }
+
+    fun getRecipesWithFilters(
+        userId: Int,
+        limit: Int = 50,
+        offset: Int = 0,
+        filters: com.esteban.ruano.lifecommander.models.nutrition.RecipeFilters = com.esteban.ruano.lifecommander.models.nutrition.RecipeFilters()
+    ): RecipesResponseDTO {
+        return nutritionService.getRecipesWithFilters(userId, limit, offset, filters)
     }
 
     fun getRecipesNotAssignedToDay(userId: Int, filter: String, limit: Int, offset: Long): List<RecipeDTO> {
@@ -29,8 +41,18 @@ class NutritionRepository(private val nutritionService: NutritionService) {
         return nutritionService.getRecipesByIdAndUserId(userId, id)
     }
 
-    fun getRecipesByDay(userId: Int, day: Int): List<RecipeDTO> {
-        return nutritionService.getRecipesByDay(userId, day)
+    fun getRecipesByDay(userId: Int, day: Int, filter: String = "", limit: Int = 50, offset: Long = 0, sortBy: String = "name", sortOrder: String = "asc", mealTagFilter: String? = null, nutritionFilters: Map<String, Pair<Double?, Double?>> = emptyMap()): List<RecipeDTO> {
+        return nutritionService.getRecipesByDay(userId, day, filter, limit, offset, sortBy, sortOrder, mealTagFilter, nutritionFilters)
+    }
+
+    fun getRecipesByDayWithFilters(
+        userId: Int,
+        day: Int,
+        limit: Int = 50,
+        offset: Int = 0,
+        filters: com.esteban.ruano.lifecommander.models.nutrition.RecipeFilters = com.esteban.ruano.lifecommander.models.nutrition.RecipeFilters()
+    ): RecipesResponseDTO {
+        return nutritionService.getRecipesByDayWithFilters(userId, day, limit, offset, filters)
     }
 
     fun getDashboard(userId: Int, date: String): NutritionDashboardDTO {

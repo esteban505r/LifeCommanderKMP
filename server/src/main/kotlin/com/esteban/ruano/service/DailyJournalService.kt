@@ -1,20 +1,18 @@
 package com.esteban.ruano.service
 
-import kotlinx.datetime.*
 import com.esteban.ruano.database.converters.toDTO
 import com.esteban.ruano.database.entities.DailyJournal
 import com.esteban.ruano.database.entities.DailyJournals
+import com.esteban.ruano.database.entities.Question
+import com.esteban.ruano.database.entities.Questions
 import com.esteban.ruano.database.models.Status
-import com.esteban.ruano.models.dailyjournal.CreateDailyJournalDTO
-import com.esteban.ruano.models.dailyjournal.DailyJournalDTO
-import com.esteban.ruano.models.dailyjournal.UpdateDailyJournalDTO
-import com.esteban.ruano.models.questions.CreateQuestionAnswerDTO
+import com.esteban.ruano.models.dailyjournal.*
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
+import kotlinx.datetime.*
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.UUID
+import java.util.*
 
 class DailyJournalService(
     private val pomodoroService: PomodoroService,
@@ -101,6 +99,74 @@ class DailyJournalService(
             DailyJournal.find {
                 (DailyJournals.id eq id) and (DailyJournals.user eq userId) and (DailyJournals.status eq Status.ACTIVE)
             }.firstOrNull()?.toDTO()
+        }
+    }
+
+    fun getJournalEntryByDate(userId: Int, date: LocalDate): JournalHistoryEntry? {
+        val journal = transaction {
+            DailyJournal.find {
+                (DailyJournals.user eq userId) and 
+                (DailyJournals.status eq Status.ACTIVE) and
+                (DailyJournals.date eq date)
+            }.firstOrNull()
+        }
+
+        return journal?.let { j ->
+            val questionAnswers = questionAnswerService.getByDailyJournalId(j.id.value)
+            val questions = questionAnswers.map { answer ->
+
+                val question = Question.find { Questions.id eq UUID.fromString(answer.questionId) }.firstOrNull()
+
+
+                if (question == null) {
+                    throw IllegalStateException("Question with ID ${answer.questionId} not found")
+                }
+
+                QuestionWithAnswer(
+                    id = answer.questionId,
+                    question = question.question,
+                    type = question.type,
+                    answer = answer.answer
+                )
+            }
+            JournalHistoryEntry(
+                date = j.date.formatDefault(),
+                questions = questions
+            )
+        }
+    }
+
+    fun getJournalEntriesInRange(userId: Int, startDate: LocalDate, endDate: LocalDate): List<JournalHistoryEntry> {
+        val journals = transaction {
+            DailyJournal.find {
+                (DailyJournals.user eq userId) and
+                (DailyJournals.status eq Status.ACTIVE) and
+                (DailyJournals.date greaterEq startDate) and
+                (DailyJournals.date lessEq endDate)
+            }.orderBy(DailyJournals.date to SortOrder.DESC).toList()
+        }
+
+        return journals.map { journal ->
+            val questionAnswers = questionAnswerService.getByDailyJournalId(journal.id.value)
+            val questions = questionAnswers.map { answer ->
+
+                val question = Question.find { Questions.id eq UUID.fromString(answer.questionId) }.firstOrNull()
+
+                if (question == null) {
+                    throw IllegalStateException("Question with ID ${answer.questionId} not found")
+                }
+
+                QuestionWithAnswer(
+                    id = answer.questionId,
+                    question = question.question,
+                    type = question.type,
+                    answer = answer.answer
+                )
+            }
+            JournalHistoryEntry(
+                date = journal.date.formatDefault(),
+                questions = questions
+            )
         }
     }
 } 

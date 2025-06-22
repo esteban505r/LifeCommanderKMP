@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.esteban.ruano.core_ui.composables.ListTile
 import com.esteban.ruano.core_ui.theme.LightGray4
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
-import com.esteban.ruano.nutrition_domain.model.Recipe
+import com.esteban.ruano.lifecommander.models.Recipe
 import com.esteban.ruano.nutrition_presentation.R
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -47,11 +47,12 @@ fun RecipeComposable(
     showDay: Boolean = false,
     onClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .height(120.dp),
+            .height(160.dp),
         elevation = 6.dp,
         shape = RoundedCornerShape(16.dp),
         onClick = onClick
@@ -119,31 +120,131 @@ fun RecipeComposable(
                     
                     Spacer(modifier = Modifier.height(4.dp))
                     
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    // Nutritional info badges
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        // First row: Protein and Calories
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         // Protein badge
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(8.dp))
                                 .background(Color(0xFF4CAF50).copy(alpha = 0.15f))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = "${recipe.protein}g protein",
                                 style = MaterialTheme.typography.caption.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF4CAF50),
-                                    fontSize = 11.sp
+                                        fontSize = 10.sp
+                                    )
                                 )
-                            )
+                            }
+                            
+                            // Calories badge
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFFF9800).copy(alpha = 0.15f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "${recipe.calories} cal",
+                                    style = MaterialTheme.typography.caption.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFFF9800),
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                        }
+                        
+                        // Second row: Carbs and Fat
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Carbs badge
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFF2196F3).copy(alpha = 0.15f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "${recipe.carbs}g carbs",
+                                    style = MaterialTheme.typography.caption.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF2196F3),
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                            
+                            // Fat badge
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFF9C27B0).copy(alpha = 0.15f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "${recipe.fat}g fat",
+                                    style = MaterialTheme.typography.caption.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF9C27B0),
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                        }
+                        
+                        // Third row: Fiber and Sugar
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Fiber badge
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFF795548).copy(alpha = 0.15f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "${recipe.fiber}g fiber",
+                                    style = MaterialTheme.typography.caption.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF795548),
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                            
+                            // Sugar badge
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFE91E63).copy(alpha = 0.15f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "${recipe.sugar}g sugar",
+                                    style = MaterialTheme.typography.caption.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFE91E63),
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
                         }
                         
                         // Meal type badge
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(8.dp))
                                 .background(
                                     when (recipe.mealTag?.uppercase()) {
                                         "BREAKFAST" -> Color(0xFFFFB74D).copy(alpha = 0.15f)
@@ -153,7 +254,7 @@ fun RecipeComposable(
                                         else -> Color(0xFFE0E0E0).copy(alpha = 0.15f)
                                     }
                                 )
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = recipe.mealTag ?: stringResource(R.string.no_meal),
@@ -166,7 +267,7 @@ fun RecipeComposable(
                                         "SNACK" -> Color(0xFFFF5722)
                                         else -> Color(0xFF757575)
                                     },
-                                    fontSize = 11.sp
+                                    fontSize = 10.sp
                                 )
                             )
                         }
@@ -180,20 +281,22 @@ fun RecipeComposable(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Day information
-                    if (showDay && recipe.day != null) {
+                    if (showDay && recipe.days?.isNotEmpty() == true) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = "Day:",
+                                text = "Days:",
                                 style = MaterialTheme.typography.caption.copy(
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                                 )
                             )
                             Text(
-                                text = recipe.day.toDayOfTheWeekString(LocalContext.current),
+                                text = recipe.days?.sorted()?.joinToString(", ") {
+                                    it.toDayOfTheWeekString(context)
+                                } ?: "Unknown" ,
                                 style = MaterialTheme.typography.caption.copy(
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colors.primary

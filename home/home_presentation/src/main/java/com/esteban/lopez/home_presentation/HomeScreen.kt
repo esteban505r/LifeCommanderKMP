@@ -126,12 +126,14 @@ fun HomeScreen(
             SharedAppBar(
                 title = "Life Commander",
                 onSettingsClick = { DeviceUtilities.prepareAutoStartInXiaomi(context) }
-            )sudo docker start test-postgres
-                    .pullRefresh(pullRefreshState)
+            )
+            Box(
+                modifier = Modifier.pullRefresh(pullRefreshState)
                     .fillMaxSize()
             ) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),sudo docker start test-postgres
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
                         horizontal = LifeCommanderDesignSystem.Layout.contentPadding,
                         vertical = LCDS.dimensions.SpacingSmall
                     ),
@@ -140,7 +142,7 @@ fun HomeScreen(
                     // Welcome section
                     item {
                         val habit = habitState.value.habits.findCurrentHabit()
-                        SharedWelcomeCard(sudo docker start test-postgres
+                        SharedWelcomeCard(
                             greeting = LCDS.getGreeting(),
                             subtitle = "Ready to make today amazing?",
                             habitName = habit?.name,
@@ -154,7 +156,7 @@ fun HomeScreen(
                                     modifier = Modifier
                                         .size(60.dp)
                                         .align(Alignment.Center)
-                                )sudo docker start test-postgres
+                                )
                             }
                         )
                     }
@@ -167,7 +169,10 @@ fun HomeScreen(
                                 tasks = tasks,
                                 onGoToTasks = onGoToTasks
                             )
-                        }sudo docker start test-postgres
+                        }
+                    }
+                    
+                    // Workout section
                     if (workoutState.value.workoutDay?.exercises?.isNotEmpty() == true) {
                         item {
                             WorkoutSection(
@@ -184,19 +189,21 @@ fun HomeScreen(
 
                 // Pull refresh indicator
                 PullRefreshIndicator(
-                    refreshing = isRefreshing,sudo docker start test-postgres
+                    refreshing = isRefreshing,
                     modifier = Modifier.align(Alignment.TopCenter),
                     backgroundColor = Color.White,
-                    contentColor = LCDS.colors.Primary
+                    contentColor = LCDS.colors.Primary,
+                    state = pullRefreshState,
                 )
             }
         }
 
         // Floating version info
         Text(
-            text = "v$version",sudo docker start test-postgres
-                    LCDS.shapes.VersionBadge
-                )
+            text = "v$version",
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .clip(LCDS.shapes.VersionBadge)
                 .padding(
                     horizontal = LCDS.dimensions.PaddingMedium, 
                     vertical = LCDS.dimensions.SpacingSmall
@@ -205,7 +212,12 @@ fun HomeScreen(
             color = Color.White,
             fontWeight = FontWeight.Medium
         )
-    }sudo docker start test-postgres
+    }
+}
+
+@Composable
+private fun TasksSection(
+    tasks: List<Task>,
     onGoToTasks: () -> Unit
 ) {
     SharedSectionCard(
@@ -220,7 +232,7 @@ fun HomeScreen(
                 contentDescription = null,
                 modifier = Modifier.size(LCDS.dimensions.IconMedium),
                 tint = Color.White
-            )sudo docker start test-postgres
+            )
         }
     ) {
         // Task items

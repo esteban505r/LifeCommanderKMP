@@ -19,6 +19,7 @@ class QuestionService : BaseService() {
             val id = Questions.insertOperation(userId) {
                 insert {
                     it[this.question] = question.question
+                    it[type] = question.type
                     it[user] = userId
                 }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
             }
@@ -31,6 +32,7 @@ class QuestionService : BaseService() {
             val updatedRow = Questions.updateOperation(userId) {
                 val updatedRows = update({ (Questions.id eq id) }) { row ->
                     question.question?.let { row[Questions.question] = it }
+                    question.type?.let { row[Questions.type] = it }
                 }
                 if (updatedRows > 0) id else null
             }

@@ -13,6 +13,8 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":core-ui"))
+    implementation(projects.shared)
+    implementation(libs.kotlinx.datetime)
     implementation(project(":nutrition:nutrition_domain"))
 
     implementation(libs.coil.compose)

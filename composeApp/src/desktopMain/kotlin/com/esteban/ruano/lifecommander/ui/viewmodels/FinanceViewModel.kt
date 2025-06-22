@@ -7,6 +7,7 @@ import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.lifecommander.services.finance.FinanceService
 import com.esteban.ruano.lifecommander.ui.state.FinanceState
+import com.esteban.ruano.lifecommander.ui.state.FinanceTab
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.lifecommander.finance.model.*
@@ -28,7 +29,7 @@ class FinanceViewModel(
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(
-                    isLoading = true,
+                    isLoadingTransactions = true,
                     error = null,
                     currentPage = if (refresh) 0 else _state.value.currentPage
                 )
@@ -42,12 +43,12 @@ class FinanceViewModel(
                 _state.value = _state.value.copy(
                     transactions = if (refresh) response.transactions else _state.value.transactions + response.transactions,
                     totalTransactions = response.totalCount,
-                    isLoading = false
+                    isLoadingTransactions = false
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingTransactions = false
                 )
             }
         }
@@ -93,7 +94,7 @@ class FinanceViewModel(
     override fun categorizeAll() {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingBudgets = true, error = null)
                 service.categorizeAllTransactions(
                     referenceDate = getCurrentDateTime(
                         TimeZone.currentSystemDefault()
@@ -103,7 +104,7 @@ class FinanceViewModel(
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingBudgets = false
                 )
             }
         }
@@ -112,7 +113,7 @@ class FinanceViewModel(
     override fun categorizeUnbudgeted() {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingBudgets = true, error = null)
                 service.categorizeUnbudgeted(
                     referenceDate = getCurrentDateTime(
                         TimeZone.currentSystemDefault()
@@ -122,7 +123,7 @@ class FinanceViewModel(
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingBudgets = false
                 )
             }
         }
@@ -141,13 +142,13 @@ class FinanceViewModel(
     override fun addTransaction(transaction: Transaction) {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingTransactions = true, error = null)
                 val newTransaction = service.addTransaction(transaction)
                 getTransactions(refresh = true)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingTransactions = false
                 )
             }
         }
@@ -156,13 +157,13 @@ class FinanceViewModel(
     override fun updateTransaction(transaction: Transaction) {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingTransactions = true, error = null)
                 val updatedTransaction = service.updateTransaction(transaction)
                 getTransactions(refresh = true)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingTransactions = false
                 )
             }
         }
@@ -171,31 +172,35 @@ class FinanceViewModel(
     override fun deleteTransaction(id: String) {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingTransactions = true, error = null)
                 service.deleteTransaction(id)
                 getTransactions(refresh = true)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingTransactions = false
                 )
             }
         }
     }
 
+    override fun setSelectedTab(tabIndex: FinanceTab) {
+        _state.value = _state.value.copy(selectedTab = tabIndex.ordinal)
+    }
+
     override fun addAccount(account: Account) {
         viewModelScope.launch{
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingAccounts = true, error = null)
                 val newAccount = service.addAccount(account)
                 _state.value = _state.value.copy(
                     accounts = _state.value.accounts + newAccount,
-                    isLoading = false
+                    isLoadingAccounts = false
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingAccounts = false
                 )
             }
         }
@@ -204,19 +209,19 @@ class FinanceViewModel(
     override fun updateAccount(account: Account) {
         viewModelScope.launch{
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingAccounts = true, error = null)
                 val updatedAccount = service.updateAccount(account)
                 _state.value = _state.value.copy(
                     accounts = _state.value.accounts.map {
                         if (it.id == updatedAccount.id) updatedAccount else it
                     },
                     selectedAccount = if (_state.value.selectedAccount?.id == updatedAccount.id) updatedAccount else _state.value.selectedAccount,
-                    isLoading = false
+                    isLoadingAccounts = false
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingAccounts = false
                 )
             }
         }    }
@@ -224,38 +229,49 @@ class FinanceViewModel(
     override fun deleteAccount(id: String) {
         viewModelScope.launch{
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingAccounts = true, error = null)
                 service.deleteAccount(id)
                 _state.value = _state.value.copy(
                     accounts = _state.value.accounts.filter { it.id != id },
                     selectedAccount = if (_state.value.selectedAccount?.id == id) null else _state.value.selectedAccount,
-                    isLoading = false
+                    isLoadingAccounts = false
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingAccounts = false
                 )
             }
         }    }
 
     override fun getAccounts(){
         viewModelScope.launch{
-            val response = service.getAccounts()
-            _state.value = _state.value.copy(accounts = response)
+            try {
+                _state.value = _state.value.copy(isLoadingAccounts = true, error = null)
+                val response = service.getAccounts()
+                _state.value = _state.value.copy(
+                    accounts = response,
+                    isLoadingAccounts = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoadingAccounts = false
+                )
+            }
         }
     }
 
     override fun addBudget(budget: Budget) {
         viewModelScope.launch{
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingBudgets = true, error = null)
                 val newBudget = service.addBudget(budget)
                 getBudgets()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingBudgets = false
                 )
             }
         }    }
@@ -263,13 +279,13 @@ class FinanceViewModel(
     override fun updateBudget(budget: Budget) {
         viewModelScope.launch{
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingBudgets = true, error = null)
                 val updatedBudget = service.updateBudget(budget)
                getBudgets()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingBudgets = false
                 )
             }
         }    }
@@ -277,16 +293,16 @@ class FinanceViewModel(
     override fun deleteBudget(id: String) {
         viewModelScope.launch{
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingBudgets = true, error = null)
                 service.deleteBudget(id)
                 _state.value = _state.value.copy(
                     budgets = _state.value.budgets.filter { it.budget.id != id },
-                    isLoading = false
+                    isLoadingBudgets = false
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingBudgets = false
                 )
             }
         }    }
@@ -301,19 +317,19 @@ class FinanceViewModel(
     override fun getBudgets() {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingBudgets = true, error = null)
                 val budgets = service.getBudgetsWithProgress(
                     filters = _state.value.budgetFilters,
                     referenceDate = _state.value.budgetBaseDate
                 )
                 _state.value = _state.value.copy(
                     budgets = budgets,
-                    isLoading = false
+                    isLoadingBudgets = false
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingBudgets = false
                 )
             }
         }
@@ -326,18 +342,18 @@ class FinanceViewModel(
     override fun addSavingsGoal(goal: SavingsGoal) {
         viewModelScope.launch{
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingSavingsGoals = true, error = null)
                 val newGoal = service.addSavingsGoal(goal)
                 val progress = service.getSavingsGoalProgress(newGoal.id ?: "")
                 _state.value = _state.value.copy(
                     savingsGoals = _state.value.savingsGoals + newGoal,
                     savingsGoalProgress = _state.value.savingsGoalProgress + ((newGoal.id ?: "") to progress.percentageComplete),
-                    isLoading = false
+                    isLoadingSavingsGoals = false
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingSavingsGoals = false
                 )
             }
         }    }
@@ -345,7 +361,7 @@ class FinanceViewModel(
     override fun updateSavingsGoal(goal: SavingsGoal) {
         viewModelScope.launch{
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingSavingsGoals = true, error = null)
                 val updatedGoal = service.updateSavingsGoal(goal)
                 val progress = service.getSavingsGoalProgress(updatedGoal.id ?: "")
                 _state.value = _state.value.copy(
@@ -353,12 +369,12 @@ class FinanceViewModel(
                         if (it.id == updatedGoal.id) updatedGoal else it
                     },
                     savingsGoalProgress = _state.value.savingsGoalProgress + ((updatedGoal.id ?: "") to progress.percentageComplete),
-                    isLoading = false
+                    isLoadingSavingsGoals = false
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingSavingsGoals = false
                 )
             }
         }    }
@@ -366,25 +382,36 @@ class FinanceViewModel(
     override fun deleteSavingsGoal(id: String) {
         viewModelScope.launch{
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingSavingsGoals = true, error = null)
                 service.deleteSavingsGoal(id)
                 _state.value = _state.value.copy(
                     savingsGoals = _state.value.savingsGoals.filter { it.id != id },
                     savingsGoalProgress = _state.value.savingsGoalProgress - id,
-                    isLoading = false
+                    isLoadingSavingsGoals = false
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingSavingsGoals = false
                 )
             }
         }    }
 
     override fun getSavingsGoals() {
         viewModelScope.launch{
-            val response = service.getSavingsGoals()
-            _state.value = _state.value.copy(savingsGoals = response)
+            try {
+                _state.value = _state.value.copy(isLoadingSavingsGoals = true, error = null)
+                val response = service.getSavingsGoals()
+                _state.value = _state.value.copy(
+                    savingsGoals = response,
+                    isLoadingSavingsGoals = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message,
+                    isLoadingSavingsGoals = false
+                )
+            }
         }
     }
 
@@ -398,17 +425,17 @@ class FinanceViewModel(
     fun importTransactions(text: String, accountId: String, skipDuplicates: Boolean = true) {
         viewModelScope.launch{
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null, transactionFilters = _state.value.transactionFilters.copy(accountIds = listOf(accountId)))
+                _state.value = _state.value.copy(isLoadingTransactions = true, error = null, transactionFilters = _state.value.transactionFilters.copy(accountIds = listOf(accountId)))
                 val transactionIds = service.importTransactions(text, accountId, skipDuplicates)
                 val transactions = service.getTransactions()
                 _state.value = _state.value.copy(
                     transactions = transactions.transactions,
-                    isLoading = false
+                    isLoadingTransactions = false
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingTransactions = false
                 )
             }
         }
@@ -486,18 +513,18 @@ class FinanceViewModel(
     override fun getBudgetTransactions(budgetId: String) {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingTransactions = true, error = null)
                 val transactions = service.getBudgetTransactions(budgetId, referenceDate = getCurrentDateTime(
                     TimeZone.currentSystemDefault()
                 ).date.formatDefault(), filters = _state.value.transactionFilters)
                 _state.value = _state.value.copy(
                     transactions = transactions,
-                    isLoading = false
+                    isLoadingTransactions = false
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingTransactions = false
                 )
             }
         }
@@ -507,7 +534,7 @@ class FinanceViewModel(
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(
-                    isLoading = true,
+                    isLoadingScheduledTransactions = true,
                     error = null,
                     currentPage = if (refresh) 0 else _state.value.currentPage
                 )
@@ -521,13 +548,13 @@ class FinanceViewModel(
                 _state.value = _state.value.copy(
                     scheduledTransactions = response.transactions,
                     totalScheduledTransactions = response.totalCount,
-                    isLoading = false
+                    isLoadingScheduledTransactions = false
                 )
 
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingScheduledTransactions = false
                 )
             }
         }
@@ -536,13 +563,13 @@ class FinanceViewModel(
     override fun addScheduledTransaction(transaction: ScheduledTransaction) {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingScheduledTransactions = true, error = null)
                 val newTransaction = service.addScheduledTransaction(transaction)
                 getScheduledTransactions(refresh = true)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingScheduledTransactions = false
                 )
             }
         }
@@ -551,13 +578,13 @@ class FinanceViewModel(
     override fun updateScheduledTransaction(transaction: ScheduledTransaction) {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingScheduledTransactions = true, error = null)
                 val updatedTransaction = service.updateScheduledTransaction(transaction)
                 getScheduledTransactions(refresh = true)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingScheduledTransactions = false
                 )
             }
         }
@@ -566,13 +593,13 @@ class FinanceViewModel(
     override fun deleteScheduledTransaction(id: String) {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value = _state.value.copy(isLoadingScheduledTransactions = true, error = null)
                 service.deleteScheduledTransaction(id)
                 getScheduledTransactions(refresh = true)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
-                    isLoading = false
+                    isLoadingScheduledTransactions = false
                 )
             }
         }
@@ -582,8 +609,6 @@ class FinanceViewModel(
         _state.value = _state.value.copy(error = null)
     }
     
-    override fun setSelectedTab(tabIndex: Int) {
-        _state.value = _state.value.copy(selectedTab = tabIndex)
-    }
+
 
 }

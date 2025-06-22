@@ -18,6 +18,7 @@ class QuestionAnswerService : BaseService() {
             val id = QuestionAnswers.insertOperation(userId) {
                 insert {
                     it[this.answer] = answer.answer
+                    it[mood] = answer.mood
                     it[question] = UUID.fromString(answer.questionId)
                     it[dailyJournal] = dailyJournalId
                     it[user] = userId

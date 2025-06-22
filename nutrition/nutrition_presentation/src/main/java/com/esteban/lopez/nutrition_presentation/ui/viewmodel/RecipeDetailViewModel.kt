@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.esteban.ruano.core_ui.utils.SnackbarType
 import com.esteban.ruano.core_ui.view_model.BaseViewModel
-import com.esteban.ruano.nutrition_domain.model.Recipe
+import com.esteban.ruano.lifecommander.models.Recipe
 import com.esteban.ruano.nutrition_domain.use_cases.RecipeUseCases
 import com.esteban.ruano.nutrition_presentation.intent.RecipeDetailEffect
 import com.esteban.ruano.nutrition_presentation.intent.RecipeDetailIntent

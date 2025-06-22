@@ -207,6 +207,8 @@
     <string name="edit_recipe_title">Edit recipe title</string>
     <string name="recipes_title">Recipes</string>
     <string name="day">Day</string>
+    <string name="days">Days</string>
+    <string name="clear_all">Clear all</string>
     <string name="dont_assign">No assign</string>
     <string name="meal">Meal</string>
     <string name="your_current_habit_is">Your current habit is...</string>

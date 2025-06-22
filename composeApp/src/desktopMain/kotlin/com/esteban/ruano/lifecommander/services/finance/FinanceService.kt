@@ -69,20 +69,26 @@ class FinanceService(
         }.body()
     }
 
-    suspend fun addTransaction(transaction: Transaction): Transaction {
-        return httpClient.post("$baseUrl/finance/transactions") {
+    suspend fun addTransaction(transaction: Transaction) {
+        val response = httpClient.post("$baseUrl/finance/transactions") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
             setBody(transaction)
-        }.body()
+        }
+        if (response.status != HttpStatusCode.Created) {
+            throw Exception("Failed to add transaction: ${response.status}")
+        }
     }
 
-    suspend fun updateTransaction(transaction: Transaction): Transaction {
-        return httpClient.patch("$baseUrl/finance/transactions/${transaction.id}") {
+    suspend fun updateTransaction(transaction: Transaction) {
+        val response =  httpClient.patch("$baseUrl/finance/transactions/${transaction.id}") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
             setBody(transaction)
-        }.body()
+        }
+        if (response.status != HttpStatusCode.OK) {
+            throw Exception("Failed to update transaction: ${response.status}")
+        }
     }
 
     suspend fun deleteTransaction(id: String) {

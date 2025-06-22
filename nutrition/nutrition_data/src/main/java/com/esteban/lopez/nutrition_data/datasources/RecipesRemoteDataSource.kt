@@ -3,30 +3,31 @@ package com.esteban.ruano.nutrition_data.datasources
 import com.esteban.ruano.nutrition_data.mappers.toDataModel
 import com.esteban.ruano.nutrition_data.mappers.toDomainModel
 import com.esteban.ruano.nutrition_data.remote.NutritionApi
-import com.esteban.ruano.nutrition_domain.model.Recipe
+import com.esteban.ruano.lifecommander.models.Recipe
+import com.esteban.ruano.lifecommander.models.nutrition.RecipesResponse
 
 
 class RecipesRemoteDataSource(
     private val api: NutritionApi
 ): RecipesDataSource {
-    override suspend fun getRecipes(filter: String, page: Int, limit: Int): List<Recipe> =
-        api.getRecipes(filter, page, limit).map { it.toDomainModel() }
+    override suspend fun getRecipes(filter: String, page: Int, limit: Int): RecipesResponse =
+        api.getRecipes(filter, page, limit)
 
     override suspend fun getRecipesByDay(
         day: Int,
         filter: String?,
         page: Int?,
         limit: Int?
-    ): List<Recipe> {
-        return api.getRecipesByDay(day, filter, page, limit).map { it.toDomainModel() }
+    ): RecipesResponse {
+        return api.getRecipesByDay(day, filter, page, limit)
     }
 
     override suspend fun getAllRecipes(
         filter: String,
         page: Int,
         limit: Int
-    ): List<Recipe> {
-        return api.getAllRecipes(filter, page, limit).map { it.toDomainModel() }
+    ): RecipesResponse {
+        return api.getAllRecipes(filter, page, limit)
     }
 
     override suspend fun getRecipe(recipeId: String): Recipe {

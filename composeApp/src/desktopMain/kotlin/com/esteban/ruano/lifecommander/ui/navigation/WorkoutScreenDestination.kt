@@ -8,6 +8,7 @@ import com.esteban.ruano.lifecommander.ui.components.ErrorScreen
 import com.esteban.ruano.lifecommander.ui.components.LoadingScreen
 import com.esteban.ruano.lifecommander.ui.screens.WorkoutScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.WorkoutViewModel
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import kotlinx.datetime.Clock
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
@@ -31,8 +32,8 @@ fun WorkoutScreenDestination() {
         )
         val endOfWeek = startOfWeek.plus(kotlinx.datetime.DatePeriod(days = 6))
         viewModel.getWorkoutTracksByDateRange(
-            startDate = startOfWeek.toString(),
-            endDate = endOfWeek.toString()
+            startDate = startOfWeek.formatDefault(),
+            endDate = endOfWeek.formatDefault()
         )
     }
 

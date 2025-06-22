@@ -4,12 +4,13 @@ import com.esteban.ruano.lifecommander.models.finance.Budget
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
+import com.esteban.ruano.lifecommander.ui.state.FinanceTab
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
 interface FinanceActions {
     // Tab selection
-    fun setSelectedTab(tabIndex: Int)
+    fun setSelectedTab(tabIndex: FinanceTab)
     
     // Account actions
     fun addAccount(account: Account)

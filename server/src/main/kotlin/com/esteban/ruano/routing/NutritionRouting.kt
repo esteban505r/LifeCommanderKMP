@@ -11,6 +11,7 @@ import com.esteban.ruano.models.nutrition.CreateRecipeTrackDTO
 import com.esteban.ruano.models.nutrition.UpdateRecipeDTO
 import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.repository.NutritionRepository
+import com.esteban.ruano.utils.gatherRecipeFilters
 import java.util.*
 
 fun Route.nutritionRouting(nutritionRepository: NutritionRepository) {
@@ -18,21 +19,21 @@ fun Route.nutritionRouting(nutritionRepository: NutritionRepository) {
     route("/nutrition") {
         route("/recipes") {
             get {
-                val filter = call.request.queryParameters["filter"] ?: ""
-                val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
-                val offset = call.request.queryParameters["offset"]?.toLong() ?: 0
+                val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
+                val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-
-                call.respond(nutritionRepository.getAllRecipes(userId, filter, limit, offset))
+                val filters = call.gatherRecipeFilters()
+                
+                call.respond(nutritionRepository.getRecipesWithFilters(userId, limit, offset, filters))
             }
 
             get("/all") {
-                val filter = call.request.queryParameters["filter"] ?: ""
-                val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
-                val offset = call.request.queryParameters["offset"]?.toLong() ?: 0
+                val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
+                val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-
-                call.respond(nutritionRepository.getAllRecipes(userId, filter, limit, offset))
+                val filters = call.gatherRecipeFilters()
+                
+                call.respond(nutritionRepository.getRecipesWithFilters(userId, limit, offset, filters))
             }
 
             get("/{id}") {
@@ -48,10 +49,13 @@ fun Route.nutritionRouting(nutritionRepository: NutritionRepository) {
 
             get("/byDay/{day}") {
                 val day = call.parameters["day"]!!.toInt()
+                val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
+                val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                call.respond(nutritionRepository.getRecipesByDay(userId, day))
+                val filters = call.gatherRecipeFilters()
+                
+                call.respond(nutritionRepository.getRecipesByDayWithFilters(userId, day, limit, offset, filters))
             }
-
 
             post {
                 val task = call.receive<CreateRecipeDTO>()
@@ -62,7 +66,6 @@ fun Route.nutritionRouting(nutritionRepository: NutritionRepository) {
                 } else {
                     call.respond(HttpStatusCode.InternalServerError)
                 }
-
             }
 
             patch("/{id}") {
@@ -87,8 +90,8 @@ fun Route.nutritionRouting(nutritionRepository: NutritionRepository) {
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             }
-
         }
+        
         route("/dashboard") {
             get {
                 val date = call.request.queryParameters["date"] ?: ""

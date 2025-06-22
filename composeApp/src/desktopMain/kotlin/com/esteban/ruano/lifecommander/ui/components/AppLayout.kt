@@ -201,6 +201,42 @@ fun AppLayout(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Statistics.route) },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Statistics.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.BarChart,
+                            contentDescription = "Statistics",
+                            tint = if (navController.currentDestination?.route == Screen.Statistics.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Statistics",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Statistics.route)
+                            MaterialTheme.colors.primary
+                        else MaterialTheme.colors.onSurface
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
                         .clickable { navController.navigate(Screen.Tasks.route) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {

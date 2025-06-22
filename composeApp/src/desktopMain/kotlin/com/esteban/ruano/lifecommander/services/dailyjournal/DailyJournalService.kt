@@ -18,22 +18,24 @@ class DailyJournalService(
         val response = httpClient.get("$baseUrl/questions") {
             header("Authorization", "Bearer ${tokenStorageImpl.getToken()}")
         }
-        return response.body()
+        val questions = response.body<List<QuestionDTO>>()
+        println("DEBUG: Received questions: $questions")
+        return questions
     }
 
-    suspend fun addQuestion(text: String): Unit {
+    suspend fun addQuestion(text: String, type: QuestionType = QuestionType.TEXT): Unit {
         httpClient.post("$baseUrl/questions") {
             header("Authorization", "Bearer ${tokenStorageImpl.getToken()}")
             contentType(ContentType.Application.Json)
-            setBody(mapOf("question" to text))
+            setBody(mapOf("question" to text, "type" to type.name))
         }
     }
 
-    suspend fun updateQuestion(id: String, text: String): QuestionDTO {
-        val response = httpClient.put("$baseUrl/questions/$id") {
+    suspend fun updateQuestion(id: String, text: String, type: QuestionType = QuestionType.TEXT): QuestionDTO {
+        val response = httpClient.patch("$baseUrl/questions/$id") {
             header("Authorization", "Bearer ${tokenStorageImpl.getToken()}")
             contentType(ContentType.Application.Json)
-            setBody(mapOf("text" to text))
+            setBody(mapOf("question" to text, "type" to type.name))
         }
         return response.body()
     }

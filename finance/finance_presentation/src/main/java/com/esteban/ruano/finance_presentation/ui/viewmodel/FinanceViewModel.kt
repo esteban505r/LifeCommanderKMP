@@ -9,6 +9,7 @@ import com.esteban.ruano.finance_presentation.ui.viewmodel.state.FinanceState
 import com.esteban.ruano.lifecommander.models.finance.Budget
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
+import com.esteban.ruano.lifecommander.ui.state.FinanceTab
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.lifecommander.finance.model.Account
@@ -18,8 +19,8 @@ import com.lifecommander.finance.model.ScheduledTransaction
 import com.lifecommander.finance.model.Transaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
-import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -141,6 +142,14 @@ class FinanceViewModel @Inject constructor(
         }
     }
 
+    override fun setSelectedTab(tabIndex: FinanceTab) {
+        emitState {
+            currentState.copy(
+                selectedTab = tabIndex
+            )
+        }
+    }
+
     override fun addAccount(account: Account) {
         viewModelScope.launch {
             emitState { currentState.copy(isLoading = true, error = null) }
@@ -246,7 +255,9 @@ class FinanceViewModel @Inject constructor(
             financeUseCases.getBudgets(
                 filters = currentState.budgetFilters,
                 referenceDate = currentState.budgetBaseDate.ifEmpty { 
-                    getCurrentDateTime().date.formatDefault() 
+                    getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date.formatDefault()
                 }
             ).fold(
                 onSuccess = { budgets ->
@@ -580,7 +591,9 @@ class FinanceViewModel @Inject constructor(
             try {
                 emitState { currentState.copy(isLoading = true, error = null) }
                 financeUseCases.categorizeAllTransactions(
-                    referenceDate = getCurrentDateTime().date.formatDefault()
+                    referenceDate = getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date.formatDefault()
                 ).fold(
                     onSuccess = {
                         getBudgets()
@@ -610,7 +623,9 @@ class FinanceViewModel @Inject constructor(
             try {
                 emitState { currentState.copy(isLoading = true, error = null) }
                 financeUseCases.categorizeUnbudgeted(
-                    referenceDate = getCurrentDateTime().date.formatDefault()
+                    referenceDate = getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date.formatDefault()
                 ).fold(
                     onSuccess = {
                         getBudgets()
@@ -726,7 +741,9 @@ class FinanceViewModel @Inject constructor(
                 emitState { currentState.copy(isLoading = true, error = null) }
                 financeUseCases.getBudgetTransactions(
                     budgetId = budgetId,
-                    referenceDate = getCurrentDateTime().date.formatDefault(),
+                    referenceDate = getCurrentDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date.formatDefault(),
                     filters = currentState.transactionFilters
                 ).fold(
                     onSuccess = { transactions ->

@@ -83,11 +83,11 @@ fun RecipeDetailScreen(
         Spacer(modifier = Modifier.height(16.dp))
         TitleH3(text = stringResource(id = R.string.day))
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
+       /* Text(
             text = state.recipe?.day?.toDayOfTheWeekString(LocalContext.current) ?: stringResource(id = R.string.dont_assign),
             style = MaterialTheme.typography.body1,
             color = Gray
-        )
+        )*/
         Spacer(modifier = Modifier.height(16.dp))
         TitleH3(text = stringResource(id = R.string.meal))
         Spacer(modifier = Modifier.height(8.dp))

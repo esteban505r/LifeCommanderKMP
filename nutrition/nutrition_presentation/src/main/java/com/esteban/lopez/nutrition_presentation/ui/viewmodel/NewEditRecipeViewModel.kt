@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.esteban.ruano.core_ui.utils.SnackbarType
 import com.esteban.ruano.core_ui.view_model.BaseViewModel
-import com.esteban.ruano.nutrition_domain.model.Recipe
+import com.esteban.ruano.lifecommander.models.Recipe
 import com.esteban.ruano.nutrition_domain.use_cases.RecipeUseCases
 import com.esteban.ruano.nutrition_presentation.intent.NewEditRecipeEffect
 import com.esteban.ruano.nutrition_presentation.intent.NewEditRecipeIntent
@@ -22,7 +22,7 @@ class NewEditRecipeViewModel @Inject constructor(
     override fun handleIntent(intent: NewEditRecipeIntent) {
         when (intent) {
             is NewEditRecipeIntent.CreateRecipe -> addRecipe(intent.name,intent.note
-                ,intent.protein,intent.day)
+                ,intent.protein,intent.days)
 
             is NewEditRecipeIntent.GetRecipe -> fetchRecipe(intent.id)
             is NewEditRecipeIntent.UpdateRecipe -> updateRecipe(intent.id, intent.recipe)
@@ -61,7 +61,7 @@ class NewEditRecipeViewModel @Inject constructor(
     }
 
     private fun addRecipe(name:String, note:String?,
-        protein:Double?, day:Int?, ) {
+        protein:Double?, days:List<Int>, ) {
         viewModelScope.launch {
             emitState {
                 currentState.copy(isLoading = true)
@@ -72,7 +72,7 @@ class NewEditRecipeViewModel @Inject constructor(
                     name = name,
                     note = note,
                     protein = protein,
-                    day = day
+                    days = days
                 )
             )
             added.fold(

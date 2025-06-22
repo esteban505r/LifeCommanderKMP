@@ -7,7 +7,8 @@ import com.esteban.ruano.core_data.repository.BaseRepository
 import com.esteban.ruano.core_data.constants.DataConstants.DEFAULT_LIMIT
 import com.esteban.ruano.core_data.constants.DataConstants.DEFAULT_PAGE
 import com.esteban.ruano.nutrition_data.datasources.RecipesDataSource
-import com.esteban.ruano.nutrition_domain.model.Recipe
+import com.esteban.ruano.lifecommander.models.Recipe
+import com.esteban.ruano.lifecommander.models.nutrition.RecipesResponse
 import com.esteban.ruano.nutrition_domain.repository.RecipesRepository
 import kotlinx.coroutines.flow.first
 
@@ -22,7 +23,7 @@ class RecipesRepositoryImpl (
         filter: String?,
         page: Int?,
         limit: Int?
-    ):Result<List<Recipe>> = doRequest(
+    ):Result<RecipesResponse> = doRequest(
         offlineModeEnabled = preferences.loadOfflineMode().first(),
         remoteFetch = {
             val result = remoteDataSource.getRecipes(
@@ -50,7 +51,7 @@ class RecipesRepositoryImpl (
         filter: String?,
         page: Int?,
         limit: Int?
-    ): Result<List<Recipe>> {
+    ): Result<RecipesResponse> {
         return doRequest(
             offlineModeEnabled = preferences.loadOfflineMode().first(),
             remoteFetch = {
@@ -81,7 +82,7 @@ class RecipesRepositoryImpl (
         filter: String?,
         page: Int?,
         limit: Int?
-    ): Result<List<Recipe>> {
+    ): Result<RecipesResponse> {
         return doRequest(
             offlineModeEnabled = preferences.loadOfflineMode().first(),
             remoteFetch = {

@@ -10,10 +10,10 @@ import com.esteban.ruano.nutrition_presentation.intent.MealTrackingIntent
 import com.esteban.ruano.nutrition_presentation.ui.viewmodel.state.MealTrackingState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import javax.inject.Inject
 
 @HiltViewModel
 class MealTrackingViewModel @Inject constructor(
@@ -70,7 +70,7 @@ class MealTrackingViewModel @Inject constructor(
                 onSuccess = {
                     emitState {
                         currentState.copy(
-                            todayRecipes = it,
+                            todayRecipes = it.recipes,
                             isRefreshing = false
                         )
                     }

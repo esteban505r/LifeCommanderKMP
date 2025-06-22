@@ -3,7 +3,7 @@ package com.esteban.ruano.nutrition_presentation.intent;
 import com.esteban.ruano.core_ui.utils.SnackbarType
 import com.esteban.ruano.core_ui.view_model.Effect
 import com.esteban.ruano.core_ui.view_model.UserIntent
-import com.esteban.ruano.nutrition_domain.model.Recipe
+import com.esteban.ruano.lifecommander.models.Recipe
 
 sealed class RecipeDetailIntent : UserIntent {
     data class GetRecipe(val id: String) : RecipeDetailIntent()

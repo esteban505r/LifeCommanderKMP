@@ -19,7 +19,10 @@ fun Route.questionRouting(questionRepository: QuestionRepository) {
             val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
             val offset = call.request.queryParameters["offset"]?.toLong() ?: 0
             val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-            call.respond(questionRepository.getAll(userId, limit, offset))
+            val result = questionRepository.getAll(userId, limit, offset)
+            call.respond(
+                result
+            )
         }
 
         post {

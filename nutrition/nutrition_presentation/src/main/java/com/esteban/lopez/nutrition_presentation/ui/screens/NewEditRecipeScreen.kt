@@ -1,49 +1,32 @@
 package com.esteban.ruano.nutrition_presentation.ui.screens
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.AppBar
 import com.esteban.ruano.core_ui.theme.Gray
 import com.esteban.ruano.core_ui.theme.Gray2
-import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.text.TitleH4
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
+import com.esteban.ruano.lifecommander.models.Recipe
 import com.esteban.ruano.nutrition_domain.model.MealTag
-import com.esteban.ruano.nutrition_domain.model.Recipe
 import com.esteban.ruano.nutrition_presentation.intent.NewEditRecipeIntent
 import kotlinx.coroutines.launch
-
+import com.esteban.ruano.core_ui.composables.text.TitleH4 as CoreTitleH4
 
 @Composable
 fun NewEditRecipeScreen(
@@ -52,23 +35,22 @@ fun NewEditRecipeScreen(
     userIntent: (NewEditRecipeIntent) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
-    var name by remember {
-        mutableStateOf(recipeToEdit?.name ?: "")
-    }
-    val notes = remember { mutableStateOf("") }
-    val protein = remember { mutableStateOf("") }
-    val day = remember { mutableStateOf<Int?>(null) }
-    val mealTag = remember { mutableStateOf<MealTag?>(null) }
+    var name by remember { mutableStateOf(recipeToEdit?.name ?: "") }
+    val notes = remember { mutableStateOf(recipeToEdit?.note ?: "") }
+    val protein = remember { mutableStateOf(recipeToEdit?.protein?.toString() ?: "") }
+    var selectedDays by remember { mutableStateOf(recipeToEdit?.days ?: emptyList()) }
+    val mealTag = remember { mutableStateOf(recipeToEdit?.mealTag?.let { try { MealTag.valueOf(it) } catch (e: Exception) { null } } ?: null) }
     val dropDownExpanded = remember { mutableStateOf(false) }
     val mealDropDownExpanded = remember { mutableStateOf(false) }
-
-
+    val context = LocalContext.current
+    
+    
     LaunchedEffect (recipeToEdit){
         if(recipeToEdit!=null){
             name = recipeToEdit.name
             notes.value = recipeToEdit.note?:""
             protein.value = recipeToEdit.protein.toString()
-            day.value = recipeToEdit.day
+            selectedDays = recipeToEdit.days ?: emptyList()
             mealTag.value = try {
                 MealTag.valueOf(recipeToEdit.mealTag!!)
             } catch (e: Exception) {
@@ -76,7 +58,6 @@ fun NewEditRecipeScreen(
             }
         }
     }
-
 
     Column(
         modifier = Modifier
@@ -105,7 +86,7 @@ fun NewEditRecipeScreen(
                                     name = name,
                                     note = notes.value,
                                     protein = protein.value.toDouble(),
-                                    day = day.value,
+                                    days = selectedDays,
                                     mealTag = mealTag.value?.name ?: ""
                                 ),
                             )
@@ -116,7 +97,7 @@ fun NewEditRecipeScreen(
                                 name = name,
                                 note = notes.value,
                                 protein = protein.value.toDouble(),
-                                day = day.value,
+                                days = selectedDays,
                                 mealTag =  mealTag.value?.name ?: ""
                             )
                         )
@@ -167,55 +148,80 @@ fun NewEditRecipeScreen(
                 placeholderColor = Gray
             ),
             keyboardOptions = KeyboardOptions(
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                keyboardType = KeyboardType.Decimal
             ),
             value = protein.value,
             onValueChange = { protein.value = it },
             label = { Text(stringResource(id = R.string.protein)) }
         )
         Spacer(modifier = Modifier.height(16.dp))
-        TitleH4(R.string.day, modifier = Modifier.padding(start = 8.dp))
+        CoreTitleH4(R.string.days, modifier = Modifier.padding(start = 8.dp))
         Box(
             modifier = Modifier.padding(start = 16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-            ) {
-                Text(if(day.value==null) stringResource(R.string.dont_assign) else day.value!!.toDayOfTheWeekString(LocalContext.current))
-                IconButton(onClick = {
-                    dropDownExpanded.value = true
-                }) {
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = "More options")
+            Column {
+                // Show selected days
+                if (selectedDays.isNotEmpty()) {
+                    Text(
+                        text = selectedDays.joinToString(", ") { it.toDayOfTheWeekString(context) },
+                        style = MaterialTheme.typography.body1
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.dont_assign),
+                        style = MaterialTheme.typography.body1
+                    )
                 }
-            }
-            DropdownMenu(
-                expanded = dropDownExpanded.value,
-                onDismissRequest = { dropDownExpanded.value = false },
-            ) {
-                for (i in 1..6) {
-                    DropdownMenuItem(
-                        onClick = {
-                            day.value = i
-                            dropDownExpanded.value = false
-                        }
-                    ) {
-                        Text(i.toDayOfTheWeekString(LocalContext.current))
-                    }
-                }
-
-                DropdownMenuItem(
-                    onClick = {
-                        day.value = null
-                        dropDownExpanded.value = false
-                    }
+                
+                // Day selection buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Text(stringResource(id = R.string.dont_assign))
+                    for (i in 1..7) {
+                        val dayName = when (i) {
+                            1 -> "M"
+                            2 -> "T"
+                            3 -> "W"
+                            4 -> "T"
+                            5 -> "F"
+                            6 -> "S"
+                            7 -> "S"
+                            else -> ""
+                        }
+                        
+                        val isSelected = selectedDays.contains(i)
+                        Button(
+                            onClick = {
+                                if (isSelected) {
+                                    selectedDays = selectedDays.filter { it != i }
+                                } else {
+                                    selectedDays = selectedDays + i
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = if (isSelected) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
+                                contentColor = if (isSelected) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface
+                            ),
+                            modifier = Modifier.size(40.dp),
+                            shape = CircleShape
+                        ) {
+                            Text(dayName, style = MaterialTheme.typography.caption)
+                        }
+                    }
+                }
+                
+                // Clear all button
+                TextButton(
+                    onClick = { selectedDays = emptyList() },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text(stringResource(R.string.clear_all))
                 }
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        TitleH4(R.string.meal, modifier = Modifier.padding(start = 8.dp))
+        CoreTitleH4(R.string.meal, modifier = Modifier.padding(start = 8.dp))
         Box(
             modifier = Modifier.padding(start = 16.dp)
         ) {

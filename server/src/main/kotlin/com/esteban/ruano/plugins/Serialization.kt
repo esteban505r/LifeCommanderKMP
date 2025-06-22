@@ -11,6 +11,7 @@ import kotlinx.serialization.modules.polymorphic
 fun Application.configureSerialization() {
     install(ContentNegotiation) {
         json(Json {
+            encodeDefaults = true
             ignoreUnknownKeys = true
             classDiscriminator = "type"
             serializersModule = SerializersModule {

@@ -2,16 +2,16 @@ package com.esteban.ruano.finance_presentation.converter
 
 import com.esteban.ruano.finance_presentation.ui.viewmodel.state.FinanceState
 import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
+import com.esteban.ruano.lifecommander.ui.state.FinanceTab
 import com.esteban.ruano.lifecommander.ui.state.FinanceState as DesktopFinanceState
 
 object FinanceStateConverter {
     fun toDesktopState(mobileState: FinanceState): DesktopFinanceState {
         return DesktopFinanceState(
             selectedTab = when (mobileState.selectedTab) {
-                FinanceTab.OVERVIEW -> 0
+                FinanceTab.ACCOUNTS -> 0
                 FinanceTab.TRANSACTIONS -> 1
                 FinanceTab.BUDGETS -> 3
-                FinanceTab.SAVINGS -> 4
                 FinanceTab.SCHEDULED -> 2
             },
             accounts = mobileState.accounts,

@@ -14,8 +14,10 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":core-data"))
     implementation(project(":nutrition:nutrition_domain"))
+    implementation(projects.shared)
 
     implementation(libs.kotlinx.coroutines.core)
+
 
     "kapt"(libs.room.compiler)
     implementation(libs.room.ktx)

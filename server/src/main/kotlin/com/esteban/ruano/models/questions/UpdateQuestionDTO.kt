@@ -5,5 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class UpdateQuestionDTO(
     val question: String? = null,
+    val type: QuestionType? = null,
     val updatedAt: String? = null
 ) 

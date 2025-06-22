@@ -23,6 +23,13 @@ data class FinanceState(
     val savingsGoals: List<SavingsGoal> = emptyList(),
     val savingsGoalProgress: Map<String, Double> = emptyMap(),
     val selectedAccount: Account? = null,
+    // Tab-specific loading states
+    val isLoadingAccounts: Boolean = false,
+    val isLoadingTransactions: Boolean = false,
+    val isLoadingScheduledTransactions: Boolean = false,
+    val isLoadingBudgets: Boolean = false,
+    val isLoadingSavingsGoals: Boolean = false,
+    // Legacy global loading state (deprecated, kept for backward compatibility)
     val isLoading: Boolean = false,
     val error: String? = null,
     val currentPage: Int = 0,

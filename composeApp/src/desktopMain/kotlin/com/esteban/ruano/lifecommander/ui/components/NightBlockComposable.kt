@@ -20,6 +20,7 @@ import com.lifecommander.models.Habit
 import kotlinx.coroutines.launch
 import services.NightBlockService
 import services.dailyjournal.models.QuestionDTO
+import services.dailyjournal.models.QuestionType
 import ui.viewmodels.DailyJournalViewModel
 
 @Composable
@@ -394,7 +395,7 @@ fun NightBlockComposable(
                         Button(
                             onClick = {
                                 if (newQuestionText.isNotBlank()) {
-                                    dailyJournalViewModel.addQuestion(newQuestionText)
+                                    dailyJournalViewModel.addQuestion(newQuestionText, type = QuestionType.TEXT)
                                     newQuestionText = ""
                                 }
                             },
@@ -441,7 +442,7 @@ fun NightBlockComposable(
                                             Button(
                                                 onClick = {
                                                     editingQuestion?.let { q ->
-                                                        dailyJournalViewModel.updateQuestion(q.id, q.question)
+                                                        dailyJournalViewModel.updateQuestion(q.id, q.question, q.type ?: QuestionType.TEXT)
                                                     }
                                                     editingQuestion = null
                                                 }

@@ -33,6 +33,7 @@ import ui.ui.viewmodels.AuthViewModel
 import ui.screens.AuthScreen
 import com.esteban.ruano.lifecommander.ui.screens.HomeScreen
 import com.esteban.ruano.lifecommander.ui.screens.TransactionImportScreen
+import com.esteban.ruano.lifecommander.ui.screens.StatisticsScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import ui.state.AuthState
@@ -42,6 +43,7 @@ import services.NightBlockService
 import ui.viewmodels.HabitsViewModel
 import ui.viewmodels.TasksViewModel
 import com.esteban.ruano.lifecommander.ui.navigation.JournalScreenDestination
+import com.esteban.ruano.lifecommander.ui.screens.StatisticsScreenDestination
 
 sealed class Screen(val route: String) {
     object Auth : Screen("auth")
@@ -57,6 +59,7 @@ sealed class Screen(val route: String) {
     object Habits : Screen("habits")
     object Meals : Screen("meals")
     object Workout : Screen("workout")
+    object Statistics : Screen("statistics")
     object BudgetTransactions : Screen("budget_transactions/{budgetId}") {
         fun createRoute(budgetId: String) = "budget_transactions/$budgetId"
     }
@@ -152,6 +155,9 @@ fun AppNavHost(
                         onNavigateToHabits = {
                             navController.navigate(Screen.Habits.route)
                         },
+                        onNavigateToStatistics = {
+                            navController.navigate(Screen.Statistics.route)
+                        },
                         onTaskClick = {
 
                         },
@@ -180,8 +186,11 @@ fun AppNavHost(
                 }
 
                 composable(Screen.FinanceImporter.route) {
-                    FinanceImporterPlaceholderScreen(
-                        modifier = modifier
+                    TransactionImportScreen(
+                        modifier = modifier,
+                        onImportComplete = {
+                            navController.navigateUp()
+                        }
                     )
                 }
 
@@ -290,6 +299,15 @@ fun AppNavHost(
 
                 composable(Screen.Journal.route) {
                     JournalScreenDestination()
+                }
+
+                composable(Screen.Statistics.route) {
+                    StatisticsScreenDestination(
+                        modifier = modifier,
+                        onNavigateBack = {
+                            navController.navigateUp()
+                        }
+                    )
                 }
             }
         }

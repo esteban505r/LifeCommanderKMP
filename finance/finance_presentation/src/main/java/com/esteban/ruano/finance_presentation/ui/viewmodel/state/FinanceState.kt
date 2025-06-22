@@ -4,6 +4,7 @@ import com.esteban.ruano.core_ui.view_model.ViewState
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
+import com.esteban.ruano.lifecommander.ui.state.FinanceTab
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.lifecommander.finance.model.Account
@@ -11,9 +12,10 @@ import com.lifecommander.finance.model.SavingsGoal
 import com.lifecommander.finance.model.ScheduledTransaction
 import com.lifecommander.finance.model.Transaction
 import com.lifecommander.finance.model.TransactionImportPreview
+import kotlinx.datetime.TimeZone
 
 data class FinanceState(
-    val selectedTab: FinanceTab = FinanceTab.OVERVIEW,
+    val selectedTab: FinanceTab = FinanceTab.ACCOUNTS,
     val isLoading: Boolean = false,
     val error: String? = null,
     
@@ -33,7 +35,9 @@ data class FinanceState(
     // Budgets
     val budgets: List<BudgetProgress> = emptyList(),
     val budgetFilters: BudgetFilters = BudgetFilters(),
-    val budgetBaseDate: String = getCurrentDateTime().date.formatDefault(),
+    val budgetBaseDate: String = getCurrentDateTime(
+        TimeZone.currentSystemDefault()
+    ).date.formatDefault(),
     
     // Savings Goals
     val savingsGoals: List<SavingsGoal> = emptyList(),

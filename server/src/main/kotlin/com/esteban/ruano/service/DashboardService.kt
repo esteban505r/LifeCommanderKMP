@@ -408,16 +408,16 @@ class DashboardService(
     }
 
     private fun calculateTaskStats(tasks: List<TaskDTO>): TaskStatsDTO = TaskStatsDTO(
-            total = tasks.size,
-            completed = tasks.count { it.done == true },
-            highPriority = tasks.count { it.priority > 2 }
-        )
+        total = tasks.size,
+        completed = tasks.count { it.done == true },
+        highPriority = tasks.count { it.priority > 2 }
+    )
 
     private fun calculateHabitStats(habits: List<HabitDTO>): HabitStatsDTO = HabitStatsDTO(
-            total = habits.size,
-            completed = habits.count { it.done },
-            currentStreak = habits.maxOfOrNull { it.streak } ?: 0
-        )
+        total = habits.size,
+        completed = habits.count { it.done },
+        currentStreak = habits.maxOfOrNull { it.streak } ?: 0
+    )
 
     private fun getWorkoutTrackCountsPerDay(userId: Int, weekStart: LocalDate): List<Int> {
         return transaction {
@@ -434,11 +434,20 @@ class DashboardService(
             (0..6).map { i ->
                 val day = weekStart.plus(DatePeriod(days = i))
                 val dayOfWeek = day.dayOfWeek.value
+                
+                // Get recipe IDs that are assigned to this day of the week
+                val recipeIds = RecipeDay.find {
+                    (RecipeDays.user eq userId) and
+                    (RecipeDays.day eq dayOfWeek) and
+                    (RecipeDays.status eq Status.ACTIVE)
+                }.map { it.recipe.id }
+                
+                // Get the recipes and count those that have been consumed on this specific day
                 val recipes = Recipe.find {
-                    (Recipes.user eq userId) and
-                    (Recipes.day eq dayOfWeek) and
+                    (Recipes.id inList recipeIds) and
                     (Recipes.status eq Status.ACTIVE)
                 }.toList()
+                
                 recipes.count { recipe ->
                     // Check if there is a RecipeTrack for this recipe on this day (not skipped)
                     RecipeTrack.find {
@@ -455,9 +464,16 @@ class DashboardService(
 
     private fun getUnexpectedMealsPerDay(userId: Int, weekStart: LocalDate): List<Int> {
         return transaction {
+            // Get all recipe IDs that have active day assignments
+            val recipesWithDays = RecipeDay.find { 
+                (RecipeDays.user eq userId) and 
+                (RecipeDays.status eq Status.ACTIVE) 
+            }.map { it.recipe.id }.toSet()
+            
+            // Get recipes that have no day assignments (unexpected meals)
             val unexpectedMeals = Recipe.find { 
                 (Recipes.user eq userId) and 
-                (Recipes.day.isNull()) and 
+                (Recipes.id notInList recipesWithDays.toList()) and 
                 (Recipes.status eq Status.ACTIVE) 
             }.toList()
             

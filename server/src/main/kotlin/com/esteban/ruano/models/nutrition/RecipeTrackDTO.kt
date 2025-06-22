@@ -5,9 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RecipeTrackDTO(
     val id: String,
-    val recipeId: String,
-    val consumedDateTime: String,
-    val skipped: Boolean = false,
-    val alternativeRecipeId: String? = null,
-    val alternativeMealName: String? = null
+    val recipe: RecipeDTO,
+    val skipped: Boolean,
+    val consumedDateTime: String? = null
 ) 
