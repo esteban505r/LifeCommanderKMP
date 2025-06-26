@@ -15,7 +15,7 @@ fun WorkoutDay.toDTO(exercises: List<ExerciseDTO>): WorkoutDayDTO {
         day = this.day,
         time = formatTime(this.time),
         name = this.name,
-        exercises = exercises
+        exercises = exercises,
     )
 }
 

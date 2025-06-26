@@ -46,7 +46,7 @@ class WorkoutTrackServiceTest : BaseTest() {
         val workoutDayId = createTestWorkoutDay()
         val doneDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).formatDefault().toLocalDateTimeUI()
         
-        val success = workoutService.completeWorkout(userId, workoutDayId, doneDateTime.formatDefault())
+        val success = workoutService.completeWorkout(userId, workoutDayId.day, doneDateTime.formatDefault())
         assertTrue(success)
         
         transaction {
@@ -68,9 +68,9 @@ class WorkoutTrackServiceTest : BaseTest() {
         val monday = today.minus((today.dayOfWeek.ordinal).toLong(), DateTimeUnit.DAY)
         
         // Complete workouts on Monday, Wednesday, and Friday
-        workoutService.completeWorkout(userId, workoutDay1, monday.atTime(10, 0).formatDefault())
-        workoutService.completeWorkout(userId, workoutDay2, monday.plus(2, DateTimeUnit.DAY).atTime(10, 0).formatDefault())
-        workoutService.completeWorkout(userId, workoutDay3, monday.plus(4, DateTimeUnit.DAY).atTime(10, 0).formatDefault())
+        workoutService.completeWorkout(userId, workoutDay1.day, monday.atTime(10, 0).formatDefault())
+        workoutService.completeWorkout(userId, workoutDay2.day, monday.plus(2, DateTimeUnit.DAY).atTime(10, 0).formatDefault())
+        workoutService.completeWorkout(userId, workoutDay3.day, monday.plus(4, DateTimeUnit.DAY).atTime(10, 0).formatDefault())
         
         val completedPerDay = workoutService.getWorkoutsCompletedPerDayThisWeek(userId)
         
@@ -90,7 +90,7 @@ class WorkoutTrackServiceTest : BaseTest() {
         val doneDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         
         // Complete workout
-        workoutService.completeWorkout(userId, workoutDayId, doneDateTime.formatDefault())
+        workoutService.completeWorkout(userId, workoutDayId.day, doneDateTime.formatDefault())
         
         // Get the created track ID
         val trackId = transaction {
@@ -115,7 +115,7 @@ class WorkoutTrackServiceTest : BaseTest() {
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         
         // Complete workout today
-        workoutService.completeWorkout(userId, workoutDayId, today.formatDefault())
+        workoutService.completeWorkout(userId, workoutDayId.day, today.formatDefault())
         
         val weekStart = today.date.minus((today.date.dayOfWeek.ordinal).toLong(), DateTimeUnit.DAY)
         val weekEnd = weekStart.plus(6, DateTimeUnit.DAY)
@@ -136,7 +136,7 @@ class WorkoutTrackServiceTest : BaseTest() {
         val doneDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         
         // Complete workout
-        workoutService.completeWorkout(userId, workoutDayId, doneDateTime.formatDefault())
+        workoutService.completeWorkout(userId, workoutDayId.day, doneDateTime.formatDefault())
         
         // Get the created track ID
         val trackId = transaction {
@@ -155,7 +155,7 @@ class WorkoutTrackServiceTest : BaseTest() {
         }
     }
 
-    private fun createTestWorkoutDay(): String {
+    private fun createTestWorkoutDay(): WorkoutDay {
         return transaction {
             val workoutDay = WorkoutDay.new {
                 user = com.esteban.ruano.database.entities.User[userId]
@@ -184,7 +184,7 @@ class WorkoutTrackServiceTest : BaseTest() {
                 this.user = com.esteban.ruano.database.entities.User[userId]
             }
             
-            workoutDay.id.value.toString()
+            workoutDay
         }
     }
 } 

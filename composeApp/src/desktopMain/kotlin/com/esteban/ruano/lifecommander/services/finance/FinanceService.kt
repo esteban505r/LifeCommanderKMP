@@ -275,13 +275,15 @@ class FinanceService(
         return response.body()
     }
 
-    suspend fun getBudgetTransactions(budgetId: String,referenceDate: String,filters: TransactionFilters = TransactionFilters()): List<Transaction> {
+    suspend fun getBudgetTransactions(budgetId: String, referenceDate: String, filters: TransactionFilters = TransactionFilters()): List<Transaction> {
         val url = buildString {
             append("$baseUrl/finance/budgets/$budgetId/transactions")
             val params = mutableListOf<String>()
 
-            // Add filter parameters
+            // Add reference date parameter
             params.add("referenceDate=${referenceDate}")
+            
+            // Add filter parameters
             val filterParams = filters.buildParametersString()
 
             if (params.isNotEmpty()) {

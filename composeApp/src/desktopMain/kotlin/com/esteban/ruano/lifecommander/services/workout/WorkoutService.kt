@@ -1,7 +1,6 @@
 package com.esteban.ruano.lifecommander.services.workout
 
 import com.esteban.ruano.lifecommander.models.Exercise
-import com.esteban.ruano.lifecommander.models.Workout
 import com.esteban.ruano.lifecommander.models.WorkoutTrack
 import com.esteban.ruano.lifecommander.models.CreateWorkoutTrack
 import com.esteban.ruano.lifecommander.models.ExerciseTrack
@@ -20,40 +19,6 @@ class WorkoutService(
     private val httpClient: HttpClient,
     private val tokenStorageImpl: TokenStorageImpl
 ) {
-
-    suspend fun getWorkoutsByDay(day: Int): List<Workout> {
-        return httpClient.get("$baseUrl/workout/byDay/$day") {
-            appHeaders(tokenStorageImpl.getToken())
-        }.body()
-    }
-
-    suspend fun addWorkout(workout: Workout): Workout {
-        return httpClient.post("$baseUrl/workout/workouts") {
-            contentType(ContentType.Application.Json)
-            appHeaders(tokenStorageImpl.getToken())
-            setBody(workout)
-        }.body()
-    }
-
-    suspend fun updateWorkout(workout: Workout): Workout {
-        return httpClient.patch("$baseUrl/workout/workouts/${workout.id}") {
-            contentType(ContentType.Application.Json)
-            appHeaders(tokenStorageImpl.getToken())
-            setBody(workout)
-        }.body()
-    }
-
-    suspend fun deleteWorkout(id: String) {
-        httpClient.delete("$baseUrl/workout/workouts/$id") {
-            appHeaders(tokenStorageImpl.getToken())
-        }
-    }
-
-    suspend fun getWorkoutDashboard(): Any {
-        return httpClient.get("$baseUrl/workout/dashboard") {
-            appHeaders(tokenStorageImpl.getToken())
-        }.body()
-    }
 
     suspend fun getAllWorkoutDays(): List<WorkoutDay> {
         return httpClient.get("$baseUrl/workout/days") {
@@ -93,8 +58,9 @@ class WorkoutService(
         return response.status == HttpStatusCode.Created
     }
 
-    suspend fun getExercisesByDay(day: Int): List<WorkoutDay> {
+    suspend fun getExercisesByDay(day: Int,dateTime:String): List<WorkoutDay> {
         return httpClient.get("$baseUrl/workout/byDay/$day") {
+            parameter("dateTime", dateTime)
             appHeaders(tokenStorageImpl.getToken())
         }.body<List<WorkoutDay>>()
     }
@@ -128,11 +94,11 @@ class WorkoutService(
     }
 
     // Workout Tracking Methods
-    suspend fun completeWorkout(workoutDayId: String, doneDateTime: String): Boolean {
+    suspend fun completeWorkout(dayId: Int, doneDateTime: String): Boolean {
         val response = httpClient.post("$baseUrl/workout/tracking/complete") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
-            setBody(CreateWorkoutTrack(workoutDayId, doneDateTime))
+            setBody(CreateWorkoutTrack(dayId, doneDateTime))
         }
         return response.status == HttpStatusCode.Created
     }
@@ -208,8 +174,9 @@ class WorkoutService(
         }.body()
     }
 
-    suspend fun getCompletedExercisesForDay(workoutDayId: String): List<String> {
+    suspend fun getCompletedExercisesForDay(workoutDayId: String, dateTime: String): List<String> {
         return httpClient.get("$baseUrl/workout/exercise-tracking/completed/$workoutDayId") {
+            parameter("dateTime", dateTime)
             appHeaders(tokenStorageImpl.getToken())
         }.body()
     }

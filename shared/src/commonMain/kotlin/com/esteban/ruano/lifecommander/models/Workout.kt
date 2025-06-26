@@ -20,6 +20,7 @@ data class Exercise(
     val name: String,
     val description: String? = null,
     val restSecs: Int? = null,
+    val isCompleted: Boolean = false,
     val baseSets: Int? = null,
     val baseReps: Int? = null,
     val muscleGroup: String? = null,
@@ -37,6 +38,6 @@ data class WorkoutTrack(
 
 @Serializable
 data class CreateWorkoutTrack(
-    val workoutDayId: String,
+    val dayId: Int,
     val doneDateTime: String
 ) 

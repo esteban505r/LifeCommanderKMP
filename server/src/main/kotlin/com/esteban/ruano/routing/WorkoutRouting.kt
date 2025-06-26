@@ -1,7 +1,6 @@
 package com.esteban.ruano.routing
 
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
@@ -11,10 +10,8 @@ import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.models.workout.CreateWorkoutTrackDTO
 import com.esteban.ruano.models.workout.CreateExerciseTrackDTO
 import com.esteban.ruano.models.workout.day.UpdateWorkoutDayDTO
-import com.esteban.ruano.models.workout.day.WorkoutDayDTO
 import com.esteban.ruano.models.workout.exercise.ExerciseDTO
 import com.esteban.ruano.repository.WorkoutRepository
-import java.util.*
 
 fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
 
@@ -29,7 +26,14 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
             get("/{day}") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val day = call.parameters["day"]?.toInt() ?: 0
-                call.respond(workoutRepository.getByDay(userId, day))
+                val dateTime = call.request.queryParameters["dateTime"]
+
+                if (dateTime == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Missing dateTime parameter")
+                    return@get
+                }
+
+                call.respond(workoutRepository.getByDay(userId, day,dateTime))
             }
         }
         route("/days") {
@@ -108,7 +112,7 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
             post("/complete") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val trackRequest = call.receive<CreateWorkoutTrackDTO>()
-                val success = workoutRepository.completeWorkout(userId, trackRequest.workoutDayId, trackRequest.doneDateTime)
+                val success = workoutRepository.completeWorkout(userId, trackRequest.dayId, trackRequest.doneDateTime)
                 if (success) {
                     call.respond(HttpStatusCode.Created)
                 } else {
@@ -185,7 +189,8 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
             get("/completed/{workoutDayId}") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val workoutDayId = call.parameters["workoutDayId"]!!
-                call.respond(workoutRepository.getCompletedExercisesForDay(userId, workoutDayId))
+                val dateTime = call.request.queryParameters["dateTime"] ?: throw BadRequestException("Missing dateTime parameter")
+                call.respond(workoutRepository.getCompletedExercisesForDay(userId, workoutDayId,dateTime))
             }
         }
     }

@@ -21,7 +21,7 @@ val testModule = module {
     single { DailyJournalService(get(), get()) }
     single { AccountService() }
     single { TransactionService() }
-    single { BudgetService() }
+    single { BudgetService(get()) }
     single { SavingsGoalService() }
     single { CategoryKeywordService() }
     single { PortfolioService() }

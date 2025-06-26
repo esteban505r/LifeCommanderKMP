@@ -11,6 +11,7 @@ data class ExerciseDTO(
     val name: String,
     val description: String,
     val restSecs: Int,
+    val isCompleted: Boolean = false,
     val baseSets: Int,
     val baseReps: Int,
     val muscleGroup: String,

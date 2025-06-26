@@ -11,7 +11,9 @@ import com.esteban.ruano.models.finance.TransactionsResponseDTO
 import kotlinx.datetime.LocalDate
 import java.util.*
 
-class BudgetRepository(private val service: BudgetService) {
+class BudgetRepository(
+    private val budgetService: BudgetService,
+) {
     fun create(
         userId: Int,
         name: String,
@@ -20,24 +22,24 @@ class BudgetRepository(private val service: BudgetService) {
         startDate: LocalDate,
         endDate: LocalDate? = null
     ): UUID? =
-        service.createBudget(userId, name, amount, category, startDate, endDate)
+        budgetService.createBudget(userId, name, amount, category, startDate, endDate)
 
-    fun getAll(userId: Int): List<BudgetResponseDTO> = service.getBudgetsByUser(userId)
+    fun getAll(userId: Int): List<BudgetResponseDTO> = budgetService.getBudgetsByUser(userId)
 
     fun getAllProgress(
         userId: Int, limit: Int = 10, offset: Int,
         filters: BudgetFilters = BudgetFilters(),
         referenceDate: LocalDate
     ): List<BudgetProgressResponseDTO> {
-        return service.getAllWithProgress(userId, limit, offset, filters, referenceDate)
+        return budgetService.getAllWithProgress(userId, limit, offset, filters, referenceDate)
     }
 
-    fun getBudgetTransactions(userId: Int, budgetId: UUID, filters: TransactionFilters): List<TransactionResponseDTO> {
-        return service.getBudgetTransactions(userId, budgetId,filters)
+    fun getBudgetTransactions(userId: Int, budgetId: UUID, referenceDate: LocalDate, filters: TransactionFilters): List<TransactionResponseDTO> {
+        return budgetService.getBudgetTransactions(userId, budgetId, referenceDate, filters)
     }
 
     fun getByDateRange(userId: Int, startDate: LocalDate, endDate: LocalDate): List<BudgetResponseDTO> =
-        service.getBudgetsByDateRange(userId, startDate, endDate)
+        budgetService.getBudgetsByDateRange(userId, startDate, endDate)
 
     fun update(
         userId: Int,
@@ -48,22 +50,22 @@ class BudgetRepository(private val service: BudgetService) {
         startDate: LocalDate?,
         endDate: LocalDate?
     ): Boolean =
-        service.updateBudget(budgetId, userId, name, amount, category, startDate, endDate)
+        budgetService.updateBudget(budgetId, userId, name, amount, category, startDate, endDate)
 
-    fun delete(userId: Int, budgetId: UUID): Boolean = service.deleteBudget(budgetId, userId)
+    fun delete(userId: Int, budgetId: UUID): Boolean = budgetService.deleteBudget(budgetId, userId)
 
     fun getProgress(userId: Int, budgetId: UUID): BudgetProgressResponseDTO =
-        service.getBudgetProgress(budgetId, userId)
+        budgetService.getBudgetProgress(budgetId, userId)
 
     fun getUnbudgetedTransactions(userId: Int,referenceDate: LocalDate, filters: TransactionFilters): List<TransactionResponseDTO> {
-        return service.getUnbudgetedTransactions(userId,referenceDate,filters)
+        return budgetService.getUnbudgetedTransactions(userId,referenceDate,filters)
     }
 
     fun categorizeUnbudgetedTransactions(userId: Int, referenceDate: LocalDate) : Int{
-        return service.categorizeUnbudgetedTransactions(userId,referenceDate)
+        return budgetService.categorizeUnbudgetedTransactions(userId,referenceDate)
     }
 
     fun categorizeAllTransactions(userId: Int, referenceDate: LocalDate): Int {
-        return service.categorizeAllTransactions(userId,referenceDate)
+        return budgetService.categorizeAllTransactions(userId,referenceDate)
     }
 }

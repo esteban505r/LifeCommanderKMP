@@ -71,8 +71,8 @@ fun WorkoutScreenDestination() {
                 onDaySelected = { day ->
                     viewModel.getExercisesByDay(day)
                 },
-                onCompleteWorkout = { workoutDayId ->
-                    viewModel.completeWorkout(workoutDayId)
+                onCompleteWorkout = { dayId ->
+                    viewModel.completeWorkout(dayId)
                 },
                 onCompleteExercise = { exerciseId, workoutDayId ->
                     viewModel.completeExercise(exerciseId, workoutDayId)
@@ -88,7 +88,8 @@ fun WorkoutScreenDestination() {
                 },
                 onUnbindExerciseFromDay = { exerciseId, day, onResult ->
                     viewModel.unbindExerciseFromDay(exerciseId, day, onResult)
-                }
+                },
+
             )
         }
     }

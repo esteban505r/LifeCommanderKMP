@@ -73,6 +73,7 @@ fun AppNavHost(
     taskViewModel: TasksViewModel = koinViewModel(),
     habitViewModel: HabitsViewModel = koinViewModel(),
     authService: AuthService = koinInject(),
+    financeViewModel: FinanceViewModel = koinViewModel(),
     authViewModel: AuthViewModel = koinViewModel(),
     appViewModel: AppViewModel = koinViewModel(),
     dailyJournalViewModel: DailyJournalViewModel = koinViewModel(),
@@ -176,7 +177,7 @@ fun AppNavHost(
                         },
                         onOpenBudgetTransactions = { budgetId ->
                             navController.navigate(BudgetTransactionsRoute(
-                                budgetId
+                                budgetId = budgetId
                             ))
                         },
                         onOpenCategoryKeywordMapper = {
@@ -197,12 +198,14 @@ fun AppNavHost(
                 composable<BudgetTransactionsRoute>(
                 ) { backStackEntry ->
                     val args = backStackEntry.toRoute<BudgetTransactionsRoute>()
-                    BudgetTransactionsPlaceholderScreen(
+                    BudgetTransactionsScreen(
                         budgetId = args.budgetId,
                         onBack = {
                             navController.navigateUp()
                         },
-                        modifier = modifier
+                        modifier = modifier,
+                        financeActions = financeViewModel,
+                        state = financeViewModel.state.collectAsState().value,
                     )
                 }
 

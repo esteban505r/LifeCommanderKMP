@@ -300,8 +300,10 @@ fun Route.financeRouting(
             get("/{id}/transactions") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = UUID.fromString(call.parameters["id"]!!)
+                val referenceDate = call.parameters["referenceDate"]?.toLocalDate()
+                    ?: Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
                 val filters = call.gatherTransactionFilters()
-                call.respond(budgetRepository.getBudgetTransactions(userId, id, filters))
+                call.respond(budgetRepository.getBudgetTransactions(userId, id, referenceDate, filters))
             }
         }
 

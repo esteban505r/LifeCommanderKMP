@@ -8,6 +8,7 @@ data class WorkoutDayDTO(
     val id: String,
     val day: Int,
     val time: String,
-    val name:String,
-    val exercises: List<ExerciseDTO>
+    val name: String,
+    val exercises: List<ExerciseDTO>,
+    val isCompleted: Boolean = false
 )

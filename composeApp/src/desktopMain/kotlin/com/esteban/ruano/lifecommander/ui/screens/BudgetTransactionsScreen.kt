@@ -20,6 +20,7 @@ import com.lifecommander.finance.model.FinanceActions
 import com.esteban.ruano.lifecommander.ui.state.FinanceState
 import com.lifecommander.finance.model.Transaction
 import com.lifecommander.finance.ui.TransactionForm
+import com.esteban.ruano.lifecommander.models.finance.Budget
 import kotlinx.coroutines.launch
 
 @Composable
@@ -35,7 +36,20 @@ fun BudgetTransactionsScreen(
     val scope = rememberCoroutineScope()
     var showTransactionForm by remember { mutableStateOf(false) }
 
-    LaunchedEffect(budgetId) {
+    // Find the budget from the state
+    val budget = state.budgets.find { it.budget.id == budgetId }?.budget
+
+    // Load budgets if not available
+    LaunchedEffect(Unit) {
+        if (state.budgets.isEmpty()) {
+            financeActions.getBudgets()
+        }
+    }
+
+    LaunchedEffect(budgetId, budget, state.budgets) {
+        println("BudgetTransactionsScreen: budgetId=$budgetId, budget=$budget, budgetsCount=${state.budgets.size}")
+        
+        // Call getBudgetTransactions - the backend will handle the budget period calculation
         financeActions.getBudgetTransactions(budgetId)
     }
 
@@ -96,7 +110,7 @@ fun BudgetTransactionsScreen(
                 )
             }
             Text(
-                text = "Budget Transactions",
+                text = budget?.name?.let { "Budget Transactions - $it" } ?: "Budget Transactions",
                 style = MaterialTheme.typography.h5,
                 fontWeight = FontWeight.Bold
             )

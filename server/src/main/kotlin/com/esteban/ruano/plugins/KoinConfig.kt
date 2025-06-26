@@ -6,6 +6,7 @@ import io.ktor.server.application.*
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
+import kotlin.math.sin
 
 fun Application.configureKoin() {
     install(Koin) {
@@ -32,12 +33,13 @@ val appModule = module {
     single { DailyJournalService(get(), get()) }
     single { AccountService() }
     single { TransactionService() }
-    single { BudgetService() }
+    single { BudgetService(get()) }
     single { SavingsGoalService() }
     single { CategoryKeywordService() }
     single { PortfolioService() }
     single { ScheduledTransactionService() }
     single { SyncService(get(), get(), get()) }
+    single { SettingsService() }
     
     // Dashboard Service with dependencies
     single { 
@@ -70,4 +72,5 @@ val appModule = module {
     single { CategoryKeywordRepository(get()) }
     single { ScheduledTransactionRepository(get()) }
     single { PortfolioRepository(get()) }
+    single { SettingsRepository(get()) }
 } 

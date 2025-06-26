@@ -15,7 +15,7 @@ import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUtils.toLocalTime
 import com.esteban.ruano.utils.fromDateToLong
 import com.esteban.ruano.utils.toDayOfWeek
-import com.esteban.ruano.utils.toLocalDateTime
+import io.ktor.server.plugins.BadRequestException
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -80,10 +80,10 @@ class WorkoutService : BaseService() {
                 println("No workout day found for user $userId and workout day $workoutDayId")
                 return@transaction WorkoutDayDTO(
                     id = "-1",
+                    day = workoutDayId,
+                    time = "00:00",
                     name = "Free day",
                     exercises = emptyList(),
-                    day = workoutDayId,
-                    time = "00:00"
                 )
             }
             else{
@@ -210,7 +210,7 @@ class WorkoutService : BaseService() {
         }
     }
 
-    fun getWorkoutDaysByDay(userId: Int, day: Int): List<WorkoutDayDTO> {
+    fun getWorkoutDaysByDay(userId: Int, day: Int, dateTime: String? = null): List<WorkoutDayDTO> {
         if(day !in 1..7){
             throw Exception("Day must be between 1 and 7")
         }
@@ -227,25 +227,49 @@ class WorkoutService : BaseService() {
 
             //val equipment = Equipment.find { Equipments.exercise inList exerciseIds }.groupBy { it.exercise.id.value }
 
+            //Get which exercises are completed for the day
+            val exercisesTracks = dateTime?.let {
+                getCompletedExercisesForDay(
+                    userId = userId,
+                    workoutDayId = workoutDays.firstOrNull()?.id?.value.toString(),
+                    dateTime = it
+                )
+            } ?: emptyList()
+
+            val workoutCompleted = if(dateTime != null){
+                WorkoutTrack.find{
+                    (WorkoutTracks.workoutDayId inList workoutDays.map { it.id }) and
+                            (WorkoutTracks.status eq Status.ACTIVE)  and
+                            (WorkoutTracks.doneDateTime.date() eq dateTime.toLocalDateTime().date)
+                }.count() > 0
+            } else {
+                false
+            }
+
+
             workoutDays.map {
                 it.toDTO(
                     exercises = exercises.map { e ->
                         e.toDTO(
                           //  equipmentDTO = equipment[e.id.value]?.map { it.toDTO() } ?: emptyList(),
-                            equipmentDTO = emptyList()
+                            equipmentDTO = emptyList(),
+                        ).copy(
+                            isCompleted = exercisesTracks.contains(e.id.value.toString())
                         )
                     }
+                ).copy(
+                    isCompleted = workoutCompleted,
                 )
             }
         }
     }
 
     // Workout Tracking Methods
-    fun completeWorkout(userId: Int, workoutDayId: String, doneDateTime: String): Boolean {
+    fun completeWorkout(userId: Int, dayId: Int, doneDateTime: String): Boolean {
         return transaction {
             // Verify the workout day belongs to the user
-            val workoutDay = WorkoutDay.find { 
-                (WorkoutDays.id eq UUID.fromString(workoutDayId)) and
+            val workoutDay = WorkoutDay.find {
+                (WorkoutDays.day eq dayId) and
                 (WorkoutDays.user eq userId) and 
                 (WorkoutDays.status eq Status.ACTIVE) 
             }.firstOrNull()
@@ -438,6 +462,17 @@ class WorkoutService : BaseService() {
             }.firstOrNull()
             
             if (exercise != null && workoutDay != null) {
+                val existingTrack = ExerciseTrack.find {
+                    (ExerciseTracks.exerciseId eq exercise.id) and
+                    (ExerciseTracks.workoutDayId eq workoutDay.id) and
+                    (ExerciseTracks.doneDateTime.date() eq doneDateTime.toLocalDateTime().date) and
+                    (ExerciseTracks.status eq Status.ACTIVE)
+                }.firstOrNull()
+
+                if (existingTrack != null) {
+                    throw BadRequestException("Exercise already completed for this workout day.")
+                }
+
                 val id = ExerciseTracks.insertOperation(userId, doneDateTime.fromDateToLong()) {
                     insert {
                         it[ExerciseTracks.exerciseId] = exercise.id
@@ -494,14 +529,15 @@ class WorkoutService : BaseService() {
         }
     }
 
-    fun getCompletedExercisesForDay(userId: Int, workoutDayId: String): List<String> {
+    fun getCompletedExercisesForDay(userId: Int, workoutDayId: String, dateTime: String): List<String> {
         return transaction {
             ExerciseTrack.find {
                 (ExerciseTracks.workoutDayId eq UUID.fromString(workoutDayId)) and
                 (ExerciseTracks.status eq Status.ACTIVE) and
                 (ExerciseTracks.exerciseId inSubQuery Exercises.slice(Exercises.id).select { 
                     (Exercises.user eq userId) and (Exercises.status eq Status.ACTIVE) 
-                })
+                }) and (ExerciseTracks.doneDateTime.date() eq dateTime.toLocalDateTime().date)
+
             }.map { it.exercise.id.value.toString() }
         }
     }

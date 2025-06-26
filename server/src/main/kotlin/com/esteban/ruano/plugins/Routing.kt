@@ -51,12 +51,14 @@ fun Application.configureRouting() {
     val categoryKeywordRepository: CategoryKeywordRepository by inject()
     val scheduledTransactionRepository: ScheduledTransactionRepository by inject()
     val portfolioRepository: PortfolioRepository by inject()
+    val settingsRepository: SettingsRepository by inject()
     
     // Inject services
     val authService: AuthService by inject()
     val timerService: TimerService by inject()
     val postCategoryService: PostCategoryService by inject()
     val dashboardService: DashboardService by inject()
+
 
     routing {
         get("/") {
@@ -75,13 +77,14 @@ fun Application.configureRouting() {
                 pomodoroRouting(pomodoroRepository)
                 dailyJournalRouting(dailyJournalRepository)
                 timerRouting(timerService)
+                settingsRouting(settingsRepository)
                 financeRouting(
                     accountRepository = accountRepository,
                     transactionRepository = transactionRepository,
                     budgetRepository = budgetRepository,
                     savingsGoalRepository = savingsGoalRepository,
                     categoryKeywordRepository = categoryKeywordRepository,
-                    scheduledTransactionRepository = scheduledTransactionRepository
+                    scheduledTransactionRepository = scheduledTransactionRepository,
                 )
             }
 

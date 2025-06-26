@@ -19,6 +19,7 @@ import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
 import com.esteban.ruano.lifecommander.services.finance.FinanceService
 import com.esteban.ruano.lifecommander.services.meals.RecipesService
+import com.esteban.ruano.lifecommander.services.settings.SettingsService
 import com.esteban.ruano.lifecommander.services.workout.WorkoutService
 import com.esteban.ruano.lifecommander.utils.SOCKETS_HOST
 import com.esteban.ruano.lifecommander.utils.SOCKETS_PATH
@@ -26,6 +27,7 @@ import com.esteban.ruano.lifecommander.utils.SOCKETS_PORT
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackManager
 import com.esteban.ruano.lifecommander.ui.viewmodels.CategoryKeywordMapperViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.RecipesViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.SettingsViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.WorkoutViewModel
 import com.esteban.ruano.lifecommander.utils.DEV_VARIANT
@@ -112,6 +114,7 @@ val servicesModule = module {
     single { DashboardService(BASE_URL,get(),get()) }
     single { RecipesService (BASE_URL, get(), get()) }
     single { WorkoutService(BASE_URL, get(), get()) }
+    single { SettingsService( BASE_URL,get(),get()) }
 }
 
 // ViewModels Module
@@ -130,6 +133,7 @@ val viewModelsModule = module {
     ) }
     viewModel { RecipesViewModel(get()) }
     viewModel { WorkoutViewModel(get()) }
+    viewModel { SettingsViewModel(get()) }
 }
 
 // Combine all modules

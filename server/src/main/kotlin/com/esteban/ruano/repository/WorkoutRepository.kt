@@ -19,10 +19,11 @@ class WorkoutRepository(private val workoutService: WorkoutService) {
         )
     }
 
-    fun getByDay(userId: Int, day: Int): List<WorkoutDayDTO> {
+    fun getByDay(userId: Int, day: Int, dateTime:String): List<WorkoutDayDTO> {
         return workoutService.getWorkoutDaysByDay(
             userId,
-            day
+            day,
+            dateTime
         )
     }
 
@@ -63,7 +64,7 @@ class WorkoutRepository(private val workoutService: WorkoutService) {
     }
 
     // Workout Tracking Methods
-    fun completeWorkout(userId: Int, workoutDayId: String, doneDateTime: String): Boolean {
+    fun completeWorkout(userId: Int, workoutDayId: Int, doneDateTime: String): Boolean {
         return workoutService.completeWorkout(userId, workoutDayId, doneDateTime)
     }
 
@@ -104,7 +105,8 @@ class WorkoutRepository(private val workoutService: WorkoutService) {
         return workoutService.getExerciseTracksByDateRange(userId, startDate, endDate)
     }
 
-    fun getCompletedExercisesForDay(userId: Int, workoutDayId: String): List<String> {
-        return workoutService.getCompletedExercisesForDay(userId, workoutDayId)
+    fun getCompletedExercisesForDay(userId: Int, workoutDayId: String, dateTime: String,
+    ): List<String> {
+        return workoutService.getCompletedExercisesForDay(userId, workoutDayId,dateTime)
     }
 }

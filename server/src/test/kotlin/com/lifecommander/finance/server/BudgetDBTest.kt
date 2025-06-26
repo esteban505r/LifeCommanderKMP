@@ -5,7 +5,9 @@ import com.esteban.ruano.database.entities.Budgets
 import com.esteban.ruano.database.entities.HistoryTracks
 import com.esteban.ruano.database.entities.Transactions
 import com.esteban.ruano.database.entities.Users
+import com.esteban.ruano.repository.SettingsRepository
 import com.esteban.ruano.service.BudgetService
+import com.esteban.ruano.service.SettingsService
 import com.esteban.ruano.service.TransactionService
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUtils.formatDateTime
@@ -41,7 +43,11 @@ class BudgetDBTest{
 
     @Before
     fun setup() {
-        service = BudgetService()
+        service = BudgetService(
+            settingsRepository = SettingsRepository(
+                SettingsService()
+            )
+        )
         transactionService = TransactionService()
 
         Database.connect(

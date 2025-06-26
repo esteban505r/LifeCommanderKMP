@@ -10,4 +10,5 @@ data class WorkoutDay(
     val description: String? = null,
     val day: Int? = null,
     val exercises: List<Exercise>? = emptyList(),
+    val isCompleted: Boolean = false,
 )

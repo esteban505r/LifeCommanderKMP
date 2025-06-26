@@ -9,12 +9,10 @@ import com.esteban.ruano.models.habits.HabitDTO
 import com.esteban.ruano.models.tasks.TaskDTO
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import kotlinx.datetime.*
-import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
 
 class DashboardService(
     private val taskService: TaskService,
@@ -116,7 +114,7 @@ class DashboardService(
         
         // Calculate planned vs unexpected meals per day
         val plannedMealsPerDayThisWeek = getPlannedMealsPerDay(userId, weekStart)
-        val unexpectedMealsPerDayThisWeek = getUnexpectedMealsPerDay(userId, weekStart)
+        val unexpectedMealsPerDayThisWeek = getUnexpectedMealsByDateRange(userId, weekStart,weekEnd)
 
         return DashboardResponseDTO(
             nextTask = nextTask,
@@ -462,26 +460,33 @@ class DashboardService(
         }
     }
 
-    private fun getUnexpectedMealsPerDay(userId: Int, weekStart: LocalDate): List<Int> {
+    private fun getUnexpectedMealsByDateRange(userId: Int, startDate: LocalDate, endDate: LocalDate): List<Int> {
         return transaction {
-            // Get all recipe IDs that have active day assignments
-            val recipesWithDays = RecipeDay.find { 
-                (RecipeDays.user eq userId) and 
-                (RecipeDays.status eq Status.ACTIVE) 
-            }.map { it.recipe.id }.toSet()
-            
-            // Get recipes that have no day assignments (unexpected meals)
-            val unexpectedMeals = Recipe.find { 
-                (Recipes.user eq userId) and 
-                (Recipes.id notInList recipesWithDays.toList()) and 
-                (Recipes.status eq Status.ACTIVE) 
-            }.toList()
-            
-            // Distribute unexpected meals across the week (for now, show them on the first day)
-            val result = MutableList(7) { 0 }
-            if (unexpectedMeals.isNotEmpty()) {
-                result[0] = unexpectedMeals.size
+            val unExpectedRecipeIds = RecipeDay.find {
+                (RecipeDays.user eq userId) and
+                (RecipeDays.status eq Status.ACTIVE) and
+                (RecipeDays.day greaterEq startDate.dayOfWeek.value) and
+                (RecipeDays.day lessEq endDate.dayOfWeek.value)
+            }.map { it.recipe.id }
+
+            val unexpectedMeals = RecipeTrack.find {
+                (RecipeTracks.recipeId notInList unExpectedRecipeIds) and
+                (RecipeTracks.consumedDateTime greaterEq startDate.atTime(0, 0)) and
+                (RecipeTracks.consumedDateTime lessEq endDate.atTime(23, 59)) and
+                (RecipeTracks.status eq Status.ACTIVE) and
+                (RecipeTracks.skipped eq true)
             }
+
+            val range = List(7) { i ->
+                startDate.plus(DatePeriod(days = i))
+            }
+
+            val result = (range).map { date ->
+                unexpectedMeals.count { track ->
+                    track.consumedDateTime.date == date
+                }
+            }
+
             result
         }
     }

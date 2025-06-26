@@ -6,6 +6,7 @@ import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.WorkoutTrack
 import com.esteban.ruano.lifecommander.services.workout.WorkoutService
 import com.esteban.ruano.lifecommander.ui.state.WorkoutState
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,14 +25,15 @@ class WorkoutViewModel(
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
             try {
-                val workoutDays = service.getExercisesByDay(day)
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val workoutDays = service.getExercisesByDay(day, now.formatDefault())
                 val exercises = workoutDays.flatMap { it.exercises ?: emptyList() }
                 val exerciseDayMap = fetchExerciseDayMap()
                 
                 // Get completed exercises for the current workout day
                 val completedExercises = if (workoutDays.isNotEmpty()) {
                     val workoutDayId = workoutDays.first().id
-                    service.getCompletedExercisesForDay(workoutDayId)
+                    service.getCompletedExercisesForDay(workoutDayId, now.formatDefault())
                 } else {
                     emptyList()
                 }
@@ -99,13 +101,12 @@ class WorkoutViewModel(
     }
 
     // Workout Tracking Methods
-    fun completeWorkout(workoutDayId: String) {
+    fun completeWorkout(dayId: Int) {
         viewModelScope.launch {
             try {
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                val doneDateTime = "${now.date}T${now.hour.toString().padStart(2, '0')}:${now.minute.toString().padStart(2, '0')}:${now.second.toString().padStart(2, '0')}"
                 
-                val success = service.completeWorkout(workoutDayId, doneDateTime)
+                val success = service.completeWorkout(dayId, now.formatDefault())
                 if (success) {
                     // Refresh the current day's exercises to show updated state
                     getExercisesByDay(_state.value.daySelected)
@@ -281,9 +282,8 @@ class WorkoutViewModel(
         viewModelScope.launch {
             try {
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                val doneDateTime = "${now.date}T${now.hour.toString().padStart(2, '0')}:${now.minute.toString().padStart(2, '0')}:${now.second.toString().padStart(2, '0')}"
                 
-                val success = service.completeExercise(exerciseId, workoutDayId, doneDateTime)
+                val success = service.completeExercise(exerciseId, workoutDayId, now.formatDefault())
                 if (success) {
                     // Refresh the current day's exercises to show updated state
                     getExercisesByDay(_state.value.daySelected)
@@ -342,21 +342,5 @@ class WorkoutViewModel(
         }
     }
 
-    fun getCompletedExercisesForDay(workoutDayId: String) {
-        viewModelScope.launch {
-            try {
-                val completedIds = service.getCompletedExercisesForDay(workoutDayId)
-                _state.value = _state.value.copy(
-                    completedExercises = completedIds.toSet(),
-                    isError = false,
-                    errorMessage = ""
-                )
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isError = true,
-                    errorMessage = e.message ?: "Unknown error"
-                )
-            }
-        }
-    }
+
 } 

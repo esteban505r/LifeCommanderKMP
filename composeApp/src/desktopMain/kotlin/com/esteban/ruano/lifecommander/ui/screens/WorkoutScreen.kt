@@ -31,7 +31,7 @@ fun WorkoutScreen(
     onUpdate: (Exercise) -> Unit,
     onDelete: (String) -> Unit,
     onDaySelected: (Int) -> Unit,
-    onCompleteWorkout: (String) -> Unit = {},
+    onCompleteWorkout: (Int) -> Unit = {},
     onCompleteExercise: (String, String) -> Unit = { _, _ -> },
     onChangeAllExercisesMode: (Boolean) -> Unit = {},
     onGetAllExercises: () -> Unit = {},

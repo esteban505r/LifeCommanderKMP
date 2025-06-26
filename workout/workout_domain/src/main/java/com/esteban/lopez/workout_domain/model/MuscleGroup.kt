@@ -5,6 +5,7 @@ enum class MuscleGroup(val value: String) {
     LOWER_BODY("lower_body"),
     FULL_BODY("full_body"),
     CORE("core"),
+    BACK("back"),
     CARDIO("cardio"),
     STRETCH("stretch"),
     LEGS("legs"),
@@ -19,6 +20,7 @@ enum class MuscleGroup(val value: String) {
                 "lower_body" -> MuscleGroup.LOWER_BODY
                 "full_body" -> MuscleGroup.FULL_BODY
                 "core" -> MuscleGroup.CORE
+                "back" -> MuscleGroup.BACK
                 "cardio" -> MuscleGroup.CARDIO
                 "stretch" -> MuscleGroup.STRETCH
                 "legs" -> MuscleGroup.LEGS
@@ -37,6 +39,7 @@ fun MuscleGroup.toMuscleGroupString(): String {
         MuscleGroup.LOWER_BODY -> "lower_body"
         MuscleGroup.FULL_BODY -> "full_body"
         MuscleGroup.CORE -> "core"
+        MuscleGroup.BACK -> "back"
         MuscleGroup.CARDIO -> "cardio"
         MuscleGroup.STRETCH -> "stretch"
         MuscleGroup.LEGS -> "legs"

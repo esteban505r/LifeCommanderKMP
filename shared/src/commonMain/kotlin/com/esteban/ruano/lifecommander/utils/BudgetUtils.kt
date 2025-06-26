@@ -1,6 +1,8 @@
 package com.esteban.ruano.lifecommander.utils
 
 import com.esteban.ruano.lifecommander.models.finance.Budget
+import com.esteban.ruano.lifecommander.models.UserSettings
+import com.esteban.ruano.lifecommander.models.settings.UnbudgetedPeriodType
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.models.Frequency
 import kotlinx.datetime.*
@@ -10,6 +12,41 @@ fun getCurrentPeriodForUnbudgeted(referenceDate: LocalDate): Pair<LocalDate, Loc
     val end = start.plus(DatePeriod(months = 1)).minus(DatePeriod(days = 1))
     return Pair(start, end)
 }
+
+fun getUnbudgetedPeriod(referenceDate: LocalDate, userSettings: UserSettings): Pair<LocalDate, LocalDate> {
+    return when (userSettings.unbudgetedPeriodType) {
+        UnbudgetedPeriodType.MONTHLY -> {
+            val startDay = userSettings.unbudgetedPeriodStartDay
+            val start = LocalDate(referenceDate.year, referenceDate.month, startDay)
+            val end = start.plus(DatePeriod(months = 1)).minus(DatePeriod(days = 1))
+            Pair(start, end)
+        }
+        UnbudgetedPeriodType.WEEKLY -> {
+            val startDay = userSettings.unbudgetedPeriodStartDay
+            val endDay = userSettings.unbudgetedPeriodEndDay
+            
+            // Find the start of the week based on the reference date
+            val daysFromMonday = (referenceDate.dayOfWeek.ordinal + 6) % 7
+            val weekStart = referenceDate.minus(DatePeriod(days = daysFromMonday))
+            
+            val periodStart = weekStart.plus(DatePeriod(days = startDay - 1))
+            val periodEnd = weekStart.plus(DatePeriod(days = endDay - 1))
+            
+            Pair(periodStart, periodEnd)
+        }
+        UnbudgetedPeriodType.CUSTOM -> {
+            val startDay = userSettings.unbudgetedPeriodStartDay
+            val endDay = userSettings.unbudgetedPeriodEndDay
+            
+            // For custom periods, we use the current month as base
+            val start = LocalDate(referenceDate.year, referenceDate.month, startDay)
+            val end = LocalDate(referenceDate.year, referenceDate.month, endDay)
+            
+            Pair(start, end)
+        }
+    }
+}
+
 fun getCurrentPeriod(budget: Budget, referenceDate: LocalDate): Pair<LocalDate, LocalDate> {
     val startDate = budget.startDate.toLocalDate()
     val frequency = budget.frequency

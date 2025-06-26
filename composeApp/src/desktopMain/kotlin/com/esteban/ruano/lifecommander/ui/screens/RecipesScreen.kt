@@ -433,8 +433,8 @@ fun RecipesScreen(
     // Skip Recipe Dialog
     showSkipDialog?.let { recipe ->
         var searchQuery by remember { mutableStateOf("") }
-        var filteredRecipes = state.recipes?.recipes?.filter {
-            it.id != recipe.id && (it.name.contains(searchQuery, ignoreCase = true) || searchQuery.isBlank())
+        var filteredRecipes = state.allRecipes?.recipes?.filter {
+            it.id != recipe.id
         }
         var expanded by remember { mutableStateOf(false) }
         var selectedReplacement: Recipe? by remember { mutableStateOf(null) }

@@ -1,0 +1,83 @@
+package com.esteban.ruano.service
+
+import com.esteban.ruano.database.entities.UserSetting
+import com.esteban.ruano.database.entities.UserSettings
+import com.esteban.ruano.lifecommander.models.settings.UnbudgetedPeriodType
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
+import com.esteban.ruano.lifecommander.models.UserSettings as DomainUserSettings
+
+class SettingsService {
+    
+    fun getUserSettings(userId: Int): DomainUserSettings {
+        return transaction {
+            UserSetting.find { UserSettings.userId eq userId }.firstOrNull()
+                ?.let { userSetting ->
+                    DomainUserSettings(
+                        id = userSetting.id.value.toString(),
+                        defaultTimerListId = userSetting.defaultTimerListId?.name,
+                        dailyPomodoroGoal = userSetting.dailyPomodoroGoal,
+                        notificationsEnabled = userSetting.notificationsEnabled,
+                        unbudgetedPeriodType = userSetting.unbudgetedPeriodType,
+                        unbudgetedPeriodStartDay = userSetting.unbudgetedPeriodStartDay,
+                        unbudgetedPeriodEndDay = userSetting.unbudgetedPeriodEndDay
+                    )
+                } ?: createDefaultUserSettings(userId)
+        }
+    }
+    
+    fun updateUserSettings(userId: Int, settings: DomainUserSettings): DomainUserSettings {
+        return transaction {
+            val userSetting = UserSetting.find { UserSettings.userId eq userId }.firstOrNull()
+                ?: UserSetting.new {
+                    this.userId = com.esteban.ruano.database.entities.User[userId]
+                }
+            
+            // Update timer settings
+            settings.defaultTimerListId?.let { 
+                userSetting.defaultTimerListId = com.esteban.ruano.database.entities.TimerList[UUID.fromString(it)]
+            }
+            userSetting.dailyPomodoroGoal = settings.dailyPomodoroGoal
+            userSetting.notificationsEnabled = settings.notificationsEnabled
+            
+            // Update budget settings
+            userSetting.unbudgetedPeriodType = settings.unbudgetedPeriodType
+            userSetting.unbudgetedPeriodStartDay = settings.unbudgetedPeriodStartDay
+            userSetting.unbudgetedPeriodEndDay = settings.unbudgetedPeriodEndDay
+            
+            DomainUserSettings(
+                id = userSetting.id.value.toString(),
+                defaultTimerListId = userSetting.defaultTimerListId?.name,
+                dailyPomodoroGoal = userSetting.dailyPomodoroGoal,
+                notificationsEnabled = userSetting.notificationsEnabled,
+                unbudgetedPeriodType = userSetting.unbudgetedPeriodType,
+                unbudgetedPeriodStartDay = userSetting.unbudgetedPeriodStartDay,
+                unbudgetedPeriodEndDay = userSetting.unbudgetedPeriodEndDay
+            )
+        }
+    }
+    
+    private fun createDefaultUserSettings(userId: Int): DomainUserSettings {
+        return transaction {
+            val userSetting = UserSetting.new {
+                this.userId = com.esteban.ruano.database.entities.User[userId]
+                this.dailyPomodoroGoal = 8
+                this.notificationsEnabled = true
+                this.unbudgetedPeriodType = UnbudgetedPeriodType.MONTHLY
+                this.unbudgetedPeriodStartDay = 1
+                this.unbudgetedPeriodEndDay = 31
+            }
+            
+            DomainUserSettings(
+                id = userSetting.id.value.toString(),
+                defaultTimerListId = null,
+                dailyPomodoroGoal = userSetting.dailyPomodoroGoal,
+                notificationsEnabled = userSetting.notificationsEnabled,
+                unbudgetedPeriodType = userSetting.unbudgetedPeriodType,
+                unbudgetedPeriodStartDay = userSetting.unbudgetedPeriodStartDay,
+                unbudgetedPeriodEndDay = userSetting.unbudgetedPeriodEndDay
+            )
+        }
+    }
+} 

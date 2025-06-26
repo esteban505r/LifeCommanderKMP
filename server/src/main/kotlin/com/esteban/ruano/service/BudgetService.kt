@@ -3,42 +3,32 @@ package com.esteban.ruano.service
 import com.esteban.ruano.database.converters.toDomainModel
 import com.esteban.ruano.database.converters.toResponseDTO
 import com.esteban.ruano.database.entities.*
+import com.esteban.ruano.database.entities.Transaction
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.lifecommander.utils.getCurrentPeriod
-import com.esteban.ruano.lifecommander.utils.getCurrentPeriodForUnbudgeted
-import com.esteban.ruano.models.finance.*
+import com.esteban.ruano.lifecommander.utils.getUnbudgetedPeriod
+import com.esteban.ruano.models.finance.BudgetProgressResponseDTO
+import com.esteban.ruano.models.finance.BudgetResponseDTO
+import com.esteban.ruano.models.finance.TransactionResponseDTO
+import com.esteban.ruano.repository.SettingsRepository
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
-import com.esteban.ruano.utils.DateUtils.getPeriodEndDate
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.esteban.ruano.utils.addSortOrder
 import com.esteban.ruano.utils.buildTransactionFilters
-import com.esteban.ruano.utils.toSortOrder
 import com.lifecommander.finance.model.TransactionType
-import com.lifecommander.models.Frequency
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toLocalDate
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.andWhere
-import org.jetbrains.exposed.sql.insert
+import kotlinx.datetime.TimeZone
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.kotlin.datetime.date
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.select
-
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 import kotlin.math.absoluteValue
 
-class BudgetService : BaseService() {
+class BudgetService(private val settingsRepository: SettingsRepository) : BaseService() {
     fun createBudget(
         userId: Int,
         name: String,
@@ -88,6 +78,9 @@ class BudgetService : BaseService() {
         referenceDate: LocalDate
     ): List<BudgetProgressResponseDTO> {
         return transaction {
+            // Get user settings for unbudgeted period configuration
+            val userSettings = settingsRepository.getUserSettings(userId)
+            
             // 1. Build the base query with filters (excluding startDate and endDate)
             var baseQuery = Budgets.selectAll().where { Budgets.user eq userId }
 
@@ -140,8 +133,11 @@ class BudgetService : BaseService() {
                 .map { it[Budgets.category] }
                 .distinct()
 
-            // 5. Determine the current period for unbudgeted transactions
-            val (periodStart, periodEnd) = getCurrentPeriodForUnbudgeted(referenceDate)
+            // 5. Determine the current period for unbudgeted transactions using user settings
+            val (periodStart, periodEnd) = getUnbudgetedPeriod(referenceDate, userSettings)
+
+            println("Reference date: $referenceDate")
+            println("Unbudgeted period: $periodStart to $periodEnd")
 
             // 6. Get unbudgeted transactions within the current period
             var unbudgetedQuery = Transactions.selectAll().where {
@@ -149,7 +145,8 @@ class BudgetService : BaseService() {
                         (Transactions.category notInList budgetedCategories) and
                         (Transactions.type eq TransactionType.EXPENSE) and
                         (Transactions.date.date() greaterEq periodStart) and
-                        (Transactions.date.date() lessEq periodEnd)
+                        (Transactions.date.date() lessEq periodEnd) and
+                        (Transactions.status eq Status.ACTIVE)
             }
 
             filters.minAmount?.let { min ->
@@ -243,11 +240,18 @@ class BudgetService : BaseService() {
         }
     }
 
-    fun getBudgetTransactions(userId: Int, budgetId: UUID, filters: TransactionFilters): List<TransactionResponseDTO> {
+    fun getBudgetTransactions(userId: Int, budgetId: UUID, referenceDate: LocalDate, filters: TransactionFilters): List<TransactionResponseDTO> {
         return transaction {
             val budget = Budget.findById(budgetId)
             if (budget != null && budget.user.id.value == userId) {
-                Transactions.selectAll()
+                // Calculate the current period for this budget using the reference date
+                val (periodStart, periodEnd) = getCurrentPeriod(budget.toDomainModel(), referenceDate)
+                
+                // Use filters date range if provided, otherwise use budget period
+                val effectiveStartDate = filters.startDate?.toLocalDate() ?: periodStart
+                val effectiveEndDate = filters.endDate?.toLocalDate() ?: periodEnd
+                
+                return@transaction Transactions.selectAll()
                     .where {
                         buildTransactionFilters(
                             userId,
@@ -255,7 +259,8 @@ class BudgetService : BaseService() {
                         )
                     }.andWhere {
                         (Transactions.category eq budget.category) and
-                                (Transactions.date.date() greaterEq budget.startDate)
+                                (Transactions.date.date() greaterEq effectiveStartDate) and
+                                (Transactions.date.date() lessEq effectiveEndDate)
                     }
                     .addSortOrder(
                         filters.amountSortOrder,
@@ -359,8 +364,11 @@ class BudgetService : BaseService() {
 
     fun categorizeAllTransactions(userId: Int, referenceDate: LocalDate): Int {
         return transaction {
-            // Get all transactions for the date range
-            val (periodStart, periodEnd) = getCurrentPeriodForUnbudgeted(referenceDate)
+            // Get user settings for unbudgeted period configuration
+            val userSettings = settingsRepository.getUserSettings(userId)
+            
+            // Get all transactions for the date range using user settings
+            val (periodStart, periodEnd) = getUnbudgetedPeriod(referenceDate, userSettings)
 
             val transactions = Transaction.find {
                 (Transactions.user eq userId) and

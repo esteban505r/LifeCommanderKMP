@@ -514,9 +514,8 @@ class FinanceViewModel(
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(isLoadingTransactions = true, error = null)
-                val transactions = service.getBudgetTransactions(budgetId, referenceDate = getCurrentDateTime(
-                    TimeZone.currentSystemDefault()
-                ).date.formatDefault(), filters = _state.value.transactionFilters)
+                val referenceDate = getCurrentDateTime(TimeZone.currentSystemDefault()).date.formatDefault()
+                val transactions = service.getBudgetTransactions(budgetId, referenceDate, _state.value.transactionFilters)
                 _state.value = _state.value.copy(
                     transactions = transactions,
                     isLoadingTransactions = false

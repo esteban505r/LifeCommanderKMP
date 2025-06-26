@@ -13,7 +13,8 @@ enum class ViewMode {
 }
 
 data class RecipesState(
-    val recipes: RecipesResponse? = null, // Contains recipes and pagination info
+    val recipes: RecipesResponse? = null,
+    val allRecipes: RecipesResponse? = null,
     val totalRecipes: Long = 0,
     val isLoading: Boolean = false,
     val isError: Boolean = false,

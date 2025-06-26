@@ -239,7 +239,7 @@ class RecipesViewModel(
         viewModelScope.launch {
             try {
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                val success = service.trackRecipeConsumption(recipeId, now.toString())
+                val success = service.trackRecipeConsumption(recipeId, now.formatDefault())
                 if (success) {
                     // Refresh the current day's recipes to show updated consumption status
                     getRecipesByDay(_state.value.daySelected)
@@ -284,12 +284,11 @@ class RecipesViewModel(
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
                 val success = service.trackRecipeSkippedWithAlternative(
                     recipeId, 
-                    now.toString(), 
+                    now.formatDefault(),
                     alternativeRecipeId, 
                     alternativeMealName
                 )
                 if (success) {
-                    // Refresh the current day's recipes to show updated consumption status
                     getRecipesByDay(_state.value.daySelected)
                 }
             } catch (e: Exception) {
