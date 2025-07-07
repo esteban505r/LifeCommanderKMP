@@ -27,6 +27,20 @@ class TaskLocalDataSource(
     ): List<Task> = taskDao.getTasksByDateRange(filter, page, limit, startDate, endDate)
         .map { it.toDomainModel() }
 
+    override suspend fun getTasksByDateRangeWithSmartFiltering(
+        filter: String,
+        page: Int,
+        limit: Int,
+        startDate: String,
+        endDate: String,
+        isTodayFilter: Boolean
+    ): List<Task> {
+        // For local storage, we'll use the basic date range filtering
+        // Smart filtering logic is primarily for server-side optimization
+        return taskDao.getTasksByDateRange(filter, page, limit, startDate, endDate)
+            .map { it.toDomainModel() }
+    }
+
     override suspend fun getTasksNoDueDate(filter: String, page: Int, limit: Int): List<Task> =
         taskDao.getTasksNoDueDate(filter, page, limit).map { it.toDomainModel() }
 
@@ -57,11 +71,11 @@ class TaskLocalDataSource(
     override suspend fun updateTask(taskId: String, task: Task) {
         taskDao.updateTask(
             id = taskId,
-            title = task.name ?: "",
+            title = task.name,
             description = task.note ?: "",
             dueDate = task.dueDateTime ?: "",
             completed = task.done ?: false,
-            updatedAt = System.currentTimeMillis().toString()
+            updatedAt = task.updatedAt ?: ""
         )
         historyTrackDao.addUpdateOperation(LocalTask.TABLE_NAME, taskId)
     }

@@ -16,8 +16,9 @@ import ui.composables.NewEditTaskDialog
 @Composable
 fun GeneralFloatingActionButtons(
     onAddTask: (String, String, List<Reminder>, String?, String?, Int?) -> Unit = { _, _, _, _, _, _ -> },
-    onAddHabit: (String, String, String, Frequency) -> Unit = { _, _, _, _ -> },
+    onAddHabit: (String, String, String, Frequency, List<com.esteban.ruano.lifecommander.models.HabitReminder>) -> Unit = { _, _, _, _, _ -> },
     onError: (String) -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     var showNewTaskDialog by remember { mutableStateOf(false) }
     var showNewHabitDialog by remember { mutableStateOf(false) }

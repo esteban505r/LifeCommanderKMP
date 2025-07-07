@@ -13,4 +13,5 @@ data class UpdateTaskDTO(
     val dueDateTime: String? = null,
     val reminders: List<CreateReminderDTO>? = null,
     val updatedAt: String? = null,
+    val clearFields: List<String>? = null,
 )

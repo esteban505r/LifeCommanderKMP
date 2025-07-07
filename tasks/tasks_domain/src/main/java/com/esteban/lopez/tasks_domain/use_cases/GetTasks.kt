@@ -30,3 +30,32 @@ class GetTasks(
         )
     }
 }
+
+class GetTasksWithSmartFiltering(
+    val repository: TasksRepository
+) {
+    suspend operator fun invoke(
+        filter: String? = null,
+        page: Int? = null,
+        limit: Int? = null,
+        startDate: String? = null,
+        endDate: String? = null,
+        isTodayFilter: Boolean = false,
+    ): Result<List<Task>> {
+        if(startDate != null && endDate != null) {
+            return repository.getTasksByDateRangeWithSmartFiltering(
+                filter = filter,
+                page = page,
+                limit = limit,
+                startDate = startDate,
+                endDate = endDate,
+                isTodayFilter = isTodayFilter
+            )
+        }
+        return repository.getTasks(
+            filter = filter,
+            page = page,
+            limit = limit,
+        )
+    }
+}

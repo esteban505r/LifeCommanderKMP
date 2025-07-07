@@ -14,10 +14,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
+import com.esteban.ruano.lifecommander.ui.composables.GeneralFloatingActionButtons
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import com.esteban.ruano.lifecommander.utils.APP_NAME
 import com.esteban.ruano.utils.DateUtils.formatDefault
 import services.NightBlockService
+import services.tasks.models.Priority
 import ui.components.NightBlockComposable
 import ui.navigation.Screen
 import ui.viewmodels.AppViewModel
@@ -56,17 +58,17 @@ fun AppLayout(
 
     Scaffold(
         floatingActionButton = {
-           /* if (currentRoute != Screen.Finance.route && currentRoute != Screen.FinanceImporter.route) {
+            if (currentRoute != Screen.Finance.route && currentRoute != Screen.FinanceImporter.route) {
                 GeneralFloatingActionButtons(
                     onAddTask = { name, notes, reminders, dueDate, scheduledDate, priority ->
                         taskViewModel.addTask(name, dueDate, scheduledDate, notes, priority ?: Priority.NONE.value)
                     },
-                    onAddHabit = { name, notes, dateTime, frequency ->
-                        habitViewModel.addHabit(name, notes, frequency.value, dateTime)
+                    onAddHabit = { name, notes, dateTime, frequency, reminders ->
+                        habitViewModel.addHabit(name, notes, frequency.value, dateTime, reminders)
                     },
-                    onError = { *//* Handle error *//* }
-                )
-            }*/
+                    onError = {  }
+                    )
+                }
         },
         topBar = {
             TopAppBar(

@@ -4,8 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CreateReminderDTO(
-    val id: String?,
-    val userId: Int,
+    val id: String? = null,
     val taskId: String? = null,
     val habitId: String? = null,
     val time: Long,

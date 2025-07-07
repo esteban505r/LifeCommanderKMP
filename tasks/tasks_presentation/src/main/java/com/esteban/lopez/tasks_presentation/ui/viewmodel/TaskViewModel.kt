@@ -9,9 +9,11 @@ import com.esteban.lopez.core.utils.AppConstants.SYNC_INTERVAL
 import com.esteban.ruano.core_ui.WorkManagerUtils
 import com.esteban.ruano.tasks_domain.use_cases.TaskUseCases
 import com.esteban.ruano.core_ui.view_model.BaseViewModel
+import com.esteban.ruano.lifecommander.models.TaskFilters
 import com.esteban.ruano.tasks_presentation.intent.TaskIntent
 import com.esteban.ruano.tasks_presentation.intent.TaskEffect
 import com.esteban.ruano.tasks_presentation.ui.viewmodel.state.TaskState
+import com.lifecommander.models.Task
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -88,6 +90,7 @@ class TaskViewModel @Inject constructor(
                 is TaskIntent.SetDateRangeSelectedIndex -> changeDateRangeSelectedIndex(it.index)
                 is TaskIntent.SetDateRange -> changeDateRange(it.startDate to it.endDate)
                 is TaskIntent.ClearDateRange -> changeDateRange(null)
+                is TaskIntent.RescheduleTask -> rescheduleTask(it.id, it.task)
                 else -> {}
             }
         }
@@ -145,14 +148,20 @@ class TaskViewModel @Inject constructor(
                     page = page,
                     limit = limit
                 )
-            else
-                taskUseCases.getTasks(
-                filter = currentState.filter,
-                page = page,
-                limit = limit,
-                startDate = dateRange?.first ?: currentState.dateRange?.first,
-                endDate = dateRange?.second ?: currentState.dateRange?.second
-            )
+            else {
+                // Use smart filtering logic similar to desktop app
+                // Get the current filter based on the selected index
+                val currentFilter = TaskFilters.entries.getOrNull(currentState.dateRangeSelectedIndex) ?: TaskFilters.TODAY
+                val isTodayFilter = currentFilter == TaskFilters.TODAY
+                taskUseCases.getTasksWithSmartFiltering(
+                    filter = currentState.filter,
+                    page = page,
+                    limit = limit,
+                    startDate = dateRange?.first ?: currentState.dateRange?.first,
+                    endDate = dateRange?.second ?: currentState.dateRange?.second,
+                    isTodayFilter = isTodayFilter
+                )
+            }
             result.fold(
                 onFailure = {
                     sendErrorEffect()
@@ -176,6 +185,13 @@ class TaskViewModel @Inject constructor(
         }
     }
 
+    private fun isTodayFilter(startDate: String?, endDate: String?): Boolean {
+        // This function is no longer used, but keeping it for backward compatibility
+        if (startDate == null || endDate == null) return false
+        
+        // Check if the date range represents today (same start and end date)
+        return startDate == endDate
+    }
 
     private fun completeTask(id: String, onComplete: (Boolean) -> Unit) {
         viewModelScope.launch {
@@ -220,6 +236,21 @@ class TaskViewModel @Inject constructor(
                 onFailure = {
                     sendErrorEffect()
                 },
+            )
+        }
+    }
+
+    private fun rescheduleTask(id: String, task: Task) {
+        viewModelScope.launch {
+            val rescheduled = taskUseCases.rescheduleTask(id, task)
+            rescheduled.fold(
+                onSuccess = {
+                    // Refresh the task list to show the updated task
+                    fetchTasks()
+                },
+                onFailure = {
+                    sendErrorEffect()
+                }
             )
         }
     }

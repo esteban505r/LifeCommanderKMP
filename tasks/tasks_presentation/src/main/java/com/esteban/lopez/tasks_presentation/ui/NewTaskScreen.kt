@@ -250,6 +250,7 @@ fun NewTaskScreenComposable(
                                 )
                             )
                         )
+                        onClose()
                     } else {
                         viewModel.performAction(
                             TaskIntent.AddTask(
@@ -268,10 +269,13 @@ fun NewTaskScreenComposable(
                                         scheduledDateStartTime
                                     ).parseDateTime()
                                 },
-                                onComplete = {})
+                                onComplete = { success ->
+                                    if (success) {
+                                        onClose()
+                                    }
+                                })
                         )
                     }
-                    onClose()
                 }
             }) {
                 Text(stringResource(id = R.string.save))

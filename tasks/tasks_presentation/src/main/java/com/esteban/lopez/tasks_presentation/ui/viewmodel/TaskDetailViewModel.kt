@@ -67,6 +67,7 @@ class TaskDetailViewModel @Inject constructor(
                     onComplete(true)
                 },
                 onFailure = {
+                    onComplete(false)
                     sendErrorEffect()
                 }
             )
@@ -125,9 +126,14 @@ class TaskDetailViewModel @Inject constructor(
             val result = taskUseCases.updateTask(id, task)
             result.fold(
                 onSuccess = {
-                    fetchTask(id)
+                    emitState {
+                        currentState.copy(isLoading = false)
+                    }
                 },
                 onFailure = {
+                    emitState {
+                        currentState.copy(isLoading = false)
+                    }
                     sendErrorEffect()
                 }
             )

@@ -57,6 +57,17 @@ class FakeTaskRepository : TasksRepository {
         TODO("Not yet implemented")
     }
 
+    override suspend fun getTasksByDateRangeWithSmartFiltering(
+        filter: String?,
+        page: Int?,
+        limit: Int?,
+        startDate: String,
+        endDate: String,
+        isTodayFilter: Boolean
+    ): Result<List<Task>> {
+        TODO()
+    }
+
     override suspend fun getTasksNoDueDate(
         filter: String?,
         page: Int?,

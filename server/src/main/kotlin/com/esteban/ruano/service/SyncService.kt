@@ -126,9 +126,7 @@ class SyncService(
             val id = UUID.fromString(item.item.id)
             when (DBActions.valueOf(item.action)) {
                 DBActions.INSERT -> {
-                    val remoteId = habitService.create(userId, item.item.toCreateHabitDTO(
-                        userId
-                    ))
+                    val remoteId = habitService.create(userId, item.item.toCreateHabitDTO())
                     if(remoteId != null) {
                         habitsSynced.add(
                             SyncItemDTO(

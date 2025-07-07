@@ -26,9 +26,60 @@ import com.lifecommander.models.Task
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.LocalDateTime
 
 @Composable
 expect fun isDesktop(): Boolean
+
+enum class TaskCategory {
+    OVERDUE,
+    PENDING,
+    DONE
+}
+
+data class CategorizedTasks(
+    val overdue: List<Task>,
+    val pending: List<Task>,
+    val done: List<Task>
+)
+
+fun categorizeTasks(tasks: List<Task>): CategorizedTasks {
+    val currentDateTime = getCurrentDateTime(TimeZone.currentSystemDefault())
+    
+    val overdue = mutableListOf<Task>()
+    val pending = mutableListOf<Task>()
+    val done = mutableListOf<Task>()
+    
+    tasks.forEach { task ->
+        when {
+            task.done == true -> {
+                done.add(task)
+            }
+            isTaskOverdue(task, currentDateTime) -> {
+                overdue.add(task)
+            }
+            else -> {
+                pending.add(task)
+            }
+        }
+    }
+    
+    return CategorizedTasks(
+        overdue = overdue,
+        pending = pending,
+        done = done
+    )
+}
+
+private fun isTaskOverdue(task: Task, currentDateTime: LocalDateTime): Boolean {
+    if (task.done == true) return false
+    
+    val dueDateTime = task.dueDateTime?.toLocalDateTime()
+    val scheduledDateTime = task.scheduledDateTime?.toLocalDateTime()
+    
+    return (dueDateTime != null && dueDateTime < currentDateTime) ||
+           (scheduledDateTime != null && scheduledDateTime < currentDateTime)
+}
 
 fun LazyListScope.taskListSection(
     taskList: List<Task>,
@@ -97,6 +148,9 @@ fun TaskList(
 ) {
     val pullRefreshState =
         rememberPullRefreshState(refreshing = isRefreshing, onRefresh = onPullRefresh)
+    
+    // Categorize tasks to prevent duplicates
+    val categorizedTasks = remember(taskList) { categorizeTasks(taskList) }
 
     Box(
         modifier = modifier
@@ -112,58 +166,45 @@ fun TaskList(
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             // Overdue tasks
-            taskListSection(
-                taskList = taskList.filter { item ->
-                    (!item.done && item.dueDateTime?.let {
-                        it.toLocalDateTime() < getCurrentDateTime(
-                            TimeZone.currentSystemDefault()
-                        )
-                    } ?: false) || (!item.done && item.scheduledDateTime?.let {
-                        it.toLocalDateTime() < getCurrentDateTime(
-                            TimeZone.currentSystemDefault()
-                        )
-                    } ?: false)
-                },
-                onTaskClick = onTaskClick,
-                onCheckedChange = { task, checked ->
-                    onCheckedChange(task, checked)
-                },
-                onEdit = onEdit,
-                onDelete = onDelete,
-                onReschedule = onReschedule,
-                itemWrapper = itemWrapper,
-            )
+            if (categorizedTasks.overdue.isNotEmpty()) {
+                taskListSection(
+                    taskList = categorizedTasks.overdue,
+                    onTaskClick = onTaskClick,
+                    onCheckedChange = onCheckedChange,
+                    onEdit = onEdit,
+                    onDelete = onDelete,
+                    onReschedule = onReschedule,
+                    itemWrapper = itemWrapper,
+                )
+            }
+            
             // Pending tasks
-            taskListSection(
-                taskList = taskList.filter {
-                    (!it.done && it.dueDateTime?.let {
-                        it.toLocalDateTime() >= getCurrentDateTime(
-                            TimeZone.currentSystemDefault()
-                        )
-                    } ?: false) || (!it.done && it.scheduledDateTime?.let {
-                        it.toLocalDateTime() >= getCurrentDateTime(
-                            TimeZone.currentSystemDefault()
-                        )
-                    } ?: false) || !it.done && it.dueDateTime == null && it.scheduledDateTime == null
-                },
-                onTaskClick = onTaskClick,
-                onCheckedChange = onCheckedChange,
-                onEdit = onEdit,
-                onDelete = onDelete,
-                onReschedule = onReschedule,
-                itemWrapper = itemWrapper,
-            )
+            if (categorizedTasks.pending.isNotEmpty()) {
+                taskListSection(
+                    taskList = categorizedTasks.pending,
+                    onTaskClick = onTaskClick,
+                    onCheckedChange = onCheckedChange,
+                    onEdit = onEdit,
+                    onDelete = onDelete,
+                    onReschedule = onReschedule,
+                    itemWrapper = itemWrapper,
+                )
+            }
+            
             // Done tasks
-            taskListSection(
-                taskList = taskList.filter { it.done == true },
-                onTaskClick = onTaskClick,
-                onCheckedChange = onCheckedChange,
-                textDecoration = TextDecoration.LineThrough,
-                onEdit = onEdit,
-                onDelete = onDelete,
-                onReschedule = onReschedule,
-                itemWrapper = itemWrapper,
-            )
+            if (categorizedTasks.done.isNotEmpty()) {
+                taskListSection(
+                    taskList = categorizedTasks.done,
+                    onTaskClick = onTaskClick,
+                    onCheckedChange = onCheckedChange,
+                    textDecoration = TextDecoration.LineThrough,
+                    onEdit = onEdit,
+                    onDelete = onDelete,
+                    onReschedule = onReschedule,
+                    itemWrapper = itemWrapper,
+                )
+            }
+            
             item {
                 Spacer(modifier = Modifier.height(64.dp))
             }

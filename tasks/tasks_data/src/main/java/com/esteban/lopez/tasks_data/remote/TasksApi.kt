@@ -27,6 +27,16 @@ interface TasksApi {
         @Query("endDate") endDate: String?
     ): List<TaskResponse>
 
+    @GET("tasks/byDateRangeWithSmartFiltering")
+    suspend fun getTasksByDateRangeWithSmartFiltering(
+        @Query("filter") filter: String?,
+        @Query("page") page: Int?,
+        @Query("limit") limit: Int?,
+        @Query("startDate") startDate: String?,
+        @Query("endDate") endDate: String?,
+        @Query("isTodayFilter") isTodayFilter: Boolean?
+    ): List<TaskResponse>
+
     @GET("tasks/noDueDate")
     suspend fun getTasksNoDueDate(
         @Query("filter") filter: String?,
@@ -40,7 +50,7 @@ interface TasksApi {
     @POST("tasks")
     suspend fun addTask(
         @Body task: TaskResponse
-    ): TaskResponse
+    )
 
     @DELETE("tasks/{id}")
     suspend fun deleteTask(@Path("id") id: String)

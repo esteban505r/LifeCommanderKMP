@@ -16,6 +16,14 @@ interface TaskDataSource {
         startDate:String,
         endDate:String
     ): List<Task>
+    suspend fun getTasksByDateRangeWithSmartFiltering(
+        filter:String,
+        page:Int,
+        limit:Int,
+        startDate:String,
+        endDate:String,
+        isTodayFilter:Boolean
+    ): List<Task>
     suspend fun getTasksNoDueDate(
         filter:String,
         page:Int,

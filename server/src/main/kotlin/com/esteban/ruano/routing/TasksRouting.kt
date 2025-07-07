@@ -59,6 +59,31 @@ fun Route.tasksRouting(taskRepository: TaskRepository) {
 
         }
 
+        get("/byDateRangeWithSmartFiltering"){
+            val startDate = call.request.queryParameters["startDate"]
+            val endDate = call.request.queryParameters["endDate"]
+            val filter = call.request.queryParameters["filter"]?:""
+            val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
+            val offset = call.request.queryParameters["offset"]?.toLong() ?: 0
+            val isTodayFilter = call.request.queryParameters["isTodayFilter"]?.toBoolean() ?: false
+            val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+
+            if(startDate==null || endDate==null){
+                call.respond(HttpStatusCode.BadRequest,"Missing start date or end date")
+                return@get
+            }
+
+            try{
+                val tasks = taskRepository.getAllByDateWithSmartFiltering(
+                    userId, startDate, endDate, filter, limit, offset, isTodayFilter
+                )
+                call.respond(tasks)
+            }
+            catch(e: Exception){
+                call.respond(HttpStatusCode.BadRequest,"Invalid date")
+            }
+        }
+
         get("/noDueDate"){
             val filter = call.request.queryParameters["filter"]?:""
             val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
@@ -135,7 +160,8 @@ fun Route.tasksRouting(taskRepository: TaskRepository) {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = UUID.fromString(call.parameters["id"]!!)
                 val task = call.receive<UpdateTaskDTO>()
-                val wasUpdated = taskRepository.update(userId,id,task)
+                val updateTaskDTO = task
+                val wasUpdated = taskRepository.update(userId,id,updateTaskDTO)
                 if (wasUpdated) {
                     call.respond(HttpStatusCode.OK)
                 } else {

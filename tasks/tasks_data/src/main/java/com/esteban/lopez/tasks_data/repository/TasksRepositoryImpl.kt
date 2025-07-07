@@ -80,6 +80,42 @@ class TasksRepositoryImpl (
         forceRefresh = false
     )
 
+    override suspend fun getTasksByDateRangeWithSmartFiltering(
+        filter: String?,
+        page: Int?,
+        limit: Int?,
+        startDate: String,
+        endDate: String,
+        isTodayFilter: Boolean
+    ): Result<List<Task>> = doRequest(
+        offlineModeEnabled = preferences.loadOfflineMode().first(),
+        remoteFetch = {
+            val result = remoteDataSource.getTasksByDateRangeWithSmartFiltering(
+                filter = filter?:"",
+                page = page?:DEFAULT_PAGE,
+                limit = limit?: DEFAULT_LIMIT,
+                startDate = startDate,
+                endDate = endDate,
+                isTodayFilter = isTodayFilter
+            )
+            result
+        },
+        localFetch = {
+            val result = localDataSource.getTasksByDateRangeWithSmartFiltering(
+                filter = filter ?: "",
+                page = page?: DEFAULT_PAGE,
+                limit = limit?: DEFAULT_LIMIT,
+                startDate = startDate,
+                endDate = endDate,
+                isTodayFilter = isTodayFilter
+            )
+            result
+        },
+        lastFetchTime = preferences.loadLastFetchTime().first(),
+        isNetworkAvailable = networkHelper.isNetworkAvailable(),
+        forceRefresh = false
+    )
+
     override suspend fun getTasksNoDueDate(filter: String?, page: Int?, limit: Int?): Result<List<Task>> =
         doRequest(
             offlineModeEnabled = preferences.loadOfflineMode().first(),

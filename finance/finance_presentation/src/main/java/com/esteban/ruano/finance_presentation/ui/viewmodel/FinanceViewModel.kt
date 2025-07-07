@@ -72,6 +72,7 @@ class FinanceViewModel @Inject constructor(
             is FinanceIntent.CategorizeUnbudgeted -> categorizeUnbudgeted()
             is FinanceIntent.ImportTransactions -> importTransactions(intent.text, intent.accountId, intent.skipDuplicates)
             is FinanceIntent.PreviewTransactionImport -> previewTransactionImport(intent.text, intent.accountId)
+            is FinanceIntent.ShowSnackBar -> sendEffect { FinanceEffect.ShowSnackBar(intent.message, intent.type) }
             is FinanceIntent.ChangeTab -> TODO()
         }
     }

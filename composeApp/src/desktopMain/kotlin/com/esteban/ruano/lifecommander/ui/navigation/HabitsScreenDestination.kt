@@ -49,8 +49,8 @@ fun HabitsScreenDestination(
                 onReload = {
                     habitsViewModel.getHabits()
                 },
-                onAddHabit = { name, note, frequency, dateTime ->
-                    habitsViewModel.addHabit(name, note, frequency, dateTime)
+                onAddHabit = { name, note, frequency, dateTime, reminders ->
+                    habitsViewModel.addHabit(name, note, frequency, dateTime, reminders)
                 },
                 onUpdateHabit = { id, habit ->
                     habitsViewModel.updateHabit(id, habit)

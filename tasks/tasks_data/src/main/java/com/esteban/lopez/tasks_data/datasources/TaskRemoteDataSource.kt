@@ -20,6 +20,17 @@ class TaskRemoteDataSource(
         return api.getTasksByDateRange(filter, page, limit, startDate, endDate).map { it.toDomainModel() }
     }
 
+    override suspend fun getTasksByDateRangeWithSmartFiltering(
+        filter: String,
+        page: Int,
+        limit: Int,
+        startDate: String,
+        endDate: String,
+        isTodayFilter: Boolean
+    ): List<Task> {
+        return api.getTasksByDateRangeWithSmartFiltering(filter, page, limit, startDate, endDate, isTodayFilter).map { it.toDomainModel() }
+    }
+
     override suspend fun getTasksNoDueDate(filter: String, page: Int, limit: Int): List<Task> {
         return api.getTasksNoDueDate(filter, page, limit).map { it.toDomainModel() }
     }

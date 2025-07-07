@@ -55,6 +55,28 @@ class TaskService(
         }
     }
 
+    override suspend fun getByDateRangeWithSmartFiltering(token: String, page: Int, limit: Int, startDate: String, endDate: String, isTodayFilter: Boolean): List<Task> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val parameters = Parameters.build {
+                    append("filter", "")
+                    append("page", page.toString())
+                    append("limit", limit.toString())
+                    append("startDate", startDate)
+                    append("endDate", endDate)
+                    append("isTodayFilter", isTodayFilter.toString())
+                }
+                val encodedUrl = encodeUrlWithSpaces("$TASKS_ENDPOINT/byDateRangeWithSmartFiltering", parameters)
+                val response = client.get(encodedUrl) {
+                    appHeaders(token)
+                }.body<List<Task>>()
+                response
+            } catch (e: Exception) {
+                throw TaskServiceException("Failed to fetch tasks by date range with smart filtering: ${e.message}", e)
+            }
+        }
+    }
+
     override suspend fun completeTask(token: String, id: String, dateTime: String) {
         withContext(Dispatchers.IO) {
             try {

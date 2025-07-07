@@ -18,6 +18,15 @@ interface TasksRepository {
         endDate: String
     ): Result<List<Task>>
 
+    suspend fun getTasksByDateRangeWithSmartFiltering(
+        filter: String?,
+        page: Int?,
+        limit: Int?,
+        startDate: String,
+        endDate: String,
+        isTodayFilter: Boolean
+    ): Result<List<Task>>
+
     suspend fun getTasksNoDueDate(
         filter: String?,
         page: Int?,

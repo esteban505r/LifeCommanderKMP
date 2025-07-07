@@ -50,6 +50,26 @@ class TaskRepository(private val taskService: TaskService) {
         )
     }
 
+    fun getAllByDateWithSmartFiltering(
+        userId: Int,
+        startDate: String,
+        endDate: String,
+        filter: String,
+        limit: Int,
+        offset: Long,
+        isTodayFilter: Boolean = false
+    ): List<TaskDTO> {
+        return taskService.fetchAllByDateRangeWithSmartFiltering(
+            userId,
+            filter,
+            parseDate(startDate),
+            parseDate(endDate),
+            limit,
+            offset,
+            isTodayFilter
+        )
+    }
+
     fun getAllNoDueDate(userId: Int, filter: String, limit: Int, offset: Long): List<TaskDTO> {
         return taskService.fetchAllNoDueDate(
             userId,

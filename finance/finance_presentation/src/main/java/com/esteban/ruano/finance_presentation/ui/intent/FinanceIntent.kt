@@ -63,7 +63,10 @@ sealed class FinanceIntent : UserIntent{
         val text: String,
         val accountId: String
     ) : FinanceIntent()
-
+    data class ShowSnackBar(
+        val message: String,
+        val type: com.esteban.ruano.core_ui.utils.SnackbarType
+    ) : FinanceIntent()
 }
 
 sealed class FinanceEffect : Effect{

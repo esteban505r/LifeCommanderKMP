@@ -43,6 +43,16 @@ class TasksViewModel(
     val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
+    // Task Detail State
+    private val _selectedTask = MutableStateFlow<Task?>(null)
+    val selectedTask = _selectedTask.asStateFlow()
+
+    private val _taskDetailLoading = MutableStateFlow(false)
+    val taskDetailLoading = _taskDetailLoading.asStateFlow()
+
+    private val _taskDetailError = MutableStateFlow<String?>(null)
+    val taskDetailError = _taskDetailError.asStateFlow()
+
     private fun getTasks() {
         viewModelScope.launch {
             _loading.value = true
@@ -136,12 +146,14 @@ class TasksViewModel(
                     return@launch
                 }
                 val dates = _selectedFilter.value.getDateRangeByFilter()
-                val response = taskService.getByDateRange(
+                val isTodayFilter = _selectedFilter.value == TaskFilters.TODAY
+                val response = taskService.getByDateRangeWithSmartFiltering(
                     token = tokenStorageImpl.getToken() ?: "",
                     page = 0,
                     limit = 30,
                     startDate = dates.first!!,
-                    endDate = dates.second!!
+                    endDate = dates.second!!,
+                    isTodayFilter = isTodayFilter
                 )
                 _tasks.value = response.sortedByDefault()
                 if(_selectedFilter.value == TaskFilters.TODAY) {
@@ -296,6 +308,82 @@ class TasksViewModel(
                 )
                 getTasksByFilter()
             } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    fun getTaskById(taskId: String) {
+        viewModelScope.launch {
+            _taskDetailLoading.value = true
+            _taskDetailError.value = null
+            try {
+                // First try to find in current tasks list
+                val taskFromList = _tasks.value.find { it.id == taskId }
+                if (taskFromList != null) {
+                    _selectedTask.value = taskFromList
+                } else {
+                    // If not found, fetch from server
+                    val allTasks = taskService.getAll(
+                        token = tokenStorageImpl.getToken() ?: "",
+                        page = 0,
+                        limit = 100
+                    )
+                    val task = allTasks.find { it.id == taskId }
+                    if (task != null) {
+                        _selectedTask.value = task
+                    } else {
+                        _taskDetailError.value = "Task not found"
+                    }
+                }
+            } catch (e: Exception) {
+                _taskDetailError.value = e.message ?: "Failed to load task"
+                e.printStackTrace()
+            } finally {
+                _taskDetailLoading.value = false
+            }
+        }
+    }
+
+    fun changeCheckTask(id: String, checked: Boolean) {
+        viewModelScope.launch {
+            _loading.value = true
+            _error.value = null
+            try {
+                if (checked) {
+                    taskService.completeTask(
+                        token = tokenStorageImpl.getToken() ?: "",
+                        id = id,
+                        dateTime = LocalDateTime.now().parseDateTime()
+                    )
+                } else {
+                    taskService.unCompleteTask(
+                        token = tokenStorageImpl.getToken() ?: "",
+                        id = id,
+                        dateTime = LocalDateTime.now().parseDateTime()
+                    )
+                }
+                
+                // Update both the tasks list and selected task
+                _tasks.value = _tasks.value.map {
+                    if (it.id == id) {
+                        it.copy(done = checked)
+                    } else {
+                        it
+                    }
+                }
+                
+                _selectedTask.value = _selectedTask.value?.let {
+                    if (it.id == id) {
+                        it.copy(done = checked)
+                    } else {
+                        it
+                    }
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to update task"
                 e.printStackTrace()
             } finally {
                 _loading.value = false

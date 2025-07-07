@@ -30,7 +30,8 @@ fun FinanceDestination(
     com.lifecommander.finance.ui.FinanceScreen(
         state = toDesktopState(state),
         onOpenImporter = {
-
+            // Navigate to the transaction import screen
+            navController.navigate("transaction_import")
         },
         actions = viewModel
     )

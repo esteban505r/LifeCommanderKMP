@@ -15,11 +15,13 @@ import com.esteban.ruano.lifecommander.ui.navigation.HabitsScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.MealsScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.PomodorosScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.SettingsScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.TaskDetailDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TasksScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimerListDetailDestination
 import com.esteban.ruano.lifecommander.ui.navigation.TimersScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.WorkoutScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.routes.BudgetTransactionsRoute
+import com.esteban.ruano.lifecommander.ui.navigation.routes.TaskDetailRoute
 import com.esteban.ruano.lifecommander.ui.navigation.routes.TimerListDetailRoute
 import com.esteban.ruano.lifecommander.ui.screens.BudgetTransactionsScreen
 import com.esteban.ruano.lifecommander.ui.screens.FinancialScreenDestination
@@ -254,7 +256,7 @@ fun AppNavHost(
                     CalendarScreenDestination(
                         modifier = modifier,
                         onTaskClick = { id ->
-                            // TODO: Navigate to task details
+                            navController.navigate(TaskDetailRoute(id))
                         },
                         onHabitClick = { id ->
                             // TODO: Navigate to habit details
@@ -284,9 +286,25 @@ fun AppNavHost(
                 composable(Screen.Tasks.route) {
                     TasksScreenDestination(
                         tasksViewModel = taskViewModel,
-                        onTaskClick = { taskId ->
-
+                        onTaskClick = { task ->
+                            navController.navigate(TaskDetailRoute(task.id))
                         })
+                }
+
+                composable<TaskDetailRoute> { backStackEntry ->
+                    val arguments = backStackEntry.toRoute<TaskDetailRoute>()
+                    TaskDetailDestination(
+                        modifier = modifier,
+                        taskId = arguments.taskId,
+                        tasksViewModel = taskViewModel,
+                        onNavigateBack = {
+                            navController.navigateUp()
+                        },
+                        onEditTask = { taskId ->
+                            // TODO: Navigate to edit task
+                            navController.navigateUp()
+                        }
+                    )
                 }
 
                 composable(Screen.Habits.route) {

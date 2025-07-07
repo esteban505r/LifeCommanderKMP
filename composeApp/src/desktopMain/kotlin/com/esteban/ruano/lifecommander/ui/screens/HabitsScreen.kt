@@ -1,6 +1,9 @@
 package com.esteban.ruano.lifecommander.ui.screens
 
+import androidx.compose.foundation.ContextMenuArea
+import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -30,7 +33,8 @@ fun HabitsScreen(
         name: String,
         note: String?,
         frequency: String,
-        dateTime: String
+        dateTime: String,
+        reminders: List<com.esteban.ruano.lifecommander.models.HabitReminder>
     ) -> Unit,
     onUpdateHabit: (String, Habit) -> Unit,
     onDelete: (Habit) -> Unit,
@@ -39,6 +43,8 @@ fun HabitsScreen(
 ) {
     var habitToEdit by remember { mutableStateOf<Habit?>(null) }
     var showNewHabitDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var habitToDelete by remember { mutableStateOf<Habit?>(null) }
     val currentDate = Clock.System.now().toLocalDateTimeKt(
         timeZone = TimeZone.currentSystemDefault()
     ).date
@@ -243,7 +249,22 @@ fun HabitsScreen(
                     modifier = Modifier.fillMaxSize(),
                     onDelete = onDelete,
                     itemWrapper = { content, habit ->
-                        content()
+                        ContextMenuArea(
+                            items = {
+                                listOf(
+                                    ContextMenuItem("Edit") { 
+                                        habitToEdit = habit
+                                        showNewHabitDialog = true
+                                    },
+                                    ContextMenuItem("Delete") { 
+                                        habitToDelete = habit
+                                        showDeleteDialog = true
+                                    }
+                                )
+                            }
+                        ) {
+                            content()
+                        }
                     },
                     onEdit = { habit ->
                         habitToEdit = habit
@@ -259,8 +280,8 @@ fun HabitsScreen(
             showNewHabitDialog = false
             habitToEdit = null
         },
-        onAddHabit = { name, note, dateTime, frequency ->
-            onAddHabit(name, note, frequency.value, dateTime)
+        onAddHabit = { name, note, dateTime, frequency, reminders ->
+            onAddHabit(name, note, frequency.value, dateTime, reminders)
             showNewHabitDialog = false
         },
         onUpdateHabit = { id, habit ->
@@ -274,6 +295,57 @@ fun HabitsScreen(
         },
         show = showNewHabitDialog
     )
+
+    // Delete Confirmation Dialog
+    if (showDeleteDialog && habitToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { 
+                showDeleteDialog = false
+                habitToDelete = null
+            },
+            title = {
+                Text(
+                    "Delete Habit",
+                    style = MaterialTheme.typography.h6,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    "Are you sure you want to delete \"${habitToDelete!!.name}\"? This action cannot be undone.",
+                    style = MaterialTheme.typography.body1
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDelete(habitToDelete!!)
+                        showDeleteDialog = false
+                        habitToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = MaterialTheme.colors.error
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { 
+                        showDeleteDialog = false
+                        habitToDelete = null
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable

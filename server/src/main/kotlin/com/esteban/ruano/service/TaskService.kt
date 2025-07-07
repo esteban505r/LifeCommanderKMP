@@ -119,6 +119,17 @@ class TaskService(
                     task.scheduledDateTime?.let { row[scheduledDateTime] = parseDateTime(it) }
                     task.doneDateTime?.let { row[doneDateTime] = parseDateTime(it) }
                     task.dueDateTime?.let { row[dueDateTime] = parseDateTime(it) }
+                    
+                    // Handle fields that should be cleared
+                    task.clearFields?.forEach { fieldName ->
+                        when (fieldName.lowercase()) {
+                            "duedatetime" -> row[dueDateTime] = null
+                            "scheduleddatetime" -> row[scheduledDateTime] = null
+                            "donedatetime" -> row[doneDateTime] = null
+                            "note" -> row[note] = ""
+                            "name" -> row[name] = ""
+                        }
+                    }
                 }
                 id.let {
                     task.reminders?.forEach { reminder ->
@@ -246,6 +257,46 @@ class TaskService(
         }
     }
 
+    fun fetchAllByDateRangeWithSmartFiltering(
+        userId: Int,
+        pattern: String,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        limit: Int,
+        offset: Long,
+        isTodayFilter: Boolean = false,
+        doneTaskHiddenTimeInDays: Long = 1
+    ): List<TaskDTO> {
+        return transaction {
+            val query = if (isTodayFilter) {
+                // For Today filter: 
+                // - Show all due tasks (overdue, today, future) because they should be done as soon as possible
+                // - Show only scheduled tasks for today (not future scheduled tasks)
+                ((Tasks.dueDateTime.date() lessEq startDate) and (Tasks.doneDateTime eq null))  // Due today or overdue
+                    .or((Tasks.scheduledDateTime.date() eq startDate) and (Tasks.doneDateTime eq null))  // Scheduled for today only
+            } else {
+                // For other filters: only show scheduled tasks for the date range
+                (Tasks.scheduledDateTime.date() greaterEq startDate) and 
+                (Tasks.scheduledDateTime.date() lessEq endDate) and 
+                (Tasks.doneDateTime eq null)
+            }
+
+            val tasks = Task.find {
+                (Tasks.user eq userId) and 
+                (Tasks.name.lowerCase() like "%${pattern.lowercase()}%") and
+                query and
+                (Tasks.status eq Status.ACTIVE)
+            }
+                .limit(limit, offset).toList().sortedByDefault().map { it.toDTO() }
+            
+            tasks.map {
+                val reminders = reminderService.getByTaskID(
+                    UUID.fromString(it.id)
+                )
+                it.copy(reminders = reminders.map { it.toDTO() })
+            }
+        }
+    }
 
     fun completeTask(userId: Int, id: UUID, dateTime: String): Boolean {
         return transaction {

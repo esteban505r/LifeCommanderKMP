@@ -51,7 +51,7 @@ fun TasksScreenDestination(
                     tasksViewModel.rescheduleTask(task)
                 },
                 onCheckedTask = { task, checked ->
-                    tasksViewModel.changeCheckHabit(task.id, checked)
+                    tasksViewModel.changeCheckTask(task.id, checked)
                 },
                 onFilterChange = {
                     tasksViewModel.changeFilter(it)

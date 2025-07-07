@@ -7,7 +7,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +40,8 @@ import utils.DateUtils.parseDate
 import utils.DateUtils.toLocalDateTime
 import java.awt.Dimension
 import androidx.compose.ui.graphics.Color
+import ui.composables.DesktopRemindersDialog
+import ui.composables.ReminderItem
 
 @Composable
 fun NewEditTaskDialog(
@@ -53,6 +60,12 @@ fun NewEditTaskDialog(
     var prioritySelected by remember { mutableStateOf(taskToEdit?.priority?.toPriority() ?: Priority.MEDIUM) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showScheduledDatePicker by remember { mutableStateOf(false) }
+    var showScheduledTimePicker by remember { mutableStateOf(false) }
+    var showRemindersDialog by remember { mutableStateOf(false) }
+    
+    // Track which fields were cleared by the user
+    var clearedFields by remember { mutableStateOf(setOf<String>()) }
     
     LaunchedEffect(taskToEdit) {
         name = taskToEdit?.name ?: ""
@@ -61,6 +74,7 @@ fun NewEditTaskDialog(
         scheduledDate = taskToEdit?.scheduledDateTime?.toLocalDateTime()
         reminders = taskToEdit?.reminders ?: emptyList()
         prioritySelected = taskToEdit?.priority?.toPriority() ?: Priority.MEDIUM
+        clearedFields = emptySet() // Reset cleared fields when editing a new task
     }
 
     if (show) {
@@ -208,6 +222,116 @@ fun NewEditTaskDialog(
                                         Text(text = dueDate?.time?.formatDefault() ?: "Select Time", style = MaterialTheme.typography.body2)
                                     }
                                 }
+                                
+                                // Clear due date button
+                                if (dueDate != null) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    OutlinedButton(
+                                        onClick = { 
+                                            dueDate = null
+                                            clearedFields = clearedFields + "dueDateTime"
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = MaterialTheme.colors.error
+                                        )
+                                    ) {
+                                        Icon(Icons.Default.Clear, contentDescription = "Clear due date", modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Clear Due Date", style = MaterialTheme.typography.body2)
+                                    }
+                                }
+                            }
+                            
+                            // Scheduled Date & Time
+                            Column {
+                                Text(
+                                    text = "Scheduled Date & Time",
+                                    style = MaterialTheme.typography.subtitle1,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                                    color = MaterialTheme.colors.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = { showScheduledDatePicker = true },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = MaterialTheme.colors.primary
+                                        )
+                                    ) {
+                                        Icon(Icons.Default.Today, contentDescription = "Scheduled Date", modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(text = scheduledDate?.date?.parseDate() ?: "Select Date", style = MaterialTheme.typography.body2)
+                                    }
+                                    OutlinedButton(
+                                        onClick = { showScheduledTimePicker = true },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = MaterialTheme.colors.primary
+                                        )
+                                    ) {
+                                        Icon(Icons.Default.Schedule, contentDescription = "Scheduled Time", modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(text = scheduledDate?.time?.formatDefault() ?: "Select Time", style = MaterialTheme.typography.body2)
+                                    }
+                                }
+                                
+                                // Clear scheduled date button
+                                if (scheduledDate != null) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    OutlinedButton(
+                                        onClick = { 
+                                            scheduledDate = null
+                                            clearedFields = clearedFields + "scheduledDateTime"
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = MaterialTheme.colors.error
+                                        )
+                                    ) {
+                                        Icon(Icons.Default.Clear, contentDescription = "Clear scheduled date", modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Clear Scheduled Date", style = MaterialTheme.typography.body2)
+                                    }
+                                }
+                            }
+                            // Reminders
+                            Column {
+                                Text(
+                                    text = "Reminders",
+                                    style = MaterialTheme.typography.subtitle1,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                                    color = MaterialTheme.colors.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                // Display existing reminders
+                                reminders.forEach { reminder ->
+                                    ReminderItem(
+                                        reminder = reminder,
+                                        onDelete = {
+                                            reminders = reminders.filter { it != reminder }
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                                
+                                // Add reminder button
+                                OutlinedButton(
+                                    onClick = { showRemindersDialog = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = MaterialTheme.colors.primary
+                                    )
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = "Add reminder", modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Add Reminder")
+                                }
                             }
                             // Priority
                             Column {
@@ -265,12 +389,25 @@ fun NewEditTaskDialog(
                                                     fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.Medium else androidx.compose.ui.text.font.FontWeight.Normal,
                                                     color = textColor
                                                 )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                                                                }
+                    
+                    // Reminders Dialog
+                    DesktopRemindersDialog(
+                        show = showRemindersDialog,
+                        onDismiss = { showRemindersDialog = false },
+                        onConfirm = { timeInMillis ->
+                            reminders = reminders + Reminder(
+                                id = "",
+                                time = timeInMillis,
+                                type = com.lifecommander.models.ReminderType.NOTIFICATION
+                            )
                         }
+                    )
+                }
+            }
+        }
+    }
+}
                         // Action Buttons
                         Row(
                             modifier = Modifier
@@ -293,6 +430,13 @@ fun NewEditTaskDialog(
                                         onError("Task name cannot be empty")
                                         return@Button
                                     }
+                                    
+                                   /* // Validate that at least one date is set
+                                    if (dueDate == null && scheduledDate == null) {
+                                        onError("Please set either a due date or scheduled date")
+                                        return@Button
+                                    }*/
+                                    
                                     if (taskToEdit != null) {
                                         onUpdateTask(
                                             taskToEdit.id,
@@ -302,7 +446,8 @@ fun NewEditTaskDialog(
                                                 dueDateTime = dueDate?.formatDefault(),
                                                 scheduledDateTime = scheduledDate?.formatDefault(),
                                                 reminders = reminders,
-                                                priority = prioritySelected.value
+                                                priority = prioritySelected.value,
+                                                clearFields = if (clearedFields.isNotEmpty()) clearedFields.toList() else null
                                             )
                                         )
                                     } else {
@@ -361,6 +506,44 @@ fun NewEditTaskDialog(
                                 onTimeSelected = { dueDate = dueDate?.date?.atTime(it) },
                                 modifier = Modifier.fillMaxWidth(),
                                 onDismiss = { showTimePicker = false }
+                            )
+                        }
+                    }
+                    
+                    // Scheduled Date Picker Dialog
+                    if(showScheduledDatePicker) {
+                        DialogWindow(
+                            onCloseRequest = { showScheduledDatePicker = false },
+                            state = rememberDialogState(position = WindowPosition(Alignment.Center))
+                        ) {
+                            LaunchedEffect(Unit) {
+                                window.size = Dimension(datePickerDimensionWith, datePickerDimensionHeight)
+                            }
+                            CustomDatePicker(
+                                selectedDate = scheduledDate?.date ?: getCurrentDateTime(
+                                    TimeZone.currentSystemDefault()
+                                ).date,
+                                onDateSelected = { scheduledDate = it.atTime(scheduledDate?.time ?: LocalTime(0, 0)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                onDismiss = { showScheduledDatePicker = false }
+                            )
+                        }
+                    }
+                    
+                    // Scheduled Time Picker Dialog
+                    if(showScheduledTimePicker) {
+                        DialogWindow(
+                            onCloseRequest = { showScheduledTimePicker = false },
+                            state = rememberDialogState(position = WindowPosition(Alignment.Center))
+                        ) {
+                            LaunchedEffect(Unit) {
+                                window.size = Dimension(timePickerDimensionWith, timePickerDimensionHeight)
+                            }
+                            CustomTimePicker(
+                                selectedTime = scheduledDate?.time ?: LocalTime(0, 0),
+                                onTimeSelected = { scheduledDate = scheduledDate?.date?.atTime(it) },
+                                modifier = Modifier.fillMaxWidth(),
+                                onDismiss = { showScheduledTimePicker = false }
                             )
                         }
                     }

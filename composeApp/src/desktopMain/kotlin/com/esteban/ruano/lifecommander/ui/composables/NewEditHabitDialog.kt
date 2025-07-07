@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberDialogState
+import com.esteban.ruano.lifecommander.models.HabitReminder
 import com.lifecommander.models.Frequency
 import com.lifecommander.models.Habit
 import com.esteban.ruano.ui.datePickerDimensionHeight
@@ -34,17 +35,21 @@ import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUtils.parseDate
 import com.esteban.ruano.utils.DateUtils.parseDateTime
+import com.lifecommander.models.Reminder
+import com.lifecommander.models.ReminderType
 import com.lifecommander.ui.components.CustomDatePicker
 import com.lifecommander.ui.components.CustomTimePicker
 import kotlinx.datetime.*
 import java.awt.Dimension
+import ui.composables.DesktopRemindersDialog
+import ui.composables.ReminderItem
 
 @Composable
 fun NewEditHabitDialog(
     habitToEdit: Habit?,
     show: Boolean,
     onDismiss: () -> Unit,
-    onAddHabit: (String, String, String, Frequency) -> Unit,
+    onAddHabit: (String, String, String, Frequency, List<com.esteban.ruano.lifecommander.models.HabitReminder>) -> Unit,
     onError: (String) -> Unit,
     onUpdateHabit: (String, Habit) -> Unit
 ) {
@@ -54,6 +59,8 @@ fun NewEditHabitDialog(
     var frequencySelected by remember { mutableStateOf(habitToEdit?.frequency?.let { Frequency.fromString(it) } ?: Frequency.DAILY) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showRemindersDialog by remember { mutableStateOf(false) }
+    var reminders by remember { mutableStateOf(habitToEdit?.reminders ?: emptyList()) }
 
     LaunchedEffect(habitToEdit) {
         name = habitToEdit?.name ?: ""
@@ -62,6 +69,7 @@ fun NewEditHabitDialog(
             TimeZone.currentSystemDefault()
         )
         frequencySelected = habitToEdit?.frequency?.let { Frequency.fromString(it) } ?: Frequency.DAILY
+        reminders = habitToEdit?.reminders ?: emptyList()
     }
 
     if (show) {
@@ -304,6 +312,45 @@ fun NewEditHabitDialog(
                                     }
                                 }
                             }
+                            
+                            // Reminders Section
+                            Column {
+                                Text(
+                                    text = "Reminders",
+                                    style = MaterialTheme.typography.subtitle1,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colors.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                // Display existing reminders
+                                reminders.forEach { reminder ->
+                                    ReminderItem(
+                                        reminder = Reminder(
+                                            id = reminder.id,
+                                            time = reminder.time,
+                                        ),
+                                        onDelete = {
+                                            reminders = reminders.filter { it != reminder }
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                                
+                                // Add reminder button
+                                OutlinedButton(
+                                    onClick = { showRemindersDialog = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = MaterialTheme.colors.primary
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = "Add reminder", modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Add Reminder")
+                                }
+                            }
                         }
 
                         // Action Buttons
@@ -343,7 +390,8 @@ fun NewEditHabitDialog(
                                                 name = name,
                                                 note = notes,
                                                 dateTime = dateTime?.parseDateTime(),
-                                                frequency = frequencySelected.value
+                                                frequency = frequencySelected.value,
+                                                reminders = reminders
                                             )
                                         )
                                     } else {
@@ -351,7 +399,8 @@ fun NewEditHabitDialog(
                                             name,
                                             notes,
                                             dateTime!!.parseDateTime(),
-                                            frequencySelected
+                                            frequencySelected,
+                                            reminders
                                         )
                                     }
                                     onDismiss()
@@ -414,5 +463,17 @@ fun NewEditHabitDialog(
                 )
             }
         }
+        
+        // Reminders Dialog
+        DesktopRemindersDialog(
+            show = showRemindersDialog,
+            onDismiss = { showRemindersDialog = false },
+            onConfirm = { timeInMillis ->
+                reminders = reminders + HabitReminder(
+                    id = "",
+                    time = timeInMillis
+                )
+            }
+        )
     }
 }

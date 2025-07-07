@@ -19,15 +19,13 @@ fun Habit.toHabitDTO(): HabitDTO {
     )
 }
 
-fun HabitDTO.toCreateHabitDTO(userID:Int): CreateHabitDTO {
+fun HabitDTO.toCreateHabitDTO(): CreateHabitDTO {
     return CreateHabitDTO(
         name = this.name,
         frequency = this.frequency,
         note = this.note,
         dateTime = this.dateTime,
-        reminders = this.reminders.map { it.toCreateReminderDTO(
-            userID
-        ) },
+        reminders = this.reminders.map { it.toCreateReminderDTO() },
     )
 }
 

@@ -11,6 +11,35 @@ import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+// Converter function to transform HabitReminder to CreateReminderDTO
+private fun com.esteban.ruano.lifecommander.models.HabitReminder.toCreateReminderDTO(): CreateReminderDTO {
+    return CreateReminderDTO(
+        id = this.id,
+        taskId = null, // Not applicable for habits
+        habitId = null, // Will be set by the server
+        time = this.time
+    )
+}
+
+// Data class for CreateReminderDTO (matching server-side structure)
+@kotlinx.serialization.Serializable
+private data class CreateReminderDTO(
+    val id: String? = null,
+    val taskId: String? = null,
+    val habitId: String? = null,
+    val time: Long,
+)
+
+// Data class for CreateHabitDTO (matching server-side structure)
+@kotlinx.serialization.Serializable
+private data class CreateHabitDTO(
+    val name: String,
+    val frequency: String,
+    val dateTime: String?,
+    val note: String,
+    val reminders: List<CreateReminderDTO>
+)
+
 class HabitService(
     private val client: HttpClient
 ) : HabitRepository {
@@ -93,20 +122,21 @@ class HabitService(
         }
     }
 
-    override suspend fun addHabit(token: String, name: String, note: String?, frequency: String, dateTime: String) {
+    override suspend fun addHabit(token: String, name: String, note: String?, frequency: String, dateTime: String, reminders: List<com.esteban.ruano.lifecommander.models.HabitReminder>) {
         withContext(Dispatchers.IO) {
             try {
+                val createHabitDTO = CreateHabitDTO(
+                    name = name,
+                    frequency = frequency,
+                    dateTime = dateTime,
+                    note = note ?: "",
+                    reminders = reminders.map { it.toCreateReminderDTO() }
+                )
+                
                 val response = client.post(HABITS_ENDPOINT) {
                     appHeaders(token)
                     contentType(ContentType.Application.Json)
-                    setBody(Habit(
-                        id = "",
-                        name = name,
-                        note = note,
-                        dateTime = dateTime,
-                        done = false,
-                        frequency = frequency
-                    ))
+                    setBody(createHabitDTO)
                 }
                 if (response.status != HttpStatusCode.Created) {
                     throw HabitServiceException("Failed to add habit: ${response.status}")

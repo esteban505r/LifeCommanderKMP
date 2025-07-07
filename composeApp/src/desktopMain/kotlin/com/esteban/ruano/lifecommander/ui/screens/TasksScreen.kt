@@ -3,6 +3,7 @@ package com.esteban.ruano.lifecommander.ui.screens
 import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -48,6 +49,8 @@ fun TasksScreen(
 ) {
     var taskToEdit by remember { mutableStateOf<Task?>(null) }
     var showNewTaskDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var taskToDelete by remember { mutableStateOf<Task?>(null) }
     val currentDate = Clock.System.now().toLocalDateTimeKt(
         timeZone = kotlinx.datetime.TimeZone.currentSystemDefault()
     ).date
@@ -190,8 +193,14 @@ fun TasksScreen(
                     ContextMenuArea(
                         items = {
                             listOf(
-                                ContextMenuItem("Edit") { },
-                                ContextMenuItem("Delete") { }
+                                ContextMenuItem("Edit") { 
+                                    taskToEdit = task
+                                    showNewTaskDialog = true
+                                },
+                                ContextMenuItem("Delete") { 
+                                    taskToDelete = task
+                                    showDeleteDialog = true
+                                }
                             )
                         }
                     ) {
@@ -225,6 +234,57 @@ fun TasksScreen(
                 onUpdateTask(id, task)
             },
             onError = { /* Handle error */ }
+        )
+    }
+
+    // Delete Confirmation Dialog
+    if (showDeleteDialog && taskToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { 
+                showDeleteDialog = false
+                taskToDelete = null
+            },
+            title = {
+                Text(
+                    "Delete Task",
+                    style = MaterialTheme.typography.h6,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    "Are you sure you want to delete \"${taskToDelete!!.name}\"? This action cannot be undone.",
+                    style = MaterialTheme.typography.body1
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDelete(taskToDelete!!)
+                        showDeleteDialog = false
+                        taskToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = MaterialTheme.colors.error
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { 
+                        showDeleteDialog = false
+                        taskToDelete = null
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 }

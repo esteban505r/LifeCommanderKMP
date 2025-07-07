@@ -219,8 +219,8 @@ fun HomeScreen(
             showNewHabitDialog = false
             habitToEdit = null
         },
-        onAddHabit = { name, note, dateTime,frequency ->
-            habitsViewModel.addHabit(name, note, frequency.value, dateTime)
+        onAddHabit = { name, note, dateTime, frequency, reminders ->
+            habitsViewModel.addHabit(name, note, frequency.value, dateTime, reminders)
         },
         onUpdateHabit = { id, habit ->
             habitsViewModel.updateHabit(id, habit)

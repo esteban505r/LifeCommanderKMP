@@ -13,4 +13,5 @@ dependencies {
     implementation(project(":core"))
     implementation(projects.shared)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.datetime)
 }

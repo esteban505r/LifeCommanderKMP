@@ -41,7 +41,7 @@ interface HabitsApi {
     @POST("habits")
     suspend fun addHabit(
         @Body habit: HabitResponse
-    ): Unit
+    )
 
     @DELETE("habits/{id}")
     suspend fun deleteHabit(@Path("id") id: String)

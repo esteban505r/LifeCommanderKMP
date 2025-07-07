@@ -6,6 +6,7 @@ import com.lifecommander.models.Task
 interface TaskRepository {
     suspend fun getByDate(token: String, page: Int, limit: Int, date: String): List<Task>
     suspend fun getByDateRange(token: String, page: Int, limit: Int, startDate: String, endDate: String): List<Task>
+    suspend fun getByDateRangeWithSmartFiltering(token: String, page: Int, limit: Int, startDate: String, endDate: String, isTodayFilter: Boolean): List<Task>
     suspend fun completeTask(token: String, id: String, dateTime: String)
     suspend fun unCompleteTask(token: String, id: String, dateTime: String)
     suspend fun getAll(token: String, page: Int, limit: Int): List<Task>

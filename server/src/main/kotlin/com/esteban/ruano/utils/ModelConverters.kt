@@ -36,7 +36,8 @@ object ModelConverters {
             reminders = reminders?.map { it.toReminder() },
             priority = priority,
             createdAt = createdAt,
-            updatedAt = updatedAt
+            updatedAt = updatedAt,
+            clearFields = null
         )
     }
 
@@ -54,7 +55,7 @@ object ModelConverters {
             updatedAt = updatedAt
         )
     }
-
+    
     fun ReminderDTO.toReminder(): Reminder {
         return Reminder(
             id = id ?: "",

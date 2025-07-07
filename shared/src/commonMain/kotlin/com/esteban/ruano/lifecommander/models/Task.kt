@@ -13,7 +13,8 @@ data class Task(
     val reminders: List<Reminder>? = null,
     val priority: Int = 0,
     val createdAt: String? = null,
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
+    val clearFields: List<String>? = null
 )
 
 @Serializable

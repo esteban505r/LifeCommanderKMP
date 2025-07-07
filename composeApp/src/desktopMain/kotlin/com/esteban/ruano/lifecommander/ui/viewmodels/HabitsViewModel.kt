@@ -122,7 +122,7 @@ class HabitsViewModel(
         }
     }
 
-    fun addHabit(name: String, note: String?, frequency: String, dateTime: String) {
+    fun addHabit(name: String, note: String?, frequency: String, dateTime: String, reminders: List<com.esteban.ruano.lifecommander.models.HabitReminder>) {
         viewModelScope.launch {
             _loading.value = true
             try {
@@ -131,7 +131,8 @@ class HabitsViewModel(
                     name = name,
                     note = note,
                     frequency = frequency,
-                    dateTime = dateTime
+                    dateTime = dateTime,
+                    reminders = reminders
                 )
                 getHabits()
             } catch (e: Exception) {
