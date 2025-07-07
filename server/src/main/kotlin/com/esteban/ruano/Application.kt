@@ -36,12 +36,12 @@ fun Application.module() {
     configureRouting()
     connectToPostgres()
 
-/*    // Get services from Koin
+    // Get services from Koin
     val timerService: TimerService by inject()
-    val timerCheckerService: TimerCheckerService by inject()*/
+    val timerCheckerService: TimerCheckerService by inject()
 
     // Start background tasks
-//    timerCheckerService.start()
+    timerCheckerService.start()
 }
 
 fun Application.configureCORS() {

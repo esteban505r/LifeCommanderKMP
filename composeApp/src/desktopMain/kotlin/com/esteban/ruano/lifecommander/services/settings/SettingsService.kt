@@ -32,4 +32,40 @@ class SettingsService(
         
         return response.body()
     }
+    
+    suspend fun testNotification(): Map<String, String> {
+        val response = httpClient.post("$baseUrl/settings/test-notification") {
+            appHeaders(tokenStorageImpl.getToken())
+        }
+        
+        if (response.status != HttpStatusCode.OK) {
+            throw Exception("Failed to send test notification: ${response.status}")
+        }
+
+        return response.body()
+    }
+    
+    suspend fun testDueTasksNotification(): Map<String, String> {
+        val response = httpClient.post("$baseUrl/settings/test-due-tasks-notification") {
+            appHeaders(tokenStorageImpl.getToken())
+        }
+        
+        if (response.status != HttpStatusCode.OK) {
+            throw Exception("Failed to send due tasks test notification: ${response.status}")
+        }
+
+        return response.body()
+    }
+    
+    suspend fun testDueHabitsNotification(): Map<String, String> {
+        val response = httpClient.post("$baseUrl/settings/test-due-habits-notification") {
+            appHeaders(tokenStorageImpl.getToken())
+        }
+        
+        if (response.status != HttpStatusCode.OK) {
+            throw Exception("Failed to send due habits test notification: ${response.status}")
+        }
+
+        return response.body()
+    }
 } 

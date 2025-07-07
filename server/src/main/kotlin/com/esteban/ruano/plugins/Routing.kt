@@ -58,6 +58,7 @@ fun Application.configureRouting() {
     val timerService: TimerService by inject()
     val postCategoryService: PostCategoryService by inject()
     val dashboardService: DashboardService by inject()
+    val notificationService: NotificationService by inject()
 
 
     routing {
@@ -77,7 +78,7 @@ fun Application.configureRouting() {
                 pomodoroRouting(pomodoroRepository)
                 dailyJournalRouting(dailyJournalRepository)
                 timerRouting(timerService)
-                settingsRouting(settingsRepository)
+                settingsRouting(settingsRepository, notificationService, timerService)
                 financeRouting(
                     accountRepository = accountRepository,
                     transactionRepository = transactionRepository,
@@ -90,7 +91,7 @@ fun Application.configureRouting() {
 
             blogRouting(blogRepository, postCategoryService)
             portfolioRouting(portfolioRepository)
-            authRouting(authService)
+            authRouting(authService,timerService)
             dashboardRouting(dashboardService)
         }
     }

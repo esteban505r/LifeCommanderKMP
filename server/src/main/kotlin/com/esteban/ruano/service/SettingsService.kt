@@ -21,7 +21,9 @@ class SettingsService {
                         notificationsEnabled = userSetting.notificationsEnabled,
                         unbudgetedPeriodType = userSetting.unbudgetedPeriodType,
                         unbudgetedPeriodStartDay = userSetting.unbudgetedPeriodStartDay,
-                        unbudgetedPeriodEndDay = userSetting.unbudgetedPeriodEndDay
+                        unbudgetedPeriodEndDay = userSetting.unbudgetedPeriodEndDay,
+                        dueTasksNotificationFrequency = userSetting.dueTasksNotificationFrequency,
+                        dueHabitsNotificationFrequency = userSetting.dueHabitsNotificationFrequency
                     )
                 } ?: createDefaultUserSettings(userId)
         }
@@ -46,6 +48,10 @@ class SettingsService {
             userSetting.unbudgetedPeriodStartDay = settings.unbudgetedPeriodStartDay
             userSetting.unbudgetedPeriodEndDay = settings.unbudgetedPeriodEndDay
             
+            // Update notification frequency settings
+            userSetting.dueTasksNotificationFrequency = settings.dueTasksNotificationFrequency
+            userSetting.dueHabitsNotificationFrequency = settings.dueHabitsNotificationFrequency
+            
             DomainUserSettings(
                 id = userSetting.id.value.toString(),
                 defaultTimerListId = userSetting.defaultTimerListId?.name,
@@ -53,7 +59,9 @@ class SettingsService {
                 notificationsEnabled = userSetting.notificationsEnabled,
                 unbudgetedPeriodType = userSetting.unbudgetedPeriodType,
                 unbudgetedPeriodStartDay = userSetting.unbudgetedPeriodStartDay,
-                unbudgetedPeriodEndDay = userSetting.unbudgetedPeriodEndDay
+                unbudgetedPeriodEndDay = userSetting.unbudgetedPeriodEndDay,
+                dueTasksNotificationFrequency = userSetting.dueTasksNotificationFrequency,
+                dueHabitsNotificationFrequency = userSetting.dueHabitsNotificationFrequency
             )
         }
     }
@@ -67,6 +75,8 @@ class SettingsService {
                 this.unbudgetedPeriodType = UnbudgetedPeriodType.MONTHLY
                 this.unbudgetedPeriodStartDay = 1
                 this.unbudgetedPeriodEndDay = 31
+                this.dueTasksNotificationFrequency = 30 // 30 minutes default
+                this.dueHabitsNotificationFrequency = 60 // 60 minutes default
             }
             
             DomainUserSettings(
@@ -76,7 +86,9 @@ class SettingsService {
                 notificationsEnabled = userSetting.notificationsEnabled,
                 unbudgetedPeriodType = userSetting.unbudgetedPeriodType,
                 unbudgetedPeriodStartDay = userSetting.unbudgetedPeriodStartDay,
-                unbudgetedPeriodEndDay = userSetting.unbudgetedPeriodEndDay
+                unbudgetedPeriodEndDay = userSetting.unbudgetedPeriodEndDay,
+                dueTasksNotificationFrequency = userSetting.dueTasksNotificationFrequency,
+                dueHabitsNotificationFrequency = userSetting.dueHabitsNotificationFrequency
             )
         }
     }

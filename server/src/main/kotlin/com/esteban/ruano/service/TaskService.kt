@@ -27,6 +27,59 @@ class TaskService(
     val reminderService: ReminderService
 ) : BaseService() {
 
+    data class TaskNotificationInfo(
+        val overdueTasks: List<Task>,
+        val dueTodayTasks: List<Task>,
+        val scheduledTodayTasks: List<Task>
+    )
+
+    fun getDueTasksForNotification(userId: Int, today: LocalDate): TaskNotificationInfo {
+        return transaction {
+            // Get all active tasks for this user that are not completed
+            val allActiveTasks = Task.find {
+                (Tasks.status eq Status.ACTIVE) and
+                (Tasks.doneDateTime eq null) and
+                (Tasks.user eq userId)
+            }.toList()
+
+            val overdueTasks = mutableListOf<Task>()
+            val dueTodayTasks = mutableListOf<Task>()
+            val scheduledTodayTasks = mutableListOf<Task>()
+
+            for (task in allActiveTasks) {
+                when {
+                    // Overdue tasks: due date is before today
+                    task.dueDate != null && task.dueDate!!.date < today -> {
+                        overdueTasks.add(task)
+                    }
+                    // Due today tasks: due date is today
+                    task.dueDate != null && task.dueDate!!.date == today -> {
+                        dueTodayTasks.add(task)
+                    }
+                    // Scheduled today tasks: scheduled date is today (but not due today)
+                    task.scheduledDate != null && task.scheduledDate!!.date == today && 
+                    (task.dueDate == null || task.dueDate!!.date != today) -> {
+                        scheduledTodayTasks.add(task)
+                    }
+                }
+            }
+
+            TaskNotificationInfo(overdueTasks, dueTodayTasks, scheduledTodayTasks)
+        }
+    }
+
+    fun shouldSendTaskNotification(
+        userId: Int,
+        lastNotificationTime: Long,
+        notificationFrequencyMinutes: Int
+    ): Boolean {
+        val currentTimeMillis = Clock.System.now().toEpochMilliseconds()
+        val timeSinceLastNotification = currentTimeMillis - lastNotificationTime
+        val notificationIntervalMs = notificationFrequencyMinutes * 60 * 1000L
+        
+        return timeSinceLastNotification >= notificationIntervalMs
+    }
+
     fun create(userId: Int, task: CreateTaskDTO): UUID? {
         return transaction {
             val id = Tasks.insertOperation(userId, task.createdAt?.fromDateToLong()) {

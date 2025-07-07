@@ -17,6 +17,9 @@ object UserSettings : UUIDTable() {
     val unbudgetedPeriodType = enumerationByName("unbudgeted_period_type", 20, UnbudgetedPeriodType::class).default(UnbudgetedPeriodType.MONTHLY)
     val unbudgetedPeriodStartDay = integer("unbudgeted_period_start_day").default(1)
     val unbudgetedPeriodEndDay = integer("unbudgeted_period_end_day").default(31)
+    // Notification frequency settings (in minutes)
+    val dueTasksNotificationFrequency = integer("due_tasks_notification_frequency").default(30) // 30 minutes default
+    val dueHabitsNotificationFrequency = integer("due_habits_notification_frequency").default(60) // 60 minutes default
 }
 
 class UserSetting(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -29,4 +32,6 @@ class UserSetting(id: EntityID<UUID>) : UUIDEntity(id) {
     var unbudgetedPeriodType by UserSettings.unbudgetedPeriodType
     var unbudgetedPeriodStartDay by UserSettings.unbudgetedPeriodStartDay
     var unbudgetedPeriodEndDay by UserSettings.unbudgetedPeriodEndDay
+    var dueTasksNotificationFrequency by UserSettings.dueTasksNotificationFrequency
+    var dueHabitsNotificationFrequency by UserSettings.dueHabitsNotificationFrequency
 }

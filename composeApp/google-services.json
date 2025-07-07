@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "257506021915",
+    "project_id": "lifecommander-35150",
+    "storage_bucket": "lifecommander-35150.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:257506021915:android:2bfbe58dbda2e3efa2debe",
+        "android_client_info": {
+          "package_name": "com.esteban.ruano.lifecommander"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCRdG-QyPapAlK093ZUaaZs_cr_uXDOp8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

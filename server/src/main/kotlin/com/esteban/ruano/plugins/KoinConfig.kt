@@ -21,8 +21,9 @@ val appModule = module {
     single { AuthService() }
     single { TaskService(get()) }
     single { HabitService(get()) }
+    single { NotificationService() }
     single { TimerService() }
-    single { TimerCheckerService(get()) }
+    single { TimerCheckerService(get(),get(),get(),get(),get(),get()) }
     single { WorkoutService() }
     single { NutritionService() }
     single { BlogService() }
@@ -70,7 +71,7 @@ val appModule = module {
     single { TransactionRepository(get()) }
     single { SavingsGoalRepository(get()) }
     single { CategoryKeywordRepository(get()) }
-    single { ScheduledTransactionRepository(get()) }
     single { PortfolioRepository(get()) }
+    single { ScheduledTransactionRepository(get()) }
     single { SettingsRepository(get()) }
 } 

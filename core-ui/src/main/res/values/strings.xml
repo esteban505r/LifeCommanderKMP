@@ -256,4 +256,5 @@
     <string name="consumed">Consumed</string>
     <string name="skipped">Skipped</string>
     <string name="refresh">Refresh</string>
+    <string name="back">Back</string>
 </resources>

@@ -19,6 +19,7 @@ interface Preferences {
     suspend fun saveFatRatio(ratio: Float)
     suspend fun saveOfflineMode(offlineMode: Boolean)
     suspend fun saveAuthToken(token: String)
+    suspend fun clearAuthToken()
 
     fun loadUserInfo(): Flow<UserInfo>
     fun loadShouldShowOnboarding(): Flow<Boolean>

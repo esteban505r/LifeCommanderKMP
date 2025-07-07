@@ -12,10 +12,10 @@ class AuthRepositoryImpl(
     private val networkHelper: NetworkHelper,
     private val preferences: Preferences
 ): BaseRepository(), AuthRepository {
-    override suspend fun login(email: String, password: String): Result<LoginModel> {
+    override suspend fun login(email: String, password: String, fcmToken: String?, timezone: String?): Result<LoginModel> {
         return doRemoteRequest(
             remoteFetch = {
-                remoteDataSource.login(email, password)
+                remoteDataSource.login(email, password, fcmToken, timezone)
             },
             networkAvailable = networkHelper.isNetworkAvailable(),
         )

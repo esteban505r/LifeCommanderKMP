@@ -9,10 +9,13 @@ data class MainState(
     val isSynced: Boolean = false,
     val isLoading: Boolean = false,
     val isError: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isAuthenticated: Boolean = false
     ): ViewState
 
 sealed class MainEffect: Effect {
     data class ShowSnackBar(val message: String, val type:SnackbarType = SnackbarType.INFO) : MainEffect()
+    data object NavigateToLogin : MainEffect()
+    data object NavigateToHome : MainEffect()
 }
 

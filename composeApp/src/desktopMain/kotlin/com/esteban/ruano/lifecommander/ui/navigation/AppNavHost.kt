@@ -44,6 +44,7 @@ import ui.viewmodels.HabitsViewModel
 import ui.viewmodels.TasksViewModel
 import com.esteban.ruano.lifecommander.ui.navigation.JournalScreenDestination
 import com.esteban.ruano.lifecommander.ui.screens.StatisticsScreenDestination
+import com.esteban.ruano.lifecommander.ui.viewmodels.SettingsViewModel
 
 sealed class Screen(val route: String) {
     object Auth : Screen("auth")
@@ -60,10 +61,8 @@ sealed class Screen(val route: String) {
     object Meals : Screen("meals")
     object Workout : Screen("workout")
     object Statistics : Screen("statistics")
-    object BudgetTransactions : Screen("budget_transactions/{budgetId}") {
-        fun createRoute(budgetId: String) = "budget_transactions/$budgetId"
-    }
     object Journal : Screen("journal")
+    object Test : Screen("test")
 }
 
 @Composable
@@ -79,6 +78,7 @@ fun AppNavHost(
     dailyJournalViewModel: DailyJournalViewModel = koinViewModel(),
     nightBlockService: NightBlockService = koinInject(),
     timersViewModel: TimersViewModel = koinViewModel(),
+    settingsViewModel: SettingsViewModel = koinViewModel(),
     startDestination: String = Screen.Auth.route,
 ) {
     val authState by authViewModel.authState.collectAsState()
@@ -120,6 +120,15 @@ fun AppNavHost(
             taskViewModel = taskViewModel,
             habitViewModel = habitViewModel,
             timersViewModel = timersViewModel,
+            onTestNotification = {
+                settingsViewModel.testNotification()
+            },
+            onTestDueTasksNotification = {
+                settingsViewModel.testDueTasksNotification()
+            },
+            onTestDueHabitsNotification = {
+                settingsViewModel.testDueHabitsNotification()
+            }
         ) {
             NavHost(
                 navController = navController,
@@ -147,7 +156,7 @@ fun AppNavHost(
                         }
                     )
                 }
-                
+
                 composable(Screen.Dashboard.route) {
                     HomeScreen(
                         onNavigateToTasks = {
@@ -312,6 +321,8 @@ fun AppNavHost(
                         }
                     )
                 }
+
+
             }
         }
     } else {

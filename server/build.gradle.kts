@@ -15,6 +15,7 @@ application {
 
 repositories {
     mavenCentral()
+    google() // Required for Firebase Admin SDK
 }
 
 dependencies {
@@ -60,4 +61,7 @@ dependencies {
     implementation(libs.aws.s3)
 
     implementation(libs.dotenv.kotlin)
+    
+    // Firebase Admin SDK for FCM notifications
+    implementation(libs.firebase.admin)
 }

@@ -37,6 +37,9 @@ import com.esteban.ruano.utils.HabitsUtils.findCurrentHabit
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
 import com.esteban.ruano.workout_presentation.ui.composable.WorkoutCard
 import com.esteban.ruano.workout_presentation.ui.viewmodel.WorkoutDetailViewModel
+import com.esteban.ruano.home_presentation.viewmodel.HomeViewModel
+import com.esteban.ruano.core_ui.utils.LocalMainIntent
+import com.esteban.ruano.core_ui.view_model.intent.MainIntent
 import com.lifecommander.models.Habit
 import com.lifecommander.models.Task
 import kotlinx.coroutines.launch
@@ -48,12 +51,14 @@ fun HomeScreen(
     habitViewModel: HabitViewModel = hiltViewModel(),
     taskViewModel: TaskViewModel = hiltViewModel(),
     workoutViewModel: WorkoutDetailViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel(),
     onGoToTasks: () -> Unit,
     onGoToWorkout: () -> Unit,
-    onCurrentHabitClick: (Habit?) -> Unit
+    onCurrentHabitClick: (Habit?) -> Unit,
+    onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
-
+    val sendMainIntent = LocalMainIntent.current
     val habitState = habitViewModel.viewState.collectAsState()
     val taskState = taskViewModel.viewState.collectAsState()
     val workoutState = workoutViewModel.viewState.collectAsState()
@@ -125,7 +130,11 @@ fun HomeScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             SharedAppBar(
                 title = "Life Commander",
-                onSettingsClick = { DeviceUtilities.prepareAutoStartInXiaomi(context) }
+                onSettingsClick = { DeviceUtilities.prepareAutoStartInXiaomi(context) },
+                onLogoutClick = {
+                    sendMainIntent(MainIntent.Logout)
+                    onLogout()
+                }
             )
             Box(
                 modifier = Modifier.pullRefresh(pullRefreshState)

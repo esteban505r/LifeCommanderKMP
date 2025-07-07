@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -134,10 +135,11 @@ fun CommonItem(
                         // Title with improved typography
                         Text(
                             text = title,
-                            style = MaterialTheme.typography.subtitle1.copy(
+                            style = MaterialTheme.typography.body2.copy(
                                 fontWeight = if (isDone) FontWeight.Normal else FontWeight.SemiBold,
-                                textDecoration = if (isDone) TextDecoration.LineThrough else textDecoration
+                                textDecoration = if (isDone) TextDecoration.LineThrough else textDecoration,
                             ),
+                            overflow = TextOverflow.Ellipsis,
                             color = when {
                                 !isEnabled -> MaterialTheme.colors.onSurface.copy(alpha = 0.4f)
                                 isDone -> MaterialTheme.colors.onSurface.copy(alpha = 0.6f)

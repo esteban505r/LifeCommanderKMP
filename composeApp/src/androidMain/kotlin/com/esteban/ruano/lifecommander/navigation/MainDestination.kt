@@ -20,7 +20,6 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MainDestination(
-    isLogged: Boolean,
     snackbarHostState: SnackbarHostState,
     viewModel: MainViewModel = hiltViewModel()
 ) {
@@ -48,6 +47,12 @@ fun MainDestination(
                     keyboardController?.hide()
                 }
             }
+            MainEffect.NavigateToLogin -> {
+                // This will be handled by the MainScreen based on authentication state
+            }
+            MainEffect.NavigateToHome -> {
+                // This will be handled by the MainScreen based on authentication state
+            }
         }
     }
 
@@ -66,7 +71,7 @@ fun MainDestination(
         }
     }
     MainScreen(
-        isLogged = isLogged,
+        isLogged = state.value.isAuthenticated,
         snackbarHostState = snackbarHostState,
     )
 }

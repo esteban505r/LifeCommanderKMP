@@ -11,5 +11,7 @@ data class UserSettings(
     val notificationsEnabled: Boolean = false,
     val unbudgetedPeriodType: UnbudgetedPeriodType = UnbudgetedPeriodType.MONTHLY,
     val unbudgetedPeriodStartDay: Int = 1,
-    val unbudgetedPeriodEndDay: Int = 31
+    val unbudgetedPeriodEndDay: Int = 31,
+    val dueTasksNotificationFrequency: Int = 30, // minutes
+    val dueHabitsNotificationFrequency: Int = 60 // minutes
 )

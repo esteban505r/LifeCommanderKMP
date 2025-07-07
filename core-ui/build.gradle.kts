@@ -22,6 +22,14 @@ dependencies {
     // Compose
     api(libs.compose.icons)
     api(libs.compose.ui)
+    
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+    
+    // Android dependencies for notifications
+    implementation(libs.androidx.core.ktx)
+//    implementation(libs.androidx.work.runtime.ktx)
   /*  api(platform(libs.compose.bom))
 
     testApi(platform(libs.compose.bom))

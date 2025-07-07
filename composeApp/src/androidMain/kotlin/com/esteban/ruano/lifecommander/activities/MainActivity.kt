@@ -36,6 +36,10 @@ import com.esteban.ruano.core_ui.view_model.intent.MainIntent
 import com.esteban.ruano.lifecommander.R
 import com.esteban.ruano.lifecommander.activities.interfaces.NotificationActivity
 import com.esteban.ruano.lifecommander.navigation.MainDestination
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.BuildConfig
+import com.google.firebase.FirebaseApp
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -92,20 +96,32 @@ class MainActivity : ComponentActivity(), NotificationActivity {
             Log.d("MainActivity", "Notifications prepared")
         }
 
+        val TAG = "FirebaseMessaging"
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w(TAG, "Fetching FCM registration token failed", task.exception)
+                // Don't show toast for FCM failures as they're common and not user-facing
+                return@OnCompleteListener
+            }
+
+            // Get new FCM registration token
+            val token = task.result
+
+            // Log the token (but don't show toast in production)
+            Log.d(TAG, "FCM TOKEN: $token")
+            // Only show toast in debug builds
+            if (BuildConfig.DEBUG) {
+                Toast.makeText(baseContext, "FCM Token: ${token.take(20)}...", Toast.LENGTH_SHORT).show()
+            }
+        })
+
         setContent {
             val context = LocalContext.current
 
-            var isLogged by remember {
-                mutableStateOf(false)
-            }
-
             LaunchedEffect(Unit) {
-
                 val authTokenFlow = context.dataStore.data.map {
                     it[Preferences.KEY_AUTH_TOKEN] ?: EMPTY_STRING
                 }
-
-                isLogged = authTokenFlow.first().isNotEmpty()
 
                 val initial: Pair<String?, String?> = null to null
 
@@ -131,8 +147,7 @@ class MainActivity : ComponentActivity(), NotificationActivity {
                     LifeCommanderTheme {
                         val snackbarHostState = remember { SnackbarHostState() }
                         MainDestination(
-                            snackbarHostState = snackbarHostState,
-                            isLogged = isLogged
+                            snackbarHostState = snackbarHostState
                         )
                     }
                 }

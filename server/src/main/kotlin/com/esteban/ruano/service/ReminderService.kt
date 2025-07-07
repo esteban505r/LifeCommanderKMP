@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import java.util.UUID
 
+
 class ReminderService: BaseService() {
 
     fun create(
@@ -76,5 +77,15 @@ class ReminderService: BaseService() {
                 (Reminders.habitId eq habitId) and (Reminders.status eq Status.ACTIVE)
             }
         }.toList()
+    }
+
+    fun getDueReminders(currentTime: Long): List<Reminder> {
+        return transaction {
+            Reminder.find {
+                (Reminders.enabled eq true) and
+                (Reminders.status eq Status.ACTIVE) and
+                (Reminders.time lessEq currentTime)
+            }.toList()
+        }
     }
 }

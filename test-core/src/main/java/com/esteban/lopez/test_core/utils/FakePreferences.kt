@@ -70,6 +70,10 @@ class FakePreferences: Preferences {
         this.authToken = token
     }
 
+    override suspend fun clearAuthToken() {
+        this.authToken = ""
+    }
+
     override fun loadUserInfo(): Flow<UserInfo> = flow {
         emit(UserInfo(
             gender = gender ?: Gender.Male,

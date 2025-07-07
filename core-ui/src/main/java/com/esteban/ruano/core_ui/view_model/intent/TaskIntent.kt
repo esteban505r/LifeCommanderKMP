@@ -9,4 +9,6 @@ sealed class MainIntent : UserIntent {
         val message: String,
         val type: SnackbarType = SnackbarType.INFO
     ) : MainIntent()
+    data object Logout : MainIntent()
+    data object CheckAuthentication : MainIntent()
 }

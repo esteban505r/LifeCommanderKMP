@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
+    alias(libs.plugins.googleServices)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.hilt)
@@ -135,6 +136,10 @@ kotlin {
 
                 implementation("androidx.media3:media3-exoplayer:1.3.1")
                 implementation(libs.vico.compose.multiplatform)
+
+                //Firebase
+                implementation(platform(libs.firebase.bom))
+                implementation(libs.firebase.messaging)
             }
 
         }

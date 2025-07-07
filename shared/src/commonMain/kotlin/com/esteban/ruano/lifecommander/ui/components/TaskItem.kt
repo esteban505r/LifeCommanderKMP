@@ -1,11 +1,10 @@
-package com.esteban.ruano.ui.components
+package com.esteban.ruano.lifecommander.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Schedule
@@ -14,15 +13,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.esteban.ruano.utils.DateUIUtils.getColorByPriority
+import com.esteban.ruano.ui.components.CommonItem
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
-import com.esteban.ruano.utils.DateUIUtils.getIconByPriority
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUtils.toResourceStringBasedOnNow
 import com.lifecommander.models.Task
@@ -50,10 +47,8 @@ fun TaskItem(
     val now = getCurrentDateTime(
         TimeZone.currentSystemDefault()
     )
-    val overdue = task.done != true && (
-            task.dueDateTime?.toLocalDateTime()?.let { it < now } == true ||
-                    task.scheduledDateTime?.toLocalDateTime()?.let { it < now } == true
-            )
+    val overdue = !task.done && (task.dueDateTime?.toLocalDateTime()?.let { it < now } == true ||
+            task.scheduledDateTime?.toLocalDateTime()?.let { it < now } == true)
 
     val showContextMenu = remember { mutableStateOf(false) }
     val priorityColor = when (task.priority) {
@@ -108,7 +103,7 @@ fun TaskItem(
                         )
                     )
                 }
-                
+
                 // Reschedule button for overdue tasks
                 if (overdue && onReschedule != null) {
                     IconButton(
@@ -152,7 +147,8 @@ fun TaskItem(
                                 )
                             )
                             Text(
-                                text = task.dueDateTime.toLocalDateTime().toResourceStringBasedOnNow().first.localized(),
+                                text = task.dueDateTime.toLocalDateTime()
+                                    .toResourceStringBasedOnNow().first.localized(),
                                 color = task.dueDateTime.toLocalDateTime().toResourceStringBasedOnNow().second,
                                 style = MaterialTheme.typography.caption.copy(
                                     fontWeight = FontWeight.SemiBold
@@ -174,7 +170,8 @@ fun TaskItem(
                                 )
                             )
                             Text(
-                                text = task.scheduledDateTime.toLocalDateTime().toResourceStringBasedOnNow().first.localized(),
+                                text = task.scheduledDateTime.toLocalDateTime()
+                                    .toResourceStringBasedOnNow().first.localized(),
                                 color = task.scheduledDateTime.toLocalDateTime().toResourceStringBasedOnNow().second,
                                 style = MaterialTheme.typography.caption.copy(
                                     fontWeight = FontWeight.SemiBold
@@ -183,22 +180,8 @@ fun TaskItem(
                         }
                     }
                 }
-                
-                // Priority level text with color coding
-                if (task.priority != null && task.priority > 0) {
-                    Text(
-                        text = when (task.priority) {
-                            3, 4, 5 -> "High"
-                            2 -> "Medium"
-                            1 -> "Low"
-                            else -> ""
-                        },
-                        style = MaterialTheme.typography.caption.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = priorityColor
-                        )
-                    )
-                }
+
+
             }
         },
         contextMenuContent = {

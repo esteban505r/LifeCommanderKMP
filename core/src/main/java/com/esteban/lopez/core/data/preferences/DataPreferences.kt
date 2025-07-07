@@ -83,6 +83,10 @@ class DataStorePreferences(context: Context) : LifePreferences {
         dataStore.edit { it[KEY_AUTH_TOKEN] = token }
     }
 
+    override suspend fun clearAuthToken() {
+        dataStore.edit { it.remove(KEY_AUTH_TOKEN) }
+    }
+
     override suspend fun saveShouldShowOnboarding(shouldShow: Boolean) {
         dataStore.edit { it[KEY_SHOULD_SHOW_ONBOARDING] = shouldShow }
     }

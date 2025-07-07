@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.esteban.ruano.lifecommander.ui.components.TaskItem
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.lifecommander.models.Task
@@ -113,17 +114,15 @@ fun TaskList(
             // Overdue tasks
             taskListSection(
                 taskList = taskList.filter { item ->
-                    (item.done == false && item.dueDateTime?.let {
+                    (!item.done && item.dueDateTime?.let {
+                        it.toLocalDateTime() < getCurrentDateTime(
+                            TimeZone.currentSystemDefault()
+                        )
+                    } ?: false) || (!item.done && item.scheduledDateTime?.let {
                         it.toLocalDateTime() < getCurrentDateTime(
                             TimeZone.currentSystemDefault()
                         )
                     } ?: false)
-                            ||
-                            (item.done == false && item.scheduledDateTime?.let {
-                                it.toLocalDateTime() < getCurrentDateTime(
-                                    TimeZone.currentSystemDefault()
-                                )
-                            } ?: false)
                 },
                 onTaskClick = onTaskClick,
                 onCheckedChange = { task, checked ->
@@ -137,18 +136,15 @@ fun TaskList(
             // Pending tasks
             taskListSection(
                 taskList = taskList.filter {
-                    (it.done == false && it.dueDateTime?.let {
+                    (!it.done && it.dueDateTime?.let {
                         it.toLocalDateTime() >= getCurrentDateTime(
                             TimeZone.currentSystemDefault()
                         )
-                    } ?: false)
-                            ||
-                            (it.done == false && it.scheduledDateTime?.let {
-                                it.toLocalDateTime() >= getCurrentDateTime(
-                                    TimeZone.currentSystemDefault()
-                                )
-                            } ?: false)
-                            || it.done == false && it.dueDateTime == null && it.scheduledDateTime == null
+                    } ?: false) || (!it.done && it.scheduledDateTime?.let {
+                        it.toLocalDateTime() >= getCurrentDateTime(
+                            TimeZone.currentSystemDefault()
+                        )
+                    } ?: false) || !it.done && it.dueDateTime == null && it.scheduledDateTime == null
                 },
                 onTaskClick = onTaskClick,
                 onCheckedChange = onCheckedChange,

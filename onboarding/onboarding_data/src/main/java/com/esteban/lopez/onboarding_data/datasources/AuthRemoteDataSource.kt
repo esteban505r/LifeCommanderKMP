@@ -8,11 +8,13 @@ import com.esteban.ruano.onboarding_domain.model.LoginModel
 class AuthRemoteDataSource(
     private val authApi: AuthApi
 ) : AuthDataSource {
-    override suspend fun login(email: String, password: String): LoginModel {
+    override suspend fun login(email: String, password: String, fcmToken: String?, timezone: String?): LoginModel {
         return authApi.login(
             LoginRequest(
                 email = email,
-                password = password
+                password = password,
+                fcmToken = fcmToken,
+                timezone = timezone
             )
         ).toDomainModel()
     }

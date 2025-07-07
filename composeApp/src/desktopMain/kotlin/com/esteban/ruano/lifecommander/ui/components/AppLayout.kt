@@ -1,13 +1,10 @@
 package com.esteban.ruano.lifecommander.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,12 +14,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
-import com.esteban.ruano.lifecommander.ui.composables.GeneralFloatingActionButtons
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import com.esteban.ruano.lifecommander.utils.APP_NAME
 import com.esteban.ruano.utils.DateUtils.formatDefault
 import services.NightBlockService
-import services.tasks.models.Priority
 import ui.components.NightBlockComposable
 import ui.navigation.Screen
 import ui.viewmodels.AppViewModel
@@ -42,6 +37,9 @@ fun AppLayout(
     timersViewModel: TimersViewModel,
     navController: NavController,
     onLogoutClick: () -> Unit,
+    onTestNotification: () -> Unit = {},
+    onTestDueTasksNotification: () -> Unit = {},
+    onTestDueHabitsNotification: () -> Unit = {},
     content: @Composable () -> Unit
 ) {
     val isNightBlockActive by nightBlockService.isNightBlockActive.collectAsState()
@@ -123,6 +121,31 @@ fun AppLayout(
                         IconButton(onClick = { timersViewModel.stopTimer() }) {
                             Icon(Icons.Default.Stop, contentDescription = "Stop Timer")
                         }
+                    }
+                    
+                    // Test Notification Buttons
+                    IconButton(onClick = onTestNotification) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Test General Notification",
+                            tint = MaterialTheme.colors.secondary
+                        )
+                    }
+                    
+                    IconButton(onClick = onTestDueTasksNotification) {
+                        Icon(
+                            imageVector = Icons.Default.Assignment,
+                            contentDescription = "Test Due Tasks Notification",
+                            tint = MaterialTheme.colors.primary
+                        )
+                    }
+                    
+                    IconButton(onClick = onTestDueHabitsNotification) {
+                        Icon(
+                            imageVector = Icons.Default.Repeat,
+                            contentDescription = "Test Due Habits Notification",
+                            tint = MaterialTheme.colors.primary
+                        )
                     }
                     
                     IconButton(onClick = { showNightBlockDialog = true }) {
@@ -468,7 +491,7 @@ fun AppLayout(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.LockClock,
+                            imageVector = Icons.Default.PlayCircleOutline,
                             contentDescription = "Pomodoros",
                             tint = if (navController.currentDestination?.route == Screen.Pomodoros.route)
                                 MaterialTheme.colors.primary
@@ -550,7 +573,7 @@ fun AppLayout(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Workouts",
+                        text = "Workout",
                         style = MaterialTheme.typography.subtitle1,
                         color = if (navController.currentDestination?.route == Screen.Workout.route)
                             MaterialTheme.colors.primary
@@ -593,6 +616,45 @@ fun AppLayout(
                         else MaterialTheme.colors.onSurface
                     )
                 }
+
+
+/*
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Test.route) },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Test.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Book,
+                            contentDescription = "Test",
+                            tint = if (navController.currentDestination?.route == Screen.Test.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Test",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Test.route)
+                            MaterialTheme.colors.primary
+                        else MaterialTheme.colors.onSurface
+                    )
+                }
+*/
             }
 
             // Main content
@@ -604,45 +666,26 @@ fun AppLayout(
                 content()
             }
         }
-    }
 
-    if (showNightBlockDialog) {
-        AlertDialog(
-            onDismissRequest = { showNightBlockDialog = false },
-            title = { Text("Night Block") },
-            text = {
-                NightBlockComposable(
-                    dailyJournalViewModel = dailyJournalViewModel,
-                    nightBlockService = nightBlockService,
-                    habits = emptyList(), // TODO: Pass habits from parent
-                    onOverride = { reason ->
-                        // TODO: Handle override
-                        showNightBlockDialog = false
+        // Night Block Dialog
+        if (showNightBlockDialog) {
+            /*NightBlockComposable(
+
+            )*/
+        }
+
+        // Timer Dialog
+        if (showTimerDialog) {
+            AlertDialog(
+                onDismissRequest = { showTimerDialog = false },
+                title = { Text(timerDialogTitle) },
+                text = { Text(timerDialogMessage) },
+                confirmButton = {
+                    TextButton(onClick = { showTimerDialog = false }) {
+                        Text("OK")
                     }
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = { showNightBlockDialog = false }
-                ) {
-                    Text("Close")
                 }
-            }
-        )
-    }
-
-    if (showTimerDialog) {
-        AlertDialog(
-            onDismissRequest = { showTimerDialog = false },
-            title = { Text(timerDialogTitle) },
-            text = { Text(timerDialogMessage) },
-            confirmButton = {
-                Button(
-                    onClick = { showTimerDialog = false }
-                ) {
-                    Text("OK")
-                }
-            }
-        )
+            )
+        }
     }
 } 

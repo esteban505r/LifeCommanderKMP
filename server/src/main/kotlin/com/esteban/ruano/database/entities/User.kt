@@ -21,4 +21,5 @@ class User(id: EntityID<Int>) : IntEntity(id) {
     var email by Users.email
     var password by Users.password
     var status by Users.status
+    var timeZone by Users.timeZone
 }

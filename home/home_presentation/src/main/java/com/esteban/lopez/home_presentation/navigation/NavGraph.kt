@@ -19,6 +19,10 @@ fun NavGraphBuilder.homeGraph(
             },
             onCurrentHabitClick = {
                 navController.navigate(Routes.BASE.HABITS.name)
+            },
+            onLogout = {
+                // The logout will be handled by MainViewModel which will trigger navigation
+                // No need to navigate here as the MainViewModel will handle the state change
             }
         )
     }

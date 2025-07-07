@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
@@ -32,8 +34,11 @@ import com.esteban.ruano.ui.*
 fun SharedAppBar(
     title: String,
     onSettingsClick: () -> Unit,
+    onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+    
     Surface(
         modifier = modifier.fillMaxWidth(),
         elevation = LifeCommanderDesignSystem.dimensions.ElevationNone,
@@ -57,24 +62,78 @@ fun SharedAppBar(
                 )
             )
             
-            IconButton(
-                onClick = onSettingsClick,
-                modifier = Modifier
-                    .size(LifeCommanderDesignSystem.dimensions.TouchRecommended)
-                    .clip(CircleShape)
-                    .background(LifeCommanderDesignSystem.colors.Surface)
-                    .border(
-                        LifeCommanderDesignSystem.dimensions.BorderMedium,
-                        LifeCommanderDesignSystem.colors.Border,
-                        CircleShape
+            Box {
+                IconButton(
+                    onClick = { showMenu = true },
+                    modifier = Modifier
+                        .size(LifeCommanderDesignSystem.dimensions.TouchRecommended)
+                        .clip(CircleShape)
+                        .background(LifeCommanderDesignSystem.colors.Surface)
+                        .border(
+                            LifeCommanderDesignSystem.dimensions.BorderMedium,
+                            LifeCommanderDesignSystem.colors.Border,
+                            CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Menu",
+                        modifier = Modifier.size(LifeCommanderDesignSystem.dimensions.IconLarge),
+                        tint = LifeCommanderDesignSystem.colors.OnSurfaceVariant
                     )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Settings",
-                    modifier = Modifier.size(LifeCommanderDesignSystem.dimensions.IconLarge),
-                    tint = LifeCommanderDesignSystem.colors.OnSurfaceVariant
-                )
+                }
+                
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false },
+                    modifier = Modifier.background(LifeCommanderDesignSystem.colors.Surface)
+                ) {
+                    DropdownMenuItem(
+                        onClick = {
+                            showMenu = false
+                            onSettingsClick()
+                        }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = null,
+                                tint = LifeCommanderDesignSystem.colors.OnSurfaceVariant
+                            )
+                            Text(
+                                text = "Settings",
+                                style = MaterialTheme.typography.body1,
+                                color = LifeCommanderDesignSystem.colors.OnSurface
+                            )
+                        }
+                    }
+                    
+                    DropdownMenuItem(
+                        onClick = {
+                            showMenu = false
+                            onLogoutClick()
+                        }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ExitToApp,
+                                contentDescription = null,
+                                tint = LifeCommanderDesignSystem.colors.Error
+                            )
+                            Text(
+                                text = "Logout",
+                                style = MaterialTheme.typography.body1,
+                                color = LifeCommanderDesignSystem.colors.Error
+                            )
+                        }
+                    }
+                }
             }
         }
     }

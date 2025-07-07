@@ -20,4 +20,5 @@ sealed class AuthEffect : Effect {
         val message: String,
         val type: SnackbarType = SnackbarType.INFO
     ) : AuthEffect()
+    data object AuthenticationSuccess : AuthEffect()
 }

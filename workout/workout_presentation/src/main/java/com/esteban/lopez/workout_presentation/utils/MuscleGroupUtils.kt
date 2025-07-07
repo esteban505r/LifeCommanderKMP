@@ -16,5 +16,6 @@ fun MuscleGroup.toResourceString(context:Context): String {
         MuscleGroup.PULL -> context.getString(R.string.pull)
         MuscleGroup.PUSH -> context.getString(R.string.push)
         MuscleGroup.NONE -> context.getString(R.string.none)
+        MuscleGroup.BACK -> context.getString(R.string.back)
     }
 }

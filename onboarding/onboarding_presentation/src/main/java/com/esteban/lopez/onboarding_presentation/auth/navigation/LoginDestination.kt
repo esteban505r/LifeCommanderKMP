@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.esteban.ruano.core_ui.composables.Error
 import com.esteban.ruano.core_ui.composables.Loading
 import com.esteban.ruano.core_ui.R
@@ -25,7 +24,6 @@ import com.esteban.ruano.onboarding_presentation.auth.viewmodel.AuthViewModel
 @Composable
 fun LoginDestination(
     viewModel: AuthViewModel = hiltViewModel(),
-    navController: NavController,
 ) {
 
     val state = viewModel.viewState.collectAsState()
@@ -40,6 +38,10 @@ fun LoginDestination(
         when (effect) {
             is AuthEffect.ShowSnackBar -> {
                 sendMainIntent(MainIntent.ShowSnackBar(effect.message,effect.type))
+            }
+            is AuthEffect.AuthenticationSuccess -> {
+                // Trigger MainViewModel to check authentication status and navigate
+                sendMainIntent(MainIntent.CheckAuthentication)
             }
         }
     }

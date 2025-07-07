@@ -10,7 +10,7 @@ val testModule = module {
     single { TaskService(get()) }
     single { HabitService(get()) }
     single { TimerService() }
-    single { TimerCheckerService(get()) }
+    single { TimerCheckerService(get(),get(),get(),get(),get(),get()) }
     single { WorkoutService() }
     single { NutritionService() }
     single { BlogService() }

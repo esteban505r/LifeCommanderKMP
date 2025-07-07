@@ -453,16 +453,34 @@ class TimerService : BaseService() {
         }
     }
 
+    fun getDeviceTokensForUser(userId: Int): List<String> {
+        return transaction {
+            DeviceToken.find { DeviceTokens.user eq userId }
+                .map { it.token }
+                .toList()
+        }
+    }
+
     fun checkCompletedTimers(
         timezone: TimeZone,
-        currentTime: kotlinx.datetime.LocalDateTime
+        currentTime: kotlinx.datetime.LocalDateTime,
+        userId: Int? = null
     ): List<CompletedTimerInfo> {
         return transaction {
-            Timer.find {
-                (Timers.state eq TimerState.RUNNING) and
-                        (Timers.startTime.isNotNull())
+            val query = if (userId != null) {
+                Timer.find {
+                    (Timers.state eq TimerState.RUNNING) and
+                            (Timers.startTime.isNotNull()) and
+                            (Timers.listId inList TimerList.find { TimerLists.userId eq userId }.map { it.id })
+                }
+            } else {
+                Timer.find {
+                    (Timers.state eq TimerState.RUNNING) and
+                            (Timers.startTime.isNotNull())
+                }
             }
-                .limit(1000)
+            
+            query.limit(1000)
                 .filter { timer ->
                     val endTime = timer.startTime!!
                         .toInstant(timezone)

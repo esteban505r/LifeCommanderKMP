@@ -31,10 +31,16 @@ import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.kotlin.datetime.minute
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
+import kotlinx.datetime.Clock
 
 class HabitService(
     val reminderService: ReminderService
 ) : BaseService() {
+
+    data class HabitNotificationInfo(
+        val incompleteHabits: List<Habit>,
+        val totalHabits: Int
+    )
 
     fun create(userId: Int, habit: CreateHabitDTO): UUID? {
         return transaction {
@@ -298,6 +304,45 @@ class HabitService(
                 it.copy(reminders = reminders.map { it.toDTO() })
             }
         }
+    }
+
+    fun getDueHabitsForNotification(userId: Int, today: LocalDate): HabitNotificationInfo {
+        return transaction {
+            // Get all active habits for this user that are due today
+            val dueHabits = Habit.find {
+                (Habits.status eq Status.ACTIVE) and
+                (Habits.user eq userId) and
+                (Habits.baseDateTime.date() lessEq today)
+            }.toList()
+
+            val incompleteHabits = mutableListOf<Habit>()
+            for (habit in dueHabits) {
+                // Check if habit is already done for today
+                val isDoneToday = HabitTrack.find {
+                    (HabitTracks.habitId eq habit.id) and
+                    (HabitTracks.status eq Status.ACTIVE) and
+                    (HabitTracks.doneDateTime.date() eq today)
+                }.count() > 0
+
+                if (!isDoneToday) {
+                    incompleteHabits.add(habit)
+                }
+            }
+
+            HabitNotificationInfo(incompleteHabits, dueHabits.size)
+        }
+    }
+
+    fun shouldSendHabitNotification(
+        userId: Int,
+        lastNotificationTime: Long,
+        notificationFrequencyMinutes: Int
+    ): Boolean {
+        val currentTimeMillis = Clock.System.now().toEpochMilliseconds()
+        val timeSinceLastNotification = currentTimeMillis - lastNotificationTime
+        val notificationIntervalMs = notificationFrequencyMinutes * 60 * 1000L
+        
+        return timeSinceLastNotification >= notificationIntervalMs
     }
 
 }

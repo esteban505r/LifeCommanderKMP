@@ -45,6 +45,8 @@ class HomeScreenTest {
                 navController.navigate(Routes.BASE.WORKOUT.name)
             }, onCurrentHabitClick = {
                 navController.navigate(Routes.BASE.HABITS.name)
+            }, onLogout = {
+                // Handle logout in test
             })
         }
     }

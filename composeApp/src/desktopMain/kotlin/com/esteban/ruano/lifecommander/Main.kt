@@ -51,6 +51,7 @@ import utils.timersKey
 import java.time.Duration
 import kotlin.system.exitProcess
 
+
 @Composable
 @Preview
 fun App(
@@ -60,6 +61,7 @@ fun App(
         AppNavHost(appViewModel = appViewModel)
     }
 }
+
 
 fun main() = application {
 

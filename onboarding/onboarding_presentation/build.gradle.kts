@@ -14,4 +14,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":core-ui"))
     implementation(project(":onboarding:onboarding_domain"))
+    //Firebase - only the classes, not the plugin
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 }

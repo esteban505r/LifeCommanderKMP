@@ -15,13 +15,11 @@ import com.esteban.ruano.models.finance.BudgetResponseDTO
 import com.esteban.ruano.models.finance.TransactionResponseDTO
 import com.esteban.ruano.repository.SettingsRepository
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
-import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.esteban.ruano.utils.addSortOrder
 import com.esteban.ruano.utils.buildTransactionFilters
 import com.lifecommander.finance.model.TransactionType
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.transactions.transaction

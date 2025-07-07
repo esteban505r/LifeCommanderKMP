@@ -54,9 +54,7 @@ fun MainScreen(
                 )
             }
             else{
-                LoginDestination(
-                    navController = navController,
-                )
+                LoginDestination()
             }
         }
     }
