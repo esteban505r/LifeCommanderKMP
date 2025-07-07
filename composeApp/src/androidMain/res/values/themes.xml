@@ -14,6 +14,11 @@
     <style name="Theme.LifeCommander.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <!-- Transparent system bars for Compose integration -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 
     <style name="Theme.LifeCommanderPrep.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />

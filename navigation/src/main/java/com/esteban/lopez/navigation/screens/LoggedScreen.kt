@@ -1,8 +1,10 @@
-package com.esteban.ruano.navigation.screens
+package com.esteban.lopez.navigation.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,15 +24,18 @@ import androidx.navigation.compose.rememberNavController
 import com.esteban.ruano.core.routes.Routes
 import com.esteban.ruano.core_ui.theme.Gray
 import com.esteban.ruano.core_ui.utils.IconUtils
+import com.esteban.ruano.core_ui.utils.SystemBarUtils
 import com.esteban.ruano.navigation.NavHostWrapper
 
 @Composable
 fun LoggedScreen(onRootNavigate: (String) -> Unit) {
     val navController = rememberNavController()
+    val bottomNavColor = Color.White
+    
     Scaffold(
         bottomBar = {
             BottomNavigation(
-                backgroundColor = Color.White,
+                backgroundColor = bottomNavColor,
             ) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
 
@@ -63,10 +68,49 @@ fun LoggedScreen(onRootNavigate: (String) -> Unit) {
             }
         }
     ) {
+        // Modern approach: Use utility function for consistent system bar handling
         NavHostWrapper(
-            modifier = Modifier.padding(WindowInsets.systemBars.asPaddingValues()).padding(it),
+            modifier = SystemBarUtils.withBottomNavMatchingSystemBars(
+                bottomNavColor = bottomNavColor,
+                modifier = Modifier.padding(it)
+            ),
             navController = navController,
             shouldShowOnboarding = false,
         )
+        
+        // Alternative approaches you can try:
+        
+        // 1. Manual approach with WindowInsets:
+        // NavHostWrapper(
+        //     modifier = Modifier
+        //         .fillMaxSize()
+        //         .background(bottomNavColor)
+        //         .padding(WindowInsets.systemBars.asPaddingValues())
+        //         .padding(it),
+        //     navController = navController,
+        //     shouldShowOnboarding = false,
+        // )
+        
+        // 2. Separate status and navigation bar handling:
+        // NavHostWrapper(
+        //     modifier = Modifier
+        //         .fillMaxSize()
+        //         .background(bottomNavColor)
+        //         .padding(WindowInsets.statusBars.asPaddingValues())
+        //         .padding(WindowInsets.navigationBars.asPaddingValues())
+        //         .padding(it),
+        //     navController = navController,
+        //     shouldShowOnboarding = false,
+        // )
+        
+        // 3. Using utility functions:
+        // NavHostWrapper(
+        //     modifier = SystemBarUtils.withSystemBarBackground(
+        //         backgroundColor = bottomNavColor,
+        //         modifier = Modifier.padding(it)
+        //     ),
+        //     navController = navController,
+        //     shouldShowOnboarding = false,
+        // )
     }
 }

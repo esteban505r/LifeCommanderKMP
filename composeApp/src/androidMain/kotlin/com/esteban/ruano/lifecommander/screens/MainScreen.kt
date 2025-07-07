@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
-import androidx.compose.material.ScaffoldState
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarData
 import androidx.compose.material3.SnackbarHost
@@ -14,8 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.esteban.ruano.core_ui.utils.CustomSnackBarVisuals
-import com.esteban.ruano.core_ui.view_model.intent.MainIntent
-import com.esteban.ruano.navigation.screens.LoggedScreen
+import com.esteban.lopez.navigation.screens.LoggedScreen
 import com.esteban.ruano.onboarding_presentation.auth.navigation.LoginDestination
 
 @Composable

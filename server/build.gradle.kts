@@ -65,3 +65,8 @@ dependencies {
     // Firebase Admin SDK for FCM notifications
     implementation(libs.firebase.admin)
 }
+
+// Configure shadow plugin for ZIP64 support
+tasks.shadowJar {
+    isZip64 = true
+}
