@@ -17,5 +17,6 @@ data class WorkoutState(
     val workoutTracks: List<WorkoutTrack> = emptyList(),
     val exerciseTracks: List<ExerciseTrack> = emptyList(),
     val completedExercises: Set<String> = emptySet(),
-    val exerciseDayMap: Map<String, Set<Int>> = emptyMap()
-) 
+    val exerciseDayMap: Map<String, Set<Int>> = emptyMap(),
+    val isCompleted: Boolean = false,
+)

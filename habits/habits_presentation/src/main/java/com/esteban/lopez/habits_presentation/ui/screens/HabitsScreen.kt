@@ -1,6 +1,7 @@
 package com.esteban.lopez.habits_presentation.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ExperimentalMaterialApi
@@ -30,10 +33,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
+import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.habits_presentation.ui.intent.HabitIntent
 import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.state.HabitState
-import com.esteban.ruano.ui.components.HabitList
+import com.esteban.ruano.ui.components.HabitItem
+import com.esteban.ruano.utils.HabitsUtils.date
 import com.esteban.ruano.utils.HabitsUtils.findCurrentHabit
+import com.lifecommander.models.Frequency
 import com.lifecommander.models.Habit
 import kotlinx.coroutines.launch
 
@@ -52,6 +58,9 @@ fun HabitsScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val scaffoldState = rememberScaffoldState()
 
+    // Split habits into daily and other habits
+    val dailyHabits = state.habits.filter { it.frequency == Frequency.DAILY.value }.sortedBy { it.dateTime?.toLocalDateTime()?.toLocalTime() }
+    val otherHabits = state.habits.filter { it.frequency != Frequency.DAILY.value }.sortedBy { it.dateTime?.toLocalDateTime()?.toLocalTime() }
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -123,54 +132,103 @@ fun HabitsScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    /* Spacer(modifier = Modifier.height(16.dp))
-                     Row(
-                         modifier = Modifier.fillMaxWidth(),
-                         horizontalArrangement = Arrangement.SpaceBetween
-                     ) {
-                         Text("Streak")
-                         Text("83%")
-                     }*/
-                    /*Spacer(modifier = Modifier.height(16.dp))
-                    LinearProgressIndicator(
-                        progress = currentProgress,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp),
-                        strokeCap = StrokeCap.Round
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "Your longest streak is 9 days")
-                    Spacer(modifier = Modifier.height(16.dp))*/
-                    HabitList(onHabitClick = onHabitClick,
-                        onCheckedChange = { habit, checked, onComplete ->
-                            coroutineScope.launch {
-                                userIntent(
-                                    if (checked) HabitIntent.CompleteHabit(
-                                        habit.id,
-                                        onComplete
-                                    ) else HabitIntent.UnCompleteHabit(
-                                        habit.id, onComplete
-                                    )
+                    
+                    // Custom HabitList with sections for daily and other habits
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp)
+                    ) {
+                        // Daily Habits Section
+                        if (dailyHabits.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Daily Habits",
+                                    style = MaterialTheme.typography.h4.copy(
+                                        fontWeight = FontWeight.Medium,
+                                    ),
+                                    modifier = Modifier.padding(bottom = 8.dp, top = 16.dp)
                                 )
                             }
-                        },
-                        habitList = state.habits,
-                        isRefreshing = false,
-                        onPullRefresh = {
-                            coroutineScope.launch {
-                                userIntent(HabitIntent.FetchHabits())
-                            }
-                        },
-                        onEdit = {_->
-                            },
-                        onDelete = { habit ->},
-                        itemWrapper = { content, habit ->
-                            Box {
-                                content()
+                            
+                            items(dailyHabits) { habit ->
+                                HabitItem(
+                                    habit = habit,
+                                    interactionSource = MutableInteractionSource(),
+                                    onCheckedChange = { habit, checked, onComplete ->
+                                        coroutineScope.launch {
+                                            userIntent(
+                                                if (checked) HabitIntent.CompleteHabit(
+                                                    habit.id,
+                                                    onComplete
+                                                ) else HabitIntent.UnCompleteHabit(
+                                                    habit.id, onComplete
+                                                )
+                                            )
+                                        }
+                                    },
+                                    onComplete = { habit, checked ->
+                                        // Handle completion
+                                    },
+                                    onClick = { onHabitClick(habit) },
+                                    onEdit = { /* Handle edit */ },
+                                    onDelete = { /* Handle delete */ },
+                                    itemWrapper = { content ->
+                                        Box {
+                                            content()
+                                        }
+                                    }
+                                )
                             }
                         }
-                    )
+                        
+                        // Other Habits Section
+                        if (otherHabits.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Other Habits",
+                                    style = MaterialTheme.typography.h4.copy(
+                                        fontWeight = FontWeight.Medium,
+                                    ),
+                                    modifier = Modifier.padding(bottom = 8.dp, top = 16.dp)
+                                )
+                            }
+                            
+                            items(otherHabits) { habit ->
+                                HabitItem(
+                                    habit = habit,
+                                    interactionSource = MutableInteractionSource(),
+                                    onCheckedChange = { habit, checked, onComplete ->
+                                        coroutineScope.launch {
+                                            userIntent(
+                                                if (checked) HabitIntent.CompleteHabit(
+                                                    habit.id,
+                                                    onComplete
+                                                ) else HabitIntent.UnCompleteHabit(
+                                                    habit.id, onComplete
+                                                )
+                                            )
+                                        }
+                                    },
+                                    onComplete = { habit, checked ->
+                                        // Handle completion
+                                    },
+                                    onClick = { onHabitClick(habit) },
+                                    onEdit = { /* Handle edit */ },
+                                    onDelete = { /* Handle delete */ },
+                                    itemWrapper = { content ->
+                                        Box {
+                                            content()
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                        
+                        // Bottom spacer for FAB
+                        item {
+                            Spacer(modifier = Modifier.height(64.dp))
+                        }
+                    }
                 }
             }
         }

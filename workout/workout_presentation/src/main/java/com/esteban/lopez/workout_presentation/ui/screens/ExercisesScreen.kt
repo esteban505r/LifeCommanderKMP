@@ -1,6 +1,7 @@
 package com.esteban.ruano.workout_presentation.ui.screens
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,6 +27,7 @@ import com.esteban.ruano.workout_domain.model.MuscleGroup
 import com.esteban.ruano.workout_presentation.intent.ExercisesIntent
 import com.esteban.ruano.workout_presentation.ui.composable.ExerciseCard
 import com.esteban.ruano.workout_presentation.ui.viewmodel.state.ExercisesState
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun ExerciseScreen(
@@ -86,16 +89,21 @@ private fun Exercises(
     onExerciseClick: (String?) -> Unit = {}
 ) {
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background) // Ensure background is set
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background), // Ensure background is se
+            // t
         ) {
             item {
                 AppBar(title = stringResource(R.string.exercises))
             }
             items(exercises.size) { index ->
-                ExerciseCard(exercise = exercises[index], onExerciseClick = onExerciseClick)
+                ExerciseCard(exercise = exercises[index])
             }
         }
         if (exercises.isEmpty()) {

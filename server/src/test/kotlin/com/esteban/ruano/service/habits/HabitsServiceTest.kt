@@ -201,12 +201,10 @@ class HabitsServiceTest {
             reminders = listOf(
                 CreateReminderDTO(
                     id = null,
-                    userId = 1,
                     time = 3600
                 ),
                 CreateReminderDTO(
                     id = null,
-                    userId = 1,
                     time = 64800
                 )
             )
@@ -230,12 +228,10 @@ class HabitsServiceTest {
             reminders = listOf(
                 CreateReminderDTO(
                     id = null,
-                    userId = 1,
                     time = 32400
                 ),
                 CreateReminderDTO(
                     id = null,
-                    userId = 1,
                     time = 64800
                 )
             )

@@ -4,13 +4,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
@@ -18,6 +22,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,6 +31,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.ListTile
@@ -35,6 +41,7 @@ import com.esteban.ruano.core_ui.theme.LightGray4
 import com.esteban.ruano.core_ui.utils.DateUIUtils.DAYS_OF_THE_WEEK
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
+import com.esteban.ruano.workout_presentation.ui.composable.WorkoutProgressSummary
 import com.esteban.ruano.workout_presentation.ui.viewmodel.state.WorkoutState
 import java.time.LocalDate
 
@@ -104,33 +111,84 @@ fun WorkoutScreen(
                         }
                     }
                 }
+                
+                // Progress Summary
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    WorkoutProgressSummary(
+                        totalExercises = today?.exercises?.size ?: 0,
+                        completedExercises = state.completedExercises.size,
+                        weeklyWorkoutsCompleted = state.weeklyWorkoutsCompleted.size
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+                
                 item {
                     if (today != null && today.exercises.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(24.dp))
                         Text(
                             stringResource(id = R.string.todays_workout),
                             style = MaterialTheme.typography.h3,
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Image(
-                            painter = painterResource(id = R.drawable.workout_man),
-                            contentDescription = "Pushups",
-                            modifier = Modifier
-                                .height(200.dp)
-                                .fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(today.name, style = MaterialTheme.typography.h4)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "${today.exercises.first().baseSets} sets of ${today.exercises.first().baseReps} reps",
-                            style = MaterialTheme.typography.body1.copy(color = LightGray)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "90 minutes",
-                            style = MaterialTheme.typography.body1.copy(color = LightGray)
-                        )
+                        
+                        // Enhanced today's workout card
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            backgroundColor = MaterialTheme.colors.surface
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.workout_man),
+                                    contentDescription = "Pushups",
+                                    modifier = Modifier
+                                        .height(200.dp)
+                                        .fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    today.name, 
+                                    style = MaterialTheme.typography.h4.copy(
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "${today.exercises.first().baseSets} sets of ${today.exercises.first().baseReps} reps",
+                                    style = MaterialTheme.typography.body1.copy(color = LightGray)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "90 minutes",
+                                    style = MaterialTheme.typography.body1.copy(color = LightGray)
+                                )
+                                
+                                // Show completion status
+                                if (state.completedExercises.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.CheckCircle,
+                                            contentDescription = "Completed",
+                                            tint = MaterialTheme.colors.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            "${state.completedExercises.size} of ${today.exercises.size} exercises completed",
+                                            style = MaterialTheme.typography.body2.copy(
+                                                color = MaterialTheme.colors.primary,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                     Spacer(modifier = Modifier.height(24.dp))
                 }
@@ -138,29 +196,33 @@ fun WorkoutScreen(
                     Text("This week", style = MaterialTheme.typography.h3)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
-                items(DAYS_OF_THE_WEEK) {
-                    val list = state.workoutDays
+                items(DAYS_OF_THE_WEEK) { dayIndex ->
+                    val day = dayIndex + 1
+                    val workoutDay = state.workoutDays.firstOrNull { it.day == day }
+                    val isCompleted = state.weeklyWorkoutsCompleted.contains(day)
+                    
                     ListTile(
-                        title = (it + 1).toDayOfTheWeekString(context),
-                        subtitle = if (list.size > it) list[it].name else stringResource(R.string.free_day),
+                        title = day.toDayOfTheWeekString(context),
+                        subtitle = workoutDay?.name ?: stringResource(R.string.free_day),
                         prefix = {
                             Card(
                                 elevation = 0.dp,
                                 modifier = Modifier.padding(end = 16.dp),
-                                backgroundColor = LightGray4
+                                backgroundColor = if (isCompleted) 
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f) 
+                                else 
+                                    LightGray4
                             ) {
                                 Icon(
-                                    Icons.Default.PlayArrow,
-                                    contentDescription = "Play",
-                                    tint = DarkGray,
+                                    if (isCompleted) Icons.Default.CheckCircle else Icons.Default.PlayArrow,
+                                    contentDescription = if (isCompleted) "Completed" else "Play",
+                                    tint = if (isCompleted) MaterialTheme.colors.primary else DarkGray,
                                     modifier = Modifier.padding(16.dp)
                                 )
                             }
                         },
                         onClick = {
-                            onWorkoutClick(
-                                it + 1
-                            )
+                            onWorkoutClick(day)
                         }
                     )
                 }

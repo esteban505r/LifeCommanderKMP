@@ -74,8 +74,8 @@ fun WorkoutScreenDestination() {
                 onCompleteWorkout = { dayId ->
                     viewModel.completeWorkout(dayId)
                 },
-                onCompleteExercise = { exerciseId, workoutDayId ->
-                    viewModel.completeExercise(exerciseId, workoutDayId)
+                onCompleteExercise = { exerciseId, day,workoutDayId ->
+                    viewModel.completeExercise(exerciseId, day,workoutDayId)
                 },
                 onGetAllExercises = {
                     viewModel.getAllExercises()

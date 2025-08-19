@@ -24,6 +24,7 @@ import com.esteban.ruano.database.entities.UserSetting
 import com.esteban.ruano.database.entities.UserSettings
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import io.sentry.Sentry
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
@@ -59,12 +60,13 @@ class TimerCheckerService(
                     // Log notification timing for user ID 1
                     logNotificationTimingForUser1()
                     
-                    checkTimers()
+//                    checkTimers()
                     checkReminders()
                     checkDueTasks()
                     checkDueHabits()
                     checkHabitStarts()
                 } catch (e: Exception) {
+                    Sentry.captureException(e)
                     e.printStackTrace()
                 }
                 delay(30_000L) // 30 seconds
@@ -85,6 +87,7 @@ class TimerCheckerService(
             val userTimeZone = try {
                 TimeZone.of(user.timeZone ?: "UTC")
             } catch (e: Exception) {
+                Sentry.captureException(e)
                 TimeZone.UTC
             }
             
@@ -131,6 +134,7 @@ class TimerCheckerService(
             
         } catch (e: Exception) {
             println("[User1] Error logging notification timing: ${e.message}")
+            Sentry.captureException(e)
             e.printStackTrace()
         }
     }
@@ -149,6 +153,7 @@ class TimerCheckerService(
                 val userTimeZone = try {
                     TimeZone.of(userTimezone ?: "UTC")
                 } catch (e: Exception) {
+                    Sentry.captureException(e)
                     TimeZone.UTC
                 }
                 
@@ -202,6 +207,7 @@ class TimerCheckerService(
                             println("[Timers] Timer update broadcasted for list ${info.listId}")
 
                         } catch (e: Exception) {
+                            Sentry.captureException(e)
                             println("[Timers] Error processing timer ${info.domainTimer.id}: ${e.message}")
                             e.printStackTrace()
                         }
@@ -209,6 +215,7 @@ class TimerCheckerService(
                 }
                 
             } catch (e: Exception) {
+                Sentry.captureException(e)
                 println("[Timers] Error processing timers for user $userId: ${e.message}")
                 e.printStackTrace()
             }
@@ -237,12 +244,13 @@ class TimerCheckerService(
                         }
                     }
                     else -> Pair(null, null)
-                } ?: continue
+                }
                 
                 // Check if reminder time matches current time in user's timezone
                 val userTimeZone = try {
                     TimeZone.of(userTimezone ?: "UTC")
                 } catch (e: Exception) {
+                    Sentry.captureException(e)
                     TimeZone.UTC
                 }
                 
@@ -281,6 +289,7 @@ class TimerCheckerService(
                 println("[Reminders] Sent notification for reminder in timezone: $userTimezone")
                 
             } catch (e: Exception) {
+                Sentry.captureException(e)
                 println("[Reminders] Error processing reminder: ${e.message}")
                 e.printStackTrace()
             }
@@ -307,6 +316,7 @@ class TimerCheckerService(
                 val userTimeZone = try {
                     TimeZone.of(userTimezone ?: "UTC")
                 } catch (e: Exception) {
+                    Sentry.captureException(e)
                     TimeZone.UTC
                 }
                 
@@ -414,6 +424,7 @@ class TimerCheckerService(
                 }
                 
             } catch (e: Exception) {
+                Sentry.captureException(e)
                 println("[Tasks] Error processing task notifications for user $userId: ${e.message}")
                 e.printStackTrace()
             }
@@ -440,6 +451,7 @@ class TimerCheckerService(
                 val userTimeZone = try {
                     TimeZone.of(userTimezone ?: "UTC")
                 } catch (e: Exception) {
+                    Sentry.captureException(e)
                     TimeZone.UTC
                 }
                 
@@ -498,6 +510,7 @@ class TimerCheckerService(
                 }
                 
             } catch (e: Exception) {
+                Sentry.captureException(e)
                 println("[Habits] Error processing habit notifications for user $userId: ${e.message}")
                 e.printStackTrace()
             }
@@ -524,6 +537,7 @@ class TimerCheckerService(
                 val userTimeZone = try {
                     TimeZone.of(userTimezone ?: "UTC")
                 } catch (e: Exception) {
+                    Sentry.captureException(e)
                     TimeZone.UTC
                 }
                 
@@ -625,12 +639,15 @@ class TimerCheckerService(
                         }
                         
                     } catch (e: Exception) {
+                        Sentry.captureException(e)
                         println("[Habit Starts] Error processing habit ${habit.name}: ${e.message}")
                         e.printStackTrace()
                     }
                 }
                 
             } catch (e: Exception) {
+                Sentry.captureException(e)
+
                 println("[Habit Starts] Error processing habit start notifications for user $userId: ${e.message}")
                 e.printStackTrace()
             }

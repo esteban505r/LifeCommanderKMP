@@ -1,121 +1,231 @@
 package com.esteban.ruano.workout_presentation.ui.composable
 
-import androidx.compose.foundation.Image
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.RoundedCornerCheckbox
 import com.esteban.ruano.workout_domain.model.Exercise
-import com.esteban.ruano.workout_domain.model.MuscleGroup
-import com.esteban.ruano.workout_presentation.utils.toResourceString
 
+private val CardBackground = Color(0xFFF7F7FA) // Custom light gray for card
+private val CardBorder = Color(0xFFE0E0E0)
+private val ChipBackground = Color(0xFFF0F0F5)
+
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ExerciseCard(
     modifier: Modifier = Modifier,
     exercise: Exercise,
-    checked: Boolean? = null,
-    onExerciseClick: ((String?) -> Unit)? = null,
-    onSelectExercise: ((Exercise,Boolean) -> Unit)? = null
+    onUpdate: (Exercise) -> Unit = {},
+    onDelete: (String) -> Unit = {},
+    onCompleteExercise: (() -> Unit)? = null,
+    isCompleted: Boolean = false,
+    showActionButtons: Boolean = true
 ) {
-    Row(
+    Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable {
-                onExerciseClick?.invoke(exercise.id)
-            }
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .animateContentSize(animationSpec = tween(durationMillis = 300)),
+        shape = RoundedCornerShape(18.dp),
+        backgroundColor = CardBackground,
+        elevation = 6.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
         ) {
-            if (checked != null) {
-                RoundedCornerCheckbox (
-                    isChecked = checked,
-                    onValueChange = {
-                        onSelectExercise?.invoke(exercise,it)
-                    },
-                    size = 32f,
-                    checkedColor = MaterialTheme.colors.secondary,
-                )
-                Spacer(modifier = Modifier.size(16.dp))
-            }
-            Box(
-                modifier = Modifier.size(50.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
-                exercise.resource?.let {
-                    AsyncImage(
-                        model = exercise.resource?.url,
-                        contentDescription = "Exercise Image",
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
                         modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
                             .background(
-                                color = Color.Gray
+                                if (isCompleted) MaterialTheme.colors.primary.copy(alpha = 0.15f)
+                                else MaterialTheme.colors.primary.copy(alpha = 0.08f)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            if (isCompleted) Icons.Filled.FitnessCenter else Icons.Outlined.FitnessCenter,
+                            contentDescription = "Exercise",
+                            tint = if (isCompleted) MaterialTheme.colors.primary else MaterialTheme.colors.primary.copy(alpha = 0.8f),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                exercise.name,
+                                style = MaterialTheme.typography.subtitle1.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isCompleted) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
+                                )
                             )
-                            .fillMaxHeight()
-                    )
-                } ?: Image(
-                    painter = painterResource(R.drawable.workout_girl),
-                    contentDescription = "Workout image"
-                )
+                            if (isCompleted) {
+                                Icon(
+                                    Icons.Filled.CheckCircle,
+                                    contentDescription = "Completed",
+                                    tint = MaterialTheme.colors.primary,
+                                    modifier = Modifier.size(15.dp).padding(start = 4.dp)
+                                )
+                            }
+                        }
+                        if (exercise.description.isNotBlank()) {
+                            Text(
+                                exercise.description,
+                                style = MaterialTheme.typography.body2.copy(
+                                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                ),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+                    }
+                }
+                if (showActionButtons) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(CardBorder.copy(alpha = 0.15f))
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        if (onCompleteExercise != null) {
+                            IconButton(
+                                onClick = onCompleteExercise,
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    if (isCompleted) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                                    contentDescription = if (isCompleted) "Completed" else "Complete Exercise",
+                                    tint = if (isCompleted) MaterialTheme.colors.primary else MaterialTheme.colors.primary.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                        IconButton(
+                            onClick = { onUpdate(exercise) },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.Edit,
+                                contentDescription = "Edit",
+                                tint = MaterialTheme.colors.primary.copy(alpha = 0.8f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = { onDelete(exercise.id ?: "") },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.Delete,
+                                contentDescription = "Delete",
+                                tint = MaterialTheme.colors.error.copy(alpha = 0.8f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
             }
-            Text(exercise.name, style = MaterialTheme.typography.subtitle1)
-        }
-        Column {
-            Text(
-                text = exercise.muscleGroup.toResourceString(LocalContext.current),
-                style = MaterialTheme.typography.subtitle2
-            )
-            Text(
-                text = "${exercise.baseSets} sets x ${exercise.baseReps} reps",
-                style = MaterialTheme.typography.subtitle2
-            )
-            Text(
-                text = "${exercise.restSecs} seconds rest",
-                style = MaterialTheme.typography.subtitle2
-            )
+            if (exercise.baseSets > 0 || exercise.baseReps > 0 || exercise.restSecs > 0) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Divider(
+                    color = CardBorder.copy(alpha = 0.3f),
+                    thickness = 1.dp,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (exercise.baseSets > 0) {
+                        StatChip(
+                            text = "${exercise.baseSets}",
+                            label = "sets",
+                            backgroundColor = ChipBackground,
+                            textColor = MaterialTheme.colors.primary
+                        )
+                    }
+                    if (exercise.baseReps > 0) {
+                        StatChip(
+                            text = "${exercise.baseReps}",
+                            label = "reps",
+                            backgroundColor = ChipBackground,
+                            textColor = MaterialTheme.colors.secondary
+                        )
+                    }
+                    if (exercise.restSecs > 0) {
+                        StatChip(
+                            text = "${exercise.restSecs}",
+                            label = "rest",
+                            backgroundColor = ChipBackground,
+                            textColor = MaterialTheme.colors.error
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
-@Preview
 @Composable
-fun ExerciseCardPreview() {
-    Box(
-        modifier = Modifier.background(
-            color = Color.White
-        )
+private fun StatChip(
+    text: String,
+    label: String,
+    backgroundColor: Color,
+    textColor: Color
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = backgroundColor,
+        modifier = Modifier.padding(vertical = 1.dp)
     ) {
-        ExerciseCard(
-            exercise = Exercise(
-                name = "Bench Press",
-                description = "Lay down on a bench and press the bar up",
-                restSecs = 60,
-                baseSets = 3,
-                baseReps = 10,
-                muscleGroup = MuscleGroup.CORE,
-                equipment = emptyList()
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.subtitle2.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
+                )
             )
-        )
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.caption.copy(
+                    color = textColor.copy(alpha = 0.8f),
+                    fontWeight = FontWeight.Medium
+                )
+            )
+        }
     }
 }

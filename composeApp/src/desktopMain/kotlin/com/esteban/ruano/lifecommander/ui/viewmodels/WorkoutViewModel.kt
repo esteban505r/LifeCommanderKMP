@@ -12,7 +12,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
 class WorkoutViewModel(
@@ -26,7 +30,10 @@ class WorkoutViewModel(
             _state.value = _state.value.copy(isLoading = true)
             try {
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                val workoutDays = service.getExercisesByDay(day, now.formatDefault())
+                val dayOfWeek = now.dayOfWeek.value
+                val weekStart = now.date.minus(DatePeriod(days = dayOfWeek - 1))
+                val dateToSend = weekStart.plus(DatePeriod(days = day - 1 ))
+                val workoutDays = service.getExercisesByDay(day, dateToSend.atTime(12,0).formatDefault())
                 val exercises = workoutDays.flatMap { it.exercises ?: emptyList() }
                 val exerciseDayMap = fetchExerciseDayMap()
                 
@@ -46,7 +53,8 @@ class WorkoutViewModel(
                     isError = false,
                     errorMessage = "",
                     daySelected = day,
-                    exerciseDayMap = exerciseDayMap
+                    exerciseDayMap = exerciseDayMap,
+                    isCompleted = workoutDays.firstOrNull()?.isCompleted == true
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
@@ -105,8 +113,10 @@ class WorkoutViewModel(
         viewModelScope.launch {
             try {
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                
-                val success = service.completeWorkout(dayId, now.formatDefault())
+                val dayOfWeek = now.dayOfWeek.value
+                val weekStart = now.date.minus(DatePeriod(days = dayOfWeek - 1))
+                val dateToSend = weekStart.plus(DatePeriod(days = dayId - 1 ))
+                val success = service.completeWorkout(dayId, dateToSend.atTime(4,0).formatDefault())
                 if (success) {
                     // Refresh the current day's exercises to show updated state
                     getExercisesByDay(_state.value.daySelected)
@@ -278,12 +288,14 @@ class WorkoutViewModel(
     }
 
     // Exercise Tracking Methods
-    fun completeExercise(exerciseId: String, workoutDayId: String) {
+    fun completeExercise(exerciseId: String, day:Int, workoutDayId: String) {
         viewModelScope.launch {
             try {
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                
-                val success = service.completeExercise(exerciseId, workoutDayId, now.formatDefault())
+                val dayOfWeek = now.dayOfWeek.value
+                val weekStart = now.date.minus(DatePeriod(days = dayOfWeek - 1))
+                val dateToSend = weekStart.plus(DatePeriod(days = day - 1 ))
+                val success = service.completeExercise(exerciseId, workoutDayId, dateToSend.atTime(4,0).formatDefault())
                 if (success) {
                     // Refresh the current day's exercises to show updated state
                     getExercisesByDay(_state.value.daySelected)

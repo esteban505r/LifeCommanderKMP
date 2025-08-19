@@ -10,5 +10,8 @@ data class WorkoutState(
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isError: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val completedExercises: Set<String> = emptySet(),
+    val weeklyWorkoutsCompleted: List<Int> = emptyList(),
+    val daySelected: Int = 0
 ) : ViewState

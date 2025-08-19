@@ -1,12 +1,37 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- pick up env vars if present -->
+    <variable name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}" />
+    <variable name="ENVIRONMENT" value="${ENVIRONMENT:-production}" />
+    <variable name="RELEASE" value="${GIT_COMMIT:-unknown}" />
+
+    <!-- Console for local visibility (can be JSON if you prefer) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d %-5level %logger - %msg %X{requestId} %n</pattern>
         </encoder>
     </appender>
-    <root level="trace">
-        <appender-ref ref="STDOUT"/>
+
+    <!-- Send ERROR+ to Sentry -->
+    <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
+        <!-- Use env var so it also captures startup errors -->
+        <dsn>${SENTRY_DSN}</dsn>
+        <environment>${ENVIRONMENT}</environment>
+        <release>${RELEASE}</release>
+        <!-- Send only ERROR by default; you can raise/lower as needed -->
+        <minimumEventLevel>ERROR</minimumEventLevel>
+        <!-- Optional: also send breadcrumbs from WARN+ logs -->
+        <minimumBreadcrumbLevel>INFO</minimumBreadcrumbLevel>
+
+        <!-- If you rely on MDC, you can mark some keys as tags -->
+        <!-- <mdcTags>requestId,tenantId,userId</mdcTags> -->
+    </appender>
+
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="SENTRY"/>
     </root>
-    <logger name="org.eclipse.jetty" level="INFO"/>
-    <logger name="io.netty" level="INFO"/>
+
+    <!-- Quiet down chatty libs if needed -->
+    <logger name="io.netty" level="WARN"/>
+    <logger name="org.apache" level="WARN"/>
 </configuration>

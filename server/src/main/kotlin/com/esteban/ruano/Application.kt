@@ -1,7 +1,10 @@
 package com.esteban.ruano
 
 import com.esteban.ruano.database.entities.*
-import com.esteban.ruano.plugins.*
+import com.esteban.ruano.plugins.configureKoin
+import com.esteban.ruano.plugins.configureRouting
+import com.esteban.ruano.plugins.configureSecurity
+import com.esteban.ruano.plugins.configureSerialization
 import com.esteban.ruano.service.TimerCheckerService
 import com.esteban.ruano.service.TimerService
 import com.esteban.ruano.utils.X_CATEGORY_PASSWORD_HEADER
@@ -11,15 +14,24 @@ import io.ktor.server.application.*
 import io.ktor.server.config.yaml.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.callid.*
+import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.websocket.*
+import io.sentry.Sentry
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.ktor.ext.inject
+import org.slf4j.event.Level
+import java.util.*
 import kotlin.time.Duration.Companion.seconds
+
+private const val MDC_KEY = "requestId"
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
@@ -28,6 +40,7 @@ fun main() {
 
 @Suppress("unused")
 fun Application.module() {
+    configureLogging()
     configureCORS()
     configureWebSockets()
     configureSecurity()
@@ -44,6 +57,30 @@ fun Application.module() {
     timerCheckerService.start()
 }
 
+fun Application.configureLogging() {
+    install(CallId) {
+        retrieveFromHeader(HttpHeaders.XRequestId)
+        generate { UUID.randomUUID().toString() }
+        replyToHeader(HttpHeaders.XRequestId)
+    }
+
+    install(CallLogging) {
+        level = Level.INFO
+        callIdMdc(MDC_KEY)                 // <- surfaces CallId in MDC
+        filter { !it.request.path().startsWith("/health") }
+        format { call ->
+            val status = call.response.status()?.value ?: 0
+            "${call.request.httpMethod.value} ${call.request.uri} -> $status"
+        }
+    }
+
+    install(StatusPages) {
+        exception<Throwable> { call, cause ->
+            this@configureLogging.log.error("Unhandled exception", cause)  // -> Sentry receives it
+            call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "internal_error"))
+        }
+    }
+}
 fun Application.configureCORS() {
     install(CORS) {
         allowMethod(HttpMethod.Options)
@@ -85,6 +122,20 @@ fun Application.connectToPostgres() {
     val password = configs?.property("services.postgres.environment.POSTGRES_PASSWORD")?.getString()
     val env = configs?.property("services.postgres.environment.POSTGRES_ENV")?.getString()
     val host = configs?.property("services.postgres.environment.POSTGRES_HOST")?.getString()
+    val sentryDsn = configs?.property("services.postgres.environment.SENTRY_DSN")?.getString()
+
+
+    Sentry.init { opts ->
+        opts.dsn = sentryDsn
+        opts.environment = env
+        opts.release = "unknown"
+    }
+
+    try {
+        throw Exception("This is a test.")
+    } catch (e: Exception) {
+        Sentry.captureException(e)
+    }
 
     if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
         throw Exception("No user or password detected")

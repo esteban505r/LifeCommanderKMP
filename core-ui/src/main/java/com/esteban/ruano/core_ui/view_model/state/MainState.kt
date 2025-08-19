@@ -7,7 +7,7 @@ import com.esteban.ruano.core_ui.view_model.ViewState
 
 data class MainState(
     val isSynced: Boolean = false,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val isError: Boolean = false,
     val errorMessage: String? = null,
     val isAuthenticated: Boolean = false

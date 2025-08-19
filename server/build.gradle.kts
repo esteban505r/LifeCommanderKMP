@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.sentry)
     application
 }
 
@@ -25,6 +26,9 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.server.call.logging)
+    implementation("io.ktor:ktor-server-core:3.2.3")
+    implementation("io.ktor:ktor-server-host-common:3.2.3")
+    implementation("io.ktor:ktor-server-core:3.2.3")
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
     implementation(libs.ktor.server.auth)
@@ -64,9 +68,20 @@ dependencies {
     
     // Firebase Admin SDK for FCM notifications
     implementation(libs.firebase.admin)
+    implementation(libs.sentry)
+    implementation(libs.call.id)
+    implementation(libs.status.pages)
 }
 
 // Configure shadow plugin for ZIP64 support
 tasks.shadowJar {
     isZip64 = true
+}
+
+sentry {
+    includeSourceContext = true
+
+    org = "personal-tow"
+    projectName = "kotlin"
+    authToken = providers.gradleProperty("sentry.auth.token").orNull
 }

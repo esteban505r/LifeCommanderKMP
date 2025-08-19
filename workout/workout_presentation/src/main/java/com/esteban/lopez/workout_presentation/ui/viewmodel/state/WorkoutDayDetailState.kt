@@ -11,7 +11,9 @@ data class WorkoutDayDetailState(
     val exercisesInProgress: List<ExerciseInProgress> = listOf(),
     val time: String = "00:00",
     val errorMessage: String? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val completedExercises: Set<String> = emptySet(),
+    val isWorkoutCompleted: Boolean = false
 ) : ViewState
 
 sealed class WorkoutDayDetailEffect: Effect {

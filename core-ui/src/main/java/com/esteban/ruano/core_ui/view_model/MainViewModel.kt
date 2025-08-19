@@ -27,9 +27,10 @@ class MainViewModel @Inject constructor(
 
     private fun checkAuthenticationStatus() {
         viewModelScope.launch {
+            emitState { currentState.copy(isAuthenticated = isAuthenticated) }
             val authToken = preferences.loadAuthToken().first()
             val isAuthenticated = authToken.isNotEmpty()
-            emitState { currentState.copy(isAuthenticated = isAuthenticated) }
+            emitState { currentState.copy(isAuthenticated = isAuthenticated, isLoading = false) }
             
             if (isAuthenticated) {
                 sendEffect { MainEffect.NavigateToHome }

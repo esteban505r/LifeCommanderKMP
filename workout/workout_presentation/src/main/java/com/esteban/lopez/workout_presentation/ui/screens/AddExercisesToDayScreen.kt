@@ -254,11 +254,7 @@ private fun ColumnScope.AllExercises(
                 )
             }
             items(exercises.size) { index ->
-                ExerciseCard(exercise = exercises[index],
-                    checked = exercises[index] in workoutExercises,
-                    onSelectExercise = { exercise, checked ->
-                        onSelectedExercise(exercise, checked)
-                    })
+                ExerciseCard(exercise = exercises[index],)
             }
         }
         if (exercises.isEmpty()) {

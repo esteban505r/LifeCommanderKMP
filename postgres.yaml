@@ -7,3 +7,4 @@ services:
       POSTGRES_DB: "lifecommanderdb"
       POSTGRES_ENV: "DEV"
       POSTGRES_HOST: "localhost"
+      SENTRY_DSN: "https://1b260ee224405b64c9cd85aa1ec832d7@o4509867909775360.ingest.us.sentry.io/4509867913117696"

@@ -67,13 +67,10 @@ fun LoggedScreen(onRootNavigate: (String) -> Unit) {
                 }
             }
         }
-    ) {
+    ) { padding ->
         // Modern approach: Use utility function for consistent system bar handling
         NavHostWrapper(
-            modifier = SystemBarUtils.withBottomNavMatchingSystemBars(
-                bottomNavColor = bottomNavColor,
-                modifier = Modifier.padding(it)
-            ),
+            modifier = Modifier.padding(padding),
             navController = navController,
             shouldShowOnboarding = false,
         )

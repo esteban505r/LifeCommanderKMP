@@ -17,6 +17,7 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 .env
+server/gradle.properties
 
 # Firebase
 firebase-service-account*.json

@@ -7,6 +7,7 @@ import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.habits.HabitDTO
 import com.esteban.ruano.models.tasks.TaskDTO
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import kotlinx.datetime.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
@@ -421,8 +422,8 @@ class DashboardService(
         return transaction {
             (0..6).map { i ->
                 val day = weekStart.plus(DatePeriod(days = i))
-                val workout = workoutService.getWorkoutDayById(userId, day.dayOfWeek.value)
-                workout.exercises.size
+                val workout = workoutService.getWorkoutDaysByDay(userId, day.dayOfWeek.value,day.atTime(0,0).formatDefault())
+                workout.firstOrNull()?.isCompleted.let { if(it == true) 1 else 0 }
             }
         }
     }

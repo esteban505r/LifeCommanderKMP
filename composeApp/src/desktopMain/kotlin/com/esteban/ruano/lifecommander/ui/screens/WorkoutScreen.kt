@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.ui.state.WorkoutState
 import com.esteban.ruano.ui.LifeCommanderDesignSystem
+import com.kdroid.composenotification.model.Button
 import ui.composables.NewEditExerciseDialog
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -32,7 +33,7 @@ fun WorkoutScreen(
     onDelete: (String) -> Unit,
     onDaySelected: (Int) -> Unit,
     onCompleteWorkout: (Int) -> Unit = {},
-    onCompleteExercise: (String, String) -> Unit = { _, _ -> },
+    onCompleteExercise: (String,Int, String) -> Unit = { _,_, _ -> },
     onChangeAllExercisesMode: (Boolean) -> Unit = {},
     onGetAllExercises: () -> Unit = {},
     onBindExerciseToDay: (String, Int, (Boolean) -> Unit) -> Unit = { _, _, _ -> },
@@ -96,7 +97,7 @@ fun WorkoutScreen(
         }
 
         // Day selection chips
-            Card(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 24.dp),
@@ -115,43 +116,79 @@ fun WorkoutScreen(
                     ),
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
-                
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    FilterChip(
-                        selected = allExercisesMode,
-                        onClick = {
-                            onChangeAllExercisesMode(true)
-                            onGetAllExercises()
-                        },
-                        content = { Text("All Exercises") },
-                        colors = ChipDefaults.filterChipColors(
-                            selectedBackgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.12f),
-                            selectedContentColor = MaterialTheme.colors.primary
-                        )
-                    )
-                    
-                    val dayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-                    dayNames.forEachIndexed { idx, name ->
-                        val day = idx + 1
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         FilterChip(
-                            selected = (!allExercisesMode && state.daySelected == day),
+                            selected = allExercisesMode,
                             onClick = {
-                                onChangeAllExercisesMode(false)
-                                onDaySelected(day)
+                                onChangeAllExercisesMode(true)
+                                onGetAllExercises()
                             },
-                            content = { Text(name) },
+                            content = { Text("All Exercises") },
                             colors = ChipDefaults.filterChipColors(
                                 selectedBackgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.12f),
                                 selectedContentColor = MaterialTheme.colors.primary
                             )
-                                        )
-                                    }
-                                }
-                            }
+                        )
+
+                        val dayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                        dayNames.forEachIndexed { idx, name ->
+                            val day = idx + 1
+                            FilterChip(
+                                selected = (!allExercisesMode && state.daySelected == day),
+                                onClick = {
+                                    onChangeAllExercisesMode(false)
+                                    onDaySelected(day)
+                                },
+                                content = { Text(name) },
+                                colors = ChipDefaults.filterChipColors(
+                                    selectedBackgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.12f),
+                                    selectedContentColor = MaterialTheme.colors.primary
+                                )
+                            )
                         }
+                    }
+
+                    if (
+                        !allExercisesMode
+                    ) {
+                        Button(
+                            onClick = {
+                                onCompleteWorkout(
+                                    state.daySelected
+                                )
+                            },
+                            enabled = !state.isCompleted,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = MaterialTheme.colors.primary,
+                                contentColor = MaterialTheme.colors.onPrimary
+                            ),
+                            elevation = ButtonDefaults.elevation(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Done,
+                                contentDescription = "Add Exercise",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Complete workout",
+                                style = MaterialTheme.typography.button.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
         if (state.exercises.isEmpty()) {
             Card(
@@ -189,7 +226,7 @@ fun WorkoutScreen(
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-                    Text(
+                        Text(
                             if (allExercisesMode) "No exercises in database." else "No exercises for this day.",
                             style = MaterialTheme.typography.h6.copy(
                                 color = MaterialTheme.colors.onSurface,
@@ -216,16 +253,16 @@ fun WorkoutScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                    items(state.exercises.size) { idx ->
-                        val exercise = state.exercises[idx]
+                items(state.exercises.size) { idx ->
+                    val exercise = state.exercises[idx]
                     val boundDays = state.exerciseDayMap[exercise.id] ?: emptySet()
-                    
-                        ExerciseCard(
-                            exercise = exercise,
-                            onUpdate = {
-                                exerciseToEdit = it
-                                showExerciseDialog = true
-                            },
+
+                    ExerciseCard(
+                        exercise = exercise,
+                        onUpdate = {
+                            exerciseToEdit = it
+                            showExerciseDialog = true
+                        },
                         onDelete = onDelete,
                         boundDays = boundDays.toList(),
                         onUnbindDay = { day ->
@@ -233,13 +270,17 @@ fun WorkoutScreen(
                                 if (success) onGetAllExercises()
                             }
                         },
-                        onBindToDay = if (allExercisesMode) { { showBindDialog = exercise } } else null,
-                        onCompleteExercise = if (!allExercisesMode && state.workoutDays.isNotEmpty()) { { 
-                            val workoutDayId = state.workoutDays.firstOrNull()?.id
-                            if (workoutDayId != null) {
-                                onCompleteExercise(exercise.id, workoutDayId)
+                        onBindToDay = if (allExercisesMode) {
+                            { showBindDialog = exercise }
+                        } else null,
+                        onCompleteExercise = if (!allExercisesMode && state.workoutDays.isNotEmpty()) {
+                            {
+                                val workoutDayId = state.workoutDays.firstOrNull()?.id
+                                if (workoutDayId != null) {
+                                    onCompleteExercise(exercise.id, state.daySelected,workoutDayId)
+                                }
                             }
-                        } } else null,
+                        } else null,
                         isAllExercisesMode = allExercisesMode,
                         isCompleted = state.completedExercises.contains(exercise.id)
                     )
@@ -295,7 +336,7 @@ fun WorkoutScreen(
                         ) {
                             dayNames.forEachIndexed { idx, name ->
                                 val day = idx + 1
-            FilterChip(
+                                FilterChip(
                                     selected = selectedDays.contains(day),
                                     onClick = {
                                         selectedDays = if (selectedDays.contains(day)) {
@@ -396,9 +437,9 @@ fun ExerciseCard(
                             modifier = Modifier.size(24.dp)
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.width(16.dp))
-                    
+
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             exercise.name,
@@ -422,7 +463,7 @@ fun ExerciseCard(
                         }
                     }
                 }
-                
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -440,7 +481,7 @@ fun ExerciseCard(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    
+
                     IconButton(
                         onClick = { onDelete(exercise.id) },
                         modifier = Modifier
@@ -455,7 +496,7 @@ fun ExerciseCard(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    
+
                     // Show different button based on mode
                     if (isAllExercisesMode && onBindToDay != null) {
                         // Schedule button for all exercises mode
@@ -481,18 +522,18 @@ fun ExerciseCard(
                                 .size(32.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (isCompleted) 
+                                    if (isCompleted)
                                         MaterialTheme.colors.primary.copy(alpha = 0.2f)
-                                    else 
+                                    else
                                         MaterialTheme.colors.primary.copy(alpha = 0.1f)
                                 )
                         ) {
                             Icon(
                                 if (isCompleted) Icons.Default.CheckCircle else Icons.Default.CheckCircleOutline,
                                 contentDescription = if (isCompleted) "Completed" else "Complete Exercise",
-                                tint = if (isCompleted) 
-                                    MaterialTheme.colors.primary 
-                                else 
+                                tint = if (isCompleted)
+                                    MaterialTheme.colors.primary
+                                else
                                     MaterialTheme.colors.primary.copy(alpha = 0.7f),
                                 modifier = Modifier.size(20.dp)
                             )
@@ -523,7 +564,7 @@ fun ExerciseCard(
                             )
                         }
                     }
-                    
+
                     exercise.baseReps?.let {
                         Chip(
                             colors = ChipDefaults.chipColors(
@@ -540,7 +581,7 @@ fun ExerciseCard(
                             )
                         }
                     }
-                    
+
                     exercise.restSecs?.let {
                         Chip(
                             colors = ChipDefaults.chipColors(

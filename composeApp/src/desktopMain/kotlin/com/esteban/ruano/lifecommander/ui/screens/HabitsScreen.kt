@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.esteban.ruano.ui.components.HabitList
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.lifecommander.models.Frequency
 import com.lifecommander.models.Habit
 import com.lifecommander.models.Reminder
 import kotlinx.datetime.Clock
@@ -48,6 +49,10 @@ fun HabitsScreen(
     val currentDate = Clock.System.now().toLocalDateTimeKt(
         timeZone = TimeZone.currentSystemDefault()
     ).date
+
+    // Split habits into daily and other habits
+    val dailyHabits = habits.filter { it.frequency == Frequency.DAILY.value }
+    val otherHabits = habits.filter { it.frequency != Frequency.DAILY.value }
 
     Column(
         modifier = modifier
@@ -126,14 +131,14 @@ fun HabitsScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             HabitCategoryCard(
-                title = "Today",
-                count = habits.count { it.dateTime?.toLocalDateTime()?.date == currentDate },
+                title = "Daily",
+                count = dailyHabits.size,
                 modifier = Modifier.weight(1f),
                 backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.1f)
             )
             HabitCategoryCard(
-                title = "Active",
-                count = habits.count { it.done == false},
+                title = "Other",
+                count = otherHabits.size,
                 modifier = Modifier.weight(1f),
                 backgroundColor = MaterialTheme.colors.secondary.copy(alpha = 0.1f)
             )
@@ -211,66 +216,141 @@ fun HabitsScreen(
                     }
                 }
             } else {
-                // Stats summary
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    backgroundColor = MaterialTheme.colors.surface,
-                    elevation = 1.dp
+                // Split layout for daily and other habits
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Daily Habits Column
+                    Column(
+                        modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = "Total Habits",
-                            style = MaterialTheme.typography.subtitle2,
-                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                        )
-                        Text(
-                            text = "${habits.size}",
-                            style = MaterialTheme.typography.h6,
+                            text = "Daily Habits",
+                            style = MaterialTheme.typography.h5,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colors.primary
+                            modifier = Modifier.padding(bottom = 16.dp)
                         )
+                        
+                        if (dailyHabits.isEmpty()) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = MaterialTheme.colors.surface,
+                                elevation = 1.dp
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(32.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No daily habits",
+                                        style = MaterialTheme.typography.body1,
+                                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+                        } else {
+                            HabitList(
+                                habitList = dailyHabits,
+                                isRefreshing = false,
+                                onPullRefresh = onReload,
+                                onHabitClick = onHabitClick,
+                                onCheckedChange = onCheckedHabit,
+                                modifier = Modifier.fillMaxSize(),
+                                onDelete = onDelete,
+                                itemWrapper = { content, habit ->
+                                    ContextMenuArea(
+                                        items = {
+                                            listOf(
+                                                ContextMenuItem("Edit") { 
+                                                    habitToEdit = habit
+                                                    showNewHabitDialog = true
+                                                },
+                                                ContextMenuItem("Delete") { 
+                                                    habitToDelete = habit
+                                                    showDeleteDialog = true
+                                                }
+                                            )
+                                        }
+                                    ) {
+                                        content()
+                                    }
+                                },
+                                onEdit = { habit ->
+                                    habitToEdit = habit
+                                    showNewHabitDialog = true
+                                }
+                            )
+                        }
+                    }
+                    
+                    // Other Habits Column
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Other Habits",
+                            style = MaterialTheme.typography.h5,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                        
+                        if (otherHabits.isEmpty()) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = MaterialTheme.colors.surface,
+                                elevation = 1.dp
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(32.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No other habits",
+                                        style = MaterialTheme.typography.body1,
+                                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+                        } else {
+                            HabitList(
+                                habitList = otherHabits,
+                                isRefreshing = false,
+                                onPullRefresh = onReload,
+                                onHabitClick = onHabitClick,
+                                onCheckedChange = onCheckedHabit,
+                                modifier = Modifier.fillMaxSize(),
+                                onDelete = onDelete,
+                                itemWrapper = { content, habit ->
+                                    ContextMenuArea(
+                                        items = {
+                                            listOf(
+                                                ContextMenuItem("Edit") { 
+                                                    habitToEdit = habit
+                                                    showNewHabitDialog = true
+                                                },
+                                                ContextMenuItem("Delete") { 
+                                                    habitToDelete = habit
+                                                    showDeleteDialog = true
+                                                }
+                                            )
+                                        }
+                                    ) {
+                                        content()
+                                    }
+                                },
+                                onEdit = { habit ->
+                                    habitToEdit = habit
+                                    showNewHabitDialog = true
+                                }
+                            )
+                        }
                     }
                 }
-
-                HabitList(
-                    habitList = habits,
-                    isRefreshing = false,
-                    onPullRefresh = onReload,
-                    onHabitClick = onHabitClick,
-                    onCheckedChange = onCheckedHabit,
-                    modifier = Modifier.fillMaxSize(),
-                    onDelete = onDelete,
-                    itemWrapper = { content, habit ->
-                        ContextMenuArea(
-                            items = {
-                                listOf(
-                                    ContextMenuItem("Edit") { 
-                                        habitToEdit = habit
-                                        showNewHabitDialog = true
-                                    },
-                                    ContextMenuItem("Delete") { 
-                                        habitToDelete = habit
-                                        showDeleteDialog = true
-                                    }
-                                )
-                            }
-                        ) {
-                            content()
-                        }
-                    },
-                    onEdit = { habit ->
-                        habitToEdit = habit
-                        showNewHabitDialog = true
-                    }
-                )
             }
         }
     }

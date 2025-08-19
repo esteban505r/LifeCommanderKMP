@@ -71,7 +71,7 @@ fun MainDestination(
         }
     }
     MainScreen(
-        isLogged = state.value.isAuthenticated,
+        state = state.value,
         snackbarHostState = snackbarHostState,
     )
 }

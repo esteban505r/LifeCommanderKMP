@@ -15,7 +15,7 @@ import com.esteban.ruano.workout_presentation.navigation.workoutGraph
 @Composable
 fun NavHostWrapper(
     navController: NavHostController,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     shouldShowOnboarding: Boolean,
 ) {
     NavHost(

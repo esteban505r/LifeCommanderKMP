@@ -1,4 +1,4 @@
-package com.esteban.ruano.onboarding_presentation.auth.navigation
+package com.esteban.lopez.onboarding_presentation.auth.navigation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
