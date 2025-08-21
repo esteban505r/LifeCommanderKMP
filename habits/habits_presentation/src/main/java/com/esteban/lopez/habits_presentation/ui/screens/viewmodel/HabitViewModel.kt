@@ -160,6 +160,18 @@ class HabitViewModel @Inject constructor(
                 onSuccess = {
                    // sendEffect(UiEvent.ShowSnackbar(UiText.StringResource(R.string.habit_completed)))
                     onComplete(true)
+                    emitState {
+                        currentState.copy(
+                            habits = habits.map {
+                                if(it.id == id){
+                                    it.copy(done = true)
+                                }
+                                else {
+                                    it
+                                }
+                            }
+                        )
+                    }
                 },
                 onFailure = {
                     //sendEffect(UiEvent.ShowSnackbar(UiText.DynamicString(it.message?:"Error")))
@@ -170,13 +182,36 @@ class HabitViewModel @Inject constructor(
 
     private fun unCompleteHabit(id: String, onComplete: (Boolean) -> Unit) {
         viewModelScope.launch {
+            emitState {
+                currentState.copy(
+                    isLoading = true
+                )
+            }
             val unCompleted = habitUseCases.unCompleteHabit(id)
             unCompleted.fold(
                 onSuccess = {
                     //sendEffect(UiEvent.ShowSnackbar(UiText.StringResource(R.string.habit_uncompleted)))
                     onComplete(false)
+                    emitState {
+                        currentState.copy(
+                            habits = habits.map {
+                                if(it.id == id){
+                                    it.copy(done = false)
+                                }
+                                else {
+                                    it
+                                }
+                            },
+                            isLoading = false
+                        )
+                    }
                 },
                 onFailure = {
+                    emitState {
+                        currentState.copy(
+                            isLoading = false
+                        )
+                    }
                     //sendEffect(UiEvent.ShowSnackbar(UiText.DynamicString(it.message?:"Error")))
                 }
             )

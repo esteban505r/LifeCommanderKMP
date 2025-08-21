@@ -84,4 +84,5 @@ sentry {
     org = "personal-tow"
     projectName = "kotlin"
     authToken = providers.gradleProperty("sentry.auth.token").orNull
+    authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
 }

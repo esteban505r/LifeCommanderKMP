@@ -131,12 +131,6 @@ fun Application.connectToPostgres() {
         opts.release = "unknown"
     }
 
-    try {
-        throw Exception("This is a test.")
-    } catch (e: Exception) {
-        Sentry.captureException(e)
-    }
-
     if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
         throw Exception("No user or password detected")
     }

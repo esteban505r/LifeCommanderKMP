@@ -29,6 +29,8 @@ fun AccountList(
     onDeleteAccount: (Account) -> Unit,
     modifier: Modifier = Modifier
 ) {
+
+
     Column(modifier = modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -72,6 +74,8 @@ private fun AccountItem(
     onDelete: () -> Unit
 ) {
 
+    var passwordVisible by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth().pointerInput(Unit) {
             awaitPointerEventScope {
@@ -105,7 +109,16 @@ private fun AccountItem(
                         color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                     )
                     Text(
-                        text = account.balance.toCurrencyFormat(),
+                        text = passwordVisible.let {
+                            val text = account.balance.toCurrencyFormat()
+                            val textNotVisible = StringBuilder("*").repeat(10)
+                            if(it){
+                                text
+                            }
+                            else {
+                                textNotVisible
+                            }
+                        },
                         style = MaterialTheme.typography.h5,
                         color = if (account.balance >= 0) {
                             MaterialTheme.colors.primary
@@ -117,6 +130,15 @@ private fun AccountItem(
             }
             
             Row {
+                IconButton(onClick = {
+                    passwordVisible = !passwordVisible
+                }) {
+                    Icon(
+                        if(passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = "Password Visibility",
+                        tint = MaterialTheme.colors.primary
+                    )
+                }
                 IconButton(onClick = onEdit) {
                     Icon(
                         Icons.Default.Edit,
