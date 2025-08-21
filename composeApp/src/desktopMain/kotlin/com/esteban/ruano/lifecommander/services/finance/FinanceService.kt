@@ -28,7 +28,7 @@ class FinanceService(
     private val tokenStorageImpl: TokenStorageImpl
 ) {
     suspend fun getTransactions(
-        limit: Int = 50,
+        limit: Int = 100,
         offset: Int = 0,
         withFutureTransactions: Boolean = false,
         filters: TransactionFilters = TransactionFilters()
@@ -383,20 +383,28 @@ class FinanceService(
         }.body()
     }
 
-    suspend fun addScheduledTransaction(transaction: ScheduledTransaction): ScheduledTransaction {
-        return httpClient.post("$baseUrl/finance/scheduled-transactions") {
+    suspend fun addScheduledTransaction(transaction: ScheduledTransaction) {
+        val response =  httpClient.post("$baseUrl/finance/scheduled-transactions") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
             setBody(transaction)
-        }.body()
+        }
+
+        if(response.status != HttpStatusCode.Created) {
+            throw Exception("Failed to add scheduled transaction: ${response.status}")
+        }
+
     }
 
-    suspend fun updateScheduledTransaction(transaction: ScheduledTransaction): ScheduledTransaction {
-        return httpClient.patch("$baseUrl/finance/scheduled-transactions/${transaction.id}") {
+    suspend fun updateScheduledTransaction(transaction: ScheduledTransaction) {
+        val response = httpClient.patch("$baseUrl/finance/scheduled-transactions/${transaction.id}") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
             setBody(transaction)
-        }.body()
+        }
+        if(response.status != HttpStatusCode.OK) {
+            throw Exception("Failed to update scheduled transaction: ${response.status}")
+        }
     }
 
     suspend fun deleteScheduledTransaction(id: String) {

@@ -46,7 +46,7 @@ fun ScheduledTransactionForm(
     }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
-    var frequency by remember { mutableStateOf(initialTransaction?.frequency ?: Frequency.MONTHLY.value.uppercase()) }
+    var frequency by remember { mutableStateOf(initialTransaction?.frequency?.uppercase() ?: Frequency.MONTHLY.value.uppercase()) }
     var interval by remember { mutableStateOf(initialTransaction?.interval?.toString() ?: "1") }
     var applyAutomatically by remember { mutableStateOf(initialTransaction?.applyAutomatically ?: false) }
 

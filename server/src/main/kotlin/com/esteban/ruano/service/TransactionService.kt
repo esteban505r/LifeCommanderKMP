@@ -134,7 +134,7 @@ class TransactionService() : BaseService() {
 
     fun getTransactionsByUser(
         userId: Int,
-        limit: Int = 50,
+        limit: Int = 100,
         offset: Int = 0,
         filters: TransactionFilters = TransactionFilters(),
         scheduledBaseDate: LocalDate? = null

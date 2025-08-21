@@ -91,7 +91,7 @@ fun Route.financeRouting(
         route("/transactions") {
             get {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
+                val limit = call.parameters["limit"]?.toIntOrNull() ?: 100
                 val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
                 val scheduledBaseDate = call.parameters["scheduledBaseDate"]?.toLocalDate()
                 val filters = call.gatherTransactionFilters()

@@ -17,7 +17,13 @@ fun getUnbudgetedPeriod(referenceDate: LocalDate, userSettings: UserSettings): P
     return when (userSettings.unbudgetedPeriodType) {
         UnbudgetedPeriodType.MONTHLY -> {
             val startDay = userSettings.unbudgetedPeriodStartDay
-            val start = LocalDate(referenceDate.year, referenceDate.month, startDay)
+            val month = if(referenceDate.dayOfMonth < startDay)
+                referenceDate.minus(
+                    DatePeriod(months = 1)
+                ).month
+            else
+                referenceDate.month
+            val start = LocalDate(referenceDate.year, month, startDay)
             val end = start.plus(DatePeriod(months = 1)).minus(DatePeriod(days = 1))
             Pair(start, end)
         }
