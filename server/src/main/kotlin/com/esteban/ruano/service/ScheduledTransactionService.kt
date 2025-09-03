@@ -14,12 +14,12 @@ import com.esteban.ruano.utils.addSortOrder
 import com.esteban.ruano.utils.buildScheduledTransactionFilters
 import com.lifecommander.finance.model.TransactionType
 import com.lifecommander.models.Frequency
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.Op
+import org.jetbrains.exposed.v1.jdbc.SortOrder
+import org.jetbrains.exposed.v1.jdbc.and
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.*
 
 class ScheduledTransactionService : BaseService() {

@@ -15,9 +15,9 @@ import com.esteban.ruano.utils.DateUtils
 import com.esteban.ruano.utils.HabitUtils
 import com.lifecommander.models.Frequency
 import kotlinx.datetime.*
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.SortOrder
+import org.jetbrains.exposed.v1.jdbc.and
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.Rule
 import org.junit.Test
 import org.koin.test.KoinTest

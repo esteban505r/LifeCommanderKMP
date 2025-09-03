@@ -13,7 +13,7 @@ import com.esteban.ruano.testModule
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime as toLocalDateTimeUI
 import kotlinx.datetime.*
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.Rule
 import org.junit.Test
 import org.koin.test.KoinTest

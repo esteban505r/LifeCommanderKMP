@@ -5,9 +5,9 @@ import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.finance.*
 import kotlinx.datetime.LocalDate
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.and
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.*
 
 class SavingsGoalService : BaseService() {

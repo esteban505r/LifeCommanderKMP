@@ -17,22 +17,22 @@ import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime as toLocalDateTimeUI
 import com.esteban.ruano.utils.fromDateToLong
 import com.esteban.ruano.utils.parseDate
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toLocalDateTime
-import org.jetbrains.exposed.dao.with
-import org.jetbrains.exposed.sql.kotlin.datetime.date
+import org.jetbrains.exposed.v1.core.dao.with
+import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
 import com.esteban.ruano.models.nutrition.RecipeTrackDTO
 import com.esteban.ruano.models.nutrition.UpdateRecipeDTO
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.like
 
 class NutritionService() : BaseService() {
 

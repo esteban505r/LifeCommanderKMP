@@ -1,13 +1,16 @@
 package com.esteban.ruano.service
 
 import com.esteban.ruano.database.converters.toResponseDTO
-import com.esteban.ruano.database.entities.*
+import com.esteban.ruano.database.entities.Account
+import com.esteban.ruano.database.entities.Accounts
+import com.esteban.ruano.database.entities.Transaction
+import com.esteban.ruano.database.entities.Transactions
 import com.esteban.ruano.database.models.Status
-import com.esteban.ruano.models.finance.*
+import com.esteban.ruano.models.finance.AccountResponseDTO
 import com.lifecommander.finance.model.TransactionType
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.*
 
 class AccountService : BaseService() {

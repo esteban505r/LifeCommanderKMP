@@ -10,12 +10,12 @@ import com.esteban.ruano.service.ReminderService
 import com.esteban.ruano.service.TaskService
 import com.esteban.ruano.utils.DateUtils.formatDateTime
 import kotlinx.datetime.*
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.deleteAll
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.Before
 import org.junit.Test
 import java.sql.Connection
@@ -250,4 +250,42 @@ class TasksServiceTest {
         assert(updatedTask!!.scheduledDateTime != null)
         assert(updatedTask.scheduledDateTime == formatDateTime(tomorrow))
     }
+
+    @Test
+    fun `should surface overdue scheduled tasks in today smart filter`() {
+        // Arrange: create a NOT-DONE task scheduled for yesterday (no due date)
+        val tz = TimeZone.currentSystemDefault()
+        val yesterday = Clock.System.now()
+            .minus(1, DateTimeUnit.DAY, tz)
+            .toLocalDateTime(tz)
+
+        transaction {
+            Tasks.insert {
+                it[name] = "Scheduled Overdue"
+                it[note] = "Scheduled for yesterday, still pending"
+                it[scheduledDateTime] = yesterday
+                it[dueDateTime] = null
+                it[doneDateTime] = null
+                it[user] = 1
+            }
+        }
+
+        // Act: "Today" smart filtering (startDate == endDate == today)
+        val today = Clock.System.now().toLocalDateTime(tz).date
+        val result = service.fetchAllByDateRangeWithSmartFiltering(
+            userId = 1,
+            pattern = "",
+            startDate = today,
+            endDate = today,
+            limit = 50,
+            offset = 0,
+            isTodayFilter = true
+        )
+
+        // Assert: the overdue scheduled task is present
+        assert(result.any { it.name == "Scheduled Overdue" }) {
+            "Expected overdue scheduled tasks to be returned in Today smart filter"
+        }
+    }
+
 }

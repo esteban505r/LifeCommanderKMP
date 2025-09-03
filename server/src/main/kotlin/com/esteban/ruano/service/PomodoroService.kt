@@ -10,9 +10,9 @@ import com.esteban.ruano.models.pomodoros.PomodoroDTO
 import com.esteban.ruano.models.pomodoros.UpdatePomodoroDTO
 import com.esteban.ruano.utils.parseDateTime
 import com.esteban.ruano.utils.parseDateTimeWithSeconds
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.kotlin.datetime.date
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 
 class PomodoroService : BaseService() {

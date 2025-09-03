@@ -15,12 +15,12 @@ import com.esteban.ruano.models.tasks.UpdateTaskDTO
 import com.esteban.ruano.utils.sortedByDefault
 import com.esteban.ruano.utils.fromDateToLong
 import com.esteban.ruano.utils.parseDateTime
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.sql.kotlin.datetime.date
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 
 class TaskService(
@@ -278,20 +278,21 @@ class TaskService(
     ): List<TaskDTO> {
         return transaction {
             val query = if (isTodayFilter) {
-                // For Today filter: 
-                // - Show all due tasks (overdue, today, future) because they should be done as soon as possible
-                // - Show only scheduled tasks for today (not future scheduled tasks)
-                ((Tasks.dueDateTime.date() lessEq startDate) or
-                        ((Tasks.dueDateTime.date() greaterEq startDate)) and
-                        (Tasks.doneDateTime eq null))  // Due today or overdue
-                    .or((Tasks.scheduledDateTime.date() eq startDate) and (Tasks.doneDateTime eq null))  // Scheduled for today only
-            } else {
-                // For other filters: only show scheduled tasks for the date range
+                // For overdue tasks:
+                // - Include tasks with a dueDateTime or scheduledDateTime that is overdue (less than or equal to today)
+                // - And the task is not done (doneDateTime is null)
+                (Tasks.dueDateTime.isNull().not() and (Tasks.dueDateTime.lessEq(startDate)) and (Tasks.doneDateTime eq null))
+                    .or((Tasks.scheduledDateTime.isNull().not() and (Tasks.scheduledDateTime.lessEq(startDate)) and (Tasks.doneDateTime eq null))) // Scheduled but overdue
 
+                    // Tasks scheduled for today
+                    .or((Tasks.scheduledDateTime.date() eq startDate) and (Tasks.doneDateTime eq null))
+            } else {
+                // For non-today filters: show only scheduled tasks within the date range
                 (Tasks.scheduledDateTime.date() greaterEq startDate) and
                         (Tasks.scheduledDateTime.date() lessEq endDate) and
                         (Tasks.doneDateTime eq null)
             }
+
 
             val tasks = Task.find {
                 (Tasks.user eq userId) and

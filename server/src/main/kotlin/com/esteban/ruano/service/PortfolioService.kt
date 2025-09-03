@@ -9,11 +9,11 @@ import kotlinx.serialization.json.Json
 import lopez.esteban.com.models.portfolio.CreatePortfolioDTO
 import lopez.esteban.com.models.portfolio.PortfolioDTO
 import lopez.esteban.com.models.portfolio.UpdatePortfolioDTO
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.jdbc.and
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
 
 class PortfolioService : BaseService() {

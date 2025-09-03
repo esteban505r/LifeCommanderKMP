@@ -11,7 +11,7 @@ import com.esteban.ruano.database.entities.TimerLists
 import com.esteban.ruano.database.entities.Timers
 import com.esteban.ruano.database.entities.UserSettings
 import com.esteban.ruano.lifecommander.models.timers.CompletedTimerInfo
-import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import com.esteban.ruano.lifecommander.models.Timer as DomainTimer
 import com.esteban.ruano.lifecommander.models.TimerList as DomainTimerList
 import com.esteban.ruano.lifecommander.models.UserSettings as DomainUserSettings
@@ -24,9 +24,9 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.SortOrder
+import org.jetbrains.exposed.v1.jdbc.and
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.seconds

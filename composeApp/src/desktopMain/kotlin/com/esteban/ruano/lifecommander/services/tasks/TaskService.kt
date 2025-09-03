@@ -69,8 +69,8 @@ class TaskService(
                 val encodedUrl = encodeUrlWithSpaces("$TASKS_ENDPOINT/byDateRangeWithSmartFiltering", parameters)
                 val response = client.get(encodedUrl) {
                     appHeaders(token)
-                }.body<List<Task>>()
-                response
+                }
+                response.body<List<Task>>()
             } catch (e: Exception) {
                 throw TaskServiceException("Failed to fetch tasks by date range with smart filtering: ${e.message}", e)
             }

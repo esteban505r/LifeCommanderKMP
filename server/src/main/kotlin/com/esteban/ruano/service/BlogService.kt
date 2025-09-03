@@ -1,27 +1,26 @@
 package com.esteban.ruano.service
 
+import com.esteban.ruano.database.converters.toDTO
+import com.esteban.ruano.database.converters.verifyPassword
+import com.esteban.ruano.database.entities.Post
+import com.esteban.ruano.database.entities.PostCategories
+import com.esteban.ruano.database.entities.PostCategory
+import com.esteban.ruano.database.entities.Posts
+import com.esteban.ruano.models.tasks.PostDTO
+import com.esteban.ruano.utils.SecurityUtils
+import com.esteban.ruano.utils.parseDateTime
 import io.github.cdimascio.dotenv.Dotenv
 import io.github.cdimascio.dotenv.dotenv
 import io.ktor.server.plugins.*
 import kotlinx.datetime.LocalDate
-import com.esteban.ruano.database.converters.toDTO
-import com.esteban.ruano.database.converters.verifyPassword
-import com.esteban.ruano.database.converters.isPasswordProtected
-import com.esteban.ruano.database.entities.Post
-import com.esteban.ruano.database.entities.Posts
-import com.esteban.ruano.database.entities.PostCategory
-import com.esteban.ruano.database.entities.PostCategories
-import com.esteban.ruano.models.tasks.PostDTO
-import com.esteban.ruano.utils.parseDateTime
-import com.esteban.ruano.utils.SecurityUtils
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.kotlin.datetime.date
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.datetime.date
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.sync.RequestBody
@@ -31,7 +30,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import java.io.File
-import java.util.UUID
+import java.util.*
 
 
 class BlogService : BaseService() {

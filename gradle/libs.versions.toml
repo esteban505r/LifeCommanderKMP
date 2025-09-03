@@ -91,9 +91,9 @@ junit-ktx = "1.2.0-alpha04"
 junit = "4.13.2"
 
 #Server
-ktor = "3.1.2"
+ktor = "3.2.3"
 logback = "1.5.18"
-exposed = "0.48.0"
+exposed = "1.0.0-beta-5"
 koin-server = "4.1.0"
 navigation-compose = "2.9.0-beta01"
 lifecycle-viewmodel-compose = "2.8.2"

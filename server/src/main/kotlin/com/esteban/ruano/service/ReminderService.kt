@@ -5,10 +5,10 @@ import com.esteban.ruano.database.entities.Reminders
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.reminders.CreateReminderDTO
 import com.esteban.ruano.models.reminders.UpdateReminderDTO
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.jdbc.and
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
 
 

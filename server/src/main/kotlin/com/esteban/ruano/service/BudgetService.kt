@@ -20,9 +20,12 @@ import com.esteban.ruano.utils.addSortOrder
 import com.esteban.ruano.utils.buildTransactionFilters
 import com.lifecommander.finance.model.TransactionType
 import kotlinx.datetime.LocalDate
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.kotlin.datetime.date
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.datetime.date
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.*
 import kotlin.math.absoluteValue
 

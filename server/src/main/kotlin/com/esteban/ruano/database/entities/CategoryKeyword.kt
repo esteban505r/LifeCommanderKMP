@@ -4,11 +4,11 @@ import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.lifecommander.models.finance.Category
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import kotlinx.datetime.TimeZone
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.kotlin.datetime.datetime
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.dao.UUIDEntity
+import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import org.jetbrains.exposed.v1.datetime.datetime
 import java.util.*
 
 

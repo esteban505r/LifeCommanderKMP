@@ -21,15 +21,15 @@ import com.esteban.ruano.utils.parseDate
 import com.esteban.ruano.utils.parseDateTime
 import com.lifecommander.models.Frequency
 import kotlinx.datetime.plus
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.sql.kotlin.datetime.date
-import org.jetbrains.exposed.sql.kotlin.datetime.minute
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.neq
+import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
+import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.minute
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 import kotlinx.datetime.Clock
 

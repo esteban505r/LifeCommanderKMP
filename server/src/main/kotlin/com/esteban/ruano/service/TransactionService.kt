@@ -4,35 +4,27 @@ import com.esteban.ruano.database.converters.toDomainModel
 import com.esteban.ruano.database.converters.toResponseDTO
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
-import com.esteban.ruano.lifecommander.models.finance.ScheduledTransactionFilters
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.models.finance.*
+import com.esteban.ruano.utils.*
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
-import com.esteban.ruano.utils.DateUtils.toLocalTime
-import com.esteban.ruano.utils.TransactionParser
-import com.esteban.ruano.utils.absAmount
-import com.esteban.ruano.utils.addSortOrder
-import com.esteban.ruano.utils.buildTransactionFilters
-import com.esteban.ruano.utils.generateOccurrencesBetween
-import com.esteban.ruano.utils.toScheduledTransactionFilters
-import com.esteban.ruano.utils.toSortOrder
 import com.lifecommander.finance.model.TransactionImportPreview
 import com.lifecommander.finance.model.TransactionImportPreviewItem
 import com.lifecommander.finance.model.TransactionType
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.atTime
 import kotlinx.datetime.plus
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.kotlin.datetime.date
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.datetime.date
+import org.jetbrains.exposed.v1.jdbc.SortOrder
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.*
 
 class TransactionService() : BaseService() {
@@ -162,8 +154,7 @@ class TransactionService() : BaseService() {
                     filters.amountSortOrder,
                     absAmount,
                     defaultSortOrder = Transactions.date to SortOrder.DESC
-                )
-                .limit(limit, offset.toLong())
+                ).limit(limit, offset.toLong())
 
             val results = paginatedResults.map {
                 TransactionResponseDTO(

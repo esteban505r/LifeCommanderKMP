@@ -3,8 +3,8 @@ package com.esteban.ruano.service
 import com.esteban.ruano.database.entities.UserSetting
 import com.esteban.ruano.database.entities.UserSettings
 import com.esteban.ruano.lifecommander.models.settings.UnbudgetedPeriodType
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.*
 import com.esteban.ruano.lifecommander.models.UserSettings as DomainUserSettings
 

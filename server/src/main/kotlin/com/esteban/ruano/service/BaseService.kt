@@ -2,10 +2,9 @@ package com.esteban.ruano.service
 
 import com.esteban.ruano.database.entities.HistoryTracks
 import com.esteban.ruano.database.models.DBActions
-
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import java.util.UUID
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.jdbc.insert
+import java.util.*
 
 open class BaseService {
     /**

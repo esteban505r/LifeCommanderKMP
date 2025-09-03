@@ -18,8 +18,8 @@ import com.esteban.ruano.models.sync.SyncDTO
 import com.esteban.ruano.models.sync.SyncItemDTO
 import com.esteban.ruano.models.tasks.TaskDTO
 import com.esteban.ruano.utils.SyncUtils.sortedByAction
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.and
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 
 class SyncService(

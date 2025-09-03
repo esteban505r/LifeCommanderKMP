@@ -12,8 +12,8 @@ import com.esteban.ruano.utils.JWTUtils
 import com.esteban.ruano.utils.SecurityUtils.hashPassword
 import com.esteban.ruano.service.TimerService
 import com.esteban.ruano.database.entities.Users
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 
 fun Route.authRouting(authService: AuthService, timerService: TimerService) {
     route("/auth") {

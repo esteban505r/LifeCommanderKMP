@@ -7,8 +7,8 @@ import com.esteban.ruano.database.entities.Users
 import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.models.users.RegisterUserDTO
 import com.esteban.ruano.utils.SecurityUtils
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class AuthService : BaseService() {
 

@@ -81,6 +81,7 @@ class AuthViewModel(
                     authService.login(it.email, it.password)
                     setAuthenticated()
                 }
+                setLoading(false)
             } catch (e: Exception) {
                 setError("Failed to login: ${e.message}")
             }
@@ -96,6 +97,7 @@ class AuthViewModel(
                     authService.signUp(it.name,it.email, it.password)
                     setSignUp(false)
                 }
+                setLoading(false)
             } catch (e: Exception) {
                 setError("Failed to sign up: ${e.message}")
             }
@@ -114,11 +116,11 @@ class AuthViewModel(
         }
     }
 
-    fun setLoading() {
+    fun setLoading(value: Boolean = true) {
         val currentState = authState.value as? AuthState.Unauthenticated
         currentState?.let {
             _authState.value = it.copy(
-                isLoading = true,
+                isLoading = value,
             )
         }
     }

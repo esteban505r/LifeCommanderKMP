@@ -7,9 +7,9 @@ import com.esteban.ruano.models.blog.PostCategoryDTO
 import com.esteban.ruano.models.blog.CreatePostCategoryDTO
 import com.esteban.ruano.models.blog.UpdatePostCategoryDTO
 import com.esteban.ruano.utils.SecurityUtils
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.SortOrder
+import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 
 class PostCategoryService : BaseService() {
