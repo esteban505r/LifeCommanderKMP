@@ -5,6 +5,7 @@ import com.esteban.ruano.lifecommander.models.RecipeTrack
 import com.esteban.ruano.lifecommander.models.CreateRecipeTrack
 import com.esteban.ruano.lifecommander.models.nutrition.RecipesResponse
 import com.esteban.ruano.lifecommander.models.nutrition.RecipeFilters
+import com.esteban.ruano.lifecommander.models.AlternativeNutrients
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -164,7 +165,8 @@ class RecipesService(
         recipeId: String, 
         consumedDateTime: String, 
         alternativeRecipeId: String?, 
-        alternativeMealName: String?
+        alternativeMealName: String?,
+        alternativeNutrients: AlternativeNutrients?
     ): Boolean {
         val response = httpClient.post("$baseUrl/nutrition/tracking/consume") {
             contentType(ContentType.Application.Json)
@@ -174,7 +176,8 @@ class RecipesService(
                 consumedDateTime, 
                 skipped = true,
                 alternativeRecipeId = alternativeRecipeId,
-                alternativeMealName = alternativeMealName
+                alternativeMealName = alternativeMealName,
+                alternativeNutrients = alternativeNutrients
             ))
         }
         return response.status == HttpStatusCode.Created

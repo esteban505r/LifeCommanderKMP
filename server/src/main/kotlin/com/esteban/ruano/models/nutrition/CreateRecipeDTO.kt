@@ -12,6 +12,7 @@ data class CreateRecipeDTO(
     val fat: Double? = 0.0,
     val fiber: Double? = 0.0,
     val sugar: Double? = 0.0,
+    val sodium: Double? = 0.0,
     val image: String? = null,
     val days: List<Int> = emptyList(),
     val createdAt: String? = null,

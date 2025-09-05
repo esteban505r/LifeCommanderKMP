@@ -5,7 +5,7 @@ import com.esteban.ruano.models.reminders.ReminderDTO
 
 @Serializable
 data class RecipeDTO(
-    val id: String,
+    val id: String? = null,
     val name: String,
     val note: String? = null,
     val protein: Double? = 0.0,

@@ -9,6 +9,7 @@ import com.esteban.ruano.lifecommander.ui.state.ViewMode
 import com.esteban.ruano.lifecommander.models.nutrition.RecipeFilters
 import com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField
 import com.esteban.ruano.lifecommander.models.nutrition.RecipeSortOrder
+import com.esteban.ruano.lifecommander.models.AlternativeNutrients
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -210,7 +211,14 @@ class RecipesViewModel(
                 val startDate = date.atTime(0, 0).date.formatDefault()
                 val endDate = date.atTime(23, 59).date.formatDefault()
                 val tracks = service.getRecipeTracksByDateRange(startDate, endDate)
-                val recipes = tracks.map { it.recipe }
+                val recipes = tracks.map {
+                    if(it.skipped && it.skippedRecipeDTO!=null) {
+                        it.skippedRecipeDTO!!
+                    }
+                    else {
+                        it.recipe
+                    }
+                }
                 
                 _state.value = _state.value.copy(
                     recipes = com.esteban.ruano.lifecommander.models.nutrition.RecipesResponse(
@@ -278,15 +286,16 @@ class RecipesViewModel(
         }
     }
 
-    fun skipRecipeWithAlternative(recipeId: String, alternativeRecipeId: String?, alternativeMealName: String?) {
+    fun skipRecipeWithAlternative(recipeId: String, alternativeRecipeId: String?, alternativeMealName: String?, nutrients: AlternativeNutrients?) {
         viewModelScope.launch {
             try {
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
                 val success = service.trackRecipeSkippedWithAlternative(
-                    recipeId, 
+                    recipeId,
                     now.formatDefault(),
                     alternativeRecipeId, 
-                    alternativeMealName
+                    alternativeMealName,
+                    nutrients
                 )
                 if (success) {
                     getRecipesByDay(_state.value.daySelected)

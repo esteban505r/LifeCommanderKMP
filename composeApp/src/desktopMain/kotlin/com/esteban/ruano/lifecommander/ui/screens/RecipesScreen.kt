@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -26,10 +28,26 @@ import com.esteban.ruano.lifecommander.models.Recipe
 import com.esteban.ruano.lifecommander.models.nutrition.RecipeFilters
 import com.esteban.ruano.lifecommander.ui.composables.NewEditRecipeDialog
 import com.esteban.ruano.lifecommander.ui.composables.RecipeFiltersDialog
+import com.esteban.ruano.lifecommander.models.AlternativeNutrients
 import com.esteban.ruano.lifecommander.ui.state.RecipesState
 import com.esteban.ruano.lifecommander.ui.state.ViewMode
 import kotlinx.datetime.*
 import java.time.DayOfWeek
+
+
+private fun sanitizeDecimalInput(input: String): String {
+    // Allow digits and a single dot; convert comma to dot
+    val dotNormalized = input.replace(',', '.')
+    var dotSeen = false
+    val sb = StringBuilder()
+    for (c in dotNormalized) {
+        if (c.isDigit()) sb.append(c)
+        else if (c == '.' && !dotSeen) {
+            sb.append('.'); dotSeen = true
+        }
+    }
+    return sb.toString()
+}
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -42,7 +60,7 @@ fun RecipesScreen(
     onEditRecipe: (Recipe) -> Unit,
     onDeleteRecipe: (String) -> Unit,
     onConsumeRecipe: (String) -> Unit,
-    onSkipRecipeWithAlternative: (String, String?, String?) -> Unit,
+    onSkipRecipeWithAlternative: (String, String?, String?, AlternativeNutrients?) -> Unit,
     onSearchRecipes: (String) -> Unit,
     onClearSearch: () -> Unit,
     onApplyFilters: (RecipeFilters) -> Unit,
@@ -56,9 +74,9 @@ fun RecipesScreen(
     var alternativeMealName by remember { mutableStateOf(TextFieldValue("")) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showFiltersDialog by remember { mutableStateOf(false) }
-    
+
     val daysOfWeek = remember { DayOfWeek.values() }
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -94,7 +112,7 @@ fun RecipesScreen(
                 Text("Add Recipe")
             }
         }
-        
+
         // View Mode Toggle
         Row(
             modifier = Modifier
@@ -104,8 +122,9 @@ fun RecipesScreen(
         ) {
             FilterChip(
                 selected = state.viewMode == ViewMode.PLAN,
-                onClick = { 
-                    val todayIndex = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.value
+                onClick = {
+                    val todayIndex =
+                        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.value
                     onGetRecipesByDay(todayIndex)
                 },
                 colors = ChipDefaults.filterChipColors(
@@ -161,7 +180,7 @@ fun RecipesScreen(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
             )
-            
+
             // Filters Button
             OutlinedButton(
                 onClick = { showFiltersDialog = true },
@@ -172,7 +191,7 @@ fun RecipesScreen(
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("Filters")
             }
-            
+
             // Clear All Filters Button (only show if filters are active)
             if (state.recipeFilters != RecipeFilters()) {
                 OutlinedButton(
@@ -195,21 +214,30 @@ fun RecipesScreen(
                     .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Active filters:", style = MaterialTheme.typography.caption, modifier = Modifier.padding(top = 8.dp))
-                
+                Text(
+                    "Active filters:",
+                    style = MaterialTheme.typography.caption,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
                 // Sort indicator
-                if (state.recipeFilters.sortField != com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField.NAME || 
-                    state.recipeFilters.sortOrder != com.esteban.ruano.lifecommander.models.nutrition.RecipeSortOrder.NONE) {
+                if (state.recipeFilters.sortField != com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField.NAME ||
+                    state.recipeFilters.sortOrder != com.esteban.ruano.lifecommander.models.nutrition.RecipeSortOrder.NONE
+                ) {
                     FilterChip(
                         selected = true,
                         onClick = { showFiltersDialog = true },
                         content = {
-                            Text("Sort: ${state.recipeFilters.sortField.name.lowercase().replaceFirstChar { it.uppercase() }} ${state.recipeFilters.sortOrder.name.lowercase().replaceFirstChar { it.uppercase() }}") 
+                            Text(
+                                "Sort: ${
+                                    state.recipeFilters.sortField.name.lowercase().replaceFirstChar { it.uppercase() }
+                                } ${state.recipeFilters.sortOrder.name.lowercase().replaceFirstChar { it.uppercase() }}"
+                            )
                         },
                         leadingIcon = { Icon(Icons.Default.Sort, contentDescription = "Sort") }
                     )
                 }
-                
+
                 // Meal tag filter
                 state.recipeFilters.mealTypes?.forEach { tag ->
                     FilterChip(
@@ -219,7 +247,7 @@ fun RecipesScreen(
                         leadingIcon = { Icon(Icons.Default.Restaurant, contentDescription = "Meal type") }
                     )
                 }
-                
+
                 // Day filter
                 state.recipeFilters.days?.forEach { day ->
                     val dayName = when (day) {
@@ -239,7 +267,7 @@ fun RecipesScreen(
                         leadingIcon = { Icon(Icons.Default.Schedule, contentDescription = "Day") }
                     )
                 }
-                
+
                 // Nutrition filters
                 val nutritionFilters = listOf(
                     "calories" to (state.recipeFilters.minCalories to state.recipeFilters.maxCalories),
@@ -250,7 +278,7 @@ fun RecipesScreen(
                     "sugar" to (state.recipeFilters.minSugar to state.recipeFilters.maxSugar),
                     "sodium" to (state.recipeFilters.minSodium to state.recipeFilters.maxSodium)
                 )
-                
+
                 nutritionFilters.forEach { (type, range) ->
                     val (minValue, maxValue) = range
                     if (minValue != null || maxValue != null) {
@@ -280,47 +308,49 @@ fun RecipesScreen(
                     .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-            daysOfWeek.forEach { day ->
-                FilterChip(
+                daysOfWeek.forEach { day ->
+                    FilterChip(
                         selected = state.daySelected == day.value,
-                    onClick = { onGetRecipesByDay(day.value) },
-                    colors = ChipDefaults.filterChipColors(
-                            backgroundColor = if (state.daySelected == day.value) MaterialTheme.colors.primary.copy(alpha = 0.15f) else MaterialTheme.colors.surface,
-                        contentColor = MaterialTheme.colors.primary
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
+                        onClick = { onGetRecipesByDay(day.value) },
+                        colors = ChipDefaults.filterChipColors(
+                            backgroundColor = if (state.daySelected == day.value) MaterialTheme.colors.primary.copy(
+                                alpha = 0.15f
+                            ) else MaterialTheme.colors.surface,
+                            contentColor = MaterialTheme.colors.primary
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
                         Text(day.name.lowercase().replaceFirstChar { it.uppercase() })
                     }
                 }
             }
         }
-        
+
         // Content area - this is what gets affected by loading state
         Box(modifier = Modifier.fillMaxSize()) {
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-            } else if (state.recipes?.recipes?.isEmpty() == true)  {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+            if (state.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        Icons.Default.Restaurant,
-                        contentDescription = "No meals",
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colors.onSurface.copy(alpha = 0.3f)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
+                    CircularProgressIndicator()
+                }
+            } else if (state.recipes?.recipes?.isEmpty() == true) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            Icons.Default.Restaurant,
+                            contentDescription = "No meals",
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colors.onSurface.copy(alpha = 0.3f)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
                             when {
                                 state.searchQuery.isNotEmpty() -> "No recipes found matching '${state.searchQuery}'"
                                 state.recipeFilters != RecipeFilters() -> "No recipes match the current filters"
@@ -328,38 +358,43 @@ fun RecipesScreen(
                                 state.viewMode == ViewMode.DATABASE -> "No recipes in the database."
                                 state.viewMode == ViewMode.HISTORY -> "No meals tracked for this day."
                                 else -> "No recipes found."
-                        },
-                        style = MaterialTheme.typography.body1.copy(
-                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            },
+                            style = MaterialTheme.typography.body1.copy(
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
                         )
-                    )
+                    }
                 }
-            }
-        } else {
+            } else {
                 // Recipe list content
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     state.recipes?.recipes?.forEach { recipe ->
                         item {
-                            val todayIndex = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.value
+                            val todayIndex =
+                                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.value
                             val actionsEnabled = state.viewMode == ViewMode.PLAN && state.daySelected == todayIndex
                             val showDayAssignment = state.viewMode == ViewMode.DATABASE
-                            
+
                             RecipeCard(
                                 recipe = recipe,
                                 isConsumed = recipe.consumed,
                                 actionsEnabled = actionsEnabled,
                                 showDayAssignment = showDayAssignment,
-                                onEdit = {
+                                onEdit = if (state.viewMode != ViewMode.HISTORY) {
+                                    {
                                         recipeToEdit = recipe
                                         showRecipeDialog = true
-                                            },
-                                onDelete = {
+                                    }
+                                } else null,
+                                onDelete = if (state.viewMode != ViewMode.HISTORY) {
+                                    {
                                         recipeToDelete = recipe
                                         showDeleteDialog = true
-                                            },
+                                    }
+                                } else null,
                                 onConsumeRecipe = { onConsumeRecipe(recipe.id) },
                                 onSkipRecipe = { showSkipDialog = recipe }
                             )
@@ -382,14 +417,14 @@ fun RecipesScreen(
 
     // Recipe Dialog
     if (showRecipeDialog) {
-    NewEditRecipeDialog(
-        recipeToEdit = recipeToEdit,
-        show = showRecipeDialog,
+        NewEditRecipeDialog(
+            recipeToEdit = recipeToEdit,
+            show = showRecipeDialog,
             onDismiss = { showRecipeDialog = false },
-        onSave = { recipe ->
+            onSave = { recipe ->
                 if (recipeToEdit != null) {
                     onEditRecipe(recipe)
-            } else {
+                } else {
                     onNewRecipe(recipe)
                 }
                 showRecipeDialog = false
@@ -433,52 +468,160 @@ fun RecipesScreen(
     // Skip Recipe Dialog
     showSkipDialog?.let { recipe ->
         var searchQuery by remember { mutableStateOf("") }
-        var filteredRecipes = state.allRecipes?.recipes?.filter {
-            it.id != recipe.id
-        }
-        var expanded by remember { mutableStateOf(false) }
+        var alternativeMealName by remember { mutableStateOf(TextFieldValue("")) }
         var selectedReplacement: Recipe? by remember { mutableStateOf(null) }
+
+        // Manual nutrient inputs (strings for the fields; parse on submit)
+        var calTxt by remember { mutableStateOf("") }
+        var protTxt by remember { mutableStateOf("") }
+        var carbTxt by remember { mutableStateOf("") }
+        var fatTxt by remember { mutableStateOf("") }
+        var fiberTxt by remember { mutableStateOf("") }
+        var sugarTxt by remember { mutableStateOf("") }
+
+        val filteredRecipes = remember(recipe.id, state.allRecipes?.recipes, searchQuery) {
+            state.allRecipes?.recipes
+                ?.asSequence()
+                ?.filter { it.id != recipe.id }
+                ?.filter { r -> searchQuery.isBlank() || r.name.contains(searchQuery, ignoreCase = true) }
+                ?.toList().orEmpty()
+        }
+
         AlertDialog(
-            onDismissRequest = { showSkipDialog = null },
+            onDismissRequest = {
+                selectedReplacement = null
+                alternativeMealName = TextFieldValue("")
+                calTxt = ""
+                protTxt = ""
+                carbTxt = ""
+                fatTxt = ""
+                fiberTxt = ""
+                sugarTxt = ""
+                showSkipDialog = null
+            },
             title = { Text("Skip ${recipe.name}") },
             text = {
                 Column {
                     Text("You must specify what you ate instead.")
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
+
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         label = { Text("Search recipes") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Spacer(Modifier.height(8.dp))
+
                     OutlinedTextField(
                         value = alternativeMealName,
                         onValueChange = { alternativeMealName = it },
                         label = { Text("Or enter meal name") },
-                            modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    if (filteredRecipes?.isNotEmpty() == true) {
-                        Spacer(modifier = Modifier.height(8.dp))
+
+                    // If the user is entering an alternative (no selected recipe), show nutrient fields
+                    if (selectedReplacement == null) {
+                        Spacer(Modifier.height(12.dp))
+                        Text("Add nutrition (optional, decimals allowed):", style = MaterialTheme.typography.caption)
+
+                        // Use FlowRow (or Wrap/Flow layout you already have) to keep it compact
+                        FlowRow(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = calTxt,
+                                onValueChange = { calTxt = sanitizeDecimalInput(it) },
+                                label = { Text("Calories") },
+                                modifier = Modifier.fillMaxWidth(0.48f),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            OutlinedTextField(
+                                value = protTxt,
+                                onValueChange = { protTxt = sanitizeDecimalInput(it) },
+                                label = { Text("Protein (g)") },
+                                modifier = Modifier.fillMaxWidth(0.48f),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            )
+                            OutlinedTextField(
+                                value = carbTxt,
+                                onValueChange = { carbTxt = sanitizeDecimalInput(it) },
+                                label = { Text("Carbs (g)") },
+                                modifier = Modifier.fillMaxWidth(0.48f),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            OutlinedTextField(
+                                value = fatTxt,
+                                onValueChange = { fatTxt = sanitizeDecimalInput(it) },
+                                label = { Text("Fat (g)") },
+                                modifier = Modifier.fillMaxWidth(0.48f),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            )
+                            OutlinedTextField(
+                                value = fiberTxt,
+                                onValueChange = { fiberTxt = sanitizeDecimalInput(it) },
+                                label = { Text("Fiber (g)") },
+                                modifier = Modifier.fillMaxWidth(0.48f),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            OutlinedTextField(
+                                value = sugarTxt,
+                                onValueChange = { sugarTxt = sanitizeDecimalInput(it) },
+                                label = { Text("Sugar (g)") },
+                                modifier = Modifier.fillMaxWidth(0.48f),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            )
+                        }
+                    }
+
+                    if (filteredRecipes.isNotEmpty()) {
+                        Spacer(Modifier.height(12.dp))
                         Text("Or select from your recipes:", style = MaterialTheme.typography.caption)
                         LazyColumn(
-                            modifier = Modifier.heightIn(max = 200.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            modifier = Modifier.heightIn(max = 280.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(filteredRecipes?:listOf()) { replacementRecipe ->
+                            items(filteredRecipes, key = { it.id }) { replacementRecipe ->
+                                val isSelected = selectedReplacement?.id == replacementRecipe.id
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable { selectedReplacement = replacementRecipe },
-                                    backgroundColor = if (selectedReplacement?.id == replacementRecipe.id) 
-                                        MaterialTheme.colors.primary.copy(alpha = 0.1f) 
-                                    else 
-                                        MaterialTheme.colors.surface
+                                    backgroundColor = if (isSelected)
+                                        MaterialTheme.colors.primary.copy(alpha = 0.08f)
+                                    else
+                                        MaterialTheme.colors.surface,
+                                    elevation = if (isSelected) 4.dp else 1.dp
                                 ) {
-                                    Text(
-                                        replacementRecipe.name,
-                                        modifier = Modifier.padding(8.dp)
-                                    )
+                                    Column(Modifier.padding(12.dp)) {
+                                        Text(replacementRecipe.name, style = MaterialTheme.typography.subtitle1)
+                                        Spacer(Modifier.height(6.dp))
+                                        FlowRow(modifier = Modifier.fillMaxWidth()) {
+                                            NutrientInfo(
+                                                "Calories",
+                                                replacementRecipe.calories,
+                                                Icons.Default.LocalFireDepartment
+                                            )
+                                            NutrientInfo(
+                                                "Protein",
+                                                replacementRecipe.protein,
+                                                Icons.Default.FitnessCenter
+                                            )
+                                            NutrientInfo("Carbs", replacementRecipe.carbs, Icons.Default.Grain)
+                                            NutrientInfo("Fat", replacementRecipe.fat, Icons.Default.Fastfood)
+                                            NutrientInfo("Fiber", replacementRecipe.fiber, Icons.Default.Grass)
+                                            NutrientInfo("Sugar", replacementRecipe.sugar, Icons.Default.Cake)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -490,24 +633,55 @@ fun RecipesScreen(
                     onClick = {
                         val alternativeId = selectedReplacement?.id
                         val alternativeName = if (alternativeId == null) alternativeMealName.text else null
-                        onSkipRecipeWithAlternative(recipe.id, alternativeId, alternativeName)
-                        showSkipDialog = null
+
+                        // Parse decimals if provided
+                        val nutrients = if (alternativeId == null) {
+                            AlternativeNutrients(
+                                calories = calTxt.toDoubleOrNull(),
+                                protein = protTxt.toDoubleOrNull(),
+                                carbs = carbTxt.toDoubleOrNull(),
+                                fat = fatTxt.toDoubleOrNull(),
+                                fiber = fiberTxt.toDoubleOrNull(),
+                                sugar = sugarTxt.toDoubleOrNull()
+                            )
+                        } else null
+
+
+                        onSkipRecipeWithAlternative(
+                            recipe.id,
+                            alternativeId,
+                            alternativeName,
+                            nutrients
+                        )
+
+                        // Reset
                         selectedReplacement = null
                         alternativeMealName = TextFieldValue("")
+                        calTxt = ""
+                        protTxt = ""
+                        carbTxt = ""
+                        fatTxt = ""
+                        fiberTxt = ""
+                        sugarTxt = ""
+                        showSkipDialog = null
                     },
                     enabled = selectedReplacement != null || alternativeMealName.text.isNotBlank()
-                ) {
-                    Text("Skip")
-                }
+                ) { Text("Skip") }
             },
             dismissButton = {
-                TextButton(onClick = { 
-                        showSkipDialog = null
-                    selectedReplacement = null
+                TextButton(
+                    onClick = {
+                        selectedReplacement = null
                         alternativeMealName = TextFieldValue("")
-                }) {
-                    Text("Cancel")
-                }
+                        calTxt = ""
+                        protTxt = ""
+                        carbTxt = ""
+                        fatTxt = ""
+                        fiberTxt = ""
+                        sugarTxt = ""
+                        showSkipDialog = null
+                    }
+                ) { Text("Cancel") }
             }
         )
     }
@@ -518,7 +692,11 @@ fun DatePickerDialog(
     onDismiss: () -> Unit,
     onDateSelected: (LocalDate) -> Unit
 ) {
-    var selectedDate by remember { mutableStateOf(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date) }
+    var selectedDate by remember {
+        mutableStateOf(
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        )
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -631,8 +809,8 @@ fun RecipeCard(
     isConsumed: Boolean,
     actionsEnabled: Boolean,
     showDayAssignment: Boolean,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
+    onEdit: (() -> Unit)?,
+    onDelete: (() -> Unit)?,
     onConsumeRecipe: () -> Unit,
     onSkipRecipe: () -> Unit
 ) {
@@ -727,9 +905,12 @@ fun RecipeCard(
                     }
                     if (showDayAssignment && recipe.days?.isNotEmpty() == true) {
                         Text(
-                            "Assigned to ${recipe.days?.sorted()?.joinToString(", ") {
-                                kotlinx.datetime.DayOfWeek(it).name.lowercase().replaceFirstChar { char -> char.uppercase() }
-                            }}",
+                            "Assigned to ${
+                                recipe.days?.sorted()?.joinToString(", ") {
+                                    kotlinx.datetime.DayOfWeek(it).name.lowercase()
+                                        .replaceFirstChar { char -> char.uppercase() }
+                                }
+                            }",
                             style = MaterialTheme.typography.caption.copy(
                                 color = MaterialTheme.colors.primary,
                                 fontWeight = FontWeight.Medium
@@ -766,20 +947,44 @@ fun RecipeCard(
                 // Ingredient and Instruction Counts
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     if (recipe.ingredients.isNotEmpty()) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Icon(Icons.Default.ListAlt, contentDescription = "Ingredients", modifier = Modifier.size(16.dp), tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.ListAlt,
+                                contentDescription = "Ingredients",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
                             Text(
                                 text = "${recipe.ingredients.size} Ingredients",
-                                style = MaterialTheme.typography.caption.copy(color = MaterialTheme.colors.onSurface.copy(alpha = 0.8f))
+                                style = MaterialTheme.typography.caption.copy(
+                                    color = MaterialTheme.colors.onSurface.copy(
+                                        alpha = 0.8f
+                                    )
+                                )
                             )
                         }
                     }
                     if (recipe.instructions.isNotEmpty()) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Icon(Icons.Default.FormatListNumbered, contentDescription = "Instructions", modifier = Modifier.size(16.dp), tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.FormatListNumbered,
+                                contentDescription = "Instructions",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
                             Text(
                                 text = "${recipe.instructions.size} Steps",
-                                style = MaterialTheme.typography.caption.copy(color = MaterialTheme.colors.onSurface.copy(alpha = 0.8f))
+                                style = MaterialTheme.typography.caption.copy(
+                                    color = MaterialTheme.colors.onSurface.copy(
+                                        alpha = 0.8f
+                                    )
+                                )
                             )
                         }
                     }
@@ -795,22 +1000,30 @@ fun RecipeCard(
                             Icon(
                                 Icons.Default.CheckCircle,
                                 contentDescription = if (isConsumed) "Already Consumed" else "Consume Recipe",
-                                tint = if (isConsumed) MaterialTheme.colors.onSurface.copy(alpha = 0.3f) else Color(0xFF4CAF50)
+                                tint = if (isConsumed) MaterialTheme.colors.onSurface.copy(alpha = 0.3f) else Color(
+                                    0xFF4CAF50
+                                )
                             )
                         }
                         IconButton(onClick = onSkipRecipe, enabled = !isConsumed) {
                             Icon(
                                 Icons.Default.SkipNext,
                                 contentDescription = "Skip Recipe",
-                                tint = if (isConsumed) MaterialTheme.colors.onSurface.copy(alpha = 0.3f) else Color(0xFFFF9800)
+                                tint = if (isConsumed) MaterialTheme.colors.onSurface.copy(alpha = 0.3f) else Color(
+                                    0xFFFF9800
+                                )
                             )
                         }
                     }
-                    IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, "Edit Recipe", tint = MaterialTheme.colors.primary)
+                    onEdit?.let{
+                        IconButton(onClick = it) {
+                            Icon(Icons.Default.Edit, "Edit Recipe", tint = MaterialTheme.colors.primary)
+                        }
                     }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, "Delete Recipe", tint = MaterialTheme.colors.error)
+                    onDelete?.let{
+                        IconButton(onClick = it) {
+                            Icon(Icons.Default.Delete, "Delete Recipe", tint = MaterialTheme.colors.error)
+                        }
                     }
                 }
             }

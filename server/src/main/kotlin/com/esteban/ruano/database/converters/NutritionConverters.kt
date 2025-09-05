@@ -4,6 +4,7 @@ import com.esteban.ruano.database.entities.Ingredient
 import com.esteban.ruano.database.entities.Instruction
 import com.esteban.ruano.database.entities.Recipe
 import com.esteban.ruano.database.entities.RecipeTrack
+import com.esteban.ruano.models.nutrition.CreateRecipeTrackDTO
 import com.esteban.ruano.models.nutrition.IngredientDTO
 import com.esteban.ruano.models.nutrition.InstructionDTO
 import com.esteban.ruano.models.nutrition.RecipeDTO
@@ -54,8 +55,18 @@ fun RecipeTrack.toTrackDTO(): RecipeTrackDTO {
         id = this.id.value.toString(),
         recipe = recipeDto,
         skipped = this.skipped,
-        consumedDateTime = this.consumedDateTime.toString()
+        consumedDateTime = this.consumedDateTime.toString(),
+        skippedRecipeDTO = if(skipped) RecipeDTO(
+            name = this.alternativeMealName ?: "Alternative meal",
+            protein = this.protein,
+            fat = this.fat,
+            carbs = this.carbs,
+            fiber = this.fiber,
+            sugar = this.sugar,
+            calories = this.calories,
+        ) else null
     )
 }
+
 
 

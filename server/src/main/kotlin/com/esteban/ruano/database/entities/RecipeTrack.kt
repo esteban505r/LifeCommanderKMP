@@ -16,6 +16,13 @@ object RecipeTracks : UUIDTable() {
     val skipped = bool("skipped").default(false)
     val alternativeRecipeId = reference("alternative_recipe_id", Recipes.id, onDelete = ReferenceOption.SET_NULL).nullable()
     val alternativeMealName = varchar("alternative_meal_name", 255).nullable()
+    val protein = double("protein").nullable()
+    val calories = double("calories").nullable()
+    val carbs = double("carbs").nullable()
+    val fat = double("fat").nullable()
+    val fiber = double("fiber").nullable()
+    val sugar = double("sugar").nullable()
+    val sodium = double("sodium").nullable()
 }
 
 class RecipeTrack(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -27,4 +34,11 @@ class RecipeTrack(id: EntityID<UUID>) : UUIDEntity(id) {
     var skipped by RecipeTracks.skipped
     var alternativeRecipe by Recipe optionalReferencedOn RecipeTracks.alternativeRecipeId
     var alternativeMealName by RecipeTracks.alternativeMealName
+    var protein by RecipeTracks.protein
+    var calories by RecipeTracks.calories
+    var carbs by RecipeTracks.carbs
+    var fat by RecipeTracks.fat
+    var fiber by RecipeTracks.fiber
+    var sugar by RecipeTracks.sugar
+    var sodium by RecipeTracks.sodium
 } 

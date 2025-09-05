@@ -40,10 +40,11 @@ import kotlin.time.ExperimentalTime
 
 class NutritionService() : BaseService() {
 
-    fun getDashboard(userId: Int,date:String): NutritionDashboardDTO {
+    fun getDashboard(userId: Int, date: String): NutritionDashboardDTO {
         return transaction {
-            val recipes = Recipe.find { (Recipes.user eq userId )
-                .and (Recipes.status eq Status.ACTIVE)
+            val recipes = Recipe.find {
+                (Recipes.user eq userId)
+                    .and(Recipes.status eq Status.ACTIVE)
             }.with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions).map { it.toDTO() }
             val totalRecipes = recipes.size
             val currentDay = parseDate(date).dayOfWeek.ordinal
@@ -54,20 +55,30 @@ class NutritionService() : BaseService() {
     }
 
     @OptIn(ExperimentalTime::class)
-    fun getRecipesByDay(userId: Int, day: Int, filter: String = "", limit: Int = 50, offset: Long = 0, sortBy: String = "name", sortOrder: String = "asc", mealTagFilter: String? = null, nutritionFilters: Map<String, Pair<Double?, Double?>> = emptyMap()): List<RecipeDTO> {
+    fun getRecipesByDay(
+        userId: Int,
+        day: Int,
+        filter: String = "",
+        limit: Int = 50,
+        offset: Long = 0,
+        sortBy: String = "name",
+        sortOrder: String = "asc",
+        mealTagFilter: String? = null,
+        nutritionFilters: Map<String, Pair<Double?, Double?>> = emptyMap()
+    ): List<RecipeDTO> {
         return transaction {
             // Get recipes that are assigned to the specified day
-            val recipeIds = RecipeDay.find { 
-                (RecipeDays.user eq userId) and 
-                (RecipeDays.day eq day) and 
-                (RecipeDays.status eq Status.ACTIVE) 
+            val recipeIds = RecipeDay.find {
+                (RecipeDays.user eq userId) and
+                        (RecipeDays.day eq day) and
+                        (RecipeDays.status eq Status.ACTIVE)
             }.map { it.recipe.id }
-            
+
             // Build the complete condition
-            var condition = (Recipes.id inList recipeIds) and 
-                           (Recipes.status eq Status.ACTIVE) and
-                           (Recipes.name.lowerCase() like "%${filter.lowercase()}%")
-            
+            var condition = (Recipes.id inList recipeIds) and
+                    (Recipes.status eq Status.ACTIVE) and
+                    (Recipes.name.lowerCase() like "%${filter.lowercase()}%")
+
             // Apply meal tag filter
             mealTagFilter?.let { tag ->
                 try {
@@ -77,7 +88,7 @@ class NutritionService() : BaseService() {
                     // Invalid meal tag, ignore filter
                 }
             }
-            
+
             // Apply nutrition filters
             nutritionFilters.forEach { (type, range) ->
                 val (minValue, maxValue) = range
@@ -86,60 +97,86 @@ class NutritionService() : BaseService() {
                         minValue?.let { condition = condition and (Recipes.calories greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.calories lessEq it) }
                     }
+
                     "protein" -> {
                         minValue?.let { condition = condition and (Recipes.protein greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.protein lessEq it) }
                     }
+
                     "carbs" -> {
                         minValue?.let { condition = condition and (Recipes.carbs greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.carbs lessEq it) }
                     }
+
                     "fat" -> {
                         minValue?.let { condition = condition and (Recipes.fat greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.fat lessEq it) }
                     }
+
                     "fiber" -> {
                         minValue?.let { condition = condition and (Recipes.fiber greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.fiber lessEq it) }
                     }
+
                     "sugar" -> {
                         minValue?.let { condition = condition and (Recipes.sugar greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.sugar lessEq it) }
                     }
                 }
             }
-            
+
             // Create the query with the complete condition
             var query = Recipe.find(condition)
-            
+
             // Apply sorting
             val sortedQuery = when (sortBy.lowercase()) {
-                "name" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.name to SortOrder.DESC) else query.orderBy(Recipes.name to SortOrder.ASC)
-                "calories" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.calories to SortOrder.DESC) else query.orderBy(Recipes.calories to SortOrder.ASC)
-                "protein" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.protein to SortOrder.DESC) else query.orderBy(Recipes.protein to SortOrder.ASC)
-                "carbs" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.carbs to SortOrder.DESC) else query.orderBy(Recipes.carbs to SortOrder.ASC)
-                "fat" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.fat to SortOrder.DESC) else query.orderBy(Recipes.fat to SortOrder.ASC)
-                "fiber" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.fiber to SortOrder.DESC) else query.orderBy(Recipes.fiber to SortOrder.ASC)
-                "sugar" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.sugar to SortOrder.DESC) else query.orderBy(Recipes.sugar to SortOrder.ASC)
+                "name" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.name to SortOrder.DESC) else query.orderBy(
+                    Recipes.name to SortOrder.ASC
+                )
+
+                "calories" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.calories to SortOrder.DESC) else query.orderBy(
+                    Recipes.calories to SortOrder.ASC
+                )
+
+                "protein" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.protein to SortOrder.DESC) else query.orderBy(
+                    Recipes.protein to SortOrder.ASC
+                )
+
+                "carbs" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.carbs to SortOrder.DESC) else query.orderBy(
+                    Recipes.carbs to SortOrder.ASC
+                )
+
+                "fat" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.fat to SortOrder.DESC) else query.orderBy(
+                    Recipes.fat to SortOrder.ASC
+                )
+
+                "fiber" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.fiber to SortOrder.DESC) else query.orderBy(
+                    Recipes.fiber to SortOrder.ASC
+                )
+
+                "sugar" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.sugar to SortOrder.DESC) else query.orderBy(
+                    Recipes.sugar to SortOrder.ASC
+                )
+
                 else -> query.orderBy(Recipes.name to SortOrder.ASC)
             }
-            
+
             val recipes = sortedQuery.limit(limit).offset(offset)
-            .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions).map { it.toDTO() }
-            
+                .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions).map { it.toDTO() }
+
             // Add consumption status to each recipe
             recipes.map { recipe ->
                 val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
                 val startOfDay = today.atTime(0, 0)
                 val endOfDay = today.atTime(23, 59)
-                
-                val recentTrack = RecipeTrack.find { 
+
+                val recentTrack = RecipeTrack.find {
                     (RecipeTracks.recipeId eq UUID.fromString(recipe.id)) and
-                    (RecipeTracks.consumedDateTime greaterEq startOfDay) and 
-                    (RecipeTracks.consumedDateTime lessEq endOfDay) and
-                    (RecipeTracks.status eq Status.ACTIVE)
+                            (RecipeTracks.consumedDateTime greaterEq startOfDay) and
+                            (RecipeTracks.consumedDateTime lessEq endOfDay) and
+                            (RecipeTracks.status eq Status.ACTIVE)
                 }.firstOrNull()
-                
+
                 recipe.copy(
                     consumed = recentTrack != null,
                     consumedDateTime = recentTrack?.consumedDateTime?.toString()
@@ -167,6 +204,7 @@ class NutritionService() : BaseService() {
                     it[carbs] = recipe.carbs
                     it[fat] = recipe.fat
                     it[fiber] = recipe.fiber
+                    it[sodium] = recipe.sodium
                     it[sugar] = recipe.sugar
                     it[image] = recipe.image
                     it[note] = recipe.note
@@ -180,7 +218,7 @@ class NutritionService() : BaseService() {
                     }
                 }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
             }
-            
+
             recipeId?.let { id ->
                 // Create Ingredient entries
                 recipe.ingredients.forEach { ingredient ->
@@ -191,7 +229,7 @@ class NutritionService() : BaseService() {
                         it[this.recipe] = id
                     }
                 }
-                
+
                 // Create Instruction entries
                 recipe.instructions.forEach { instruction ->
                     Instructions.insert {
@@ -214,7 +252,7 @@ class NutritionService() : BaseService() {
                     }
                 }
             }
-            
+
             recipeId
         }
     }
@@ -232,16 +270,17 @@ class NutritionService() : BaseService() {
                     recipe.sugar?.let { row[sugar] = it }
                     recipe.image?.let { row[image] = it }
                     recipe.note?.let { row[note] = it }
-                    recipe.mealTag?.let { row[mealTag] = try {
-                        MealTag.valueOf(it)
-                    } catch (e: IllegalArgumentException) {
-                        null
-                    }
+                    recipe.mealTag?.let {
+                        row[mealTag] = try {
+                            MealTag.valueOf(it)
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
                     }
                 }
                 if (updatedRows > 0) id else null
             }
-            
+
             if (updatedRow != null) {
                 // Clear old ingredients and instructions
                 Ingredients.deleteWhere { Ingredients.recipe eq id }
@@ -271,7 +310,7 @@ class NutritionService() : BaseService() {
                 RecipeDays.update({ (RecipeDays.recipeId eq id) }) {
                     it[status] = Status.DELETED
                 }
-                
+
                 // Then create new entries for the specified days
                 recipe.days.forEach { day ->
                     RecipeDays.insertOperation(userId, recipe.updatedAt?.fromDateToLong()) {
@@ -285,7 +324,7 @@ class NutritionService() : BaseService() {
                     }
                 }
             }
-            
+
             updatedRow != null
         }
     }
@@ -298,25 +337,34 @@ class NutritionService() : BaseService() {
                 }
                 if (updatedRows > 0) id else null
             }
-            
+
             // Also mark all associated RecipeDay entries as deleted
             if (deletedRow != null) {
                 RecipeDays.update({ (RecipeDays.recipeId eq id) }) {
                     it[status] = Status.DELETED
                 }
             }
-            
+
             deletedRow != null
         }
     }
 
-    fun fetchAllRecipes(userId: Int, filter: String, limit: Int, offset: Long, sortBy: String = "name", sortOrder: String = "asc", mealTagFilter: String? = null, nutritionFilters: Map<String, Pair<Double?, Double?>> = emptyMap()): List<RecipeDTO> {
+    fun fetchAllRecipes(
+        userId: Int,
+        filter: String,
+        limit: Int,
+        offset: Long,
+        sortBy: String = "name",
+        sortOrder: String = "asc",
+        mealTagFilter: String? = null,
+        nutritionFilters: Map<String, Pair<Double?, Double?>> = emptyMap()
+    ): List<RecipeDTO> {
         return transaction {
             // Build the complete condition
-            var condition = (Recipes.user eq userId) and 
-                           (Recipes.name.lowerCase() like "%${filter.lowercase()}%") and 
-                           (Recipes.status eq Status.ACTIVE)
-            
+            var condition = (Recipes.user eq userId) and
+                    (Recipes.name.lowerCase() like "%${filter.lowercase()}%") and
+                    (Recipes.status eq Status.ACTIVE)
+
             // Apply meal tag filter
             mealTagFilter?.let { tag ->
                 try {
@@ -326,7 +374,7 @@ class NutritionService() : BaseService() {
                     // Invalid meal tag, ignore filter
                 }
             }
-            
+
             // Apply nutrition filters
             nutritionFilters.forEach { (type, range) ->
                 val (minValue, maxValue) = range
@@ -335,66 +383,92 @@ class NutritionService() : BaseService() {
                         minValue?.let { condition = condition and (Recipes.calories greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.calories lessEq it) }
                     }
+
                     "protein" -> {
                         minValue?.let { condition = condition and (Recipes.protein greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.protein lessEq it) }
                     }
+
                     "carbs" -> {
                         minValue?.let { condition = condition and (Recipes.carbs greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.carbs lessEq it) }
                     }
+
                     "fat" -> {
                         minValue?.let { condition = condition and (Recipes.fat greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.fat lessEq it) }
                     }
+
                     "fiber" -> {
                         minValue?.let { condition = condition and (Recipes.fiber greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.fiber lessEq it) }
                     }
+
                     "sugar" -> {
                         minValue?.let { condition = condition and (Recipes.sugar greaterEq it) }
                         maxValue?.let { condition = condition and (Recipes.sugar lessEq it) }
                     }
                 }
             }
-            
+
             // Create the query with the complete condition
             var query = Recipe.find(condition)
-            
+
             // Apply sorting
             val sortedQuery = when (sortBy.lowercase()) {
-                "name" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.name to SortOrder.DESC) else query.orderBy(Recipes.name to SortOrder.ASC)
-                "calories" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.calories to SortOrder.DESC) else query.orderBy(Recipes.calories to SortOrder.ASC)
-                "protein" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.protein to SortOrder.DESC) else query.orderBy(Recipes.protein to SortOrder.ASC)
-                "carbs" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.carbs to SortOrder.DESC) else query.orderBy(Recipes.carbs to SortOrder.ASC)
-                "fat" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.fat to SortOrder.DESC) else query.orderBy(Recipes.fat to SortOrder.ASC)
-                "fiber" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.fiber to SortOrder.DESC) else query.orderBy(Recipes.fiber to SortOrder.ASC)
-                "sugar" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.sugar to SortOrder.DESC) else query.orderBy(Recipes.sugar to SortOrder.ASC)
+                "name" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.name to SortOrder.DESC) else query.orderBy(
+                    Recipes.name to SortOrder.ASC
+                )
+
+                "calories" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.calories to SortOrder.DESC) else query.orderBy(
+                    Recipes.calories to SortOrder.ASC
+                )
+
+                "protein" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.protein to SortOrder.DESC) else query.orderBy(
+                    Recipes.protein to SortOrder.ASC
+                )
+
+                "carbs" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.carbs to SortOrder.DESC) else query.orderBy(
+                    Recipes.carbs to SortOrder.ASC
+                )
+
+                "fat" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.fat to SortOrder.DESC) else query.orderBy(
+                    Recipes.fat to SortOrder.ASC
+                )
+
+                "fiber" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.fiber to SortOrder.DESC) else query.orderBy(
+                    Recipes.fiber to SortOrder.ASC
+                )
+
+                "sugar" -> if (sortOrder.lowercase() == "desc") query.orderBy(Recipes.sugar to SortOrder.DESC) else query.orderBy(
+                    Recipes.sugar to SortOrder.ASC
+                )
+
                 else -> query.orderBy(Recipes.name to SortOrder.ASC)
             }
-            
+
             sortedQuery.limit(limit).offset(offset)
-            .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
-            .map { it.toDTO() }
+                .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
+                .map { it.toDTO() }
         }
     }
 
     fun getRecipesNotAssignedToDay(userId: Int, filter: String, limit: Int, offset: Long): List<RecipeDTO> {
         return transaction {
             // Get all recipe IDs that have no active day assignments
-            val recipesWithDays = RecipeDay.find { 
-                (RecipeDays.user eq userId) and 
-                (RecipeDays.status eq Status.ACTIVE) 
+            val recipesWithDays = RecipeDay.find {
+                (RecipeDays.user eq userId) and
+                        (RecipeDays.status eq Status.ACTIVE)
             }.map { it.recipe.id }.toSet()
-            
-            Recipe.find{
-                (Recipes.user eq userId) and 
-                (Recipes.id notInList recipesWithDays.toList()) and
-                (Recipes.name.lowerCase() like "%${filter.lowercase()}%") and 
-                (Recipes.status eq Status.ACTIVE)
+
+            Recipe.find {
+                (Recipes.user eq userId) and
+                        (Recipes.id notInList recipesWithDays.toList()) and
+                        (Recipes.name.lowerCase() like "%${filter.lowercase()}%") and
+                        (Recipes.status eq Status.ACTIVE)
             }.limit(limit).offset(offset)
-            .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
-            .map { it.toDTO() }
+                .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
+                .map { it.toDTO() }
         }
     }
 
@@ -402,12 +476,12 @@ class NutritionService() : BaseService() {
     fun trackRecipeConsumption(userId: Int, recipeTrack: CreateRecipeTrackDTO): UUID? {
         return transaction {
             // Verify the recipe belongs to the user
-            val recipe = Recipe.find { 
+            val recipe = Recipe.find {
                 (Recipes.id eq UUID.fromString(recipeTrack.recipeId)) and
-                (Recipes.user eq userId) and 
-                (Recipes.status eq Status.ACTIVE) 
+                        (Recipes.user eq userId) and
+                        (Recipes.status eq Status.ACTIVE)
             }.firstOrNull()
-            
+
             if (recipe != null) {
                 val id = RecipeTracks.insertOperation(userId, recipeTrack.consumedDateTime.fromDateToLong()) {
                     insert {
@@ -417,6 +491,13 @@ class NutritionService() : BaseService() {
                         it[skipped] = recipeTrack.skipped
                         it[alternativeRecipeId] = recipeTrack.alternativeRecipeId?.let { UUID.fromString(it) }
                         it[alternativeMealName] = recipeTrack.alternativeMealName
+                        it[protein] = recipeTrack.alternativeNutrients?.protein
+                        it[calories] = recipeTrack.alternativeNutrients?.calories
+                        it[carbs] = recipeTrack.alternativeNutrients?.carbs
+                        it[fat] = recipeTrack.alternativeNutrients?.fat
+                        it[fiber] = recipeTrack.alternativeNutrients?.fiber
+                        it[sodium] = recipeTrack.alternativeNutrients?.sodium
+                        it[sugar] = recipeTrack.alternativeNutrients?.sugar
                     }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
                 }
                 id
@@ -433,7 +514,7 @@ class NutritionService() : BaseService() {
     ): List<RecipeTrackDTO> {
         val startDateTime = startDateStr.toLocalDate()
         val endDateTime = endDateStr.toLocalDate()
-        try{
+        try {
             return transaction {
                 val activeRecipeIds = Recipe
                     .find { (Recipes.user eq userId) and (Recipes.status eq Status.ACTIVE) }
@@ -444,10 +525,11 @@ class NutritionService() : BaseService() {
                             (RecipeTracks.consumedDateTime.date() greaterEq startDateTime) and
                             (RecipeTracks.consumedDateTime.date() lessEq endDateTime) and
                             (RecipeTracks.status eq Status.ACTIVE)
-                }.with(RecipeTrack::recipe, Recipe::ingredients, Recipe::instructions).map { it.toTrackDTO() }
+                }.with(RecipeTrack::recipe, Recipe::ingredients, Recipe::instructions).map {
+                    it.toTrackDTO()
+                }
             }
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
             return emptyList()
         }
@@ -457,7 +539,7 @@ class NutritionService() : BaseService() {
         return transaction {
             RecipeTrack.find {
                 (RecipeTracks.recipeId eq UUID.fromString(recipeId)) and
-                (RecipeTracks.status eq Status.ACTIVE)
+                        (RecipeTracks.status eq Status.ACTIVE)
             }.toList().map { it.toDTO() }
         }
     }
@@ -484,8 +566,8 @@ class NutritionService() : BaseService() {
             RecipeTrack.find {
                 val recipeIds = Recipe.find { Recipes.user eq userId }.map { it.id }
                 (RecipeTracks.recipeId inList recipeIds) and
-                (RecipeTracks.consumedDateTime.date() eq localDate) and
-                (RecipeTracks.status eq Status.ACTIVE)
+                        (RecipeTracks.consumedDateTime.date() eq localDate) and
+                        (RecipeTracks.status eq Status.ACTIVE)
             }
                 .with(RecipeTrack::recipe, Recipe::ingredients, Recipe::instructions)
                 .map { track ->
@@ -508,12 +590,12 @@ class NutritionService() : BaseService() {
         return transaction {
             // Build the complete condition
             var condition = (Recipes.user eq userId) and (Recipes.status eq Status.ACTIVE)
-            
+
             // Apply search pattern
             filters.searchPattern?.let { pattern ->
                 condition = condition and (Recipes.name.lowerCase() like "%${pattern.lowercase()}%")
             }
-            
+
             // Apply meal type filters
             filters.mealTypes?.let { mealTypes ->
                 val mealTags = mealTypes.mapNotNull { type ->
@@ -527,20 +609,20 @@ class NutritionService() : BaseService() {
                     condition = condition and (Recipes.mealTag inList mealTags)
                 }
             }
-            
+
             // Apply day filters
             filters.days?.let { days ->
                 val dayNumbers = days.mapNotNull { it.toIntOrNull() }
                 if (dayNumbers.isNotEmpty()) {
-                    val recipeIdsForDays = RecipeDay.find { 
-                        (RecipeDays.user eq userId) and 
-                        (RecipeDays.day inList dayNumbers) and 
-                        (RecipeDays.status eq Status.ACTIVE) 
+                    val recipeIdsForDays = RecipeDay.find {
+                        (RecipeDays.user eq userId) and
+                                (RecipeDays.day inList dayNumbers) and
+                                (RecipeDays.status eq Status.ACTIVE)
                     }.map { it.recipe.id }
                     condition = condition and (Recipes.id inList recipeIdsForDays)
                 }
             }
-            
+
             // Apply nutrition filters
             filters.minCalories?.let { condition = condition and (Recipes.calories greaterEq it) }
             filters.maxCalories?.let { condition = condition and (Recipes.calories lessEq it) }
@@ -556,17 +638,17 @@ class NutritionService() : BaseService() {
             filters.maxSugar?.let { condition = condition and (Recipes.sugar lessEq it) }
             filters.minSodium?.let { condition = condition and (Recipes.sodium greaterEq it) }
             filters.maxSodium?.let { condition = condition and (Recipes.sodium lessEq it) }
-            
+
             // Create the query with the complete condition
             var query = Recipe.find(condition)
-            
+
             // Apply sorting
             val sortOrder = when (filters.sortOrder) {
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortOrder.ASCENDING -> SortOrder.ASC
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortOrder.DESCENDING -> SortOrder.DESC
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortOrder.NONE -> SortOrder.ASC
             }
-            
+
             val sortedQuery = when (filters.sortField) {
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField.NAME -> query.orderBy(Recipes.name to sortOrder)
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField.CALORIES -> query.orderBy(Recipes.calories to sortOrder)
@@ -577,12 +659,12 @@ class NutritionService() : BaseService() {
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField.SUGAR -> query.orderBy(Recipes.sugar to sortOrder)
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField.SODIUM -> query.orderBy(Recipes.sodium to sortOrder)
             }
-            
+
             val totalCount = sortedQuery.count()
             val recipes = sortedQuery.limit(limit).offset(offset.toLong())
                 .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
                 .map { it.toDTO() }
-            
+
             com.esteban.ruano.models.nutrition.RecipesResponseDTO(
                 recipes = recipes,
                 totalCount = totalCount
@@ -600,20 +682,20 @@ class NutritionService() : BaseService() {
     ): com.esteban.ruano.models.nutrition.RecipesResponseDTO {
         return transaction {
             // Get recipes that are assigned to the specified day
-            val recipeIds = RecipeDay.find { 
-                (RecipeDays.user eq userId) and 
-                (RecipeDays.day eq day) and 
-                (RecipeDays.status eq Status.ACTIVE) 
+            val recipeIds = RecipeDay.find {
+                (RecipeDays.user eq userId) and
+                        (RecipeDays.day eq day) and
+                        (RecipeDays.status eq Status.ACTIVE)
             }.map { it.recipe.id }
-            
+
             // Build the complete condition
             var condition = (Recipes.id inList recipeIds) and (Recipes.status eq Status.ACTIVE)
-            
+
             // Apply search pattern
             filters.searchPattern?.let { pattern ->
                 condition = condition and (Recipes.name.lowerCase() like "%${pattern.lowercase()}%")
             }
-            
+
             // Apply meal type filters
             filters.mealTypes?.let { mealTypes ->
                 val mealTags = mealTypes.mapNotNull { type ->
@@ -627,7 +709,7 @@ class NutritionService() : BaseService() {
                     condition = condition and (Recipes.mealTag inList mealTags)
                 }
             }
-            
+
             // Apply nutrition filters
             filters.minCalories?.let { condition = condition and (Recipes.calories greaterEq it) }
             filters.maxCalories?.let { condition = condition and (Recipes.calories lessEq it) }
@@ -643,17 +725,17 @@ class NutritionService() : BaseService() {
             filters.maxSugar?.let { condition = condition and (Recipes.sugar lessEq it) }
             filters.minSodium?.let { condition = condition and (Recipes.sodium greaterEq it) }
             filters.maxSodium?.let { condition = condition and (Recipes.sodium lessEq it) }
-            
+
             // Create the query with the complete condition
             var query = Recipe.find(condition)
-            
+
             // Apply sorting
             val sortOrder = when (filters.sortOrder) {
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortOrder.ASCENDING -> SortOrder.ASC
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortOrder.DESCENDING -> SortOrder.DESC
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortOrder.NONE -> SortOrder.ASC
             }
-            
+
             val sortedQuery = when (filters.sortField) {
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField.NAME -> query.orderBy(Recipes.name to sortOrder)
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField.CALORIES -> query.orderBy(Recipes.calories to sortOrder)
@@ -664,31 +746,31 @@ class NutritionService() : BaseService() {
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField.SUGAR -> query.orderBy(Recipes.sugar to sortOrder)
                 com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField.SODIUM -> query.orderBy(Recipes.sodium to sortOrder)
             }
-            
+
             val totalCount = sortedQuery.count()
             val recipes = sortedQuery.limit(limit).offset(offset.toLong())
                 .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
                 .map { it.toDTO() }
-            
+
             // Add consumption status to each recipe
             val recipesWithConsumption = recipes.map { recipe ->
                 val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
                 val startOfDay = today.atTime(0, 0)
                 val endOfDay = today.atTime(23, 59)
-                
-                val recentTrack = RecipeTrack.find { 
+
+                val recentTrack = RecipeTrack.find {
                     (RecipeTracks.recipeId eq UUID.fromString(recipe.id)) and
-                    (RecipeTracks.consumedDateTime greaterEq startOfDay) and 
-                    (RecipeTracks.consumedDateTime lessEq endOfDay) and
-                    (RecipeTracks.status eq Status.ACTIVE)
+                            (RecipeTracks.consumedDateTime greaterEq startOfDay) and
+                            (RecipeTracks.consumedDateTime lessEq endOfDay) and
+                            (RecipeTracks.status eq Status.ACTIVE)
                 }.firstOrNull()
-                
+
                 recipe.copy(
                     consumed = recentTrack != null,
                     consumedDateTime = recentTrack?.consumedDateTime?.toString()
                 )
             }
-            
+
             com.esteban.ruano.models.nutrition.RecipesResponseDTO(
                 recipes = recipesWithConsumption,
                 totalCount = totalCount

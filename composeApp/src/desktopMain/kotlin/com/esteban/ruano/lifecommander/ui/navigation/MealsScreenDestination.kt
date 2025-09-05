@@ -63,8 +63,8 @@ fun MealsScreenDestination(
                 onConsumeRecipe = { recipeId ->
                     recipesViewModel.consumeRecipe(recipeId)
                 },
-                onSkipRecipeWithAlternative = { recipeId, alternativeRecipeId, alternativeMealName ->
-                    recipesViewModel.skipRecipeWithAlternative(recipeId, alternativeRecipeId, alternativeMealName)
+                onSkipRecipeWithAlternative = { recipeId, alternativeRecipeId, alternativeMealName, nutrients ->
+                    recipesViewModel.skipRecipeWithAlternative(recipeId, alternativeRecipeId, alternativeMealName, nutrients)
                 },
                 onSearchRecipes = { query ->
                     recipesViewModel.searchRecipes(query)

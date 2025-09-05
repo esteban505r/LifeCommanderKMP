@@ -29,5 +29,6 @@ data class CreateRecipeTrack(
     val consumedDateTime: String,
     val skipped: Boolean = false,
     val alternativeRecipeId: String? = null,
-    val alternativeMealName: String? = null
+    val alternativeMealName: String? = null,
+    val alternativeNutrients: AlternativeNutrients? = null
 )
