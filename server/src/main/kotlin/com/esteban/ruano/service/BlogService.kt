@@ -184,7 +184,7 @@ class BlogService : BaseService() {
             Post.find {
                 finalCondition
             }.orderBy(Posts.publishedDate to SortOrder.DESC)
-                .limit(limit, offset)
+                .limit(limit).offset(offset)
                 .toList()
                 .map { post -> post.toDTO(password) }
                 .filter { postDTO ->

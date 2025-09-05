@@ -29,6 +29,7 @@ class FinanceViewModel(
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(
+                    currentBudgetId = null,
                     isLoadingTransactions = true,
                     error = null,
                     currentPage = if (refresh) 0 else _state.value.currentPage
@@ -144,7 +145,12 @@ class FinanceViewModel(
             try {
                 _state.value = _state.value.copy(isLoadingTransactions = true, error = null)
                 val newTransaction = service.addTransaction(transaction)
-                getTransactions(refresh = true)
+                if(state.value.currentBudgetId!=null) {
+                    getBudgetTransactions(state.value.currentBudgetId!!)
+                }
+                else {
+                    getTransactions(refresh = true)
+                }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
@@ -159,7 +165,12 @@ class FinanceViewModel(
             try {
                 _state.value = _state.value.copy(isLoadingTransactions = true, error = null)
                 val updatedTransaction = service.updateTransaction(transaction)
-                getTransactions(refresh = true)
+                if(state.value.currentBudgetId!=null) {
+                    getBudgetTransactions(state.value.currentBudgetId!!)
+                }
+                else {
+                    getTransactions(refresh = true)
+                }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
@@ -174,7 +185,12 @@ class FinanceViewModel(
             try {
                 _state.value = _state.value.copy(isLoadingTransactions = true, error = null)
                 service.deleteTransaction(id)
-                getTransactions(refresh = true)
+                if(state.value.currentBudgetId!=null) {
+                    getBudgetTransactions(state.value.currentBudgetId!!)
+                }
+                else {
+                    getTransactions(refresh = true)
+                }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
@@ -533,6 +549,7 @@ class FinanceViewModel(
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(
+                    currentBudgetId = null,
                     isLoadingScheduledTransactions = true,
                     error = null,
                     currentPage = if (refresh) 0 else _state.value.currentPage
@@ -607,7 +624,12 @@ class FinanceViewModel(
     fun resetError() {
         _state.value = _state.value.copy(error = null)
     }
-    
+
+    fun setCurrentBudgetId(budgetId: String) {
+        _state.value = _state.value.copy(
+            currentBudgetId = budgetId,
+        )
+    }
 
 
 }

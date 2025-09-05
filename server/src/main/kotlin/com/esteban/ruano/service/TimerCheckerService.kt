@@ -1,22 +1,26 @@
 package com.esteban.ruano.service
 
-import com.esteban.ruano.lifecommander.models.timers.CompletedTimerInfo
-import com.esteban.ruano.lifecommander.timer.TimerWebSocketServerMessage
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.lifecommander.models.UserSettings
+import com.esteban.ruano.lifecommander.models.timers.CompletedTimerInfo
+import com.esteban.ruano.lifecommander.timer.TimerWebSocketServerMessage
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import io.sentry.Sentry
 import kotlinx.coroutines.*
-import kotlinx.datetime.*
-import org.jetbrains.exposed.v1.jdbc.and
-import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.datetime.date
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
-import java.util.UUID
+import java.util.*
 import kotlin.math.abs
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 class TimerCheckerService(
     private val timerService: TimerService,
@@ -54,6 +58,7 @@ class TimerCheckerService(
     }
 
     /** Start loop. Returns cancellable Job. */
+    @OptIn(ExperimentalTime::class)
     fun start(): Job = scope.launch {
         while (isActive) {
             val tickStartInstant = Clock.System.now()
@@ -106,6 +111,7 @@ class TimerCheckerService(
     // Logging helpers / user 1 debug (kept, but made non-blocking)
     // ------------------------------------------------------------
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun logNotificationTimingForUser1(
         users: List<UserContext>,
         nowInstant: Instant
@@ -152,6 +158,7 @@ class TimerCheckerService(
     // Timers
     // ------------------------------------------------------------
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun checkTimersForUser(user: UserContext, nowInstant: Instant) {
         try {
             val nowLocal = nowInstant.toLocalDateTime(user.timeZone)
@@ -208,6 +215,7 @@ class TimerCheckerService(
     // Reminders
     // ------------------------------------------------------------
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun checkReminders(nowInstant: Instant) {
         try {
             val nowMs = nowInstant.toEpochMilliseconds()
@@ -283,6 +291,7 @@ class TimerCheckerService(
     // Tasks
     // ------------------------------------------------------------
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun checkDueTasksForUser(user: UserContext, nowInstant: Instant, nowMs: Long) {
         try {
             if (!user.settings.notificationsEnabled) {
@@ -371,6 +380,7 @@ class TimerCheckerService(
     // Habits (due today)
     // ------------------------------------------------------------
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun checkDueHabitsForUser(user: UserContext, nowInstant: Instant, nowMs: Long) {
         try {
             if (!user.settings.notificationsEnabled) {
@@ -420,6 +430,7 @@ class TimerCheckerService(
     // Habit starts window (next 5 min)
     // ------------------------------------------------------------
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun checkHabitStartsForUser(user: UserContext, nowInstant: Instant, nowMs: Long) {
         try {
             if (!user.settings.notificationsEnabled) {

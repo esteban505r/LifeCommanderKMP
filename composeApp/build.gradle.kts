@@ -164,6 +164,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.encoding)
             implementation(libs.ktor.client.json)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
@@ -226,6 +227,7 @@ android {
 }
 
 dependencies {
+    implementation("io.ktor:ktor-client-encoding:3.2.3")
     debugImplementation(compose.uiTooling)
 }
 

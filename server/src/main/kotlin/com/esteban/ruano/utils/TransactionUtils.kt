@@ -19,6 +19,7 @@ import kotlinx.datetime.plus
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.CustomFunction
 import org.jetbrains.exposed.v1.core.DecimalColumnType
+import org.jetbrains.exposed.v1.core.DoubleColumnType
 import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -28,19 +29,9 @@ import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.great
 import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.inList
 import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.like
-import org.jetbrains.exposed.v1.jdbc.Column
-import org.jetbrains.exposed.v1.jdbc.CustomFunction
-import org.jetbrains.exposed.v1.jdbc.DecimalColumnType
-import org.jetbrains.exposed.v1.jdbc.Expression
-import org.jetbrains.exposed.v1.jdbc.Op
+
 import org.jetbrains.exposed.v1.jdbc.Query
-import org.jetbrains.exposed.v1.jdbc.SortOrder
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.like
-import org.jetbrains.exposed.v1.jdbc.and
+
 import java.util.UUID
 
 
@@ -62,8 +53,11 @@ fun Query.addSortOrder(sortOrder: ModelSortOrder, column: Expression<*>,
     }
 }
 
-val absAmount = CustomFunction<Double>("ABS", DecimalColumnType(10, 2), Transactions.amount)
-
+val absAmount = CustomFunction(
+    "ABS",
+    DoubleColumnType(),
+    Transactions.amount
+)
 fun ModelSortOrder.toSortOrder(): SortOrder? {
     return when (this) {
         ModelSortOrder.NONE -> SortOrder.ASC

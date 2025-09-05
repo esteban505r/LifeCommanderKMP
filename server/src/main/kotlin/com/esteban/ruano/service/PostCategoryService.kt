@@ -7,8 +7,9 @@ import com.esteban.ruano.models.blog.PostCategoryDTO
 import com.esteban.ruano.models.blog.CreatePostCategoryDTO
 import com.esteban.ruano.models.blog.UpdatePostCategoryDTO
 import com.esteban.ruano.utils.SecurityUtils
-import org.jetbrains.exposed.v1.jdbc.SortOrder
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 
@@ -23,7 +24,7 @@ class PostCategoryService : BaseService() {
             val query = if (activeOnly) {
                 PostCategories.status eq com.esteban.ruano.database.models.Status.ACTIVE
             } else {
-                org.jetbrains.exposed.sql.Op.TRUE
+                Op.TRUE
             }
             
             PostCategory.find { query }

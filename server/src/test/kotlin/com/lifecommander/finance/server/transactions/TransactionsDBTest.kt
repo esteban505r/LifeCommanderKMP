@@ -25,6 +25,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
 
 class TransactionsDBTest {
@@ -129,6 +130,7 @@ class TransactionsDBTest {
         assertEquals(1, transactions.size)
     }
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun `should get transactions by date range`() {
         val accountId = getTestAccountId()

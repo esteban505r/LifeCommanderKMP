@@ -20,16 +20,17 @@ import com.esteban.ruano.lifecommander.timer.TimerWebSocketServerMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import org.jetbrains.exposed.v1.jdbc.SortOrder
-import org.jetbrains.exposed.v1.jdbc.and
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 import org.slf4j.LoggerFactory
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
 class TimerService : BaseService() {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -244,6 +245,7 @@ class TimerService : BaseService() {
 
 
 
+    @OptIn(ExperimentalTime::class)
     suspend fun startTimer(
         userId: Int,
         listId: UUID,
@@ -291,6 +293,7 @@ class TimerService : BaseService() {
     }
 
 
+    @OptIn(ExperimentalTime::class)
     suspend fun pauseTimer(userId: Int, listId: UUID, timerId: UUID? = null): List<DomainTimer> = transaction {
         val list = TimerList.findById(listId) ?: return@transaction emptyList()
         if (list.userId.id.value != userId) return@transaction emptyList()
@@ -355,6 +358,7 @@ class TimerService : BaseService() {
     }
 
 
+    @OptIn(ExperimentalTime::class)
     suspend fun resumeTimer(userId: Int, listId: UUID): List<DomainTimer> = transaction {
         val list = TimerList.findById(listId) ?: return@transaction emptyList()
         if (list.userId.id.value != userId) return@transaction emptyList()
@@ -373,6 +377,7 @@ class TimerService : BaseService() {
         } ?: emptyList()
     }
 
+    @OptIn(ExperimentalTime::class)
     suspend fun restartTimer(userId: Int, listId: UUID, timerId: UUID? = null): List<DomainTimer> = transaction {
         val list = TimerList.findById(listId) ?: return@transaction emptyList()
         if (list.userId.id.value != userId) return@transaction emptyList()
@@ -409,6 +414,7 @@ class TimerService : BaseService() {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     suspend fun registerDeviceToken(userId: Int, token: String, platform: String): Boolean {
         return transaction {
             try {
@@ -461,6 +467,7 @@ class TimerService : BaseService() {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun checkCompletedTimers(
         timezone: TimeZone,
         currentTime: kotlinx.datetime.LocalDateTime,

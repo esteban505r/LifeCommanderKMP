@@ -14,9 +14,8 @@ import com.esteban.ruano.utils.addSortOrder
 import com.esteban.ruano.utils.buildScheduledTransactionFilters
 import com.lifecommander.finance.model.TransactionType
 import com.lifecommander.models.Frequency
-import org.jetbrains.exposed.v1.jdbc.Op
-import org.jetbrains.exposed.v1.jdbc.SortOrder
-import org.jetbrains.exposed.v1.jdbc.and
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -75,7 +74,7 @@ class ScheduledTransactionService : BaseService() {
                     absAmount,
                     defaultSortOrder = ScheduledTransactions.startDate to SortOrder.DESC
                 )
-                .limit(limit, offset.toLong())
+                .limit(limit).offset(offset.toLong())
 
             val results = paginatedResults.map {
                 ScheduledTransactionResponseDTO(

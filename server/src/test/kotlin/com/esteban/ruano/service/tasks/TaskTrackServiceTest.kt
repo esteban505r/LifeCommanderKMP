@@ -11,7 +11,6 @@ import com.esteban.ruano.service.TaskService
 import com.esteban.ruano.testModule
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime as toLocalDateTimeUI
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
@@ -28,6 +27,8 @@ import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 class TaskTrackServiceTest : BaseTest() {
     private val taskService: TaskService by inject()
@@ -44,6 +45,7 @@ class TaskTrackServiceTest : BaseTest() {
     }
 
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun `test create task track`() {
         val taskId = createTestTask()
@@ -61,6 +63,7 @@ class TaskTrackServiceTest : BaseTest() {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun `test get tasks completed per day this week`() {
         // Create tasks and complete them on different days
@@ -88,6 +91,7 @@ class TaskTrackServiceTest : BaseTest() {
         assertEquals(0, completedPerDay[6]) // Sunday
     }
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun `test uncomplete task removes latest track`() {
         val taskId = createTestTask()

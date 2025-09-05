@@ -16,23 +16,24 @@ import com.esteban.ruano.utils.DateUtils.toLocalTime
 import com.esteban.ruano.utils.fromDateToLong
 import com.esteban.ruano.utils.toDayOfWeek
 import io.ktor.server.plugins.BadRequestException
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.datetime.date
 import kotlinx.datetime.toLocalDateTime as toLocalDateTimeKt
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.v1.jdbc.and
 import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
-import org.jetbrains.exposed.v1.jdbc.lowerCase
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import java.util.*
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 class WorkoutService : BaseService() {
 
@@ -114,7 +115,7 @@ class WorkoutService : BaseService() {
 
     fun getExercises(userId: Int, filter: String, limit: Int, offset: Long):List<ExerciseDTO> {
         return transaction {
-            val exercises = Exercise.find { Exercises.user eq userId and (Exercises.name.lowerCase() like "%${filter.lowercase()}%") }.limit(limit, offset).toList()
+            val exercises = Exercise.find { Exercises.user eq userId and (Exercises.name.lowerCase() like "%${filter.lowercase()}%") }.limit(limit).offset(offset).toList()
             val exerciseWithEquipment = exercises.map { e ->
                 //val equipment = Equipment.find { Equipments.exercise eq e.id }.toList()
                 e.toDTO(
@@ -311,57 +312,61 @@ class WorkoutService : BaseService() {
 
 
 
-    fun getWorkoutsCompletedPerDayThisWeek(userId: Int): List<Int> {
-        return transaction {
-            val today = Clock.System.now().toLocalDateTimeKt(TimeZone.currentSystemDefault()).date
-            val weekStart = today.minus((today.dayOfWeek.ordinal).toLong(), DateTimeUnit.DAY)
-            
-            (0..6).map { i ->
-                val day = weekStart.plus(i, DateTimeUnit.DAY)
-                val start = day.atTime(0, 0)
-                val end = day.atTime(23, 59)
-                
-                WorkoutTrack.find { 
-                    (WorkoutTracks.doneDateTime greaterEq start) and 
-                    (WorkoutTracks.doneDateTime lessEq end) and 
-                    (WorkoutTracks.status eq Status.ACTIVE) and
-                    (WorkoutTracks.workoutDayId inSubQuery WorkoutDays.slice(WorkoutDays.id).select { 
-                        (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) 
-                    })
-                }.count().toInt()
-            }
-        }
-    }
+    @OptIn(ExperimentalTime::class)
+    fun getWorkoutsCompletedPerDayThisWeek(userId: Int): List<Int> = transaction {
+        val today = Clock.System.now().toLocalDateTimeKt(TimeZone.currentSystemDefault()).date
+        val weekStart = today.minus(today.dayOfWeek.ordinal.toLong(), DateTimeUnit.DAY)
 
-    fun getWorkoutTracksByDateRange(userId: Int, startDate: String, endDate: String): List<WorkoutTrackDTO> {
-        return transaction {
+        // Subquery of the user's active workout days (reused below)
+        val userWorkoutDays = WorkoutDays
+            .select(WorkoutDays.id)
+            .where { (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) }
+
+        (0..6).map { i ->
+            val day = weekStart.plus(i, DateTimeUnit.DAY)
+
             WorkoutTrack.find {
-                (WorkoutTracks.doneDateTime.date() greaterEq startDate.toLocalDate()) and
-                (WorkoutTracks.doneDateTime.date() lessEq endDate.toLocalDate()) and
-                (WorkoutTracks.status eq Status.ACTIVE) and
-                (WorkoutTracks.workoutDayId inSubQuery WorkoutDays.slice(WorkoutDays.id).select { 
-                    (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) 
-                })
-            }.toList().map { it.toDTO() }
+                (WorkoutTracks.doneDateTime.date() eq day) and
+                        (WorkoutTracks.status eq Status.ACTIVE) and
+                        (WorkoutTracks.workoutDayId inSubQuery userWorkoutDays)
+            }.count().toInt()
         }
     }
 
-    fun deleteWorkoutTrack(userId: Int, trackId: String): Boolean {
-        return transaction {
-            val deletedRow = WorkoutTracks.deleteOperation(userId) {
-                val updatedRows = WorkoutTracks.update({ 
-                    (WorkoutTracks.id eq UUID.fromString(trackId)) and
-                    (WorkoutTracks.workoutDayId inSubQuery WorkoutDays.slice(WorkoutDays.id).select { 
-                        (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) 
-                    })
-                }) {
-                    it[status] = Status.DELETED
-                }
-                if (updatedRows > 0) UUID.fromString(trackId) else null
-            }
-            deletedRow != null
-        }
+    fun getWorkoutTracksByDateRange(
+        userId: Int,
+        startDate: String,
+        endDate: String
+    ): List<WorkoutTrackDTO> = transaction {
+        val userWorkoutDays = WorkoutDays
+            .select(WorkoutDays.id)
+            .where { (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) }
+
+        WorkoutTrack.find {
+            (WorkoutTracks.doneDateTime.date() greaterEq startDate.toLocalDate()) and
+                    (WorkoutTracks.doneDateTime.date() lessEq endDate.toLocalDate()) and
+                    (WorkoutTracks.status eq Status.ACTIVE) and
+                    (WorkoutTracks.workoutDayId inSubQuery userWorkoutDays)
+        }.toList().map { it.toDTO() }
     }
+
+    fun deleteWorkoutTrack(userId: Int, trackId: String): Boolean = transaction {
+        val userWorkoutDays = WorkoutDays
+            .select(WorkoutDays.id)
+            .where { (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) }
+
+        val deletedRow = WorkoutTracks.deleteOperation(userId) {
+            val updatedRows = WorkoutTracks.update({
+                (WorkoutTracks.id eq UUID.fromString(trackId)) and
+                        (WorkoutTracks.workoutDayId inSubQuery userWorkoutDays)
+            }) {
+                it[status] = Status.DELETED
+            }
+            if (updatedRows > 0) UUID.fromString(trackId) else null
+        }
+        deletedRow != null
+    }
+
 
     fun bindExerciseToDay(userId: Int, exerciseId: String, workoutDayDay: Int): Boolean {
         return transaction {
@@ -512,33 +517,44 @@ class WorkoutService : BaseService() {
 
         updatedRows > 0
     }
+    fun getExerciseTracksByDateRange(
+        userId: Int,
+        startDate: String,
+        endDate: String
+    ): List<ExerciseTrackDTO> = transaction {
+        // Subqueries without slice()
+        val userWorkoutDays = WorkoutDays
+            .select(WorkoutDays.id)
+            .where { (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) }
 
-    fun getExerciseTracksByDateRange(userId: Int, startDate: String, endDate: String): List<ExerciseTrackDTO> {
-        return transaction {
-            ExerciseTrack.find {
-                (ExerciseTracks.doneDateTime.date() greaterEq startDate.toLocalDate()) and
-                (ExerciseTracks.doneDateTime.date() lessEq endDate.toLocalDate()) and
-                (ExerciseTracks.status eq Status.ACTIVE) and
-                (ExerciseTracks.workoutDayId inSubQuery WorkoutDays.slice(WorkoutDays.id).select { 
-                    (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) 
-                }) and
-                (ExerciseTracks.exerciseId inSubQuery Exercises.slice(Exercises.id).select { 
-                    (Exercises.user eq userId) and (Exercises.status eq Status.ACTIVE) 
-                })
-            }.toList().map { it.toDTO() }
-        }
+        val userExercises = Exercises
+            .select(Exercises.id)
+            .where { (Exercises.user eq userId) and (Exercises.status eq Status.ACTIVE) }
+
+        ExerciseTrack.find {
+            (ExerciseTracks.doneDateTime.date() greaterEq startDate.toLocalDate()) and
+                    (ExerciseTracks.doneDateTime.date() lessEq endDate.toLocalDate()) and
+                    (ExerciseTracks.status eq Status.ACTIVE) and
+                    (ExerciseTracks.workoutDayId inSubQuery userWorkoutDays) and
+                    (ExerciseTracks.exerciseId inSubQuery userExercises)
+        }.toList().map { it.toDTO() }
     }
 
-    fun getCompletedExercisesForDay(userId: Int, workoutDayId: String, dateTime: String): List<String> {
-        return transaction {
-            ExerciseTrack.find {
-                (ExerciseTracks.workoutDayId eq UUID.fromString(workoutDayId)) and
-                (ExerciseTracks.status eq Status.ACTIVE) and
-                (ExerciseTracks.exerciseId inSubQuery Exercises.slice(Exercises.id).select { 
-                    (Exercises.user eq userId) and (Exercises.status eq Status.ACTIVE) 
-                }) and (ExerciseTracks.doneDateTime.date() eq dateTime.toLocalDateTime().date)
+    fun getCompletedExercisesForDay(
+        userId: Int,
+        workoutDayId: String,
+        dateTime: String
+    ): List<String> = transaction {
+        val userExercises = Exercises
+            .select(Exercises.id)
+            .where { (Exercises.user eq userId) and (Exercises.status eq Status.ACTIVE) }
 
-            }.map { it.exercise.id.value.toString() }
-        }
+        ExerciseTrack.find {
+            (ExerciseTracks.workoutDayId eq UUID.fromString(workoutDayId)) and
+                    (ExerciseTracks.status eq Status.ACTIVE) and
+                    (ExerciseTracks.exerciseId inSubQuery userExercises) and
+                    (ExerciseTracks.doneDateTime.date() eq dateTime.toLocalDateTime().date)
+        }.map { it.exercise.id.value.toString() }
     }
+
 }

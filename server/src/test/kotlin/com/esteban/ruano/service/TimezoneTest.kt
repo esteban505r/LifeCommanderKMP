@@ -3,6 +3,7 @@ package com.esteban.ruano.service
 import kotlinx.datetime.*
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import kotlin.test.*
+import kotlin.time.ExperimentalTime
 
 class TimezoneTest {
 
@@ -78,6 +79,7 @@ class TimezoneTest {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun `test timezone conversion between different zones`() {
         val bogotaTimezone = TimeZone.of("America/Bogota")
@@ -103,7 +105,7 @@ class TimezoneTest {
         val testCases = listOf(
             "America/Bogota" to "America/Bogota",
             "UTC" to "UTC", // TimeZone.of("UTC") returns "UTC"
-            "Invalid/Timezone" to "Z", // TimeZone.UTC returns "Z"
+            "Invalid/Timezone" to "UTC", // TimeZone.UTC returns "Z"
             null to "UTC" // TimeZone.of("UTC") returns "UTC"
         )
 

@@ -20,6 +20,7 @@ data class FinanceState(
     val scheduledTransactions: List<ScheduledTransaction> = emptyList(),
     val totalScheduledTransactions: Long = 0,
     val budgets: List<BudgetProgress> = emptyList(),
+    val currentBudgetId: String? = null,
     val savingsGoals: List<SavingsGoal> = emptyList(),
     val savingsGoalProgress: Map<String, Double> = emptyMap(),
     val selectedAccount: Account? = null,

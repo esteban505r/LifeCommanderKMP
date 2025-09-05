@@ -104,7 +104,7 @@ class BudgetService(private val settingsRepository: SettingsRepository) : BaseSe
             // 2. Apply ordering and pagination
             val paginatedQuery = baseQuery
                 .orderBy(Budgets.startDate to SortOrder.DESC)
-                .limit(limit, offset.toLong())
+                .limit(limit).offset(offset.toLong())
 
             // 3. Fetch and map each budget
             val budgetedResults = paginatedQuery.map { row ->

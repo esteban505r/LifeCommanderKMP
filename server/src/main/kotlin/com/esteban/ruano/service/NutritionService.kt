@@ -20,19 +20,23 @@ import com.esteban.ruano.utils.parseDate
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
-import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toLocalDateTime
-import org.jetbrains.exposed.v1.core.dao.with
-import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
 import com.esteban.ruano.models.nutrition.RecipeTrackDTO
 import com.esteban.ruano.models.nutrition.UpdateRecipeDTO
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.dao.with
+import org.jetbrains.exposed.v1.datetime.date
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 class NutritionService() : BaseService() {
 
@@ -42,13 +46,14 @@ class NutritionService() : BaseService() {
                 .and (Recipes.status eq Status.ACTIVE)
             }.with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions).map { it.toDTO() }
             val totalRecipes = recipes.size
-            val currentDay = parseDate(date).dayOfWeek.value
+            val currentDay = parseDate(date).dayOfWeek.ordinal
             NutritionDashboardDTO(totalRecipes, recipes.filter {
                 it.days?.contains(currentDay) == true
             })
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun getRecipesByDay(userId: Int, day: Int, filter: String = "", limit: Int = 50, offset: Long = 0, sortBy: String = "name", sortOrder: String = "asc", mealTagFilter: String? = null, nutritionFilters: Map<String, Pair<Double?, Double?>> = emptyMap()): List<RecipeDTO> {
         return transaction {
             // Get recipes that are assigned to the specified day
@@ -119,7 +124,7 @@ class NutritionService() : BaseService() {
                 else -> query.orderBy(Recipes.name to SortOrder.ASC)
             }
             
-            val recipes = sortedQuery.limit(limit, offset)
+            val recipes = sortedQuery.limit(limit).offset(offset)
             .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions).map { it.toDTO() }
             
             // Add consumption status to each recipe
@@ -368,7 +373,7 @@ class NutritionService() : BaseService() {
                 else -> query.orderBy(Recipes.name to SortOrder.ASC)
             }
             
-            sortedQuery.limit(limit, offset)
+            sortedQuery.limit(limit).offset(offset)
             .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
             .map { it.toDTO() }
         }
@@ -387,7 +392,7 @@ class NutritionService() : BaseService() {
                 (Recipes.id notInList recipesWithDays.toList()) and
                 (Recipes.name.lowerCase() like "%${filter.lowercase()}%") and 
                 (Recipes.status eq Status.ACTIVE)
-            }.limit(limit, offset)
+            }.limit(limit).offset(offset)
             .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
             .map { it.toDTO() }
         }
@@ -574,7 +579,7 @@ class NutritionService() : BaseService() {
             }
             
             val totalCount = sortedQuery.count()
-            val recipes = sortedQuery.limit(limit, offset.toLong())
+            val recipes = sortedQuery.limit(limit).offset(offset.toLong())
                 .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
                 .map { it.toDTO() }
             
@@ -585,6 +590,7 @@ class NutritionService() : BaseService() {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun getRecipesByDayWithFilters(
         userId: Int,
         day: Int,
@@ -660,7 +666,7 @@ class NutritionService() : BaseService() {
             }
             
             val totalCount = sortedQuery.count()
-            val recipes = sortedQuery.limit(limit, offset.toLong())
+            val recipes = sortedQuery.limit(limit).offset(offset.toLong())
                 .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
                 .map { it.toDTO() }
             

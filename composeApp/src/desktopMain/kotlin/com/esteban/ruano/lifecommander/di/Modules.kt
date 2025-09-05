@@ -33,6 +33,7 @@ import com.esteban.ruano.lifecommander.ui.viewmodels.WorkoutViewModel
 import com.esteban.ruano.lifecommander.utils.DEV_VARIANT
 import com.esteban.ruano.lifecommander.utils.VARIANT
 import com.esteban.ruano.lifecommander.websocket.TimerWebSocketClient
+import io.ktor.client.plugins.compression.ContentEncoding
 import io.ktor.client.plugins.websocket.WebSockets
 import org.koin.core.qualifier.named
 import services.dailyjournal.PomodoroService
@@ -49,23 +50,48 @@ import utils.BackgroundServiceManager
 import utils.StatusBarService
 import utils.TimerService
 import utils.createDataStore
+import java.io.FileInputStream
+import java.security.KeyStore
+import java.security.cert.CertificateFactory
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 
 // Network Module
 val socketQualifier = named("socketHttpClient")
+
+
+fun trustManagerFromPem(pemPath: String): X509TrustManager {
+    val cf = CertificateFactory.getInstance("X.509")
+    val cert = FileInputStream(pemPath).use { cf.generateCertificate(it) }
+    val ks = KeyStore.getInstance(KeyStore.getDefaultType()).apply { load(null, null) }
+    ks.setCertificateEntry("httptoolkit-root", cert)
+    val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+    tmf.init(ks)
+    return tmf.trustManagers.single() as X509TrustManager
+}
+
+val tm = trustManagerFromPem("/home/bansyne/.config/httptoolkit/ca.pem")
+
 val networkModule = module {
     single {
         HttpClient(CIO) {
-            if(VARIANT == DEV_VARIANT) {
+            if (VARIANT == DEV_VARIANT) {
                 engine {
                     //Proxy for debugging
-                    proxy = ProxyBuilder.http("http://localhost:8000")
+                    proxy = ProxyBuilder.http("https://localhost:8000")
+                    https { trustManager = tm }
                 }
             }
             install(ContentNegotiation) {
                 gson {
                     setPrettyPrinting()
                 }
+            }
+            install(ContentEncoding) {
+                gzip()
+                deflate()
+                identity()
             }
         }
     }
@@ -80,7 +106,6 @@ val networkModule = module {
         }
     }
 }
-
 
 
 // Data Store Module
@@ -98,10 +123,10 @@ val managersModule = module {
 val servicesModule = module {
     single { HabitService(get()) }
     single { TaskService(get()) }
-    single { AuthService(get(),get()) }
+    single { AuthService(get(), get()) }
     single { FinanceService(BASE_URL, get(), get()) }
     single { AppPreferencesService(get()) }
-    single { NightBlockService(get(),get()) }
+    single { NightBlockService(get(), get()) }
     single { BackgroundServiceManager() }
     single { TimerPlaybackManager() }
     single { StatusBarService() }
@@ -109,28 +134,30 @@ val servicesModule = module {
     single { TimerService(get()) }
     single { com.esteban.ruano.lifecommander.services.timers.TimerService(get()) }
     single { DailyJournalService(BASE_URL, get(), get()) }
-    single { CategoryKeywordService(BASE_URL, get(),get()) }
+    single { CategoryKeywordService(BASE_URL, get(), get()) }
     single { PomodoroService(BASE_URL, get(), get()) }
-    single { DashboardService(BASE_URL,get(),get()) }
-    single { RecipesService (BASE_URL, get(), get()) }
+    single { DashboardService(BASE_URL, get(), get()) }
+    single { RecipesService(BASE_URL, get(), get()) }
     single { WorkoutService(BASE_URL, get(), get()) }
-    single { SettingsService( BASE_URL,get(),get()) }
+    single { SettingsService(BASE_URL, get(), get()) }
 }
 
 // ViewModels Module
 val viewModelsModule = module {
-    viewModel { AppViewModel(get(),get(), get(), get(), get()) }
-    viewModel { HabitsViewModel(get(),get()) }
-    viewModel { TasksViewModel(get(),get(),get()) }
+    viewModel { AppViewModel(get(), get(), get(), get(), get()) }
+    viewModel { HabitsViewModel(get(), get()) }
+    viewModel { TasksViewModel(get(), get(), get()) }
     viewModel { AuthViewModel(get()) }
-    viewModel { DailyJournalViewModel(get(),get()) }
-    viewModel { CalendarViewModel(get(),get(),get(),get()) }
+    viewModel { DailyJournalViewModel(get(), get()) }
+    viewModel { CalendarViewModel(get(), get(), get(), get()) }
     viewModel { FinanceViewModel(get()) }
-    viewModel { TimersViewModel(get(),get(), get(),get(),get(),get())}
+    viewModel { TimersViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { CategoryKeywordMapperViewModel(get()) }
-    viewModel { DashboardViewModel(
-        get(),
-    ) }
+    viewModel {
+        DashboardViewModel(
+            get(),
+        )
+    }
     viewModel { RecipesViewModel(get()) }
     viewModel { WorkoutViewModel(get()) }
     viewModel { SettingsViewModel(get()) }
@@ -138,5 +165,5 @@ val viewModelsModule = module {
 
 // Combine all modules
 val appModule = module {
-    includes(networkModule, managersModule,dataStoreModule, servicesModule, viewModelsModule)
+    includes(networkModule, managersModule, dataStoreModule, servicesModule, viewModelsModule)
 }

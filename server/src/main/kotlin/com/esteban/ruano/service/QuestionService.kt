@@ -7,8 +7,8 @@ import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.questions.CreateQuestionDTO
 import com.esteban.ruano.models.questions.QuestionDTO
 import com.esteban.ruano.models.questions.UpdateQuestionDTO
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.*
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 
@@ -56,7 +56,7 @@ class QuestionService : BaseService() {
         return transaction {
             Question.find {
                 (Questions.user eq userId) and (Questions.status eq Status.ACTIVE)
-            }.limit(limit, offset).toList().map { it.toDTO() }
+            }.limit(limit).offset(offset).toList().map { it.toDTO() }
         }
     }
 

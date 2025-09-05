@@ -187,6 +187,7 @@ fun AppNavHost(
                             navController.navigate(Screen.FinanceImporter.route)
                         },
                         onOpenBudgetTransactions = { budgetId ->
+                            financeViewModel.setCurrentBudgetId(budgetId)
                             navController.navigate(BudgetTransactionsRoute(
                                 budgetId = budgetId
                             ))

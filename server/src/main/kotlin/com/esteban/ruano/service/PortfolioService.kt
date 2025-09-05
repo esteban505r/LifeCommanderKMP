@@ -5,16 +5,16 @@ import com.esteban.ruano.database.entities.Portfolio
 import com.esteban.ruano.database.entities.Portfolios
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.utils.parseDate
-import kotlinx.serialization.json.Json
 import lopez.esteban.com.models.portfolio.CreatePortfolioDTO
 import lopez.esteban.com.models.portfolio.PortfolioDTO
 import lopez.esteban.com.models.portfolio.UpdatePortfolioDTO
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.jdbc.and
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
-import java.util.UUID
+import java.util.*
 
 class PortfolioService : BaseService() {
 
@@ -87,8 +87,8 @@ class PortfolioService : BaseService() {
             }
 
             Portfolio.find { query }
-                .orderBy(Portfolios.createdDate to org.jetbrains.exposed.sql.SortOrder.DESC)
-                .limit(limit, offset)
+                .orderBy(Portfolios.createdDate to SortOrder.DESC)
+                .limit(limit).offset(offset)
                 .toList()
                 .map { it.toDTO() }
         }
@@ -115,8 +115,8 @@ class PortfolioService : BaseService() {
             }
 
             Portfolio.find { query }
-                .orderBy(Portfolios.createdDate to org.jetbrains.exposed.sql.SortOrder.DESC)
-                .limit(limit, offset)
+                .orderBy(Portfolios.createdDate to SortOrder.DESC)
+                .limit(limit).offset(offset)
                 .toList()
                 .map { it.toDTO() }
         }

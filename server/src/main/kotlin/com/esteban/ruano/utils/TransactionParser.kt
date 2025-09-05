@@ -11,7 +11,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.atTime
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.jdbc.and
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import kotlin.math.absoluteValue
 import kotlin.text.iterator

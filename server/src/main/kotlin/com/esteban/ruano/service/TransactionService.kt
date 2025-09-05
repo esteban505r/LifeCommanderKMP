@@ -20,9 +20,7 @@ import kotlinx.datetime.plus
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.datetime.date
-import org.jetbrains.exposed.v1.jdbc.SortOrder
 import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.*
@@ -154,7 +152,7 @@ class TransactionService() : BaseService() {
                     filters.amountSortOrder,
                     absAmount,
                     defaultSortOrder = Transactions.date to SortOrder.DESC
-                ).limit(limit, offset.toLong())
+                ).limit(limit).offset(offset.toLong())
 
             val results = paginatedResults.map {
                 TransactionResponseDTO(

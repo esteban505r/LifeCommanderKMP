@@ -6,10 +6,11 @@ import com.esteban.ruano.database.entities.QuestionAnswers
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.questions.CreateQuestionAnswerDTO
 import com.esteban.ruano.models.questions.QuestionAnswerDTO
-import org.jetbrains.exposed.v1.jdbc.*
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.util.UUID
+import org.jetbrains.exposed.v1.jdbc.update
+import java.util.*
 
 class QuestionAnswerService : BaseService() {
 

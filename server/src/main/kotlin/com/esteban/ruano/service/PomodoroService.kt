@@ -1,6 +1,5 @@
 package com.esteban.ruano.service
 
-import kotlinx.datetime.*
 import com.esteban.ruano.database.converters.toDTO
 import com.esteban.ruano.database.entities.Pomodoro
 import com.esteban.ruano.database.entities.Pomodoros
@@ -10,10 +9,13 @@ import com.esteban.ruano.models.pomodoros.PomodoroDTO
 import com.esteban.ruano.models.pomodoros.UpdatePomodoroDTO
 import com.esteban.ruano.utils.parseDateTime
 import com.esteban.ruano.utils.parseDateTimeWithSeconds
-import org.jetbrains.exposed.v1.jdbc.*
-import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
+import kotlinx.datetime.LocalDate
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.datetime.date
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.util.UUID
+import org.jetbrains.exposed.v1.jdbc.update
+import java.util.*
 
 class PomodoroService : BaseService() {
 
@@ -59,7 +61,7 @@ class PomodoroService : BaseService() {
         return transaction {
             Pomodoro.find {
                 (Pomodoros.user eq userId) and (Pomodoros.status eq Status.ACTIVE)
-            }.limit(limit, offset).toList().map { it.toDTO() }
+            }.limit(limit).offset(offset).toList().map { it.toDTO() }
         }
     }
 
@@ -76,7 +78,7 @@ class PomodoroService : BaseService() {
                 (Pomodoros.status eq Status.ACTIVE) and
                 (Pomodoros.startDateTime.date() greaterEq startDate) and
                 (Pomodoros.startDateTime.date() lessEq endDate)
-            }.limit(limit, offset).toList().map { it.toDTO() }
+            }.limit(limit).offset(offset).toList().map { it.toDTO() }
         }
     }
 

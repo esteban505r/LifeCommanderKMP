@@ -21,17 +21,20 @@ import com.esteban.ruano.utils.parseDate
 import com.esteban.ruano.utils.parseDateTime
 import com.lifecommander.models.Frequency
 import kotlinx.datetime.plus
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.datetime.date
+import org.jetbrains.exposed.v1.datetime.minute
 import org.jetbrains.exposed.v1.jdbc.*
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.like
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
-import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.minute
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 class HabitService(
     val reminderService: ReminderService
@@ -120,7 +123,7 @@ class HabitService(
         return transaction {
             val habits =
                 Habit.find { (Habits.user eq userId) and (Habits.name.lowerCase() like "%${pattern.lowercase()}%") and (Habits.baseDateTime.date() lessEq date) and (Habits.status eq Status.ACTIVE) }
-                    .orderBy(Habits.baseDateTime.minute() to SortOrder.ASC).limit(limit, offset).toList()
+                    .orderBy(Habits.baseDateTime.minute() to SortOrder.ASC).limit(limit).offset(offset).toList()
 
             val result = mutableListOf<HabitDTO>()
             for (habit in habits) {
@@ -144,7 +147,7 @@ class HabitService(
     fun fetchAll(userId: Int, pattern: String, limit: Int, offset: Long): List<HabitDTO> {
         return transaction {
             val habits = Habit.find { (Habits.user eq userId) and (Habits.name.lowerCase() like "%${pattern.lowercase()}%") and (Habits.frequency neq Frequency.ONE_TIME.value and (Habits.status eq Status.ACTIVE)) }
-                .orderBy(Habits.baseDateTime.minute() to SortOrder.ASC).limit(limit, offset).toList()
+                .orderBy(Habits.baseDateTime.minute() to SortOrder.ASC).limit(limit).offset(offset).toList()
                 .map { it.toHabitDTO() }
             habits.map {
                 val reminders = reminderService.getByHabitID(UUID.fromString(it.id))
@@ -179,7 +182,7 @@ class HabitService(
 
             val habits = Habit.find(baseQuery)
                 .orderBy(Habits.baseDateTime.minute() to SortOrder.ASC)
-                .limit(limit, offset)
+                .limit(limit).offset(offset)
                 .toList()
 
             val result = mutableListOf<HabitDTO>()
@@ -333,6 +336,7 @@ class HabitService(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun shouldSendHabitNotification(
         userId: Int,
         lastNotificationTime: Long,

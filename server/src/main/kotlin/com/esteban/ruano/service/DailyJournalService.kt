@@ -10,6 +10,7 @@ import com.esteban.ruano.models.dailyjournal.*
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import kotlinx.datetime.*
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -67,7 +68,7 @@ class DailyJournalService(
         return transaction {
             DailyJournal.find {
                 (DailyJournals.user eq userId) and (DailyJournals.status eq Status.ACTIVE)
-            }.limit(limit, offset).toList().map { it.toDTO() }
+            }.limit(limit).offset(offset).toList().map { it.toDTO() }
         }
     }
 
@@ -84,7 +85,7 @@ class DailyJournalService(
                 (DailyJournals.status eq Status.ACTIVE) and
                 (DailyJournals.date greaterEq startDate) and
                 (DailyJournals.date lessEq endDate)
-            }.limit(limit, offset).toList().map { it.toDTO() }
+            }.limit(limit).offset(offset).toList().map { it.toDTO() }
         }
 
         val result = journals.map {

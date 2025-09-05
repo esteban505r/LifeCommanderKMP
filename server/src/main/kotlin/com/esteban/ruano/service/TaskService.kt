@@ -1,6 +1,5 @@
 package com.esteban.ruano.service
 
-import kotlinx.datetime.*
 import com.esteban.ruano.database.converters.toDTO
 import com.esteban.ruano.database.entities.Task
 import com.esteban.ruano.database.entities.Tasks
@@ -15,13 +14,27 @@ import com.esteban.ruano.models.tasks.UpdateTaskDTO
 import com.esteban.ruano.utils.sortedByDefault
 import com.esteban.ruano.utils.fromDateToLong
 import com.esteban.ruano.utils.parseDateTime
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.isNotNull
+import org.jetbrains.exposed.v1.datetime.date
 import org.jetbrains.exposed.v1.jdbc.*
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.v1.jdbc.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.v1.jdbc.kotlin.datetime.date
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
+import kotlin.and
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 class TaskService(
     val reminderService: ReminderService
@@ -68,6 +81,7 @@ class TaskService(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun shouldSendTaskNotification(
         userId: Int,
         lastNotificationTime: Long,
@@ -168,7 +182,7 @@ class TaskService(
         return transaction {
             Task.find {
                 (Tasks.user eq userId) and (Tasks.status eq Status.ACTIVE)
-            }.limit(limit, offset).toList().sortedByDefault().map { it.toDTO() }
+            }.limit(limit).offset(offset).toList().sortedByDefault().map { it.toDTO() }
         }
     }
 
@@ -196,7 +210,7 @@ class TaskService(
         return transaction {
             val tasks =
                 Task.find { (Tasks.user eq userId) and (Tasks.name.lowerCase() like "%${pattern.lowercase()}%") and (Tasks.status eq Status.ACTIVE) }
-                    .limit(limit, offset).toList().sortedByDefault().map { it.toDTO() }
+                    .limit(limit).offset(offset).toList().sortedByDefault().map { it.toDTO() }
             tasks.map {
                 val reminders = reminderService.getByTaskID(
                     UUID.fromString(it.id)
@@ -242,7 +256,7 @@ class TaskService(
                     )
 
             }
-                .limit(limit, offset).toList().sortedByDefault().map { it.toDTO() }
+                .limit(limit).offset(offset).toList().sortedByDefault().map { it.toDTO() }
             tasks.map {
                 val reminders = reminderService.getByTaskID(
                     UUID.fromString(it.id)
@@ -256,7 +270,7 @@ class TaskService(
         return transaction {
             val tasks =
                 Task.find { (Tasks.user eq userId) and (Tasks.name.lowerCase() like "%${pattern.lowercase()}%") and (Tasks.dueDateTime eq null) and (Tasks.status eq Status.ACTIVE) }
-                    .limit(limit, offset).toList().sortedByDefault().map { it.toDTO() }
+                    .limit(limit).offset(offset).toList().sortedByDefault().map { it.toDTO() }
             tasks.map {
                 val reminders = reminderService.getByTaskID(
                     UUID.fromString(it.id)
@@ -281,8 +295,8 @@ class TaskService(
                 // For overdue tasks:
                 // - Include tasks with a dueDateTime or scheduledDateTime that is overdue (less than or equal to today)
                 // - And the task is not done (doneDateTime is null)
-                (Tasks.dueDateTime.isNull().not() and (Tasks.dueDateTime.lessEq(startDate)) and (Tasks.doneDateTime eq null))
-                    .or((Tasks.scheduledDateTime.isNull().not() and (Tasks.scheduledDateTime.lessEq(startDate)) and (Tasks.doneDateTime eq null))) // Scheduled but overdue
+                (Tasks.dueDateTime.isNotNull() and (Tasks.dueDateTime.date().lessEq(startDate)) and (Tasks.doneDateTime eq null))
+                    .or((Tasks.scheduledDateTime.isNotNull() and (Tasks.scheduledDateTime.date().lessEq(startDate)) and (Tasks.doneDateTime eq null))) // Scheduled but overdue
 
                     // Tasks scheduled for today
                     .or((Tasks.scheduledDateTime.date() eq startDate) and (Tasks.doneDateTime eq null))
@@ -302,7 +316,7 @@ class TaskService(
             }.orderBy(Tasks.dueDateTime to SortOrder.ASC_NULLS_LAST).orderBy(
                 Tasks.scheduledDateTime to SortOrder.ASC_NULLS_LAST
             )
-                .limit(limit, offset).toList().sortedByDefault().map { it.toDTO() }
+                .limit(limit).offset(offset).toList().sortedByDefault().map { it.toDTO() }
 
             tasks.map {
                 val reminders = reminderService.getByTaskID(
@@ -378,18 +392,26 @@ class TaskService(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun getTasksCompletedPerDayThisWeek(userId: Int): List<Int> {
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val startOfWeek = today.minus((today.dayOfWeek.ordinal).toLong(), DateTimeUnit.DAY)
+        val startOfWeek = today.minus((today.dayOfWeek.ordinal + 1).toLong(), DateTimeUnit.DAY)
         val endOfWeek = startOfWeek.plus(6, DateTimeUnit.DAY)
         val completedPerDay = IntArray(7) { 0 }
 
         transaction {
+            val userTasks = Tasks
+                .select(Tasks.id)
+                .where {
+                    (Tasks.user eq userId)
+                        .and (Tasks.status eq Status.ACTIVE)
+                }
+
             TaskTrack.find {
                 (TaskTracks.status eq Status.ACTIVE) and
                         (TaskTracks.doneDateTime.date() greaterEq startOfWeek) and
                         (TaskTracks.doneDateTime.date() lessEq endOfWeek) and
-                        (TaskTracks.taskId inSubQuery Tasks.slice(Tasks.id).select { Tasks.user eq userId })
+                        (TaskTracks.taskId inSubQuery userTasks)
             }.forEach { track ->
                 val doneDate = track.doneDateTime.date
                 val dayIdx = doneDate.dayOfWeek.ordinal // 0=Mon, 6=Sun

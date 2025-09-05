@@ -10,6 +10,11 @@ import com.esteban.ruano.models.tasks.TaskDTO
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import kotlinx.datetime.*
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class DashboardService(
@@ -34,7 +39,7 @@ class DashboardService(
     fun getDashboardData(userId: Int, dateTime: String): DashboardResponseDTO {
         val currentDateTime = dateTime.toLocalDateTime()
         val today = currentDateTime.date
-        val dayOfWeek = today.dayOfWeek.value
+        val dayOfWeek = today.dayOfWeek.ordinal + 1
 
         val weekStart = today.minus(DatePeriod(days = dayOfWeek - 1))
         val weekEnd = weekStart.plus(DatePeriod(days = 6))
@@ -149,8 +154,8 @@ class DashboardService(
 
     private fun getTrackCountsPerDay(
         weekStart: LocalDate,
-        column: org.jetbrains.exposed.sql.Column<LocalDateTime>,
-        finder: (org.jetbrains.exposed.sql.Op<Boolean>) -> Iterable<*>
+        column: Column<LocalDateTime>,
+        finder: (Op<Boolean>) -> Iterable<*>
     ): List<Int> {
         return transaction {
             (0..6).map { i ->
@@ -165,8 +170,8 @@ class DashboardService(
 
     private fun calculateTaskCompletionFromTracks(
         weekStart: LocalDate,
-        column: org.jetbrains.exposed.sql.Column<LocalDateTime>,
-        finder: (org.jetbrains.exposed.sql.Op<Boolean>) -> Iterable<*>
+        column: Column<LocalDateTime>,
+        finder: (Op<Boolean>) -> Iterable<*>
     ): Float = transaction {
         val start = weekStart.atTime(0, 0)
         val end = weekStart.plus(DatePeriod(days = 6)).atTime(23, 59)
@@ -176,8 +181,8 @@ class DashboardService(
 
     private fun calculateHabitCompletionFromTracks(
         weekStart: LocalDate,
-        column: org.jetbrains.exposed.sql.Column<LocalDateTime>,
-        finder: (org.jetbrains.exposed.sql.Op<Boolean>) -> Iterable<*>
+        column: Column<LocalDateTime>,
+        finder: (Op<Boolean>) -> Iterable<*>
     ): Float = transaction {
         val start = weekStart.atTime(0, 0)
         val end = weekStart.plus(DatePeriod(days = 6)).atTime(23, 59)
@@ -187,8 +192,8 @@ class DashboardService(
 
     private fun calculateRecipeCompletionFromTracks(
         weekStart: LocalDate,
-        column: org.jetbrains.exposed.sql.Column<LocalDateTime>,
-        finder: (org.jetbrains.exposed.sql.Op<Boolean>) -> Iterable<*>
+        column: Column<LocalDateTime>,
+        finder: (Op<Boolean>) -> Iterable<*>
     ): Float = transaction {
         val start = weekStart.atTime(0, 0)
         val end = weekStart.plus(DatePeriod(days = 6)).atTime(23, 59)
@@ -200,7 +205,7 @@ class DashboardService(
         var streak = 0
         var checkDate = currentDate
         while (true) {
-            val workout = workoutService.getWorkoutDayById(userId, checkDate.dayOfWeek.value)
+            val workout = workoutService.getWorkoutDayById(userId, checkDate.dayOfWeek.ordinal)
             if (workout.exercises.isEmpty()) break
             streak++
             checkDate = checkDate.minus(DatePeriod(days = 1))
@@ -419,7 +424,7 @@ class DashboardService(
         return transaction {
             (0..6).map { i ->
                 val day = weekStart.plus(DatePeriod(days = i))
-                val workout = workoutService.getWorkoutDaysByDay(userId, day.dayOfWeek.value,day.atTime(0,0).formatDefault())
+                val workout = workoutService.getWorkoutDaysByDay(userId, day.dayOfWeek.ordinal+1,day.atTime(0,0).formatDefault())
                 workout.firstOrNull()?.isCompleted.let { if(it == true) 1 else 0 }
             }
         }
@@ -429,7 +434,7 @@ class DashboardService(
         return transaction {
             (0..6).map { i ->
                 val day = weekStart.plus(DatePeriod(days = i))
-                val dayOfWeek = day.dayOfWeek.value
+                val dayOfWeek = day.dayOfWeek.ordinal + 1
                 
                 // Get recipe IDs that are assigned to this day of the week
                 val recipeIds = RecipeDay.find {
@@ -463,8 +468,8 @@ class DashboardService(
             val unExpectedRecipeIds = RecipeDay.find {
                 (RecipeDays.user eq userId) and
                 (RecipeDays.status eq Status.ACTIVE) and
-                (RecipeDays.day greaterEq startDate.dayOfWeek.value) and
-                (RecipeDays.day lessEq endDate.dayOfWeek.value)
+                (RecipeDays.day greaterEq startDate.dayOfWeek.ordinal) and
+                (RecipeDays.day lessEq endDate.dayOfWeek.ordinal)
             }.map { it.recipe.id }
 
             val unexpectedMeals = RecipeTrack.find {
@@ -551,8 +556,8 @@ class DashboardService(
                         timeOverdue
                     } else {
                         // Check if we've passed the target day this week
-                        val todayDayOfWeek = today.dayOfWeek.value
-                        val targetDayOfWeekValue = targetDayOfWeek.value
+                        val todayDayOfWeek = today.dayOfWeek.ordinal + 1
+                        val targetDayOfWeekValue = targetDayOfWeek.ordinal + 1
                         
                         println("  WEEKLY: today day of week: $todayDayOfWeek, target day of week: $targetDayOfWeekValue")
                         
