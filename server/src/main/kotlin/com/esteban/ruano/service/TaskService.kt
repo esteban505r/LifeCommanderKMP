@@ -22,6 +22,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.v1.core.and
@@ -292,39 +293,48 @@ class TaskService(
     ): List<TaskDTO> {
         return transaction {
             val query = if (isTodayFilter) {
-                // For overdue tasks:
-                // - Include tasks with a dueDateTime or scheduledDateTime that is overdue (less than or equal to today)
-                // - And the task is not done (doneDateTime is null)
-                (Tasks.dueDateTime.isNotNull() and (Tasks.dueDateTime.date().lessEq(startDate)) and (Tasks.doneDateTime eq null))
-                    .or((Tasks.scheduledDateTime.isNotNull() and (Tasks.scheduledDateTime.date().lessEq(startDate)) and (Tasks.doneDateTime eq null))) // Scheduled but overdue
-
-                    // Tasks scheduled for today
-                    .or((Tasks.scheduledDateTime.date() eq startDate) and (Tasks.doneDateTime eq null))
+                // Overdue by dueDateTime
+                ((Tasks.dueDateTime.isNotNull()) and (Tasks.dueDateTime.date() lessEq startDate) and (Tasks.doneDateTime eq null))
+                    // Overdue by scheduledDateTime
+                    .or((Tasks.scheduledDateTime.isNotNull()) and (Tasks.scheduledDateTime.date() lessEq startDate) and (Tasks.doneDateTime eq null))
+                    // Scheduled for today
+                    .or((Tasks.scheduledDateTime.isNotNull()) and (Tasks.scheduledDateTime.date() eq startDate) and (Tasks.doneDateTime eq null))
+                .or((Tasks.dueDateTime.isNotNull()) and (Tasks.dueDateTime.date() greater startDate) and (Tasks.doneDateTime eq null))
             } else {
-                // For non-today filters: show only scheduled tasks within the date range
-                (Tasks.scheduledDateTime.date() greaterEq startDate) and
-                        (Tasks.scheduledDateTime.date() lessEq endDate) and
-                        (Tasks.doneDateTime eq null)
+                // Include either dueDateTime in range OR scheduledDateTime in range
+                (
+                        ((Tasks.dueDateTime.isNotNull()) and
+                                (Tasks.dueDateTime.date() greaterEq startDate) and
+                                (Tasks.dueDateTime.date() lessEq endDate))
+                            .or(
+                                (Tasks.scheduledDateTime.isNotNull()) and
+                                        (Tasks.scheduledDateTime.date() greaterEq startDate) and
+                                        (Tasks.scheduledDateTime.date() lessEq endDate))
+                        ) and (Tasks.doneDateTime eq null)
             }
-
 
             val tasks = Task.find {
                 (Tasks.user eq userId) and
                         (Tasks.name.lowerCase() like "%${pattern.lowercase()}%") and
                         query and
                         (Tasks.status eq Status.ACTIVE)
-            }.orderBy(Tasks.dueDateTime to SortOrder.ASC_NULLS_LAST).orderBy(
-                Tasks.scheduledDateTime to SortOrder.ASC_NULLS_LAST
-            )
-                .limit(limit).offset(offset).toList().sortedByDefault().map { it.toDTO() }
-
-            tasks.map {
-                val reminders = reminderService.getByTaskID(
-                    UUID.fromString(it.id)
+            }
+                .orderBy(
+                    Tasks.dueDateTime to SortOrder.ASC_NULLS_LAST,
+                    Tasks.scheduledDateTime to SortOrder.ASC_NULLS_LAST
                 )
-                it.copy(reminders = reminders.map { it.toDTO() })
+                .limit(limit)
+                .offset(offset)
+                .toList()
+                .sortedByDefault()
+                .map { it.toDTO() }
+
+            tasks.map { dto ->
+                val reminders = reminderService.getByTaskID(UUID.fromString(dto.id))
+                dto.copy(reminders = reminders.map { it.toDTO() })
             }
         }
+
     }
 
     fun completeTask(userId: Int, id: UUID, dateTime: String): Boolean {

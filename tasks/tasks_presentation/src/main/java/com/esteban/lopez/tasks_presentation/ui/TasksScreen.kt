@@ -253,28 +253,26 @@ fun TasksScreen(
                                         }
                                     }, onTaskClick = onTaskClick,
                                         onCheckedChange = { task, it ->
-                                            if (task.id != null) {
-                                                coroutineScope.launch {
-                                                    userIntent(
-                                                        if (it) TaskIntent.CompleteTask(
-                                                            task.id!!
-                                                        ) {
-                                                            coroutineScope.launch {
-                                                                sendMainIntent(
-                                                                    MainIntent.Sync
-                                                                )
-                                                            }
-                                                        } else TaskIntent.UnCompleteTask(
-                                                            task.id!!
-                                                        ) {
-                                                            coroutineScope.launch {
-                                                                sendMainIntent(
-                                                                    MainIntent.Sync
-                                                                )
-                                                            }
-                                                        }
-                                                    )
-                                                }
+                                            coroutineScope.launch {
+                                                userIntent(
+                                                    if (it) TaskIntent.CompleteTask(
+                                                        task.id!!
+                                                    ) {
+                                                       /* coroutineScope.launch {
+                                                            sendMainIntent(
+                                                                MainIntent.Sync
+                                                            )
+                                                        }*/
+                                                    } else TaskIntent.UnCompleteTask(
+                                                        task.id!!
+                                                    ) {
+                                                        /*coroutineScope.launch {
+                                                            sendMainIntent(
+                                                                MainIntent.Sync
+                                                            )
+                                                        }*/
+                                                    }
+                                                )
                                             }
                                         },
                                         onEdit = {
