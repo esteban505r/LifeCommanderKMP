@@ -9,7 +9,8 @@ fun ExerciseTrack.toDTO(): ExerciseTrackDTO {
         id = this.id.value.toString(),
         exerciseId = this.exercise.id.value.toString(),
         workoutDayId = this.workoutDay.id.value.toString(),
-        doneDateTime = formatDateTime(this.doneDateTime),
+        doneDateTime = this.doneDateTime?.let {  formatDateTime(it) },
+        dateTime = this.dateTime?.let { formatDateTime(it) },
         status = this.status.name
     )
-} 
+}

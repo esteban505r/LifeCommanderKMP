@@ -77,6 +77,9 @@ fun WorkoutScreenDestination() {
                 onCompleteExercise = { exerciseId, day,workoutDayId ->
                     viewModel.completeExercise(exerciseId, day,workoutDayId)
                 },
+                onUncompleteExercise = { trackId ->
+                    viewModel.unCompleteExercise(trackId)
+                },
                 onGetAllExercises = {
                     viewModel.getAllExercises()
                 },
@@ -89,7 +92,21 @@ fun WorkoutScreenDestination() {
                 onUnbindExerciseFromDay = { exerciseId, day, onResult ->
                     viewModel.unbindExerciseFromDay(exerciseId, day, onResult)
                 },
+                onAddSet = { repsDone,exerciseId,workoutDayId, onResult ->
+                    viewModel.addExerciseSet(
+                        exerciseId = exerciseId,
+                        workoutDayId = workoutDayId,
+                        reps = repsDone
+                    )
+                },
+                onRemoveSet = { setId ->
+                    viewModel.unCompleteExerciseSet(
+                        setTrackId = setId,
+                    )
+                },
+                onUpdateSetReps = { setId, newReps ->
 
+                },
             )
         }
     }

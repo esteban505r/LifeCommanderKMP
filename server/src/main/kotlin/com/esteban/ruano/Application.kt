@@ -156,7 +156,7 @@ fun Application.connectToPostgres() {
         SchemaUtils.createMissingTablesAndColumns(
             Resources, WorkoutTracks, Exercises,
             Equipments, WorkoutDays, ExercisesWithWorkoutDays,
-            ExercisesWithWorkoutTracks, Users, Habits,
+            ExercisesWithWorkoutTracks, ExerciseSetTracks, Users, Habits,
             Tasks, HistoryTracks, HabitTracks, TaskTracks, Reminders, Recipes, Posts,
             DailyJournals, Pomodoros, Questions, QuestionAnswers,
             Transactions, ScheduledTransactions, Accounts, Budgets, SavingsGoals, TimerLists,

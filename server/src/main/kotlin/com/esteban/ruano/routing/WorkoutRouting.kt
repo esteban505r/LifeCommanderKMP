@@ -8,6 +8,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import com.esteban.ruano.models.users.LoggedUserDTO
+import com.esteban.ruano.models.workout.CreateExerciseSetTrackDTO
 import com.esteban.ruano.models.workout.CreateWorkoutTrackDTO
 import com.esteban.ruano.models.workout.CreateExerciseTrackDTO
 import com.esteban.ruano.models.workout.day.UpdateWorkoutDayDTO
@@ -158,6 +159,43 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
 
         // Exercise Tracking Endpoints
         route("/exercise-tracking") {
+            route("/sets") {
+
+                // Complete a set
+                post("/complete") {
+                    val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                    val setRequest = call.receive<CreateExerciseSetTrackDTO>()
+                    val success = workoutRepository.completeExerciseSet(
+                        userId,
+                        setRequest.exerciseId,
+                        setRequest.workoutDayId,
+                        setRequest.reps,
+                        setRequest.doneDateTime
+                    )
+                    if (success) {
+                        call.respond(HttpStatusCode.Created)
+                    } else {
+                        call.respond(HttpStatusCode.BadRequest)
+                    }
+                }
+
+                // Uncomplete a set
+                delete("/{setTrackId}") {
+                    val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                    val setTrackId = call.parameters["setTrackId"]!!
+                    val success = workoutRepository.unCompleteExerciseSet(
+                        userId,
+                        setTrackId
+                    )
+                    if (success) {
+                        call.respond(HttpStatusCode.OK)
+                    } else {
+                        call.respond(HttpStatusCode.BadRequest)
+                    }
+                }
+            }
+
+
             post("/complete") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val trackRequest = call.receive<CreateExerciseTrackDTO>()

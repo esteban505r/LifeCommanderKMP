@@ -2,13 +2,16 @@ package com.lifecommander.finance.server.transactions
 
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
+import com.esteban.ruano.lifecommander.models.finance.ScheduledTransactionFilters
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
+import com.esteban.ruano.service.ScheduledTransactionService
 import com.esteban.ruano.service.TransactionService
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUtils.formatDateTime
 import com.esteban.ruano.utils.DateUtils.toLocalDate
 import com.lifecommander.finance.model.AccountType
 import com.lifecommander.finance.model.TransactionType
+import com.lifecommander.models.Frequency
 import kotlinx.datetime.*
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -30,10 +33,12 @@ import kotlin.time.toDuration
 
 class TransactionsDBTest {
     private lateinit var service: TransactionService
+    private lateinit var scheduledTransactionsService: ScheduledTransactionService
 
     @Before
     fun setup() {
         service = TransactionService()
+        scheduledTransactionsService = ScheduledTransactionService()
         Database.connect(
             url = "jdbc:postgresql://localhost:5431/testdb",
             driver = "org.postgresql.Driver",
@@ -60,6 +65,7 @@ class TransactionsDBTest {
 
         transaction {
             Transactions.deleteAll()
+            ScheduledTransactions.deleteAll()
             Accounts.deleteAll()
             Users.deleteAll()
         }
@@ -86,6 +92,105 @@ class TransactionsDBTest {
             }
         }
     }
+
+    @Test
+    fun `should get paginated scheduled transactions by user id with larger limit`() {
+        val accountId = getTestAccountId()
+
+        // Create more test scheduled transactions (100 for this test)
+        transaction {
+            repeat(100) { number ->
+                ScheduledTransactions.insert {
+                    it[id] = UUID.randomUUID()
+                    it[amount] = 100.0.toBigDecimal()
+                    it[description] = "Test Scheduled Transaction $number"
+                    it[startDate] = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                    it[frequency] = Frequency.MONTHLY
+                    it[interval] = 1 // Correct interval value
+                    it[type] = TransactionType.EXPENSE
+                    it[category] = "FOOD"
+                    it[user] = 1
+                    it[account] = accountId
+                    it[applyAutomatically] = false
+                    it[status] = Status.ACTIVE
+                }
+            }
+        }
+
+        // Pagination: Fetch the first page of scheduled transactions (limit = 20, offset = 0)
+        val filters = ScheduledTransactionFilters()
+        val firstPage = scheduledTransactionsService.getScheduledTransactionsByUser(
+            userId = 1,
+            limit = 20,
+            offset = 0,
+            filters = filters
+        )
+
+        // Assert that the first page returns 20 results
+        assertEquals(20, firstPage.transactions.size)
+        assertEquals(100, firstPage.totalCount) // Total count should be 100 transactions
+
+        // Pagination: Fetch the second page of scheduled transactions (limit = 20, offset = 20)
+        val secondPage = scheduledTransactionsService.getScheduledTransactionsByUser(
+            userId = 1,
+            limit = 20,
+            offset = 20,
+            filters = filters
+        )
+
+        // Assert that the second page returns 20 results
+        assertEquals(20, secondPage.transactions.size)
+        assertEquals(100, secondPage.totalCount) // Total count should still be 100 transactions
+
+        // Pagination: Fetch the third page of scheduled transactions (limit = 20, offset = 40)
+        val thirdPage = scheduledTransactionsService.getScheduledTransactionsByUser(
+            userId = 1,
+            limit = 20,
+            offset = 40,
+            filters = filters
+        )
+
+        // Assert that the third page returns 20 results
+        assertEquals(20, thirdPage.transactions.size)
+        assertEquals(100, thirdPage.totalCount) // Total count should still be 100 transactions
+
+        // Pagination: Fetch the fourth page of scheduled transactions (limit = 20, offset = 60)
+        val fourthPage = scheduledTransactionsService.getScheduledTransactionsByUser(
+            userId = 1,
+            limit = 20,
+            offset = 60,
+            filters = filters
+        )
+
+        // Assert that the fourth page returns 20 results
+        assertEquals(20, fourthPage.transactions.size)
+        assertEquals(100, fourthPage.totalCount) // Total count should still be 100 transactions
+
+        // Pagination: Fetch the fifth page of scheduled transactions (limit = 20, offset = 80)
+        val fifthPage = scheduledTransactionsService.getScheduledTransactionsByUser(
+            userId = 1,
+            limit = 20,
+            offset = 80,
+            filters = filters
+        )
+
+        // Assert that the fifth page returns 20 results
+        assertEquals(20, fifthPage.transactions.size)
+        assertEquals(100, fifthPage.totalCount) // Total count should still be 100 transactions
+
+        // Pagination: Fetch the sixth page of scheduled transactions (limit = 20, offset = 100)
+        val sixthPage = scheduledTransactionsService.getScheduledTransactionsByUser(
+            userId = 1,
+            limit = 20,
+            offset = 100,
+            filters = filters
+        )
+
+        // Assert that the sixth page returns 0 results as there are only 100 transactions
+        assertEquals(0, sixthPage.transactions.size)
+        assertEquals(100, sixthPage.totalCount) // Total count should still be 100 transactions
+    }
+
 
     @Test
     fun `should create a new transaction`() {

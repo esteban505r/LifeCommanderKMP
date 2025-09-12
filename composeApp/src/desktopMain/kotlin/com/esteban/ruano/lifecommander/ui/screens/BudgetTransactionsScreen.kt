@@ -1,58 +1,65 @@
 package com.esteban.ruano.lifecommander.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.finance.ui.components.TransactionListWrapper
-import com.lifecommander.finance.model.FinanceActions
 import com.esteban.ruano.lifecommander.ui.state.FinanceState
+import com.lifecommander.finance.model.FinanceActions
 import com.lifecommander.finance.model.Transaction
 import com.lifecommander.finance.ui.TransactionForm
-import com.esteban.ruano.lifecommander.models.finance.Budget
 import kotlinx.coroutines.launch
 
 @Composable
 fun BudgetTransactionsScreen(
     budgetId: String,
+    budgetName: String,
     onBack: () -> Unit,
     financeActions: FinanceActions,
     modifier: Modifier = Modifier,
-    state: FinanceState
+    onLoadMore: () -> Unit,
+    state: FinanceState,
+    isTransactionsLoading: Boolean = false,
+    transactionsError: String? = null,
+    onTransactionClick: (Transaction) -> Unit = {},
+    onEdit: (Transaction) -> Unit = {},
+    onDelete: (Transaction) -> Unit = {}
 ) {
     var editingTransaction by remember { mutableStateOf<Transaction?>(null) }
-    val error = state.error
     val scope = rememberCoroutineScope()
     var showTransactionForm by remember { mutableStateOf(false) }
 
-    // Find the budget from the state
-    val budget = state.budgets.find { it.budget.id == budgetId }?.budget
-
-    // Load budgets if not available
-    LaunchedEffect(Unit) {
-        if (state.budgets.isEmpty()) {
-            financeActions.getBudgets()
-        }
-    }
-
-    LaunchedEffect(budgetId, budget, state.budgets) {
-        println("BudgetTransactionsScreen: budgetId=$budgetId, budget=$budget, budgetsCount=${state.budgets.size}")
-        
-        // Call getBudgetTransactions - the backend will handle the budget period calculation
+    // Trigger for loading transactions
+    LaunchedEffect(budgetId) {
         financeActions.getBudgetTransactions(budgetId)
     }
 
+    val listState = rememberLazyListState()
+
+    // Handle pagination
+    LaunchedEffect(Unit) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { lastVisibleItemIndex ->
+                println("TRIGGERING LAUNCHED EFFECT")
+                println("$lastVisibleItemIndex")
+                println("${state.transactions.size}")
+                println(state.transactions)
+                if (listState.layoutInfo.totalItemsCount>0 && (lastVisibleItemIndex?:0)>0 && lastVisibleItemIndex != null && lastVisibleItemIndex >= listState.layoutInfo.totalItemsCount - 5) {
+                    println("LOADING MORE lastVisibleItem $lastVisibleItemIndex")
+                    onLoadMore()
+                }
+            }
+    }
+
+    // Add/Edit Transaction Dialog
     if (showTransactionForm || editingTransaction != null) {
         AlertDialog(
             onDismissRequest = {
@@ -110,7 +117,7 @@ fun BudgetTransactionsScreen(
                 )
             }
             Text(
-                text = budget?.name?.let { "Budget Transactions - $it" } ?: "Budget Transactions",
+                text = budgetName.let { "Budget Transactions - $it" } ?: "Budget Transactions",
                 style = MaterialTheme.typography.h5,
                 fontWeight = FontWeight.Bold
             )
@@ -136,7 +143,7 @@ fun BudgetTransactionsScreen(
                 }
             },
             currentFilters = state.transactionFilters,
+            isLoading = isTransactionsLoading
         )
-
     }
 }

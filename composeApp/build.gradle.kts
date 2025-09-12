@@ -57,6 +57,11 @@ kotlin {
     sourceSets {
         val desktopMain by getting
 
+        jvmMain.dependencies {
+            implementation(libs.paging.runtime)
+            implementation(libs.paging.compose)
+        }
+
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
@@ -74,6 +79,8 @@ kotlin {
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.compose.google.fonts)
                 implementation(libs.kotlinx.datetime)
+
+                implementation(libs.paging.runtime.ktx)
 
                 implementation(libs.material3)
 
@@ -153,6 +160,8 @@ kotlin {
             implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.json)
             implementation(compose.components.uiToolingPreview)
+            implementation(libs.paging)
+            implementation(libs.paging.ktx)
             implementation(libs.kotlinx.datetime)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
@@ -162,6 +171,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(projects.shared)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.paging.compose.desktop)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.encoding)
@@ -177,7 +187,6 @@ kotlin {
             implementation(libs.coil.network.okhttp)
 
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.coroutines.swing)
 
             implementation(libs.kotlinx.datetime)
 
@@ -239,7 +248,7 @@ compose.desktop {
         mainClass = "com.esteban.ruano.lifecommander.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
+            targetFormats(TargetFormat.AppImage, TargetFormat.Msi)
             packageName = "LifeCommander"
             packageVersion = "1.0.0"
             modules("jdk.unsupported")

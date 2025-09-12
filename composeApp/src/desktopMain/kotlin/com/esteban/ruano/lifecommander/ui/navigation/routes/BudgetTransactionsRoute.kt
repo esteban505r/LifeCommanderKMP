@@ -4,5 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class BudgetTransactionsRoute(
-    val budgetId: String
+    val budgetId: String,
+    val budgetName: String
 )

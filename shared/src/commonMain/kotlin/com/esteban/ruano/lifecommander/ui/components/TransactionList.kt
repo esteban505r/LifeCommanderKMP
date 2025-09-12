@@ -40,6 +40,7 @@ fun TransactionList(
     transactions: List<Transaction>,
     totalCount: Long,
     onTransactionClick: (Transaction) -> Unit,
+    isLoading: Boolean = false,
     onAddTransaction: () -> Unit,
     onEdit: (Transaction) -> Unit,
     onDelete: (Transaction) -> Unit,
@@ -51,13 +52,20 @@ fun TransactionList(
 ) {
     val listState = rememberLazyListState()
     
-    /*// Handle pagination
-    LaunchedEffect(listState) {
-        val lastItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
-        if (lastItem != null && lastItem.index >= transactions.size - 5) {
-            onLoadMore()
-        }
-    }*/
+    // Handle pagination
+    LaunchedEffect(Unit) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { lastVisibleItemIndex ->
+                println("TRIGGERING LAUNCHED EFFECT")
+                println("$lastVisibleItemIndex")
+                println("${transactions.size}")
+                println(transactions)
+                if (listState.layoutInfo.totalItemsCount>0 && (lastVisibleItemIndex?:0)>0 && lastVisibleItemIndex != null && lastVisibleItemIndex >= listState.layoutInfo.totalItemsCount - 5) {
+                    println("LOADING MORE lastVisibleItem $lastVisibleItemIndex")
+                    onLoadMore()
+                }
+            }
+    }
 
     Column(
         modifier = modifier
@@ -211,7 +219,7 @@ fun TransactionList(
             }
 
             // Loading indicator at the bottom
-            if (transactions.size < totalCount) {
+            if (isLoading) {
                 item {
                     Box(
                         modifier = Modifier

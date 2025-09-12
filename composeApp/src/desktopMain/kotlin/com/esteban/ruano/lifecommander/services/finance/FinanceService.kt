@@ -1,12 +1,8 @@
 package com.esteban.ruano.lifecommander.services.finance
 
-import com.esteban.ruano.lifecommander.models.finance.Budget
-import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
-import com.esteban.ruano.lifecommander.models.finance.BudgetProgress
-import com.esteban.ruano.lifecommander.models.finance.Category
-import com.esteban.ruano.lifecommander.models.finance.ScheduledTransactionsResponse
-import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
-import com.esteban.ruano.lifecommander.models.finance.TransactionsResponse
+// ---------- Paging imports ----------
+import androidx.paging.PagingData
+import com.esteban.ruano.lifecommander.models.finance.*
 import com.esteban.ruano.lifecommander.utils.appHeaders
 import com.esteban.ruano.lifecommander.utils.buildParametersString
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
@@ -16,19 +12,20 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.TimeZone
+import offsetPager
 import services.auth.TokenStorageImpl
-
-
-
 
 class FinanceService(
     private val baseUrl: String,
     private val httpClient: HttpClient,
     private val tokenStorageImpl: TokenStorageImpl
 ) {
+    // ===================== Transactions =====================
+
     suspend fun getTransactions(
-        limit: Int = 100,
+        limit: Int = 20,
         offset: Int = 0,
         withFutureTransactions: Boolean = false,
         filters: TransactionFilters = TransactionFilters()
@@ -37,31 +34,40 @@ class FinanceService(
             append("$baseUrl/finance/transactions")
             val params = mutableListOf<String>()
 
-            if(withFutureTransactions) {
-                params.add("scheduledBaseDate=${getCurrentDateTime(
-                    TimeZone.currentSystemDefault()
-                ).date.formatDefault()}")
+            if (withFutureTransactions) {
+                params.add(
+                    "scheduledBaseDate=${
+                        getCurrentDateTime(TimeZone.currentSystemDefault()).date.formatDefault()
+                    }"
+                )
             }
 
             params.add("limit=$limit")
             params.add("offset=$offset")
-            
-            // Add filter parameters
-           val filterParams = filters.buildParametersString()
-            
+
+            val filterParams = filters.buildParametersString()
+
             if (params.isNotEmpty()) {
                 append("?${params.joinToString("&")}")
             }
-
             if (filterParams != null) {
                 append("&$filterParams")
             }
         }
-        
+
         return httpClient.get(url) {
             appHeaders(tokenStorageImpl.getToken())
         }.body()
     }
+
+    // Paged facade (kept for symmetry with others)
+    suspend fun getTransactionsPaged(
+        limit: Int,
+        offset: Int,
+        withFutureTransactions: Boolean = false,
+        filters: TransactionFilters = TransactionFilters()
+    ): TransactionsResponse =
+        getTransactions(limit, offset, withFutureTransactions, filters)
 
     suspend fun getTransaction(id: String): Transaction {
         return httpClient.get("$baseUrl/finance/transactions/$id") {
@@ -81,7 +87,7 @@ class FinanceService(
     }
 
     suspend fun updateTransaction(transaction: Transaction) {
-        val response =  httpClient.patch("$baseUrl/finance/transactions/${transaction.id}") {
+        val response = httpClient.patch("$baseUrl/finance/transactions/${transaction.id}") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
             setBody(transaction)
@@ -97,7 +103,8 @@ class FinanceService(
         }
     }
 
-    // Account endpoints
+    // ===================== Accounts =====================
+
     suspend fun getAccounts(): List<Account> {
         return httpClient.get("$baseUrl/finance/accounts") {
             appHeaders(tokenStorageImpl.getToken())
@@ -138,38 +145,71 @@ class FinanceService(
         }
     }
 
-    // Budget endpoints
+    // ===================== Budgets =====================
+
     suspend fun getBudgets(): List<Budget> {
         return httpClient.get("$baseUrl/finance/budgets") {
             appHeaders(tokenStorageImpl.getToken())
         }.body()
     }
 
+    // Paged HTTP helper for budgets (limit/offset)
+    suspend fun getBudgetsPaged(limit: Int, offset: Int): List<Budget> {
+        val url = "$baseUrl/finance/budgets?limit=$limit&offset=$offset"
+        return httpClient.get(url) { appHeaders(tokenStorageImpl.getToken()) }.body()
+    }
+
     suspend fun getBudgetsWithProgress(
         filters: BudgetFilters = BudgetFilters(),
         referenceDate: String,
+        limit: Int, offset: Int
     ): List<BudgetProgress> {
         val url = buildString {
             append("$baseUrl/finance/budgets/withProgress")
             val params = mutableListOf<String>()
 
-            params.add("referenceDate=${referenceDate}")
-            
-            // Add filter parameters
+            params.add("referenceDate=$referenceDate")
+            params.add("limit=$limit")
+            params.add("offset=$offset")
+
             filters.searchPattern?.let { params.add("search=$it") }
             filters.categories?.forEach { params.add("category=$it") }
             filters.minAmount?.let { params.add("minAmount=$it") }
             filters.maxAmount?.let { params.add("maxAmount=$it") }
             filters.isOverBudget?.let { params.add("isOverBudget=$it") }
-            
+
             if (params.isNotEmpty()) {
                 append("?${params.joinToString("&")}")
             }
         }
-        
+
         return httpClient.get(url) {
             appHeaders(tokenStorageImpl.getToken())
         }.body()
+    }
+
+    // Paged HTTP helper for budgets with progress (limit/offset)
+    suspend fun getBudgetsWithProgressPaged(
+        referenceDate: String,
+        filters: BudgetFilters = BudgetFilters(),
+        limit: Int,
+        offset: Int
+    ): List<BudgetProgress> {
+        val url = buildString {
+            append("$baseUrl/finance/budgets/withProgress")
+            val params = mutableListOf(
+                "referenceDate=$referenceDate",
+                "limit=$limit",
+                "offset=$offset"
+            )
+            filters.searchPattern?.let { params += "search=$it" }
+            filters.categories?.forEach { params += "category=$it" }
+            filters.minAmount?.let { params += "minAmount=$it" }
+            filters.maxAmount?.let { params += "maxAmount=$it" }
+            filters.isOverBudget?.let { params += "isOverBudget=$it" }
+            append("?${params.joinToString("&")}")
+        }
+        return httpClient.get(url) { appHeaders(tokenStorageImpl.getToken()) }.body()
     }
 
     suspend fun getBudget(id: String): Budget {
@@ -212,7 +252,8 @@ class FinanceService(
         }
     }
 
-    // Savings goal endpoints
+    // ===================== Savings goals =====================
+
     suspend fun getSavingsGoals(): List<SavingsGoal> {
         return httpClient.get("$baseUrl/finance/savings-goals") {
             appHeaders(tokenStorageImpl.getToken())
@@ -253,15 +294,19 @@ class FinanceService(
         }
     }
 
+    // ===================== Import / Preview =====================
+
     suspend fun importTransactions(text: String, accountId: String, skipDuplicates: Boolean): List<String> {
         return httpClient.post("$baseUrl/finance/transactions/import") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
-            setBody(mapOf(
-                "text" to text,
-                "accountId" to accountId,
-                "skipDuplicates" to skipDuplicates
-            ))
+            setBody(
+                mapOf(
+                    "text" to text,
+                    "accountId" to accountId,
+                    "skipDuplicates" to skipDuplicates
+                )
+            )
         }.body<ImportTransactionsResponse>().transactionIds
     }
 
@@ -271,19 +316,26 @@ class FinanceService(
             appHeaders(tokenStorageImpl.getToken())
             setBody(TransactionImportPreviewRequest(text, accountId))
         }
-        
         return response.body()
     }
 
-    suspend fun getBudgetTransactions(budgetId: String, referenceDate: String, filters: TransactionFilters = TransactionFilters()): List<Transaction> {
+    // ===================== Budget Transactions =====================
+
+    suspend fun getBudgetTransactions(
+        budgetId: String,
+        referenceDate: String,
+        filters: TransactionFilters = TransactionFilters(),
+        limit: Int,
+        offset: Int,
+    ): List<Transaction> {
         val url = buildString {
             append("$baseUrl/finance/budgets/$budgetId/transactions")
             val params = mutableListOf<String>()
 
-            // Add reference date parameter
-            params.add("referenceDate=${referenceDate}")
-            
-            // Add filter parameters
+            params.add("referenceDate=$referenceDate")
+            params.add("limit=$limit")
+            params.add("offset=$offset")
+
             val filterParams = filters.buildParametersString()
 
             if (params.isNotEmpty()) {
@@ -304,16 +356,35 @@ class FinanceService(
         }
     }
 
+    // Paged HTTP helper for budget transactions
+    suspend fun getBudgetTransactionsPaged(
+        budgetId: String,
+        referenceDate: String,
+        filters: TransactionFilters = TransactionFilters(),
+        limit: Int,
+        offset: Int
+    ): List<Transaction> {
+        val url = buildString {
+            append("$baseUrl/finance/budgets/$budgetId/transactions")
+            val params = mutableListOf("referenceDate=$referenceDate", "limit=$limit", "offset=$offset")
+            filters.buildParametersString()?.let { params += it }
+            append("?${params.joinToString("&")}")
+        }
+        return httpClient.get(url) { appHeaders(tokenStorageImpl.getToken()) }.body()
+    }
+
+    // ===================== Unbudgeted Transactions =====================
+
     suspend fun categorizeUnbudgeted(referenceDate: String): Int {
         val url = buildString {
             append("$baseUrl/finance/budgets/unbudgeted/categorize")
             val params = mutableListOf<String>()
-            params.add("referenceDate=${referenceDate}")
+            params.add("referenceDate=$referenceDate")
             if (params.isNotEmpty()) {
                 append("?${params.joinToString("&")}")
             }
         }
-        
+
         val response = httpClient.post(url) {
             appHeaders(tokenStorageImpl.getToken())
         }
@@ -329,12 +400,12 @@ class FinanceService(
         val url = buildString {
             append("$baseUrl/finance/budgets/transactions/categorize")
             val params = mutableListOf<String>()
-            params.add("referenceDate=${referenceDate}")
+            params.add("referenceDate=$referenceDate")
             if (params.isNotEmpty()) {
                 append("?${params.joinToString("&")}")
             }
         }
-        
+
         val response = httpClient.post(url) {
             appHeaders(tokenStorageImpl.getToken())
         }
@@ -346,7 +417,24 @@ class FinanceService(
         }
     }
 
-    // Scheduled Transactions endpoints
+    // Paged HTTP helper for unbudgeted transactions list
+    suspend fun getUnbudgetedTransactionsPaged(
+        referenceDate: String,
+        filters: TransactionFilters = TransactionFilters(),
+        limit: Int,
+        offset: Int
+    ): List<Transaction> {
+        val url = buildString {
+            append("$baseUrl/finance/budgets/unbudgeted/transactions")
+            val params = mutableListOf("referenceDate=$referenceDate", "limit=$limit", "offset=$offset")
+            filters.buildParametersString()?.let { params += it }
+            append("?${params.joinToString("&")}")
+        }
+        return httpClient.get(url) { appHeaders(tokenStorageImpl.getToken()) }.body()
+    }
+
+    // ===================== Scheduled Transactions =====================
+
     suspend fun getScheduledTransactions(
         limit: Int = 50,
         offset: Int = 0,
@@ -355,23 +443,20 @@ class FinanceService(
         val url = buildString {
             append("$baseUrl/finance/scheduled-transactions")
             val params = mutableListOf<String>()
-            
-            // Add pagination parameters
+
             params.add("limit=$limit")
             params.add("offset=$offset")
-            
-            // Add filter parameters
+
             val filterParams = filters.buildParametersString()
-            
+
             if (params.isNotEmpty()) {
                 append("?${params.joinToString("&")}")
             }
-
             if (filterParams != null) {
                 append("&$filterParams")
             }
         }
-        
+
         return httpClient.get(url) {
             appHeaders(tokenStorageImpl.getToken())
         }.body()
@@ -384,16 +469,15 @@ class FinanceService(
     }
 
     suspend fun addScheduledTransaction(transaction: ScheduledTransaction) {
-        val response =  httpClient.post("$baseUrl/finance/scheduled-transactions") {
+        val response = httpClient.post("$baseUrl/finance/scheduled-transactions") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
             setBody(transaction)
         }
 
-        if(response.status != HttpStatusCode.Created) {
+        if (response.status != HttpStatusCode.Created) {
             throw Exception("Failed to add scheduled transaction: ${response.status}")
         }
-
     }
 
     suspend fun updateScheduledTransaction(transaction: ScheduledTransaction) {
@@ -402,7 +486,7 @@ class FinanceService(
             appHeaders(tokenStorageImpl.getToken())
             setBody(transaction)
         }
-        if(response.status != HttpStatusCode.OK) {
+        if (response.status != HttpStatusCode.OK) {
             throw Exception("Failed to update scheduled transaction: ${response.status}")
         }
     }
@@ -418,5 +502,56 @@ class FinanceService(
             appHeaders(tokenStorageImpl.getToken())
         }.body()
     }
-}
 
+    // ===================== Concrete Pager facades using the generic source =====================
+
+    fun pagedBudgets(pageSize: Int = 20): Flow<PagingData<Budget>> =
+        offsetPager(pageSize) { limit, offset ->
+            getBudgetsPaged(limit, offset)
+        }
+
+    fun pagedBudgetsWithProgress(
+        referenceDate: String,
+        filters: BudgetFilters = BudgetFilters(),
+        pageSize: Int = 20
+    ): Flow<PagingData<BudgetProgress>> =
+        offsetPager(pageSize) { limit, offset ->
+            getBudgetsWithProgressPaged(referenceDate, filters, limit, offset)
+        }
+
+    fun pagedTransactions(
+        withFutureTransactions: Boolean = false,
+        filters: TransactionFilters = TransactionFilters(),
+        pageSize: Int = 20
+    ): Flow<PagingData<Transaction>> =
+        offsetPager(pageSize) { limit, offset ->
+            getTransactionsPaged(limit, offset, withFutureTransactions, filters).transactions
+        }
+
+    fun pagedBudgetTransactions(
+        budgetId: String,
+        referenceDate: String,
+        filters: TransactionFilters = TransactionFilters(),
+        pageSize: Int = 20
+    ): Flow<PagingData<Transaction>> =
+        offsetPager(pageSize) { limit, offset ->
+            getBudgetTransactionsPaged(budgetId, referenceDate, filters, limit, offset)
+        }
+
+    fun pagedUnbudgetedTransactions(
+        referenceDate: String,
+        filters: TransactionFilters = TransactionFilters(),
+        pageSize: Int = 20
+    ): Flow<PagingData<Transaction>> =
+        offsetPager(pageSize) { limit, offset ->
+            getUnbudgetedTransactionsPaged(referenceDate, filters, limit, offset)
+        }
+
+    fun pagedScheduledTransactions(
+        filters: TransactionFilters = TransactionFilters(),
+        pageSize: Int = 20
+    ): Flow<PagingData<ScheduledTransaction>> =
+        offsetPager(pageSize) { limit, offset ->
+            getScheduledTransactions(limit, offset, filters).transactions
+        }
+}

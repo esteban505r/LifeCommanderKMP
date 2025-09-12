@@ -3,7 +3,6 @@ package com.esteban.ruano.lifecommander.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.esteban.ruano.lifecommander.models.Exercise
-import com.esteban.ruano.lifecommander.models.WorkoutTrack
 import com.esteban.ruano.lifecommander.services.workout.WorkoutService
 import com.esteban.ruano.lifecommander.ui.state.WorkoutState
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
@@ -286,6 +285,55 @@ class WorkoutViewModel(
             allExerciseMode = value
         )
     }
+
+    fun addExerciseSet(exerciseId: String, workoutDayId: String, reps: Int) {
+        viewModelScope.launch {
+            try {
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val success = service.completeExerciseSet(
+                    exerciseId = exerciseId,
+                    workoutDayId = workoutDayId,
+                    reps = reps,
+                    doneDateTime = now.formatDefault()
+                )
+                if (success) {
+                    getExercisesByDay(_state.value.daySelected)
+                } else {
+                    _state.value = _state.value.copy(
+                        isError = true,
+                        errorMessage = "Failed to complete exercise set"
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
+
+    fun unCompleteExerciseSet(setTrackId: String) {
+        viewModelScope.launch {
+            try {
+                val success = service.unCompleteExerciseSet(setTrackId)
+                if (success) {
+                    getExercisesByDay(_state.value.daySelected)
+                } else {
+                    _state.value = _state.value.copy(
+                        isError = true,
+                        errorMessage = "Failed to uncomplete exercise set"
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Unknown error"
+                )
+            }
+        }
+    }
+
 
     // Exercise Tracking Methods
     fun completeExercise(exerciseId: String, day:Int, workoutDayId: String) {

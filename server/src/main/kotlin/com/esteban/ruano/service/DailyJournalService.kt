@@ -68,7 +68,7 @@ class DailyJournalService(
         return transaction {
             DailyJournal.find {
                 (DailyJournals.user eq userId) and (DailyJournals.status eq Status.ACTIVE)
-            }.limit(limit).offset(offset).toList().map { it.toDTO() }
+            }.limit(limit).offset(offset*limit).toList().map { it.toDTO() }
         }
     }
 
@@ -85,7 +85,7 @@ class DailyJournalService(
                 (DailyJournals.status eq Status.ACTIVE) and
                 (DailyJournals.date greaterEq startDate) and
                 (DailyJournals.date lessEq endDate)
-            }.limit(limit).offset(offset).toList().map { it.toDTO() }
+            }.limit(limit).offset(offset*limit).toList().map { it.toDTO() }
         }
 
         val result = journals.map {

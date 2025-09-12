@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,13 +16,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.esteban.ruano.lifecommander.models.Exercise
+import com.esteban.ruano.lifecommander.models.ExerciseSet
 import com.esteban.ruano.lifecommander.ui.state.WorkoutState
-import com.esteban.ruano.ui.LifeCommanderDesignSystem
-import com.kdroid.composenotification.model.Button
 import ui.composables.NewEditExerciseDialog
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -34,10 +37,14 @@ fun WorkoutScreen(
     onDaySelected: (Int) -> Unit,
     onCompleteWorkout: (Int) -> Unit = {},
     onCompleteExercise: (String,Int, String) -> Unit = { _,_, _ -> },
+    onUncompleteExercise: (String) -> Unit = { _ -> },
     onChangeAllExercisesMode: (Boolean) -> Unit = {},
     onGetAllExercises: () -> Unit = {},
     onBindExerciseToDay: (String, Int, (Boolean) -> Unit) -> Unit = { _, _, _ -> },
-    onUnbindExerciseFromDay: (String, Int, (Boolean) -> Unit) -> Unit = { _, _, _ -> }
+    onUnbindExerciseFromDay: (String, Int, (Boolean) -> Unit) -> Unit = { _, _, _ -> },
+    onAddSet: (repsDone: Int, exerciseId:String, workoutDayId:String, onResult: (ExerciseSet?) -> Unit) -> Unit,
+    onUpdateSetReps: (setId: String, newReps: Int) -> Unit,
+    onRemoveSet: (setId: String) -> Unit,
 ) {
     var showExerciseDialog by remember { mutableStateOf(false) }
     var exerciseToEdit by remember { mutableStateOf<Exercise?>(null) }
@@ -259,11 +266,12 @@ fun WorkoutScreen(
 
                     ExerciseCard(
                         exercise = exercise,
-                        onUpdate = {
+                        workoutDayId = state.workoutDays.firstOrNull()?.id!!,
+                        onUpdateExercise = {
                             exerciseToEdit = it
                             showExerciseDialog = true
                         },
-                        onDelete = onDelete,
+                        onDeleteExercise = onDelete,
                         boundDays = boundDays.toList(),
                         onUnbindDay = { day ->
                             onUnbindExerciseFromDay(exercise.id, day) { success ->
@@ -272,6 +280,14 @@ fun WorkoutScreen(
                         },
                         onBindToDay = if (allExercisesMode) {
                             { showBindDialog = exercise }
+                        } else null,
+                        onUncompleteExercise = if (!allExercisesMode && state.workoutDays.isNotEmpty()) {
+                            {
+                                val workoutDayId = state.workoutDays.firstOrNull()?.id
+                                if (workoutDayId != null) {
+                                    onUncompleteExercise(state.completedExercises.firstOrNull{it.exerciseId == exercise.id}?.exerciseTrackId?:"")
+                                }
+                            }
                         } else null,
                         onCompleteExercise = if (!allExercisesMode && state.workoutDays.isNotEmpty()) {
                             {
@@ -282,7 +298,15 @@ fun WorkoutScreen(
                             }
                         } else null,
                         isAllExercisesMode = allExercisesMode,
-                        isCompleted = state.completedExercises.contains(exercise.id)
+                        isCompleted = state.completedExercises.firstOrNull {
+                            it.exerciseId == exercise.id && it.exerciseDone
+                        } != null,
+                        onAddSet = onAddSet,
+                        sets = state.completedExercises.firstOrNull{
+                            it.exerciseId == exercise.id
+                        }?.setsDone?:listOf(),
+                        onRemoveSet = onRemoveSet,
+                        onUpdateSetReps = onUpdateSetReps,
                     )
                 }
             }
@@ -385,261 +409,172 @@ fun WorkoutScreen(
     }
 }
 
+/**
+ * ExerciseCard — backend-driven sets:
+ * - DOES NOT add sets locally on "Add Set" click.
+ * - Calls `onAddSet(desiredReps) { result }` and waits for the parent/backend to confirm.
+ * - Only the just-created set (from backend) becomes editable (reps); all others are read-only.
+ */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ExerciseCard(
     exercise: Exercise,
-    onUpdate: (Exercise) -> Unit,
-    onDelete: (String) -> Unit,
+    sets: List<ExerciseSet>,
     boundDays: List<Int> = emptyList(),
-    onUnbindDay: ((Int) -> Unit)? = null,
-    onBindToDay: (() -> Unit)? = null,
+    workoutDayId:String,
+    // High-level actions
+    onUpdateExercise: (Exercise) -> Unit,
+    onDeleteExercise: (String) -> Unit,
     onCompleteExercise: (() -> Unit)? = null,
-    isAllExercisesMode: Boolean = false,
-    isCompleted: Boolean = false
+    onUncompleteExercise: (() -> Unit)? = null,
+    onBindToDay:((Int) -> Unit)? = null,
+    onUnbindDay: ((Int) -> Unit)? = null,
+
+    // Set-specific actions (backend-driven)
+    onAddSet: (repsDone: Int, exerciseId:String, workoutDayId:String, onResult: (ExerciseSet?) -> Unit) -> Unit,
+    onUpdateSetReps: (setId: String, newReps: Int) -> Unit,
+    onRemoveSet: (setId: String) -> Unit,
+
+    // UI flags
+    isCompleted: Boolean = false,
+    isAllExercisesMode: Boolean = false, // reserved for future layout tweaks
 ) {
+    // Which set (if any) is currently allowed to edit reps
+    var editableSetId by remember { mutableStateOf<String?>(null) }
+    // Text for the "next" set request
+    var desiredRepsText by remember { mutableStateOf(exercise.baseReps.toString()) }
+    // Loading state while waiting backend confirmation for Add
+    var isAdding by remember { mutableStateOf(false) }
+    // Optional feedback state
+    var errorMsg by remember { mutableStateOf<String?>(null) }
+
+    var showExpectedSetsDialog by remember { mutableStateOf(false) }
+    var pendingRepsToAdd by remember { mutableStateOf<Int?>(null) }
+    val canMutateSets = !isCompleted
+
+
+    if (showExpectedSetsDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showExpectedSetsDialog = false
+                pendingRepsToAdd = null
+            },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colors.error
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Expected sets reached")
+                }
+            },
+            text = {
+                val expected = exercise.baseSets ?: 0
+                Text(
+                    "You’ve already completed $expected set${if (expected == 1) "" else "s"} for ${exercise.name}.\n" +
+                            "Do you still want to add another set?"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val reps = pendingRepsToAdd
+                        if (reps != null) {
+                            showExpectedSetsDialog = false
+                            pendingRepsToAdd = null
+                            // Proceed with the same backend-driven add flow
+                            isAdding = true
+                            errorMsg = null
+                            onAddSet(reps, exercise.id, workoutDayId) { newSetOrNull ->
+                                isAdding = false
+                                if (newSetOrNull != null) {
+                                    editableSetId = newSetOrNull.id
+                                    desiredRepsText = exercise.baseReps.toString()
+                                } else {
+                                    errorMsg = "Could not add set. Try again."
+                                }
+                            }
+                        } else {
+                            showExpectedSetsDialog = false
+                        }
+                    }
+                ) { Text("Add anyway") }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        showExpectedSetsDialog = false
+                        pendingRepsToAdd = null
+                    },
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Cancel") }
+            },
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
+
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize()
-            .shadow(8.dp, RoundedCornerShape(16.dp)),
+            .padding(vertical = 6.dp)
+            .shadow(6.dp, RoundedCornerShape(16.dp))
+            .animateContentSize(),
         shape = RoundedCornerShape(16.dp),
         backgroundColor = MaterialTheme.colors.surface,
         elevation = 0.dp
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+
+            // ===== Top Row: Title + Scheduled Days =====
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(
-                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.FitnessCenter,
-                            contentDescription = null,
-                            tint = MaterialTheme.colors.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            exercise.name,
-                            style = MaterialTheme.typography.h6.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colors.onSurface
-                            )
-                        )
-                        exercise.description?.let { desc ->
-                            if (desc.isNotBlank()) {
-                                Text(
-                                    desc,
-                                    style = MaterialTheme.typography.body2.copy(
-                                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                                    ),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    IconButton(
-                        onClick = { onUpdate(exercise) },
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colors.surface.copy(alpha = 0.1f))
-                    ) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = MaterialTheme.colors.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    IconButton(
-                        onClick = { onDelete(exercise.id) },
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colors.error.copy(alpha = 0.1f))
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Delete",
-                            tint = MaterialTheme.colors.error,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    // Show different button based on mode
-                    if (isAllExercisesMode && onBindToDay != null) {
-                        // Schedule button for all exercises mode
-                        IconButton(
-                            onClick = onBindToDay,
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colors.secondary.copy(alpha = 0.1f))
-                        ) {
-                            Icon(
-                                Icons.Default.Schedule,
-                                contentDescription = "Schedule",
-                                tint = MaterialTheme.colors.secondary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    } else if (!isAllExercisesMode && onCompleteExercise != null) {
-                        // Complete exercise button for day mode
-                        IconButton(
-                            onClick = onCompleteExercise,
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (isCompleted)
-                                        MaterialTheme.colors.primary.copy(alpha = 0.2f)
-                                    else
-                                        MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                                )
-                        ) {
-                            Icon(
-                                if (isCompleted) Icons.Default.CheckCircle else Icons.Default.CheckCircleOutline,
-                                contentDescription = if (isCompleted) "Completed" else "Complete Exercise",
-                                tint = if (isCompleted)
-                                    MaterialTheme.colors.primary
-                                else
-                                    MaterialTheme.colors.primary.copy(alpha = 0.7f),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (exercise.baseSets != null || exercise.baseReps != null || exercise.restSecs != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    exercise.baseSets?.let {
-                        Chip(
-                            colors = ChipDefaults.chipColors(
-                                backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                            ),
-                            onClick = {}
-                        ) {
-                            Text(
-                                text = "$it sets",
-                                style = MaterialTheme.typography.caption.copy(
-                                    color = MaterialTheme.colors.primary,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            )
-                        }
-                    }
-
-                    exercise.baseReps?.let {
-                        Chip(
-                            colors = ChipDefaults.chipColors(
-                                backgroundColor = MaterialTheme.colors.secondary.copy(alpha = 0.1f)
-                            ),
-                            onClick = {}
-                        ) {
-                            Text(
-                                text = "$it reps",
-                                style = MaterialTheme.typography.caption.copy(
-                                    color = MaterialTheme.colors.secondary,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            )
-                        }
-                    }
-
-                    exercise.restSecs?.let {
-                        Chip(
-                            colors = ChipDefaults.chipColors(
-                                backgroundColor = MaterialTheme.colors.error.copy(alpha = 0.1f)
-                            ),
-                            onClick = {}
-                        ) {
-                            Text(
-                                text = "${it}s rest",
-                                style = MaterialTheme.typography.caption.copy(
-                                    color = MaterialTheme.colors.error,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (boundDays.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Scheduled for:",
-                        style = MaterialTheme.typography.caption.copy(
-                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                            fontWeight = FontWeight.Medium
-                        )
+                        text = exercise.name,
+                        style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Bold)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                    exercise.description?.takeIf { it.isNotBlank() }?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.body2.copy(
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            ),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                if (boundDays.isNotEmpty()) {
+                    Spacer(Modifier.width(8.dp))
+                    FlowRow {
                         boundDays.forEach { day ->
                             Chip(
+                                onClick = { onUnbindDay?.invoke(day) },
                                 colors = ChipDefaults.chipColors(
-                                    backgroundColor = MaterialTheme.colors.secondary.copy(alpha = 0.1f)
-                                ),
-                                onClick = { onUnbindDay?.invoke(day) }
+                                    backgroundColor = MaterialTheme.colors.secondary.copy(alpha = 0.15f)
+                                )
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Text(
-                                        text = dayOfWeekLabel(day),
-                                        style = MaterialTheme.typography.caption.copy(
-                                            color = MaterialTheme.colors.secondary,
-                                            fontWeight = FontWeight.Medium
-                                        )
+                                        dayOfWeekLabel(day),
+                                        color = MaterialTheme.colors.secondary,
+                                        style = MaterialTheme.typography.caption
                                     )
                                     Icon(
                                         Icons.Default.Close,
-                                        contentDescription = "Remove",
-                                        tint = MaterialTheme.colors.secondary,
-                                        modifier = Modifier.size(16.dp)
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = MaterialTheme.colors.secondary
                                     )
                                 }
                             }
@@ -647,9 +582,295 @@ fun ExerciseCard(
                     }
                 }
             }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ===== Base info chips =====
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                exercise.baseSets?.let {
+                    Chip(
+                        onClick = {},
+                        colors = ChipDefaults.chipColors(
+                            backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.15f)
+                        )
+                    ) { Text("$it sets", color = MaterialTheme.colors.primary) }
+                }
+                exercise.baseReps?.let {
+                    Chip(
+                        onClick = {},
+                        colors = ChipDefaults.chipColors(
+                            backgroundColor = MaterialTheme.colors.secondary.copy(alpha = 0.15f)
+                        )
+                    ) { Text("$it reps", color = MaterialTheme.colors.secondary) }
+                }
+                exercise.restSecs?.let {
+                    Chip(
+                        onClick = {},
+                        colors = ChipDefaults.chipColors(
+                            backgroundColor = MaterialTheme.colors.error.copy(alpha = 0.15f)
+                        )
+                    ) { Text("${it}s rest", color = MaterialTheme.colors.error) }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ===== Sets List (read-only, except the most recently created set) =====
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "Sets",
+                    style = MaterialTheme.typography.subtitle2.copy(fontWeight = FontWeight.Medium)
+                )
+                Spacer(Modifier.height(8.dp))
+
+                if (sets.isEmpty()) {
+                    Text(
+                        "No sets yet. Add your first one below.",
+                        style = MaterialTheme.typography.body2.copy(
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                    )
+                } else {
+                    if (isCompleted) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colors.onSurface.copy(alpha = 0.04f), RoundedCornerShape(8.dp))
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Lock, contentDescription = null,
+                                tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f))
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Exercise completed — sets are locked.",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.8f)
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
+
+                    LazyColumn(modifier = Modifier.heightIn(max = 220.dp)) {
+                        items(sets.size, key = { sets[it].id }) { setIndex ->
+                            val set = sets[setIndex]
+                            var editText by remember(set.id) { mutableStateOf(set.reps.toString()) }
+                            val isEditable = editableSetId == set.id
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .background(
+                                        if (isEditable)
+                                            MaterialTheme.colors.primary.copy(alpha = 0.08f)
+                                        else
+                                            MaterialTheme.colors.onSurface.copy(alpha = 0.035f),
+                                        RoundedCornerShape(10.dp)
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                // Left: Set label + reps (editable ONLY if this is the last created one)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        "Set ",
+                                        fontWeight = FontWeight.Medium
+                                    )
+
+                                    if (isEditable) {
+                                        TextField(
+                                            value = editText,
+                                            onValueChange = { v ->
+                                                // digits only
+                                                editText = v.filter { it.isDigit() }.take(4)
+                                            },
+                                            singleLine = true,
+                                            modifier = Modifier.width(80.dp),
+                                            textStyle = TextStyle(fontSize = 14.sp),
+                                            colors = TextFieldDefaults.textFieldColors(
+                                                backgroundColor = Color.Transparent,
+                                                focusedIndicatorColor = MaterialTheme.colors.primary,
+                                                unfocusedIndicatorColor = MaterialTheme.colors.onSurface.copy(alpha = 0.3f),
+                                                textColor = MaterialTheme.colors.onSurface
+                                            ),
+                                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                                        )
+                                        Text(" reps", fontSize = 14.sp)
+                                    } else {
+                                        Text("${set.reps} reps", fontSize = 14.sp)
+                                    }
+                                }
+
+                                // Right: actions per item
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // Save only appears while editable
+                                    if (isEditable) {
+                                        IconButton(
+                                            onClick = {
+                                                val parsed = editText.toIntOrNull()
+                                                if (parsed != null) {
+                                                    onUpdateSetReps(set.id, parsed)
+                                                    editableSetId = null
+                                                    errorMsg = null
+                                                } else {
+                                                    errorMsg = "Enter a valid number of reps."
+                                                }
+                                            }
+                                        ) {
+                                            Icon(Icons.Default.Check, contentDescription = "Save reps")
+                                        }
+                                    }
+
+                                    IconButton(onClick = { onRemoveSet(set.id) }, enabled = canMutateSets) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Remove set",
+                                            tint = MaterialTheme.colors.error
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(10.dp))
+
+                // Optional inline error
+                if (errorMsg != null) {
+                    Text(
+                        errorMsg!!,
+                        color = MaterialTheme.colors.error,
+                        style = MaterialTheme.typography.caption
+                    )
+                    Spacer(Modifier.height(6.dp))
+                }
+
+                // ===== Add set row (doesn't mutate local state; calls backend) =====
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextField(
+                        value = desiredRepsText,
+                        onValueChange = { desiredRepsText = it.filter { c -> c.isDigit() }.take(4) },
+                        label = { Text("Reps") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        textStyle = TextStyle(fontSize = 14.sp),
+                        colors = TextFieldDefaults.textFieldColors(
+                            backgroundColor = MaterialTheme.colors.surface.copy(alpha = 0.05f),
+                            focusedIndicatorColor = MaterialTheme.colors.primary,
+                            unfocusedIndicatorColor = MaterialTheme.colors.onSurface.copy(alpha = 0.3f)
+                        ),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                        ),
+                        enabled = !isAdding
+                    )
+
+                    Spacer(Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            val reps = desiredRepsText.toIntOrNull()
+                            if (reps == null) {
+                                errorMsg = "Enter a valid number of reps."
+                                return@Button
+                            }
+
+                            val expectedSets = exercise.baseSets
+                            if (expectedSets != null && sets.size >= expectedSets) {
+                                pendingRepsToAdd = reps
+                                showExpectedSetsDialog = true
+                                return@Button
+                            }
+
+                            isAdding = true
+                            errorMsg = null
+                            // Ask parent to add; when backend confirms, parent calls onResult with the new set
+                            onAddSet(reps,exercise.id, workoutDayId) { newSetOrNull ->
+                                isAdding = false
+                                if (newSetOrNull != null) {
+                                    // Allow editing ONLY for the fresh set
+                                    editableSetId = newSetOrNull.id
+                                    // keep desired reps ready for the next quick add
+                                    desiredRepsText = exercise.baseReps.toString()
+                                } else {
+                                    errorMsg = "Could not add set. Try again."
+                                }
+                            }
+                        },
+                        enabled = !isAdding && canMutateSets,
+                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
+                        modifier = Modifier.height(56.dp)
+                    ) {
+                        if (isAdding) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
+                            )
+                        } else {
+                            Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
+                            Spacer(Modifier.width(6.dp))
+                            Text("Add Set", color = Color.White)
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ===== Bottom Row: Action buttons (Edit / Delete / Complete-or-Undo) =====
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(
+                    onClick = { onUpdateExercise(exercise) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Edit")
+                }
+
+                OutlinedButton(
+                    onClick = { onDeleteExercise(exercise.id) },
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.error),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Delete")
+                }
+
+                if (onCompleteExercise != null) {
+                    val buttonColors = if (!isCompleted)
+                        ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
+                    else
+                        ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error)
+
+                    Button(
+                        onClick = (if(!isCompleted) onCompleteExercise else onUncompleteExercise)?:{},
+                        modifier = Modifier.weight(1f),
+                        colors = buttonColors
+                    ) {
+                        Icon(
+                            if (!isCompleted) Icons.Default.CheckCircle else Icons.Default.Undo,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (!isCompleted) "Complete" else "Undo", color = Color.White)
+                    }
+                }
+            }
         }
     }
 }
-
 fun dayOfWeekLabel(day: Int): String =
     listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").getOrElse(day - 1) { "?" } 

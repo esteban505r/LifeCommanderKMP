@@ -56,7 +56,7 @@ class QuestionService : BaseService() {
         return transaction {
             Question.find {
                 (Questions.user eq userId) and (Questions.status eq Status.ACTIVE)
-            }.limit(limit).offset(offset).toList().map { it.toDTO() }
+            }.limit(limit).offset(offset*limit).toList().map { it.toDTO() }
         }
     }
 

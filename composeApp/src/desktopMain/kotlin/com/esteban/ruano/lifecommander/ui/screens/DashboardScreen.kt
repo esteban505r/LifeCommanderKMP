@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -22,14 +21,11 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.models.TaskFilters
 import com.esteban.ruano.lifecommander.ui.components.*
-import com.esteban.ruano.lifecommander.ui.viewmodels.*
 import com.esteban.ruano.ui.components.HabitList
 import com.esteban.ruano.ui.components.TaskList
-import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalTime
 import com.lifecommander.models.Habit
@@ -42,19 +38,21 @@ import ui.components.*
 import ui.composables.*
 import ui.viewmodels.*
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
+import com.esteban.ruano.lifecommander.utils.TaskUtils.dueAtMillis
+import com.esteban.ruano.lifecommander.utils.TaskUtils.isOverdue
+import com.esteban.ruano.utils.HabitsUtils.isOverdue
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toJavaPeriod
 import kotlinx.datetime.toLocalDateTime as toLocalDateTimeKt
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.minus
-import kotlinx.datetime.plus
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import ui.composables.focus.FocusMixedList
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
-fun HomeScreen(
+fun DashboardScreen(
     habitsViewModel: HabitsViewModel = koinViewModel(),
     tasksViewModel: TasksViewModel = koinViewModel(),
     dashboardViewModel: DashboardViewModel = koinViewModel(),
@@ -100,7 +98,8 @@ fun HomeScreen(
 
     // Helper: Meals per day this week as dateMap
     val mealsPerDayDateMap = remember(dashboardViewModel.mealsLoggedPerDayThisWeek.collectAsState().value) {
-        val now = kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+        val now =
+            kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
         val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
         (0..6).associate { offset ->
             val date = startOfWeek.plus(DatePeriod(days = offset))
@@ -110,8 +109,9 @@ fun HomeScreen(
 
     LaunchedEffect(
         Unit
-    ){
-        val now = kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+    ) {
+        val now =
+            kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
         val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
         timersViewModel.loadPomodorosByDateRange(
             startOfWeek.toJavaLocalDate(),
@@ -120,7 +120,8 @@ fun HomeScreen(
     }
 
     val pomodorosPerDayThisWeek = remember(pomodoros) {
-        val now = kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+        val now =
+            kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
         val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
         val counts = MutableList(7) {
             startOfWeek.plus(DatePeriod(days = it))
@@ -162,6 +163,7 @@ fun HomeScreen(
     val overdueHabits by dashboardViewModel.overdueHabitsList.collectAsState()
     val overdueTasks by dashboardViewModel.overdueTasksList.collectAsState()
 
+    var focusModeExpanded by remember { mutableStateOf(false) }
     // Check for Night Block activation every minute
     /*LaunchedEffect(Unit) {
         while (true) {
@@ -170,7 +172,7 @@ fun HomeScreen(
         }
     }*/
 
-    if(error){
+    if (error) {
         AlertDialog(
             onDismissRequest = { error = false },
             title = { Text("Error") },
@@ -201,7 +203,7 @@ fun HomeScreen(
         show = showNewTaskDialog,
         onDismiss = { showNewTaskDialog = false },
         onAddTask = { name, note, reminders, dueDate, scheduledDate, priority ->
-            tasksViewModel.addTask(name, dueDate, scheduledDate,note,priority?:0)
+            tasksViewModel.addTask(name, dueDate, scheduledDate, note, priority ?: 0)
         },
         onUpdateTask = { id, task ->
             tasksViewModel.updateTask(id, task)
@@ -272,235 +274,283 @@ fun HomeScreen(
                     }
 
                     // Main content sections with grid layout
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 16.dp)
-                    ) {
-                        // Statistics navigation button
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            Card(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                                backgroundColor = MaterialTheme.colors.primary,
-                                elevation = 4.dp,
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                    if(!focusModeExpanded){
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 16.dp)
+                        ) {
+                            // Statistics navigation button
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                                    backgroundColor = MaterialTheme.colors.primary,
+                                    elevation = 4.dp,
+                                    shape = RoundedCornerShape(12.dp)
                                 ) {
-                                    Column {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text(
+                                                "Detailed Statistics",
+                                                style = MaterialTheme.typography.h6,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colors.onPrimary
+                                            )
+                                            Text(
+                                                "View comprehensive charts and analytics",
+                                                style = MaterialTheme.typography.body2,
+                                                color = MaterialTheme.colors.onPrimary.copy(alpha = 0.8f)
+                                            )
+                                        }
+                                        Button(
+                                            onClick = onNavigateToStatistics,
+                                            colors = ButtonDefaults.buttonColors(
+                                                backgroundColor = MaterialTheme.colors.onPrimary,
+                                                contentColor = MaterialTheme.colors.primary
+                                            ),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Analytics,
+                                                contentDescription = "Statistics",
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("View Statistics")
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Weekly Overview and Pomodoro charts side by side
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                                    backgroundColor = MaterialTheme.colors.surface,
+                                    elevation = 4.dp,
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(16.dp)
+                                    ) {
                                         Text(
-                                            "Detailed Statistics",
+                                            "Quick Overview",
                                             style = MaterialTheme.typography.h6,
                                             fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colors.onPrimary
+                                            color = MaterialTheme.colors.onSurface
                                         )
-                                        Text(
-                                            "View comprehensive charts and analytics",
-                                            style = MaterialTheme.typography.body2,
-                                            color = MaterialTheme.colors.onPrimary.copy(alpha = 0.8f)
-                                        )
-                                    }
-                                    Button(
-                                        onClick = onNavigateToStatistics,
-                                        colors = ButtonDefaults.buttonColors(
-                                            backgroundColor = MaterialTheme.colors.onPrimary,
-                                            contentColor = MaterialTheme.colors.primary
-                                        ),
-                                        shape = RoundedCornerShape(8.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Analytics,
-                                            contentDescription = "Statistics",
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text("View Statistics")
-                                    }
-                                }
-                            }
-                        }
-
-                        // Weekly Overview and Pomodoro charts side by side
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            Card(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                                backgroundColor = MaterialTheme.colors.surface,
-                                elevation = 4.dp,
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-                                    Text(
-                                        "Quick Overview",
-                                        style = MaterialTheme.typography.h6,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colors.onSurface
-                                    )
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceEvenly
-                                    ) {
-                                        QuickStatItem(
-                                            label = "Tasks Completed",
-                                            value = "${taskStats?.completed ?: 0}/${taskStats?.total ?: 0}",
-                                            icon = Icons.Default.CheckCircle,
-                                            color = Color(0xFF2196F3)
-                                        )
-                                        QuickStatItem(
-                                            label = "Habits Completed",
-                                            value = "${habitStats?.completed ?: 0}/${habitStats?.total ?: 0}",
-                                            icon = Icons.Default.TrendingUp,
-                                            color = Color(0xFF9C27B0)
-                                        )
-                                        QuickStatItem(
-                                            label = "Pomodoros Today",
-                                            value = "${pomodorosPerDayThisWeek.lastOrNull() ?: 0}",
-                                            icon = Icons.Default.Timer,
-                                            color = Color(0xFFE53935)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // Meals and Workout charts below, side by side
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            Card(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                                backgroundColor = MaterialTheme.colors.surface,
-                                elevation = 4.dp,
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-                                    Text(
-                                        "Today's Activity",
-                                        style = MaterialTheme.typography.h6,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colors.onSurface
-                                    )
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceEvenly
-                                    ) {
-                                        QuickStatItem(
-                                            label = "Meals Logged",
-                                            value = "${dashboardViewModel.mealsLogged.collectAsState().value}",
-                                            icon = Icons.Default.Restaurant,
-                                            color = Color(0xFFFFA726)
-                                        )
-                                        QuickStatItem(
-                                            label = "Workouts",
-                                            value = "${dashboardViewModel.workoutsCompletedPerDayThisWeek.collectAsState().value.lastOrNull() ?: 0}",
-                                            icon = Icons.Default.FitnessCenter,
-                                            color = Color(0xFF4CAF50)
-                                        )
-                                        QuickStatItem(
-                                            label = "Calories Burned",
-                                            value = "${dashboardViewModel.caloriesBurned.collectAsState().value}",
-                                            icon = Icons.Default.LocalFireDepartment,
-                                            color = Color(0xFFFF5722)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // Summary sections in grid
-                        items(sections) { section ->
-                            AnimatedVisibility(
-                                visible = expandedSections[section] == true,
-                                enter = expandVertically(
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                        stiffness = Spring.StiffnessLow
-                                    )
-                                ) + fadeIn(
-                                    animationSpec = tween(durationMillis = 300)
-                                ),
-                                exit = shrinkVertically(
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                        stiffness = Spring.StiffnessLow
-                                    )
-                                ) + fadeOut(
-                                    animationSpec = tween(durationMillis = 300)
-                                )
-                            ) {
-                                HomeSectionCard(
-                                    section = section,
-                                    isExpanded = true,
-                                    onToggleExpand = { expandedSections[section] = false },
-                                    content = {
-                                        when (section) {
-                                            HomeSection.Tasks -> TasksSummary(
-                                                nextTask = nextTask,
-                                                taskStats = taskStats,
-                                                overdueTasks = overdueTasks,
-                                                onMarkTaskDone = { task ->
-                                                    coroutineScope.launch {
-                                                        tasksViewModel.markTaskDone(task)
-                                                        dashboardViewModel.refreshDashboard()
-                                                    }
-                                                },
-                                                onViewAllClick = onNavigateToTasks,
-                                                isExpanded = true,
-                                                currentTime = currentTime
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceEvenly
+                                        ) {
+                                            QuickStatItem(
+                                                label = "Tasks Completed",
+                                                value = "${taskStats?.completed ?: 0}/${taskStats?.total ?: 0}",
+                                                icon = Icons.Default.CheckCircle,
+                                                color = Color(0xFF2196F3)
                                             )
-                                            HomeSection.Habits -> HabitsSummary(
-                                                nextHabit = nextHabit,
-                                                habitStats = habitStats,
-                                                overdueHabits = overdueHabits,
-                                                onMarkHabitDone = { habit ->
-                                                    coroutineScope.launch {
-                                                        habitsViewModel.markHabitDone(habit)
-                                                        dashboardViewModel.refreshDashboard()
-                                                    }
-                                                },
-                                                onViewAllClick = onNavigateToHabits,
-                                                isExpanded = true,
-                                                currentTime = currentTime
+                                            QuickStatItem(
+                                                label = "Habits Completed",
+                                                value = "${habitStats?.completed ?: 0}/${habitStats?.total ?: 0}",
+                                                icon = Icons.Default.TrendingUp,
+                                                color = Color(0xFF9C27B0)
                                             )
-                                            HomeSection.Meals -> MealsSummary(
-                                                todayCalories = dashboardViewModel.todayCalories.collectAsState().value,
-                                                mealsLogged = dashboardViewModel.mealsLogged.collectAsState().value,
-                                                nextMeal = dashboardViewModel.nextMeal.collectAsState().value,
-                                                weeklyMealLogging = dashboardViewModel.weeklyMealLogging.collectAsState().value,
-                                                plannedMeals = dashboardViewModel.plannedMealsPerDayThisWeek.collectAsState().value.sum(),
-                                                unexpectedMeals = dashboardViewModel.unexpectedMealsPerDayThisWeek.collectAsState().value.sum()
-                                            )
-                                            HomeSection.Workout -> WorkoutSummary(
-                                                todayWorkout = dashboardViewModel.todayWorkout.collectAsState().value,
-                                                caloriesBurned = dashboardViewModel.caloriesBurned.collectAsState().value,
-                                                workoutStreak = dashboardViewModel.workoutStreak.collectAsState().value,
-                                                weeklyWorkoutCompletion = dashboardViewModel.weeklyWorkoutCompletion.collectAsState().value
-                                            )
-                                            HomeSection.Finances -> FinanceSummary(
-                                                recentTransactions = dashboardViewModel.recentTransactions.collectAsState().value,
-                                                accountBalance = dashboardViewModel.accountBalance.collectAsState().value
-                                            )
-                                            HomeSection.Journal -> JournalSummary(
-                                                journalCompleted = dashboardViewModel.journalCompleted.collectAsState().value,
-                                                journalStreak = dashboardViewModel.journalStreak.collectAsState().value,
-                                                recentJournalEntries = dashboardViewModel.recentJournalEntries.collectAsState().value
+                                            QuickStatItem(
+                                                label = "Pomodoros Today",
+                                                value = "${pomodorosPerDayThisWeek.lastOrNull() ?: 0}",
+                                                icon = Icons.Default.Timer,
+                                                color = Color(0xFFE53935)
                                             )
                                         }
                                     }
-                                )
+                                }
+                            }
+
+                            // Meals and Workout charts below, side by side
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                                    backgroundColor = MaterialTheme.colors.surface,
+                                    elevation = 4.dp,
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(16.dp)
+                                    ) {
+                                        Text(
+                                            "Today's Activity",
+                                            style = MaterialTheme.typography.h6,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colors.onSurface
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceEvenly
+                                        ) {
+                                            QuickStatItem(
+                                                label = "Meals Logged",
+                                                value = "${dashboardViewModel.mealsLogged.collectAsState().value}",
+                                                icon = Icons.Default.Restaurant,
+                                                color = Color(0xFFFFA726)
+                                            )
+                                            QuickStatItem(
+                                                label = "Workouts",
+                                                value = "${dashboardViewModel.workoutsCompletedPerDayThisWeek.collectAsState().value.lastOrNull() ?: 0}",
+                                                icon = Icons.Default.FitnessCenter,
+                                                color = Color(0xFF4CAF50)
+                                            )
+                                            QuickStatItem(
+                                                label = "Calories Burned",
+                                                value = "${dashboardViewModel.caloriesBurned.collectAsState().value}",
+                                                icon = Icons.Default.LocalFireDepartment,
+                                                color = Color(0xFFFF5722)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Summary sections in grid
+                            items(sections) { section ->
+                                AnimatedVisibility(
+                                    visible = expandedSections[section] == true,
+                                    enter = expandVertically(
+                                        animationSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                                            stiffness = Spring.StiffnessLow
+                                        )
+                                    ) + fadeIn(
+                                        animationSpec = tween(durationMillis = 300)
+                                    ),
+                                    exit = shrinkVertically(
+                                        animationSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                                            stiffness = Spring.StiffnessLow
+                                        )
+                                    ) + fadeOut(
+                                        animationSpec = tween(durationMillis = 300)
+                                    )
+                                ) {
+                                    HomeSectionCard(
+                                        section = section,
+                                        isExpanded = true,
+                                        onToggleExpand = { expandedSections[section] = false },
+                                        content = {
+                                            when (section) {
+                                                HomeSection.Tasks -> TasksSummary(
+                                                    nextTask = nextTask,
+                                                    taskStats = taskStats,
+                                                    overdueTasks = overdueTasks,
+                                                    onMarkTaskDone = { task ->
+                                                        coroutineScope.launch {
+                                                            tasksViewModel.markTaskDone(task)
+                                                            dashboardViewModel.refreshDashboard()
+                                                        }
+                                                    },
+                                                    onViewAllClick = onNavigateToTasks,
+                                                    isExpanded = true,
+                                                    currentTime = currentTime
+                                                )
+
+                                                HomeSection.Habits -> HabitsSummary(
+                                                    nextHabit = nextHabit,
+                                                    habitStats = habitStats,
+                                                    overdueHabits = overdueHabits,
+                                                    onMarkHabitDone = { habit ->
+                                                        coroutineScope.launch {
+                                                            habitsViewModel.markHabitDone(habit)
+                                                            dashboardViewModel.refreshDashboard()
+                                                        }
+                                                    },
+                                                    onViewAllClick = onNavigateToHabits,
+                                                    isExpanded = true,
+                                                    currentTime = currentTime
+                                                )
+
+                                                HomeSection.Meals -> MealsSummary(
+                                                    todayCalories = dashboardViewModel.todayCalories.collectAsState().value,
+                                                    mealsLogged = dashboardViewModel.mealsLogged.collectAsState().value,
+                                                    nextMeal = dashboardViewModel.nextMeal.collectAsState().value,
+                                                    weeklyMealLogging = dashboardViewModel.weeklyMealLogging.collectAsState().value,
+                                                    plannedMeals = dashboardViewModel.plannedMealsPerDayThisWeek.collectAsState().value.sum(),
+                                                    unexpectedMeals = dashboardViewModel.unexpectedMealsPerDayThisWeek.collectAsState().value.sum()
+                                                )
+
+                                                HomeSection.Workout -> WorkoutSummary(
+                                                    todayWorkout = dashboardViewModel.todayWorkout.collectAsState().value,
+                                                    caloriesBurned = dashboardViewModel.caloriesBurned.collectAsState().value,
+                                                    workoutStreak = dashboardViewModel.workoutStreak.collectAsState().value,
+                                                    weeklyWorkoutCompletion = dashboardViewModel.weeklyWorkoutCompletion.collectAsState().value
+                                                )
+
+                                                HomeSection.Finances -> FinanceSummary(
+                                                    recentTransactions = dashboardViewModel.recentTransactions.collectAsState().value,
+                                                    accountBalance = dashboardViewModel.accountBalance.collectAsState().value
+                                                )
+
+                                                HomeSection.Journal -> JournalSummary(
+                                                    journalCompleted = dashboardViewModel.journalCompleted.collectAsState().value,
+                                                    journalStreak = dashboardViewModel.journalStreak.collectAsState().value,
+                                                    recentJournalEntries = dashboardViewModel.recentJournalEntries.collectAsState().value
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
+                    else{
+                        FocusMixedList(
+                            tasks = tasks,
+                            habits = habits,
+
+                            isRefreshing = dashboardLoading,
+                            onPullRefresh = { dashboardViewModel.refreshDashboard() },
+
+                            // TASK actions
+                            onTaskClick = onTaskClick,
+                            onTaskCheckedChange = { task, checked ->
+                                tasksViewModel.changeCheckTask(task.id, checked)
+                                dashboardViewModel.refreshDashboard()
+                            },
+                            onTaskEdit = { tasksViewModel.updateTask(it.id,it) },
+                            onTaskDelete = { tasksViewModel.deleteTask(it.id) },
+                            onTaskReschedule = { },
+
+                            // HABIT actions
+                            onHabitClick = onHabitClick,
+                            onHabitCheckedChange = { habit, checked, onComplete ->
+                                habitsViewModel.changeCheckHabit(habit.id, checked)
+                            },
+                            onHabitComplete = { habit, done ->
+                                habitsViewModel.changeCheckHabit(habit.id, done)
+                            },
+                            onHabitEdit = { habitsViewModel.updateHabit(it.id,it) },
+                            onHabitDelete = { habitsViewModel.deleteHabit(it.id) },
+                            taskItemWrapper = { content, _ -> content() },
+                            habitItemWrapper = { content, _ -> content() },
+                            habitIsDone = { it.done?:false },
+                            habitIsOverdue = { it.isOverdue() },
+                            habitDueMillis = { it.dateTime?.toLocalDateTime()?.let { ldt ->
+                                ldt.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+                            } },
+                            taskIsDone = {it.done},
+                            taskIsOverdue = { it.isOverdue() },
+                            taskDueMillis = { it.dueAtMillis() },
+                        )
+                    }
+
                 }
 
                 // Right sidebar with toggle buttons
@@ -538,60 +588,118 @@ fun HomeScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.padding(bottom = 24.dp)
                         ) {
-                            sections.forEach { section ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        if (focusModeExpanded)
+                                            Color(0xFFB45253)
+                                        else
+                                            Color(0xFFFCB53B).copy(alpha = 0.1f)
+                                    )
+                                    .clickable {
+                                        focusModeExpanded = !focusModeExpanded
+                                    }
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(
-                                            if (expandedSections[section] == true)
-                                                MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                                            else
-                                                MaterialTheme.colors.surface
-                                        )
-                                        .clickable { 
-                                            expandedSections[section] = !(expandedSections[section] ?: true)
-                                        }
-                                        .padding(12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Lightbulb,
+                                        contentDescription = null,
+                                        tint = if (focusModeExpanded)
+                                            Color.White
+                                        else
+                                            MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "Focus mode",
+                                        style = MaterialTheme.typography.body2,
+                                        fontWeight = if (focusModeExpanded) FontWeight.Normal else FontWeight.SemiBold,
+                                        color = if (focusModeExpanded)
+                                            Color.White
+                                        else
+
+                                            MaterialTheme.colors.primary
+                                    )
+                                }
+
+                                Icon(
+                                    imageVector = if (focusModeExpanded)
+                                        Icons.Default.Visibility
+                                    else
+                                        Icons.Default.VisibilityOff,
+                                    contentDescription = if (focusModeExpanded) "Hide" else "Show",
+                                    tint = if (focusModeExpanded)
+                                        Color.White
+                                    else
+                                        MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+
+                            if (!focusModeExpanded) {
+                                sections.forEach { section ->
                                     Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (expandedSections[section] == true)
+                                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                                else
+                                                    MaterialTheme.colors.surface
+                                            )
+                                            .clickable {
+                                                expandedSections[section] = !(expandedSections[section] ?: true)
+                                            }
+                                            .padding(12.dp),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = section.icon,
+                                                contentDescription = null,
+                                                tint = if (expandedSections[section] == true)
+                                                    MaterialTheme.colors.primary
+                                                else
+                                                    MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Text(
+                                                text = section.title,
+                                                style = MaterialTheme.typography.body2,
+                                                fontWeight = if (expandedSections[section] == true) FontWeight.SemiBold else FontWeight.Normal,
+                                                color = if (expandedSections[section] == true)
+                                                    MaterialTheme.colors.primary
+                                                else
+                                                    MaterialTheme.colors.onSurface
+                                            )
+                                        }
+
                                         Icon(
-                                            imageVector = section.icon,
-                                            contentDescription = null,
+                                            imageVector = if (expandedSections[section] == true)
+                                                Icons.Default.Visibility
+                                            else
+                                                Icons.Default.VisibilityOff,
+                                            contentDescription = if (expandedSections[section] == true) "Hide" else "Show",
                                             tint = if (expandedSections[section] == true)
                                                 MaterialTheme.colors.primary
                                             else
                                                 MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Text(
-                                            text = section.title,
-                                            style = MaterialTheme.typography.body2,
-                                            fontWeight = if (expandedSections[section] == true) FontWeight.SemiBold else FontWeight.Normal,
-                                            color = if (expandedSections[section] == true)
-                                                MaterialTheme.colors.primary
-                                            else
-                                                MaterialTheme.colors.onSurface
+                                            modifier = Modifier.size(16.dp)
                                         )
                                     }
-                                    
-                                    Icon(
-                                        imageVector = if (expandedSections[section] == true) 
-                                            Icons.Default.Visibility 
-                                        else 
-                                            Icons.Default.VisibilityOff,
-                                        contentDescription = if (expandedSections[section] == true) "Hide" else "Show",
-                                        tint = if (expandedSections[section] == true)
-                                            MaterialTheme.colors.primary
-                                        else
-                                            MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                                        modifier = Modifier.size(16.dp)
-                                    )
                                 }
                             }
                         }
@@ -663,7 +771,7 @@ fun HomeScreen(
                                     style = MaterialTheme.typography.subtitle2,
                                     fontWeight = FontWeight.Bold
                                 )
-                                
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
@@ -681,7 +789,7 @@ fun HomeScreen(
                                             color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                                         )
                                     }
-                                    
+
                                     Column {
                                         Text(
                                             text = "${habitStats?.completed ?: 0}",
@@ -698,19 +806,20 @@ fun HomeScreen(
                                 }
 
                                 // Overdue section
-                                if (dashboardViewModel.overdueTasks.collectAsState().value > 0 || 
-                                    dashboardViewModel.overdueHabits.collectAsState().value > 0) {
+                                if (dashboardViewModel.overdueTasks.collectAsState().value > 0 ||
+                                    dashboardViewModel.overdueHabits.collectAsState().value > 0
+                                ) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Divider(color = MaterialTheme.colors.onSurface.copy(alpha = 0.1f))
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    
+
                                     Text(
                                         text = "Overdue Items",
                                         style = MaterialTheme.typography.subtitle2,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colors.error
                                     )
-                                    
+
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
@@ -728,7 +837,7 @@ fun HomeScreen(
                                                 color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                                             )
                                         }
-                                        
+
                                         Column {
                                             Text(
                                                 text = "${dashboardViewModel.overdueHabits.collectAsState().value}",
@@ -1000,7 +1109,7 @@ private fun MealsSection() {
                     style = MaterialTheme.typography.subtitle1,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 // Meal Schedule
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1107,7 +1216,7 @@ private fun DayMealPreview(day: Int) {
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
-            text = when(day) {
+            text = when (day) {
                 0 -> "M"
                 1 -> "T"
                 2 -> "W"
@@ -1204,7 +1313,7 @@ private fun WorkoutSection() {
                     style = MaterialTheme.typography.subtitle1,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 // Progress Bars
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -1379,12 +1488,12 @@ private fun FinancesSection() {
                 ) {
                     repeat(3) { index ->
                         TransactionItem(
-                            title = when(index) {
+                            title = when (index) {
                                 0 -> "Grocery Shopping"
                                 1 -> "Netflix Subscription"
                                 else -> "Salary"
                             },
-                            amount = when(index) {
+                            amount = when (index) {
                                 0 -> "-$85.50"
                                 1 -> "-$15.99"
                                 else -> "+$2,500.00"
@@ -1573,7 +1682,7 @@ private fun JournalSection(dailyJournalViewModel: DailyJournalViewModel) {
                 ) {
                     repeat(3) { index ->
                         JournalEntryPreview(
-                            date = when(index) {
+                            date = when (index) {
                                 0 -> "Yesterday"
                                 1 -> "2 days ago"
                                 else -> "3 days ago"

@@ -4,12 +4,16 @@ import com.esteban.ruano.database.converters.toDTO
 import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.MuscleGroup
 import com.esteban.ruano.database.models.Status
+import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
+import com.esteban.ruano.lifecommander.models.ExerciseSet
+import com.esteban.ruano.models.workout.ExerciseDayStatusDTO
 import com.esteban.ruano.models.workout.WorkoutDashboardDTO
 import com.esteban.ruano.models.workout.WorkoutTrackDTO
 import com.esteban.ruano.models.workout.ExerciseTrackDTO
 import com.esteban.ruano.models.workout.day.UpdateWorkoutDayDTO
 import com.esteban.ruano.models.workout.day.WorkoutDayDTO
 import com.esteban.ruano.models.workout.exercise.ExerciseDTO
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUtils.toLocalTime
@@ -18,13 +22,16 @@ import com.esteban.ruano.utils.toDayOfWeek
 import io.ktor.server.plugins.BadRequestException
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atTime
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.countDistinct
+import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.sum
 import org.jetbrains.exposed.v1.datetime.date
 import kotlinx.datetime.toLocalDateTime as toLocalDateTimeKt
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -36,7 +43,6 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 class WorkoutService : BaseService() {
-
     fun getWorkoutDaysWithExercises(userId: Int): List<WorkoutDayDTO> {
         return transaction {
             val exercisesWithWorkoutDays = ExerciseWithWorkoutDay.find(ExercisesWithWorkoutDays.user eq userId).toList()
@@ -115,7 +121,7 @@ class WorkoutService : BaseService() {
 
     fun getExercises(userId: Int, filter: String, limit: Int, offset: Long):List<ExerciseDTO> {
         return transaction {
-            val exercises = Exercise.find { Exercises.user eq userId and (Exercises.name.lowerCase() like "%${filter.lowercase()}%") }.limit(limit).offset(offset).toList()
+            val exercises = Exercise.find { Exercises.user eq userId and (Exercises.name.lowerCase() like "%${filter.lowercase()}%") }.limit(limit).offset(offset*limit).toList()
             val exerciseWithEquipment = exercises.map { e ->
                 //val equipment = Equipment.find { Equipments.exercise eq e.id }.toList()
                 e.toDTO(
@@ -230,7 +236,7 @@ class WorkoutService : BaseService() {
 
             //Get which exercises are completed for the day
             val exercisesTracks = dateTime?.let {
-                getCompletedExercisesForDay(
+                getExerciseSetStatusForDay(
                     userId = userId,
                     workoutDayId = workoutDays.firstOrNull()?.id?.value.toString(),
                     dateTime = it
@@ -255,7 +261,9 @@ class WorkoutService : BaseService() {
                           //  equipmentDTO = equipment[e.id.value]?.map { it.toDTO() } ?: emptyList(),
                             equipmentDTO = emptyList(),
                         ).copy(
-                            isCompleted = exercisesTracks.contains(e.id.value.toString())
+                            isCompleted = exercisesTracks.firstOrNull { status ->
+                                status.exerciseId == e.id.value.toString()
+                            } != null
                         )
                     }
                 ).copy(
@@ -482,7 +490,7 @@ class WorkoutService : BaseService() {
                     insert {
                         it[ExerciseTracks.exerciseId] = exercise.id
                         it[ExerciseTracks.workoutDayId] = workoutDay.id
-                        it[this.doneDateTime] = doneDateTime.toLocalDateTime()!!
+                        it[this.doneDateTime] = doneDateTime.toLocalDateTime()
                         it[status] = Status.ACTIVE
                     }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
                 }
@@ -492,6 +500,7 @@ class WorkoutService : BaseService() {
             }
         }
     }
+
 
     fun unCompleteExercise(userId: Int, trackId: String): Boolean = transaction {
         val trackUUID = UUID.fromString(trackId)
@@ -517,12 +526,85 @@ class WorkoutService : BaseService() {
 
         updatedRows > 0
     }
+
+    fun completeExerciseSet(userId: Int, exerciseId: String, workoutDayId: String, reps: Int, doneDateTime: String): Boolean {
+        return transaction {
+            // Verify the exercise and workout day belong to the user
+            val exercise = Exercise.find {
+                (Exercises.id eq UUID.fromString(exerciseId)) and
+                        (Exercises.user eq userId) and
+                        (Exercises.status eq Status.ACTIVE)
+            }.firstOrNull()
+
+            val workoutDay = WorkoutDay.find {
+                (WorkoutDays.id eq UUID.fromString(workoutDayId)) and
+                        (WorkoutDays.user eq userId) and
+                        (WorkoutDays.status eq Status.ACTIVE)
+            }.firstOrNull()
+
+            if (exercise != null && workoutDay != null) {
+                // Check if an existing ExerciseTrack exists for the given exercise and workout day
+                var existingTrackId = ExerciseTrack.find {
+                    (ExerciseTracks.exerciseId eq exercise.id) and
+                            (ExerciseTracks.workoutDayId eq workoutDay.id) and
+                            (ExerciseTracks.dateTime.date() eq doneDateTime.toLocalDateTime().date) and
+                            (ExerciseTracks.status eq Status.ACTIVE)
+                }.firstOrNull()?.id?.value
+
+                // If no ExerciseTrack exists, create one using insertOperation
+                if (existingTrackId == null) {
+                    existingTrackId = ExerciseTracks.insertOperation(userId, doneDateTime.fromDateToLong()) {
+                        insert {
+                            it[this.exerciseId] = exercise.id
+                            it[this.workoutDayId] = workoutDay.id
+                            it[this.dateTime] = doneDateTime.toLocalDateTime()
+                            it[status] = Status.ACTIVE
+                        }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
+                    }
+                }
+
+                // Now that we have an ExerciseTrack (existing or new), create the ExerciseSetTrack
+                existingTrackId?.let {
+                    ExerciseSetTracks.insertOperation(userId, doneDateTime.fromDateToLong()) {
+                        insert {
+                            it[exerciseTrackId] = existingTrackId
+                            it[this.reps] = reps
+                            it[this.doneDateTime] = doneDateTime.toLocalDateTime()!!
+                            it[status] = Status.ACTIVE
+                        }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
+                    }
+                } ?: throw BadRequestException("Can't create exercise track")
+
+                return@transaction true
+            } else {
+                false
+            }
+        }
+    }
+
+    fun unCompleteExerciseSet(userId: Int,exerciseSetTrackId: String): Boolean = transaction {
+        val setId = runCatching { UUID.fromString(exerciseSetTrackId) }
+            .getOrElse { throw BadRequestException("Invalid exerciseSetTrackId") }
+
+        val updated = ExerciseSetTracks.updateOperation(userId,null,{
+                val rowsUpdated = ExerciseSetTracks.update({ (ExerciseSetTracks.id eq setId) and (ExerciseSetTracks.status eq Status.ACTIVE) }) {
+                    it[status] = Status.INACTIVE
+                }
+                if(rowsUpdated>0) UUID.fromString(exerciseSetTrackId) else null
+        })!=null
+
+        if (!updated) {
+            throw BadRequestException("ExerciseSetTrack not found or already inactive.")
+        }
+        true
+    }
+
+
     fun getExerciseTracksByDateRange(
         userId: Int,
         startDate: String,
         endDate: String
     ): List<ExerciseTrackDTO> = transaction {
-        // Subqueries without slice()
         val userWorkoutDays = WorkoutDays
             .select(WorkoutDays.id)
             .where { (WorkoutDays.user eq userId) and (WorkoutDays.status eq Status.ACTIVE) }
@@ -540,21 +622,76 @@ class WorkoutService : BaseService() {
         }.toList().map { it.toDTO() }
     }
 
-    fun getCompletedExercisesForDay(
+    fun getExerciseSetStatusForDay(
         userId: Int,
         workoutDayId: String,
         dateTime: String
-    ): List<String> = transaction {
+    ): List<ExerciseDayStatusDTO> = transaction {
+        val dayUuid = UUID.fromString(workoutDayId)
+        val targetDate = dateTime.toLocalDateTime().date
+
+        // 1) Active exercises for the user (subquery)
         val userExercises = Exercises
             .select(Exercises.id)
             .where { (Exercises.user eq userId) and (Exercises.status eq Status.ACTIVE) }
 
-        ExerciseTrack.find {
-            (ExerciseTracks.workoutDayId eq UUID.fromString(workoutDayId)) and
-                    (ExerciseTracks.status eq Status.ACTIVE) and
-                    (ExerciseTracks.exerciseId inSubQuery userExercises) and
-                    (ExerciseTracks.doneDateTime.date() eq dateTime.toLocalDateTime().date)
-        }.map { it.exercise.id.value.toString() }
-    }
+        // 2) Exercises fully done on targetDate (ExerciseTrack.doneDateTime != null)
+        val fullyDoneExerciseIds: Set<Pair<UUID,UUID>> = ExerciseTracks
+            .select(ExerciseTracks.exerciseId, ExerciseTracks.id)
+            .where {
+                (ExerciseTracks.workoutDayId eq dayUuid) and
+                        (ExerciseTracks.status eq Status.ACTIVE) and
+                        (ExerciseTracks.exerciseId inSubQuery userExercises) and
+                        ExerciseTracks.doneDateTime.isNotNull() and
+                        (ExerciseTracks.doneDateTime.date() eq targetDate)
+            }
+            .map { it[ExerciseTracks.id].value to it[ExerciseTracks.exerciseId].value }
+            .toSet()
 
+        // 3) Pull all ACTIVE set tracks for that day, joined to their ExerciseTrack
+        val rows = ExerciseSetTracks
+            .innerJoin(ExerciseTracks, { ExerciseSetTracks.exerciseTrackId }, { ExerciseTracks.id })
+            .select(
+                ExerciseTracks.exerciseId,
+                ExerciseSetTracks.id,
+                ExerciseSetTracks.reps,
+                ExerciseSetTracks.doneDateTime
+            )
+            .where {
+                (ExerciseTracks.workoutDayId eq dayUuid) and
+                        (ExerciseTracks.status eq Status.ACTIVE) and
+                        (ExerciseTracks.exerciseId inSubQuery userExercises) and
+                        (ExerciseSetTracks.status eq Status.ACTIVE) and
+                        (ExerciseSetTracks.doneDateTime.date() eq targetDate)
+            }
+            .orderBy(ExerciseSetTracks.doneDateTime) // earliest first (optional)
+            .toList()
+
+        // 4) Group rows by exerciseId and build the DTOs
+        val grouped: Map<UUID, List<ResultRow>> =
+            rows.groupBy { it[ExerciseTracks.exerciseId].value }
+
+        grouped.map { (exerciseUuid, list) ->
+            val sets = list.map { rr ->
+                ExerciseSet(
+                    id = rr[ExerciseSetTracks.id].value.toString(),
+                    reps = rr[ExerciseSetTracks.reps],
+                    doneDateTime = rr[ExerciseSetTracks.doneDateTime].formatDefault()
+                )
+            }
+
+            ExerciseDayStatusDTO(
+                exerciseTrackId = fullyDoneExerciseIds.firstOrNull{
+                    it.second == exerciseUuid
+                }?.first.toString(),
+                exerciseId = exerciseUuid.toString(),
+                setsCountDone = sets.size,
+                totalRepsDone = sets.sumOf { it.reps },
+                exerciseDone = fullyDoneExerciseIds.firstOrNull{
+                    it.second == exerciseUuid
+                } != null,
+                setsDone = sets
+            )
+        }
+    }
 }

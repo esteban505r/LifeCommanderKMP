@@ -52,21 +52,21 @@ class BudgetService(private val settingsRepository: SettingsRepository) : BaseSe
         }
     }
 
-    fun getBudgetsByUser(userId: Int): List<BudgetResponseDTO> {
+    fun getBudgetsByUser(userId: Int,limit:Int,offset:Int): List<BudgetResponseDTO> {
         return transaction {
-            Budget.find { Budgets.user eq userId }
+            Budget.find { Budgets.user eq userId }.limit(limit).offset(offset.toLong()*limit)
                 .map { it.toResponseDTO() }
         }
     }
 
-    fun getBudgetsByDateRange(userId: Int, startDate: LocalDate, endDate: LocalDate): List<BudgetResponseDTO> {
+    fun getBudgetsByDateRange(userId: Int, startDate: LocalDate, endDate: LocalDate, limit:Int,offset:Int): List<BudgetResponseDTO> {
         return transaction {
             Budget.find {
                 (Budgets.user eq userId) and
                         (Budgets.startDate greaterEq startDate)
                             .and(Budgets.endDate lessEq endDate)
 
-            }.map { it.toResponseDTO() }
+            }.limit(limit).offset(offset.toLong()*limit).map { it.toResponseDTO() }
         }
     }
 
@@ -79,10 +79,10 @@ class BudgetService(private val settingsRepository: SettingsRepository) : BaseSe
         referenceDate: LocalDate
     ): List<BudgetProgressResponseDTO> {
         return transaction {
-            // Get user settings for unbudgeted period configuration
+            // 1. Get user settings for unbudgeted period configuration
             val userSettings = settingsRepository.getUserSettings(userId)
-            
-            // 1. Build the base query with filters (excluding startDate and endDate)
+
+            // 2. Build the base query with filters (excluding startDate and endDate)
             var baseQuery = Budgets.selectAll().where { Budgets.user eq userId }
 
             filters.searchPattern?.let { pattern ->
@@ -101,12 +101,13 @@ class BudgetService(private val settingsRepository: SettingsRepository) : BaseSe
                 baseQuery = baseQuery.andWhere { Budgets.amount lessEq max.toBigDecimal() }
             }
 
-            // 2. Apply ordering and pagination
+            // 3. Apply ordering and pagination for the current page
             val paginatedQuery = baseQuery
                 .orderBy(Budgets.startDate to SortOrder.DESC)
-                .limit(limit).offset(offset.toLong())
+                .limit(limit)
+                .offset(offset.toLong()*limit)
 
-            // 3. Fetch and map each budget
+            // 4. Fetch the paginated budgets
             val budgetedResults = paginatedQuery.map { row ->
                 val budget = Budget.wrapRow(row)
                 val (periodStart, periodEnd) = getCurrentPeriod(budget.toDomainModel(), referenceDate)
@@ -129,18 +130,32 @@ class BudgetService(private val settingsRepository: SettingsRepository) : BaseSe
                 } ?: true
             }
 
-            // 4. Find categories already budgeted
+            // 5. Calculate the total amount for all filtered budgets (ignoring pagination)
+            val totalBudgetedAmount = Budgets.selectAll().where { Budgets.user eq userId }
+                .apply {
+                    filters.searchPattern?.let { pattern ->
+                        this.andWhere { Budgets.name like "%$pattern%" }
+                    }
+                    filters.categories?.let { categories ->
+                        this.andWhere { Budgets.category inList categories }
+                    }
+                    filters.minAmount?.let { min ->
+                        this.andWhere { Budgets.amount greaterEq min.toBigDecimal() }
+                    }
+                    filters.maxAmount?.let { max ->
+                        this.andWhere { Budgets.amount lessEq max.toBigDecimal() }
+                    }
+                }
+                .sumOf { it[Budgets.amount].toDouble() }
+
+            // 6. Get categories already budgeted
             val budgetedCategories = baseQuery
                 .map { it[Budgets.category] }
                 .distinct()
 
-            // 5. Determine the current period for unbudgeted transactions using user settings
+            // 7. Get unbudgeted transactions for the current period
             val (periodStart, periodEnd) = getUnbudgetedPeriod(referenceDate, userSettings)
 
-            println("Reference date: $referenceDate")
-            println("Unbudgeted period: $periodStart to $periodEnd")
-
-            // 6. Get unbudgeted transactions within the current period
             var unbudgetedQuery = Transactions.selectAll().where {
                 (Transactions.user eq userId) and
                         (Transactions.category notInList budgetedCategories) and
@@ -177,7 +192,7 @@ class BudgetService(private val settingsRepository: SettingsRepository) : BaseSe
                 )
             } else emptyList()
 
-            // 7. Return all combined
+            // 8. Return all combined data
             return@transaction budgetedResults + unbudgetedResult
         }
     }
@@ -241,7 +256,7 @@ class BudgetService(private val settingsRepository: SettingsRepository) : BaseSe
         }
     }
 
-    fun getBudgetTransactions(userId: Int, budgetId: UUID, referenceDate: LocalDate, filters: TransactionFilters): List<TransactionResponseDTO> {
+    fun getBudgetTransactions(userId: Int, budgetId: UUID, referenceDate: LocalDate, filters: TransactionFilters,limit:Int,offset:Int): List<TransactionResponseDTO> {
         return transaction {
             val budget = Budget.findById(budgetId)
             if (budget != null && budget.user.id.value == userId) {
@@ -267,6 +282,8 @@ class BudgetService(private val settingsRepository: SettingsRepository) : BaseSe
                         filters.amountSortOrder,
                         Transactions.amount,
                     )
+                    .limit(limit)
+                    .offset(offset.toLong()*limit)
                     .map { Transaction.wrapRow(it).toResponseDTO() }
             } else {
                 emptyList()
@@ -278,7 +295,8 @@ class BudgetService(private val settingsRepository: SettingsRepository) : BaseSe
     fun getUnbudgetedTransactions(
         userId: Int,
         referenceDate: LocalDate,
-        filters: TransactionFilters
+        filters: TransactionFilters,
+        limit:Int,offset:Int
     ): List<TransactionResponseDTO> {
         return transaction {
             // Retrieve all budgets for the user
@@ -323,7 +341,7 @@ class BudgetService(private val settingsRepository: SettingsRepository) : BaseSe
             }
 
             // Execute the query and map the results
-            unbudgetedQuery.map { row ->
+            unbudgetedQuery.limit(limit).offset(offset.toLong()*limit).map { row ->
                 Transaction.wrapRow(row).toResponseDTO()
             }
         }
@@ -332,7 +350,7 @@ class BudgetService(private val settingsRepository: SettingsRepository) : BaseSe
     fun categorizeUnbudgetedTransactions(userId: Int, referenceDate: LocalDate): Int {
         return transaction {
             // Get unbudgeted transactions
-            val unbudgetedTransactions = getUnbudgetedTransactions(userId, referenceDate, TransactionFilters())
+            val unbudgetedTransactions = getUnbudgetedTransactions(userId, referenceDate, TransactionFilters(), limit = 1000, offset = 0)
 
             // Get all category keywords for the user
             val categoryKeywords = CategoryKeyword.find { CategoryKeywords.user eq userId }

@@ -69,12 +69,13 @@ class ScheduledTransactionService : BaseService() {
             val totalCount = baseQuery.count()
 
             val paginatedResults = baseQuery
+                .limit(limit).offset(offset.toLong()*limit)
                 .addSortOrder(
                     filters.amountSortOrder,
                     absAmount,
                     defaultSortOrder = ScheduledTransactions.startDate to SortOrder.DESC
                 )
-                .limit(limit).offset(offset.toLong())
+
 
             val results = paginatedResults.map {
                 ScheduledTransactionResponseDTO(

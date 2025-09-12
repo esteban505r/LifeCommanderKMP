@@ -47,6 +47,7 @@ kotlin {
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.paging)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(compose.runtime)
                 implementation(compose.foundation)
@@ -57,6 +58,7 @@ kotlin {
                 implementation(compose.materialIconsExtended)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
+
             }
         }
         val androidMain by getting {

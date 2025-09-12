@@ -183,7 +183,7 @@ class TaskService(
         return transaction {
             Task.find {
                 (Tasks.user eq userId) and (Tasks.status eq Status.ACTIVE)
-            }.limit(limit).offset(offset).toList().sortedByDefault().map { it.toDTO() }
+            }.limit(limit).offset(offset*limit).toList().sortedByDefault().map { it.toDTO() }
         }
     }
 
@@ -211,7 +211,7 @@ class TaskService(
         return transaction {
             val tasks =
                 Task.find { (Tasks.user eq userId) and (Tasks.name.lowerCase() like "%${pattern.lowercase()}%") and (Tasks.status eq Status.ACTIVE) }
-                    .limit(limit).offset(offset).toList().sortedByDefault().map { it.toDTO() }
+                    .limit(limit).offset(offset*limit).toList().sortedByDefault().map { it.toDTO() }
             tasks.map {
                 val reminders = reminderService.getByTaskID(
                     UUID.fromString(it.id)
@@ -257,7 +257,7 @@ class TaskService(
                     )
 
             }
-                .limit(limit).offset(offset).toList().sortedByDefault().map { it.toDTO() }
+                .limit(limit).offset(offset*limit).toList().sortedByDefault().map { it.toDTO() }
             tasks.map {
                 val reminders = reminderService.getByTaskID(
                     UUID.fromString(it.id)
@@ -271,7 +271,7 @@ class TaskService(
         return transaction {
             val tasks =
                 Task.find { (Tasks.user eq userId) and (Tasks.name.lowerCase() like "%${pattern.lowercase()}%") and (Tasks.dueDateTime eq null) and (Tasks.status eq Status.ACTIVE) }
-                    .limit(limit).offset(offset).toList().sortedByDefault().map { it.toDTO() }
+                    .limit(limit).offset(offset*limit).toList().sortedByDefault().map { it.toDTO() }
             tasks.map {
                 val reminders = reminderService.getByTaskID(
                     UUID.fromString(it.id)
@@ -324,7 +324,7 @@ class TaskService(
                     Tasks.scheduledDateTime to SortOrder.ASC_NULLS_LAST
                 )
                 .limit(limit)
-                .offset(offset)
+                .offset(offset*limit)
                 .toList()
                 .sortedByDefault()
                 .map { it.toDTO() }

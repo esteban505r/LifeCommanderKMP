@@ -123,7 +123,7 @@ class HabitService(
         return transaction {
             val habits =
                 Habit.find { (Habits.user eq userId) and (Habits.name.lowerCase() like "%${pattern.lowercase()}%") and (Habits.baseDateTime.date() lessEq date) and (Habits.status eq Status.ACTIVE) }
-                    .orderBy(Habits.baseDateTime.minute() to SortOrder.ASC).limit(limit).offset(offset).toList()
+                    .orderBy(Habits.baseDateTime.minute() to SortOrder.ASC).limit(limit).offset(offset*limit).toList()
 
             val result = mutableListOf<HabitDTO>()
             for (habit in habits) {
@@ -147,7 +147,7 @@ class HabitService(
     fun fetchAll(userId: Int, pattern: String, limit: Int, offset: Long): List<HabitDTO> {
         return transaction {
             val habits = Habit.find { (Habits.user eq userId) and (Habits.name.lowerCase() like "%${pattern.lowercase()}%") and (Habits.frequency neq Frequency.ONE_TIME.value and (Habits.status eq Status.ACTIVE)) }
-                .orderBy(Habits.baseDateTime.minute() to SortOrder.ASC).limit(limit).offset(offset).toList()
+                .orderBy(Habits.baseDateTime.minute() to SortOrder.ASC).limit(limit).offset(offset*limit).toList()
                 .map { it.toHabitDTO() }
             habits.map {
                 val reminders = reminderService.getByHabitID(UUID.fromString(it.id))
@@ -182,7 +182,7 @@ class HabitService(
 
             val habits = Habit.find(baseQuery)
                 .orderBy(Habits.baseDateTime.minute() to SortOrder.ASC)
-                .limit(limit).offset(offset)
+                .limit(limit).offset(offset*limit)
                 .toList()
 
             val result = mutableListOf<HabitDTO>()

@@ -61,7 +61,7 @@ class PomodoroService : BaseService() {
         return transaction {
             Pomodoro.find {
                 (Pomodoros.user eq userId) and (Pomodoros.status eq Status.ACTIVE)
-            }.limit(limit).offset(offset).toList().map { it.toDTO() }
+            }.limit(limit).offset(offset*limit).toList().map { it.toDTO() }
         }
     }
 
@@ -78,7 +78,7 @@ class PomodoroService : BaseService() {
                 (Pomodoros.status eq Status.ACTIVE) and
                 (Pomodoros.startDateTime.date() greaterEq startDate) and
                 (Pomodoros.startDateTime.date() lessEq endDate)
-            }.limit(limit).offset(offset).toList().map { it.toDTO() }
+            }.limit(limit).offset(offset*limit).toList().map { it.toDTO() }
         }
     }
 

@@ -29,7 +29,7 @@ fun FinanceScreen(
     actions: FinanceActions,
     onOpenImporter: () -> Unit,
     modifier: Modifier = Modifier,
-    onOpenBudgetTransactions: (String) -> Unit = {},
+    onOpenBudgetTransactions: (String,String) -> Unit = {_,_ ->},
     onOpenCategoryKeywordMapper: () -> Unit = {},
     isDesktop: Boolean = false
 ) {
@@ -184,6 +184,7 @@ fun FinanceScreen(
                             })
                         }
                     },
+                    isLoading = state.isLoadingTransactions,
                     currentFilters = state.transactionFilters,
                 )
 
@@ -223,7 +224,7 @@ fun FinanceScreen(
                         },
                         onDeleteBudget = { scope.launch { it.id?.let { id -> actions.deleteBudget(id) } } },
                         onBudgetClick = { budget ->
-                            onOpenBudgetTransactions(budget.id ?: "")
+                            onOpenBudgetTransactions(budget.id ?: "",budget.name)
                         },
                         onFiltersChange = {
                             actions.changeBudgetFilters(it)

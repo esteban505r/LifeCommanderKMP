@@ -736,7 +736,7 @@ class FinanceViewModel @Inject constructor(
         }
     }
 
-    override fun getBudgetTransactions(budgetId: String) {
+    override fun getBudgetTransactions(budgetId: String,refresh: Boolean) {
         viewModelScope.launch {
             try {
                 emitState { currentState.copy(isLoading = true, error = null) }

@@ -1,6 +1,7 @@
 package com.esteban.ruano.lifecommander.ui.state
 
 import com.esteban.ruano.lifecommander.models.Exercise
+import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
 import com.esteban.ruano.lifecommander.models.WorkoutTrack
 import com.esteban.ruano.lifecommander.models.ExerciseTrack
 import com.esteban.ruano.lifecommander.models.workout.day.WorkoutDay
@@ -16,7 +17,7 @@ data class WorkoutState(
     val weeklyWorkoutsCompleted: List<Int> = emptyList(),
     val workoutTracks: List<WorkoutTrack> = emptyList(),
     val exerciseTracks: List<ExerciseTrack> = emptyList(),
-    val completedExercises: Set<String> = emptySet(),
+    val completedExercises: Set<ExerciseDayStatus> = emptySet(),
     val exerciseDayMap: Map<String, Set<Int>> = emptyMap(),
     val isCompleted: Boolean = false,
 )

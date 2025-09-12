@@ -8,7 +8,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.esteban.ruano.lifecommander.ui.navigation.CategoryKeywordMapperDestination
 import com.esteban.ruano.lifecommander.ui.components.AppLayout
 import com.esteban.ruano.lifecommander.ui.navigation.CalendarScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.HabitsScreenDestination
@@ -25,17 +24,14 @@ import com.esteban.ruano.lifecommander.ui.navigation.routes.TaskDetailRoute
 import com.esteban.ruano.lifecommander.ui.navigation.routes.TimerListDetailRoute
 import com.esteban.ruano.lifecommander.ui.screens.BudgetTransactionsScreen
 import com.esteban.ruano.lifecommander.ui.screens.FinancialScreenDestination
-import com.esteban.ruano.lifecommander.ui.screens.FinanceImporterPlaceholderScreen
-import com.esteban.ruano.lifecommander.ui.screens.BudgetTransactionsPlaceholderScreen
 import com.esteban.ruano.lifecommander.ui.screens.CategoryKeywordMapperPlaceholderScreen
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import services.auth.AuthService
 import ui.ui.viewmodels.AuthViewModel
 import ui.screens.AuthScreen
-import com.esteban.ruano.lifecommander.ui.screens.HomeScreen
+import com.esteban.ruano.lifecommander.ui.screens.DashboardScreen
 import com.esteban.ruano.lifecommander.ui.screens.TransactionImportScreen
-import com.esteban.ruano.lifecommander.ui.screens.StatisticsScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import ui.state.AuthState
@@ -160,7 +156,7 @@ fun AppNavHost(
                 }
 
                 composable(Screen.Dashboard.route) {
-                    HomeScreen(
+                    DashboardScreen(
                         onNavigateToTasks = {
                             navController.navigate(Screen.Tasks.route)
                         },
@@ -186,10 +182,11 @@ fun AppNavHost(
                         onOpenImporter = {
                             navController.navigate(Screen.FinanceImporter.route)
                         },
-                        onOpenBudgetTransactions = { budgetId ->
+                        onOpenBudgetTransactions = { budgetId,budgetName ->
                             financeViewModel.setCurrentBudgetId(budgetId)
                             navController.navigate(BudgetTransactionsRoute(
-                                budgetId = budgetId
+                                budgetId = budgetId,
+                                budgetName = budgetName
                             ))
                         },
                         onOpenCategoryKeywordMapper = {
@@ -209,15 +206,22 @@ fun AppNavHost(
 
                 composable<BudgetTransactionsRoute>(
                 ) { backStackEntry ->
+                    val financeViewModel: FinanceViewModel = koinViewModel()
                     val args = backStackEntry.toRoute<BudgetTransactionsRoute>()
                     BudgetTransactionsScreen(
                         budgetId = args.budgetId,
+                        budgetName = args.budgetName,
                         onBack = {
                             navController.navigateUp()
                         },
                         modifier = modifier,
                         financeActions = financeViewModel,
                         state = financeViewModel.state.collectAsState().value,
+                        onLoadMore = {
+                            financeViewModel.getBudgetTransactions(
+                                budgetId = args.budgetId,
+                            )
+                        }
                     )
                 }
 

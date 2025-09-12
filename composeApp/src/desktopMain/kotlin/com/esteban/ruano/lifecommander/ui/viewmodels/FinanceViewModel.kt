@@ -8,6 +8,7 @@ import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.lifecommander.services.finance.FinanceService
 import com.esteban.ruano.lifecommander.ui.state.FinanceState
 import com.esteban.ruano.lifecommander.ui.state.FinanceTab
+import com.esteban.ruano.lifecommander.utils.PaginatedDataFetcher
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.lifecommander.finance.model.*
@@ -25,7 +26,96 @@ class FinanceViewModel(
     private val _state = MutableStateFlow(FinanceState())
     val state: StateFlow<FinanceState> = _state.asStateFlow()
 
+    private val transactionsFetcher = PaginatedDataFetcher(
+        pageSize = 20,
+        fetchData = { page, pageSize ->
+            service.getTransactions( pageSize,page).transactions
+        }
+    )
+
+    private val budgetsFetcher = PaginatedDataFetcher(
+        pageSize = 20,
+        fetchData = { page, pageSize ->
+            service.getBudgetsWithProgress(
+                filters = _state.value.budgetFilters,
+                referenceDate = _state.value.budgetBaseDate,
+                limit = pageSize,
+                offset = page
+            )
+        }
+    )
+
+    private val scheduledTransactionsFetcher = PaginatedDataFetcher(
+        pageSize = 20,
+        fetchData = { page, pageSize ->
+            service.getScheduledTransactions(
+                filters = _state.value.transactionFilters,
+                limit = pageSize,
+                offset = page
+            ).transactions
+        }
+    )
+
+    private val budgetTransactionsFetcher = PaginatedDataFetcher(
+        pageSize = 20,
+        fetchData = { page, pageSize ->
+            service.getBudgetTransactions(
+                budgetId = _state.value.currentBudgetId!!,
+                filters = _state.value.transactionFilters,
+                limit = pageSize,
+                offset = page,
+                referenceDate = _state.value.budgetBaseDate,
+            )
+        }
+    )
+
+
+
+    init{
+        viewModelScope.launch {
+            transactionsFetcher.data.collect{ stateValue ->
+                _state.value = _state.value.copy(
+                    transactions = stateValue,
+                    isLoadingTransactions = false
+                )
+            }
+        }
+
+        // Collecting paged data for budgets
+        viewModelScope.launch {
+            budgetsFetcher.data.collect { budgets ->
+                _state.value = _state.value.copy(
+                    budgets = budgets,
+                    isLoadingBudgets = false
+                )
+            }
+        }
+
+        // Collecting paged data for scheduled transactions
+        viewModelScope.launch {
+            scheduledTransactionsFetcher.data.collect { scheduledTransactions ->
+                _state.value = _state.value.copy(
+                    scheduledTransactions = scheduledTransactions,
+                    isLoadingScheduledTransactions = false
+                )
+            }
+        }
+
+        viewModelScope.launch {
+            budgetTransactionsFetcher.data.collect { budgetTransactions ->
+                _state.value = _state.value.copy(
+                    transactions = budgetTransactions,
+                    isLoadingTransactions = false
+                )
+            }
+        }
+
+    }
+
+
+
     override fun getTransactions(refresh: Boolean) {
+        println("GETTING TRANSACTIONS $refresh")
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(
@@ -35,17 +125,37 @@ class FinanceViewModel(
                     currentPage = if (refresh) 0 else _state.value.currentPage
                 )
 
-                val response = service.getTransactions(
+                /*val response = service.getTransactions(
                     limit = _state.value.pageSize,
                     offset = _state.value.currentPage * _state.value.pageSize,
                     filters = _state.value.transactionFilters
-                )
+                )*/
 
+                if(refresh) {
+                    transactionsFetcher.reset()
+                }
+                transactionsFetcher.loadNextPage()
+
+            } catch (e: Exception) {
                 _state.value = _state.value.copy(
-                    transactions = if (refresh) response.transactions else _state.value.transactions + response.transactions,
-                    totalTransactions = response.totalCount,
+                    error = e.message,
                     isLoadingTransactions = false
                 )
+            }
+        }
+    }
+
+    override fun getBudgetTransactions(budgetId: String, refresh: Boolean) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoadingTransactions = true, error = null, currentBudgetId = budgetId)
+
+                if(refresh){
+                    budgetTransactionsFetcher.reset()
+                }
+
+                budgetTransactionsFetcher.loadNextPage()
+
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
@@ -64,18 +174,9 @@ class FinanceViewModel(
     }
 
     fun loadNextPage() {
-        if (_state.value.transactions.size < _state.value.totalTransactions) {
-            getTransactions(refresh = false)
-        }
+        getTransactions(refresh = false)
     }
 
-    fun updateTransactionFilters(filters: TransactionFilters) {
-        _state.value = _state.value.copy(
-            transactionFilters = filters,
-            currentPage = 0 // Reset to first page when filters change
-        )
-        getTransactions(refresh = true)
-    }
 
     override fun changeBudgetFilters(filters: BudgetFilters) {
         _state.value = _state.value.copy(
@@ -323,25 +424,12 @@ class FinanceViewModel(
             }
         }    }
 
-    fun updateBudgetFilters(filters: BudgetFilters) {
-        _state.value = _state.value.copy(
-            budgetFilters = filters
-        )
-        getBudgets()
-    }
 
     override fun getBudgets() {
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(isLoadingBudgets = true, error = null)
-                val budgets = service.getBudgetsWithProgress(
-                    filters = _state.value.budgetFilters,
-                    referenceDate = _state.value.budgetBaseDate
-                )
-                _state.value = _state.value.copy(
-                    budgets = budgets,
-                    isLoadingBudgets = false
-                )
+                budgetsFetcher.loadNextPage()  // Trigger the fetcher for the next page of budgets
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     error = e.message,
@@ -526,46 +614,44 @@ class FinanceViewModel(
         getTransactions(refresh = true)
     }
 
-    override fun getBudgetTransactions(budgetId: String) {
-        viewModelScope.launch {
-            try {
-                _state.value = _state.value.copy(isLoadingTransactions = true, error = null)
-                val referenceDate = getCurrentDateTime(TimeZone.currentSystemDefault()).date.formatDefault()
-                val transactions = service.getBudgetTransactions(budgetId, referenceDate, _state.value.transactionFilters)
-                _state.value = _state.value.copy(
-                    transactions = transactions,
-                    isLoadingTransactions = false
-                )
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    error = e.message,
-                    isLoadingTransactions = false
-                )
-            }
-        }
+  
+
+    fun updateTransactionFilters(filters: TransactionFilters) {
+        _state.value = _state.value.copy(
+            transactionFilters = filters,
+            currentPage = 0
+        )
+        transactionsFetcher.reset()  // Reset the pagination for transactions
+        getTransactions(refresh = true)
+    }
+
+    fun updateBudgetFilters(filters: BudgetFilters) {
+        _state.value = _state.value.copy(
+            budgetFilters = filters,
+            currentPage = 0
+        )
+        budgetsFetcher.reset()  // Reset the pagination for budgets
+        getBudgets()
+    }
+
+    fun updateScheduledTransactionFilters(filters: TransactionFilters) {
+        _state.value = _state.value.copy(
+            transactionFilters = filters,
+            currentPage = 0
+        )
+        scheduledTransactionsFetcher.reset()  // Reset the pagination for scheduled transactions
+        getScheduledTransactions(refresh = true)
     }
 
     override fun getScheduledTransactions(refresh: Boolean) {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(
-                    currentBudgetId = null,
-                    isLoadingScheduledTransactions = true,
-                    error = null,
-                    currentPage = if (refresh) 0 else _state.value.currentPage
-                )
+                _state.value = _state.value.copy(isLoadingScheduledTransactions = true, error = null)
 
-                val response = service.getScheduledTransactions(
-                    limit = _state.value.pageSize,
-                    offset = _state.value.currentPage * _state.value.pageSize,
-                    filters = _state.value.transactionFilters
-                )
-
-                _state.value = _state.value.copy(
-                    scheduledTransactions = response.transactions,
-                    totalScheduledTransactions = response.totalCount,
-                    isLoadingScheduledTransactions = false
-                )
+                if (refresh) {
+                    scheduledTransactionsFetcher.reset()
+                }
+                scheduledTransactionsFetcher.loadNextPage()
 
             } catch (e: Exception) {
                 _state.value = _state.value.copy(

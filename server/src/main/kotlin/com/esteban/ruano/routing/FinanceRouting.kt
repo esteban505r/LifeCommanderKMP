@@ -17,9 +17,13 @@ import com.esteban.ruano.utils.gatherTransactionFilters
 import com.lifecommander.finance.model.ImportTransactionsRequest
 import com.lifecommander.finance.model.ImportTransactionsResponse
 import com.lifecommander.finance.model.TransactionImportPreviewRequest
-import kotlinx.datetime.*
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toLocalDateTime
 import java.util.*
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 fun Route.financeRouting(
     accountRepository: AccountRepository,
     transactionRepository: TransactionRepository,
@@ -184,21 +188,32 @@ fun Route.financeRouting(
 
         // Budget routes
         route("/budgets") {
+
+            // LIST budgets (paged)
             get {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
-                call.respond(budgetRepository.getAll(userId))
+                val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
+                val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
+
+                // Optional: cap/sanitize
+                val safeLimit = limit.coerceIn(1, 200)
+                val safeOffset = offset.coerceAtLeast(0)
+
+                call.respond(budgetRepository.getAll(userId, safeLimit, safeOffset))
             }
+
             get("/withProgress") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
                 val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
+
                 val searchPattern = call.parameters["search"]
                 val categories = call.parameters.getAll("category")
                 val referenceDate = call.parameters["referenceDate"]?.toLocalDate()
                 val minAmount = call.parameters["minAmount"]?.toDoubleOrNull()
                 val maxAmount = call.parameters["maxAmount"]?.toDoubleOrNull()
 
-                if(referenceDate == null) {
+                if (referenceDate == null) {
                     call.respond(HttpStatusCode.BadRequest, ErrorResponse("Missing referenceDate parameter"))
                     return@get
                 }
@@ -209,20 +224,39 @@ fun Route.financeRouting(
                     minAmount = minAmount,
                     maxAmount = maxAmount,
                 )
-                call.respond(budgetRepository.getAllProgress(userId, limit,offset, filters,referenceDate))
+
+                val safeLimit = limit.coerceIn(1, 200)
+                val safeOffset = offset.coerceAtLeast(0)
+
+                call.respond(
+                    budgetRepository.getAllProgress(userId, safeLimit, safeOffset, filters, referenceDate)
+                )
             }
+
+            // (Optional) LIST by date range (paged)
             get("/byDateRange") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val dto = call.receive<DateRangeQueryDTO>()
                 val startDate = LocalDate.parse(dto.startDate)
                 val endDate = LocalDate.parse(dto.endDate)
-                call.respond(budgetRepository.getByDateRange(userId, startDate, endDate))
+
+                val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
+                val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
+                val safeLimit = limit.coerceIn(1, 200)
+                val safeOffset = offset.coerceAtLeast(0)
+
+                call.respond(
+                    budgetRepository.getByDateRange(userId, startDate, endDate, safeLimit, safeOffset)
+                )
             }
+
+            // SINGLE budget progress – unchanged
             get("/{id}/progress") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = UUID.fromString(call.parameters["id"]!!)
                 call.respond(budgetRepository.getProgress(userId, id))
             }
+
             post {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val dto = call.receive<CreateBudgetDTO>()
@@ -234,12 +268,9 @@ fun Route.financeRouting(
                     dto.startDate.toLocalDate(),
                     dto.endDate?.toLocalDate(),
                 )
-                if (id != null) {
-                    call.respond(HttpStatusCode.Created)
-                } else {
-                    call.respond(HttpStatusCode.InternalServerError)
-                }
+                if (id != null) call.respond(HttpStatusCode.Created) else call.respond(HttpStatusCode.InternalServerError)
             }
+
             patch("/{id}") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = UUID.fromString(call.parameters["id"]!!)
@@ -253,21 +284,14 @@ fun Route.financeRouting(
                     dto.startDate?.toLocalDate(),
                     dto.endDate?.toLocalDate()
                 )
-                if (updated) {
-                    call.respond(HttpStatusCode.OK)
-                } else {
-                    call.respond(HttpStatusCode.InternalServerError)
-                }
+                if (updated) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.InternalServerError)
             }
+
             delete("/{id}") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = UUID.fromString(call.parameters["id"]!!)
                 val deleted = budgetRepository.delete(userId, id)
-                if (deleted) {
-                    call.respond(HttpStatusCode.OK)
-                } else {
-                    call.respond(HttpStatusCode.InternalServerError)
-                }
+                if (deleted) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.InternalServerError)
             }
 
             get("unbudgeted/transactions") {
@@ -276,14 +300,21 @@ fun Route.financeRouting(
                 val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
                 val filters = call.gatherTransactionFilters()
                 val referenceDate = call.parameters["referenceDate"]?.toLocalDate()
-                call.respond(budgetRepository.getUnbudgetedTransactions(userId,referenceDate!!, filters))
+                    ?: Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+
+                val safeLimit = limit.coerceIn(1, 200)
+                val safeOffset = offset.coerceAtLeast(0)
+
+                call.respond(
+                    budgetRepository.getUnbudgetedTransactions(userId, referenceDate, filters, safeLimit, safeOffset)
+                )
             }
 
             post("unbudgeted/categorize") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val referenceDate = call.parameters["referenceDate"]?.toLocalDate()
                     ?: Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
-                
+
                 val categorizedCount = budgetRepository.categorizeUnbudgetedTransactions(userId, referenceDate)
                 call.respond(mapOf("categorizedCount" to categorizedCount))
             }
@@ -292,20 +323,30 @@ fun Route.financeRouting(
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val referenceDate = call.parameters["referenceDate"]?.toLocalDate()
                     ?: Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
-                
+
                 val categorizedCount = budgetRepository.categorizeAllTransactions(userId, referenceDate)
                 call.respond(mapOf("categorizedCount" to categorizedCount))
             }
 
+            // BUDGET'S transactions (paged) – add limit/offset
             get("/{id}/transactions") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = UUID.fromString(call.parameters["id"]!!)
                 val referenceDate = call.parameters["referenceDate"]?.toLocalDate()
                     ?: Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
                 val filters = call.gatherTransactionFilters()
-                call.respond(budgetRepository.getBudgetTransactions(userId, id, referenceDate, filters))
+                val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
+                val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
+
+                val safeLimit = limit.coerceIn(1, 200)
+                val safeOffset = offset.coerceAtLeast(0)
+
+                call.respond(
+                    budgetRepository.getBudgetTransactions(userId, id, referenceDate, filters, safeLimit, safeOffset)
+                )
             }
         }
+
 
         // Savings goal routes
         route("/savings-goals") {
@@ -461,7 +502,7 @@ fun Route.financeRouting(
                 val limit = call.parameters["limit"]?.toIntOrNull() ?: 50
                 val offset = call.parameters["offset"]?.toIntOrNull() ?: 0
                 val filters = call.gatherScheduledTransactionFilters()
-                call.respond(scheduledTransactionRepository.getAll(userId, limit, offset, filters))
+                call.respond(scheduledTransactionRepository.getAll(userId = userId, limit = limit, offset = offset, filters = filters))
             }
             get("/{id}") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id

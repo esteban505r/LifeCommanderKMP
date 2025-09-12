@@ -59,5 +59,5 @@ interface FinanceActions {
     fun changeBudgetBaseDate(date: LocalDate)
     fun categorizeUnbudgeted()
     fun categorizeAll()
-    fun getBudgetTransactions(budgetId: String)
+    fun getBudgetTransactions(budgetId: String,refresh:Boolean = false)
 }

@@ -161,7 +161,7 @@ class NutritionService() : BaseService() {
                 else -> query.orderBy(Recipes.name to SortOrder.ASC)
             }
 
-            val recipes = sortedQuery.limit(limit).offset(offset)
+            val recipes = sortedQuery.limit(limit).offset(offset*limit)
                 .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions).map { it.toDTO() }
 
             // Add consumption status to each recipe
@@ -447,7 +447,7 @@ class NutritionService() : BaseService() {
                 else -> query.orderBy(Recipes.name to SortOrder.ASC)
             }
 
-            sortedQuery.limit(limit).offset(offset)
+            sortedQuery.limit(limit).offset(offset*limit)
                 .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
                 .map { it.toDTO() }
         }
@@ -466,7 +466,7 @@ class NutritionService() : BaseService() {
                         (Recipes.id notInList recipesWithDays.toList()) and
                         (Recipes.name.lowerCase() like "%${filter.lowercase()}%") and
                         (Recipes.status eq Status.ACTIVE)
-            }.limit(limit).offset(offset)
+            }.limit(limit).offset(offset*limit)
                 .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
                 .map { it.toDTO() }
         }
@@ -661,7 +661,7 @@ class NutritionService() : BaseService() {
             }
 
             val totalCount = sortedQuery.count()
-            val recipes = sortedQuery.limit(limit).offset(offset.toLong())
+            val recipes = sortedQuery.limit(limit).offset(offset.toLong()*limit)
                 .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
                 .map { it.toDTO() }
 
@@ -748,7 +748,7 @@ class NutritionService() : BaseService() {
             }
 
             val totalCount = sortedQuery.count()
-            val recipes = sortedQuery.limit(limit).offset(offset.toLong())
+            val recipes = sortedQuery.limit(limit).offset(offset.toLong()*limit)
                 .with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions)
                 .map { it.toDTO() }
 

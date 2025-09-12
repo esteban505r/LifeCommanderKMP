@@ -88,7 +88,7 @@ class PortfolioService : BaseService() {
 
             Portfolio.find { query }
                 .orderBy(Portfolios.createdDate to SortOrder.DESC)
-                .limit(limit).offset(offset)
+                .limit(limit).offset(offset*limit)
                 .toList()
                 .map { it.toDTO() }
         }
@@ -116,7 +116,7 @@ class PortfolioService : BaseService() {
 
             Portfolio.find { query }
                 .orderBy(Portfolios.createdDate to SortOrder.DESC)
-                .limit(limit).offset(offset)
+                .limit(limit).offset(offset*limit)
                 .toList()
                 .map { it.toDTO() }
         }

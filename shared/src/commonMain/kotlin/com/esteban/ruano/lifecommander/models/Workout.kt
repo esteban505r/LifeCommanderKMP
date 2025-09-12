@@ -29,11 +29,26 @@ data class Exercise(
 )
 
 @Serializable
+data class ExerciseSet(
+    val id: String,
+    val reps: Int,
+    val doneDateTime: String
+)
+
+@Serializable
 data class WorkoutTrack(
     val id: String,
     val workoutDayId: String,
     val doneDateTime: String,
     val status: String = "ACTIVE"
+)
+
+@Serializable
+data class CreateExerciseSetTrackDTO(
+    val exerciseId: String,
+    val workoutDayId: String,
+    val reps: Int,
+    val doneDateTime: String
 )
 
 @Serializable

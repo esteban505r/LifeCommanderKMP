@@ -152,7 +152,7 @@ class TransactionService() : BaseService() {
                     filters.amountSortOrder,
                     absAmount,
                     defaultSortOrder = Transactions.date to SortOrder.DESC
-                ).limit(limit).offset(offset.toLong())
+                ).limit(limit).offset(offset.toLong()*limit)
 
             val results = paginatedResults.map {
                 TransactionResponseDTO(

@@ -61,6 +61,10 @@ kotlinx-coroutines = "1.6.0"
 # Hilt
 hilt = "2.56.2"
 
+#Paging
+
+paging = "3.4.0-alpha03"
+
 # Moshi
 moshi = "1.13.0"
 
@@ -181,6 +185,14 @@ coil-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = 
 
 # Coroutines
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+
+# Paging
+paging = { module = "androidx.paging:paging-common", version.ref = "paging" }
+paging-ktx = { module = "androidx.paging:paging-common-ktx", version.ref = "paging" }
+paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "paging" }
+paging-runtime-ktx = { module = "androidx.paging:paging-runtime-ktx", version.ref = "paging" }
+paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
+paging-compose-desktop = { module = "androidx.paging:paging-compose-desktop", version.ref = "paging" }
 
 # Hilt
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }

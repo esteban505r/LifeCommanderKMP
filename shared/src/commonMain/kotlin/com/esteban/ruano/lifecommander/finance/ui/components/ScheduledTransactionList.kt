@@ -40,14 +40,22 @@ fun ScheduledTransactionList(
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
-    
-    /*LaunchedEffect(listState) {
-        val lastItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
-        if (lastItem != null && lastItem.index >= transactions.size - 5) {
-            onLoadMore()
-        }
+
+    // Handle pagination
+    LaunchedEffect(Unit) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { lastVisibleItemIndex ->
+                println("TRIGGERING LAUNCHED EFFECT")
+                println("$lastVisibleItemIndex")
+                println("${transactions.size}")
+                println(transactions)
+                if (listState.layoutInfo.totalItemsCount>0 && (lastVisibleItemIndex?:0)>0 && lastVisibleItemIndex != null && lastVisibleItemIndex >= listState.layoutInfo.totalItemsCount - 5) {
+                    println("LOADING MORE lastVisibleItem $lastVisibleItemIndex")
+                    onLoadMore()
+                }
+            }
     }
-*/
+
     Box(
         modifier = modifier
             .fillMaxSize()
