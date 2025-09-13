@@ -1,8 +1,7 @@
 package com.esteban.ruano.workout_presentation.ui.viewmodel.state
 
 import com.esteban.ruano.core_ui.view_model.ViewState
-import com.esteban.ruano.workout_domain.model.Exercise
-import com.esteban.ruano.workout_domain.model.WorkoutDay
+import com.esteban.ruano.lifecommander.models.Exercise
 
 data class ExercisesState (
     val exercises: List<Exercise>? = null,

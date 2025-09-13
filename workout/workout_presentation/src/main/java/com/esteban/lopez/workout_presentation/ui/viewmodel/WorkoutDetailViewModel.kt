@@ -9,7 +9,7 @@ import com.esteban.ruano.core.utils.DateUtils.formatElapsedTime
 import com.esteban.ruano.core.utils.DateUtils.formatTime
 import com.esteban.ruano.core.utils.UiEvent
 import com.esteban.ruano.core_ui.view_model.BaseViewModel
-import com.esteban.ruano.workout_domain.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_domain.use_cases.WorkoutUseCases
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
 import com.esteban.ruano.workout_presentation.models.ExerciseInProgress

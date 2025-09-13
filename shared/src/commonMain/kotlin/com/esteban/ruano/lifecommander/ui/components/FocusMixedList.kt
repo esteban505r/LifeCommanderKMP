@@ -53,7 +53,6 @@ fun FocusMixedList(
 
     habitIsDone: (Habit) -> Boolean,
     habitIsOverdue: (Habit) -> Boolean,
-    habitDueMillis: (Habit) -> Long?,
     modifier: Modifier = Modifier
 ) {
     val pullRefreshState =
@@ -87,7 +86,7 @@ fun FocusMixedList(
             focusSectionHeader(title = "Overdue".desc(), show = tasksOverdue.isNotEmpty() || habitsOverdue.isNotEmpty())
             focusMixedSection(
                 tasks = tasksOverdue.sortedByDue(taskDueMillis),
-                habits = habitsOverdue.sortedByDue(habitDueMillis),
+                habits = habitsOverdue.sorted(),
                 // task row
                 onTaskClick = onTaskClick,
                 onTaskCheckedChange = onTaskCheckedChange,
@@ -110,7 +109,7 @@ fun FocusMixedList(
             focusSectionHeader(title = "Pending".desc(), show = tasksPending.isNotEmpty() || habitsPending.isNotEmpty())
             focusMixedSection(
                 tasks = tasksPending.sortedByDue(taskDueMillis),
-                habits = habitsPending.sortedByDue(habitDueMillis),
+                habits = habitsPending.sorted(),
                 onTaskClick = onTaskClick,
                 onTaskCheckedChange = onTaskCheckedChange,
                 onTaskEdit = onTaskEdit,
@@ -131,7 +130,7 @@ fun FocusMixedList(
             focusSectionHeader(title = "Done".desc(), show = tasksDone.isNotEmpty() || habitsDone.isNotEmpty())
             focusMixedSection(
                 tasks = tasksDone.sortedByDue(taskDueMillis),
-                habits = habitsDone.sortedByDue(habitDueMillis),
+                habits = habitsDone.sorted(),
                 onTaskClick = onTaskClick,
                 onTaskCheckedChange = onTaskCheckedChange,
                 onTaskEdit = onTaskEdit,

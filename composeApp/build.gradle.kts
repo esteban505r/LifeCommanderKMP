@@ -18,7 +18,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_18)
         }
     }
-    
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -29,9 +29,9 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     jvm("desktop")
-    
+
     /*@OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         moduleName = "composeApp"
@@ -85,7 +85,7 @@ kotlin {
                 implementation(libs.material3)
 
                 implementation(libs.hilt.android)
-                "kapt"(libs.hilt.android.compiler)
+                configurations.get("kapt").dependencies.add(libs.hilt.android.compiler.get())
 
                 implementation(project(":navigation"))
                 implementation(project(":test-core"))
@@ -121,13 +121,13 @@ kotlin {
                 implementation(libs.okhttp.logging.interceptor)
                 implementation(libs.retrofit.gson)
 
-                "kapt"(libs.room.compiler)
+                configurations.get("kapt").dependencies.add(libs.room.compiler.get())
                 implementation(libs.room.ktx)
                 implementation(libs.room.runtime)
 
                 // Testing
                 testImplementation(project(":test-core"))
-                androidTestImplementation(project(":test-core"))
+                /*androidTestImplementation(project(":test-core"))
 //                kaptAndroidTest(libs.hilt.android.compiler)
 
                 androidTestImplementation(libs.junit.android.ext)
@@ -139,13 +139,12 @@ kotlin {
                 androidTestImplementation(libs.compose.ui.test)
 //                androidTestImplementation(libs.espresso)
 //                androidTestImplementation(libs.hilt.testing)
-                androidTestImplementation(libs.test.runner)
+                androidTestImplementation(libs.test.runner)*/
 
                 implementation("androidx.media3:media3-exoplayer:1.3.1")
                 implementation(libs.vico.compose.multiplatform)
 
                 //Firebase
-                implementation(platform(libs.firebase.bom))
                 implementation(libs.firebase.messaging)
             }
 
@@ -161,7 +160,7 @@ kotlin {
             implementation(libs.ktor.client.json)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.paging)
-            implementation(libs.paging.ktx)
+//            implementation(libs.paging.ktx)
             implementation(libs.kotlinx.datetime)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
@@ -233,6 +232,17 @@ android {
         sourceCompatibility = JavaVersion.VERSION_18
         targetCompatibility = JavaVersion.VERSION_18
     }
+
+    dependencies{
+        androidTestImplementation(project(":test-core"))
+        androidTestImplementation(libs.junit.android.ext)
+        androidTestImplementation(libs.ui.test.manifest)
+        androidTestImplementation(libs.compose.ui.test)
+        androidTestImplementation(libs.truth)
+        androidTestImplementation(libs.turbine)
+        androidTestImplementation(libs.test.runner)
+        implementation(platform(libs.firebase.bom))
+    }
 }
 
 dependencies {
@@ -248,7 +258,7 @@ compose.desktop {
         mainClass = "com.esteban.ruano.lifecommander.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.AppImage, TargetFormat.Msi)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
             packageName = "LifeCommander"
             packageVersion = "1.0.0"
             modules("jdk.unsupported")

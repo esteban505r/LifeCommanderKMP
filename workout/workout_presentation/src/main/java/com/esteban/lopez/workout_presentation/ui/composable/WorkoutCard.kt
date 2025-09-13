@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.theme.Gray
 import com.esteban.ruano.core_ui.theme.Gray3
-import com.esteban.ruano.workout_domain.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
 
 @Composable
 fun WorkoutCard(modifier: Modifier = Modifier, exercises: List<Exercise>) {

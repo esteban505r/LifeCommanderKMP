@@ -34,7 +34,7 @@ import com.esteban.ruano.core_ui.utils.CustomSnackbarVisualsWithUiText
 import com.esteban.ruano.core_ui.utils.SnackbarController
 import com.esteban.ruano.core_ui.utils.SnackbarEvent
 import com.esteban.ruano.core_ui.utils.SnackbarType
-import com.esteban.ruano.workout_domain.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_domain.model.MuscleGroup
 import com.esteban.ruano.workout_domain.model.toMuscleGroupString
 import com.esteban.ruano.workout_presentation.intent.ExercisesIntent

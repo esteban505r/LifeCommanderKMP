@@ -15,7 +15,6 @@ import com.lifecommander.models.Task
 import com.esteban.ruano.workout_data.mappers.toDomainModel
 import com.esteban.ruano.workout_data.mappers.toResponseModel
 import com.esteban.ruano.workout_data.remote.dto.WorkoutDayResponse
-import com.esteban.ruano.workout_domain.model.WorkoutDay
 
 fun SyncResponse.toDomainModel() = SyncDTO(
     tasks = tasks.map { it.toDomainModel(

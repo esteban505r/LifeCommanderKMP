@@ -2,7 +2,7 @@ package com.esteban.ruano.workout_presentation.intent
 
 import com.esteban.ruano.core_ui.view_model.Effect
 import com.esteban.ruano.core_ui.view_model.UserIntent
-import com.esteban.ruano.workout_domain.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
 
 sealed class WorkoutIntent : UserIntent {
     data object FetchDashboard : WorkoutIntent()

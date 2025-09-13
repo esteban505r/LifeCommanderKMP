@@ -3,10 +3,10 @@ import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.helpers.NetworkHelper
 import com.esteban.ruano.core_data.repository.BaseRepository
 import com.esteban.ruano.workout_data.datasources.WorkoutDataSource
-import com.esteban.ruano.workout_domain.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
 import com.esteban.ruano.workout_domain.repository.WorkoutRepository
-import com.esteban.ruano.workout_domain.model.WorkoutDay
+import com.esteban.ruano.workout_domain.model.Workout
 import kotlinx.coroutines.flow.first
 
 class WorkoutRepositoryImpl (
@@ -15,7 +15,7 @@ class WorkoutRepositoryImpl (
     private val networkHelper: NetworkHelper,
     private val preferences: Preferences
 ): BaseRepository(),WorkoutRepository {
-    override suspend fun getWorkoutDays(): Result<List<WorkoutDay>> {
+    override suspend fun getWorkoutDays(): Result<List<Workout>> {
         return doRequest(
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
             lastFetchTime = preferences.loadLastFetchTime().first(),
@@ -25,7 +25,7 @@ class WorkoutRepositoryImpl (
         )
     }
 
-    override suspend fun getWorkoutDayById(workoutId: Int): Result<WorkoutDay> {
+    override suspend fun getWorkoutDayById(workoutId: Int): Result<Workout> {
         return doRequest(
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
             lastFetchTime = preferences.loadLastFetchTime().first(),
@@ -35,7 +35,7 @@ class WorkoutRepositoryImpl (
         )
     }
 
-    override suspend fun getWorkoutDayByNumber(number: Int): Result<WorkoutDay> {
+    override suspend fun getWorkoutDayByNumber(number: Int): Result<Workout> {
         return doRequest(
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
             lastFetchTime = preferences.loadLastFetchTime().first(),
@@ -75,7 +75,7 @@ class WorkoutRepositoryImpl (
         )
     }
 
-    override suspend fun getWorkoutDaysWithExercises(): Result<List<WorkoutDay>> {
+    override suspend fun getWorkoutDaysWithExercises(): Result<List<Workout>> {
         return doRequest(
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
             lastFetchTime = preferences.loadLastFetchTime().first(),
@@ -95,7 +95,7 @@ class WorkoutRepositoryImpl (
         )
     }
 
-    override suspend fun saveWorkoutDay(workoutDay: WorkoutDay): Result<Unit> {
+    override suspend fun saveWorkoutDay(workout: Workout): Result<Unit> {
         return doRequest(
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
             lastFetchTime = preferences.loadLastFetchTime().first(),
@@ -105,7 +105,7 @@ class WorkoutRepositoryImpl (
         )
     }
 
-    override suspend fun updateWorkoutDay(id:String,workoutDay: WorkoutDay): Result<Unit> {
+    override suspend fun updateWorkoutDay(id:String, workout: Workout): Result<Unit> {
         return doRequest(
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
             lastFetchTime = preferences.loadLastFetchTime().first(),

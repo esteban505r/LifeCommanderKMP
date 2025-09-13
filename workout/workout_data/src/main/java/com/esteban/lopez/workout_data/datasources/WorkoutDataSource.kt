@@ -1,15 +1,15 @@
 package com.esteban.ruano.workout_data.datasources
 
-import com.esteban.ruano.workout_domain.model.Exercise
+import com.esteban.ruano.workout_data.local.model.Exercise
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
-import com.esteban.ruano.workout_domain.model.WorkoutDay
+import com.esteban.ruano.workout_domain.model.Workout
 
 interface WorkoutDataSource {
-    suspend fun getWorkoutDays(): List<WorkoutDay>
+    suspend fun getWorkoutDays(): List<Workout>
 
-    suspend fun getWorkoutDaysWithExercises(): List<WorkoutDay>
+    suspend fun getWorkoutDaysWithExercises(): List<Workout>
 
-    suspend fun getWorkoutDayById(workoutId: String): WorkoutDay
+    suspend fun getWorkoutDayById(workoutId: String): Workout
 
     suspend fun getExercisesByWorkoutDay(workoutDayId:String): List<Exercise>
 
@@ -17,13 +17,13 @@ interface WorkoutDataSource {
 
     suspend fun saveExercise(exercise: Exercise): Unit
 
-    suspend fun saveWorkoutDay(workoutDay: WorkoutDay)
+    suspend fun saveWorkoutDay(workout: Workout)
 
-    suspend fun getWorkoutDayByNumber(number: Int): WorkoutDay
+    suspend fun getWorkoutDayByNumber(number: Int): Workout
 
     suspend fun linkExerciseWithWorkoutDay(workoutDayId: String, exerciseId: String)
 
-    suspend fun updateWorkoutDay(workoutDayId: String,workoutDay: WorkoutDay)
+    suspend fun updateWorkoutDay(workoutDayId: String, workout: Workout)
 
     suspend fun getWorkoutDashboard(): WorkoutDashboard
 

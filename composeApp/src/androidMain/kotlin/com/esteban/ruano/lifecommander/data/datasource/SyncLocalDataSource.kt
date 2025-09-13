@@ -1,22 +1,19 @@
 package com.esteban.ruano.lifecommander.data.datasource
 
 import com.esteban.ruano.core_data.local.HistoryTrackDao
-import com.esteban.ruano.core_data.local.addInsertOperation
-import com.esteban.ruano.core_data.local.model.DBActions
 import com.esteban.ruano.core_data.local.model.SyncItemDTO
 import com.esteban.ruano.habits_data.local.HabitsDao
 import com.esteban.ruano.habits_data.local.model.Habit
 import com.esteban.ruano.habits_data.mapper.toDomainModel
 import com.lifecommander.models.Habit as HabitDomain
 import com.esteban.ruano.lifecommander.database.SyncDTO
-import com.esteban.ruano.lifecommander.domain.model.HistoryTrack
 import com.esteban.ruano.tasks_data.local.TaskDao
 import com.esteban.ruano.tasks_data.local.model.Task
 import com.esteban.ruano.tasks_data.mappers.toDomainModel
 import com.lifecommander.models.Task as TaskDomain
 import com.esteban.ruano.workout_data.local.WorkoutDao
 import com.esteban.ruano.workout_data.local.model.WorkoutDay
-import com.esteban.ruano.workout_domain.model.WorkoutDay as WorkoutDayDomain
+import com.esteban.ruano.workout_domain.model.Workout as WorkoutDayDomain
 import com.esteban.ruano.workout_data.mappers.toDomainModel
 
 class SyncLocalDataSource(

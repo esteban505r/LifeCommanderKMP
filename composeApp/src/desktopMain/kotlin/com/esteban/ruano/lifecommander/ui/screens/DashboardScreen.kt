@@ -542,9 +542,6 @@ fun DashboardScreen(
                             habitItemWrapper = { content, _ -> content() },
                             habitIsDone = { it.done?:false },
                             habitIsOverdue = { it.isOverdue() },
-                            habitDueMillis = { it.dateTime?.toLocalDateTime()?.let { ldt ->
-                                ldt.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-                            } },
                             taskIsDone = {it.done},
                             taskIsOverdue = { it.isOverdue() },
                             taskDueMillis = { it.dueAtMillis() },

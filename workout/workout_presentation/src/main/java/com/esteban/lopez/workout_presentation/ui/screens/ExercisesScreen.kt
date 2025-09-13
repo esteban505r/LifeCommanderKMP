@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.AppBar
-import com.esteban.ruano.workout_domain.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_domain.model.MuscleGroup
 import com.esteban.ruano.workout_presentation.intent.ExercisesIntent
 import com.esteban.ruano.workout_presentation.ui.composable.ExerciseCard

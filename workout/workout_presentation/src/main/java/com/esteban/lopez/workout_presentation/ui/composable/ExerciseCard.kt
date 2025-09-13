@@ -18,7 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.esteban.ruano.workout_domain.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
+import com.esteban.ruano.lifecommander.models.ExerciseSet
 
 private val CardBackground = Color(0xFFF7F7FA) // Custom light gray for card
 private val CardBorder = Color(0xFFE0E0E0)
@@ -29,12 +30,31 @@ private val ChipBackground = Color(0xFFF0F0F5)
 fun ExerciseCard(
     modifier: Modifier = Modifier,
     exercise: Exercise,
+    sets: List<ExerciseSet>,
+    workoutDayId: String,
+    // Actions
     onUpdate: (Exercise) -> Unit = {},
     onDelete: (String) -> Unit = {},
     onCompleteExercise: (() -> Unit)? = null,
+    onAddSet: (repsDone: Int, exerciseId: String, workoutDayId: String, onResult: (ExerciseSet?) -> Unit) -> Unit,
+    onUpdateSetReps: (setId: String, newReps: Int) -> Unit,
+    onRemoveSet: (setId: String) -> Unit,
+    // Flags
     isCompleted: Boolean = false,
-    showActionButtons: Boolean = true
+    showActionButtons: Boolean = true,
+    defaultReps: Int = 0
 ) {
+    // UI state
+    var expanded by remember { mutableStateOf(false) }
+    var editableSetId by remember { mutableStateOf<String?>(null) }
+    var desiredRepsText by remember { mutableStateOf(defaultReps.toString()) }
+    var isAdding by remember { mutableStateOf(false) }
+    var errorMsg by remember { mutableStateOf<String?>(null) }
+    var showExpectedSetsDialog by remember { mutableStateOf(false) }
+    var pendingReps by remember { mutableStateOf<Int?>(null) }
+
+    val canMutateSets = !isCompleted
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -49,6 +69,7 @@ fun ExerciseCard(
                 .fillMaxWidth()
                 .padding(18.dp)
         ) {
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -107,6 +128,7 @@ fun ExerciseCard(
                         }
                     }
                 }
+
                 if (showActionButtons) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -154,6 +176,8 @@ fun ExerciseCard(
                     }
                 }
             }
+
+            // Stats row
             if (exercise.baseSets > 0 || exercise.baseReps > 0 || exercise.restSecs > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Divider(
@@ -165,33 +189,211 @@ fun ExerciseCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (exercise.baseSets > 0) {
-                        StatChip(
-                            text = "${exercise.baseSets}",
-                            label = "sets",
-                            backgroundColor = ChipBackground,
-                            textColor = MaterialTheme.colors.primary
-                        )
+                    if ((exercise.baseSets?:0) > 0) {
+                        StatChip("${exercise.baseSets}", "sets", ChipBackground, MaterialTheme.colors.primary)
                     }
-                    if (exercise.baseReps > 0) {
-                        StatChip(
-                            text = "${exercise.baseReps}",
-                            label = "reps",
-                            backgroundColor = ChipBackground,
-                            textColor = MaterialTheme.colors.secondary
-                        )
+                    if ((exercise.baseReps?:0) > 0) {
+                        StatChip("${exercise.baseReps}", "reps", ChipBackground, MaterialTheme.colors.secondary)
                     }
-                    if (exercise.restSecs > 0) {
-                        StatChip(
-                            text = "${exercise.restSecs}",
-                            label = "rest",
-                            backgroundColor = ChipBackground,
-                            textColor = MaterialTheme.colors.error
-                        )
+                    if ((exercise.restSecs?:0) > 0) {
+                        StatChip("${exercise.restSecs}", "rest", ChipBackground, MaterialTheme.colors.error)
+                    }
+                }
+            }
+
+            // Sets accordion
+            Spacer(Modifier.height(10.dp))
+            OutlinedButton(
+                onClick = { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder.copy(alpha = 0.5f))
+            ) {
+                Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null)
+                Spacer(Modifier.width(8.dp))
+                Text("Sets (${sets.size})")
+            }
+
+            if (expanded) {
+                if (isCompleted) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colors.onSurface.copy(alpha = 0.05f))
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Lock, null, tint = MaterialTheme.colors.onSurface.copy(alpha = 0.7f))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Exercise completed — sets are locked.", style = MaterialTheme.typography.caption)
+                    }
+                }
+
+                Spacer(Modifier.height(6.dp))
+
+                // List
+                sets.forEachIndexed { index, set ->
+                    var editText by remember(set.id) { mutableStateOf(set.reps.toString()) }
+                    val isEditable = editableSetId == set.id
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(
+                                if (isEditable) MaterialTheme.colors.primary.copy(alpha = 0.08f)
+                                else MaterialTheme.colors.onSurface.copy(alpha = 0.035f)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Set ${index + 1}", fontWeight = FontWeight.Medium)
+                        Spacer(Modifier.width(10.dp))
+
+                        if (isEditable && canMutateSets) {
+                            TextField(
+                                value = editText,
+                                onValueChange = { v -> editText = v.filter { it.isDigit() }.take(4) },
+                                singleLine = true,
+                                modifier = Modifier.width(88.dp),
+                                textStyle = MaterialTheme.typography.body2,
+                                colors = TextFieldDefaults.textFieldColors(
+                                    backgroundColor = Color.Transparent,
+                                    focusedIndicatorColor = MaterialTheme.colors.primary,
+                                    unfocusedIndicatorColor = MaterialTheme.colors.onSurface.copy(alpha = 0.3f),
+                                    textColor = MaterialTheme.colors.onSurface
+                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text("reps", style = MaterialTheme.typography.caption)
+                            Spacer(Modifier.weight(1f))
+                            IconButton(onClick = {
+                                editText.toIntOrNull()?.let {
+                                    onUpdateSetReps(set.id, it)
+                                    editableSetId = null
+                                    errorMsg = null
+                                } ?: run { errorMsg = "Enter a valid number of reps." }
+                            }) {
+                                Icon(Icons.Default.Check, contentDescription = "Save")
+                            }
+                        } else {
+                            Text("${set.reps} reps", style = MaterialTheme.typography.body2)
+                            Spacer(Modifier.weight(1f))
+                            IconButton(
+                                onClick = { if (canMutateSets) onRemoveSet(set.id) },
+                                enabled = canMutateSets
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Remove",
+                                    tint = if (canMutateSets) MaterialTheme.colors.error
+                                    else MaterialTheme.colors.onSurface.copy(alpha = 0.3f)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (errorMsg != null) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(errorMsg!!, color = MaterialTheme.colors.error, style = MaterialTheme.typography.caption)
+                }
+
+                // Add set
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextField(
+                        value = desiredRepsText,
+                        onValueChange = { desiredRepsText = it.filter { c -> c.isDigit() }.take(4) },
+                        label = { Text("Reps") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        enabled = canMutateSets && !isAdding
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            if (!canMutateSets) return@Button
+                            val reps = desiredRepsText.toIntOrNull()
+                            if (reps == null) {
+                                errorMsg = "Enter a valid number of reps."
+                                return@Button
+                            }
+                            val expected = exercise.baseSets
+                            if (expected > 0 && sets.size >= expected) {
+                                pendingReps = reps
+                                showExpectedSetsDialog = true
+                                return@Button
+                            }
+                            isAdding = true
+                            errorMsg = null
+                            onAddSet(reps, exercise.id ?: return@Button, workoutDayId) { newSet ->
+                                isAdding = false
+                                if (newSet != null) {
+                                    editableSetId = newSet.id
+                                    desiredRepsText = defaultReps.toString()
+                                } else {
+                                    errorMsg = "Could not add set. Try again."
+                                }
+                            }
+                        },
+                        enabled = canMutateSets && !isAdding
+                    ) {
+                        if (isAdding) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
+                            )
+                        } else {
+                            Icon(Icons.Default.Add, null)
+                            Spacer(Modifier.width(6.dp))
+                            Text("Add")
+                        }
                     }
                 }
             }
         }
+    }
+
+    // Expected sets warning
+    if (showExpectedSetsDialog) {
+        AlertDialog(
+            onDismissRequest = { showExpectedSetsDialog = false; pendingReps = null },
+            title = { Text("Expected sets reached") },
+            text = {
+                Text("You’ve already completed ${exercise.baseSets} set(s) for ${exercise.name}. Add another?")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val reps = pendingReps ?: return@TextButton
+                    showExpectedSetsDialog = false
+                    pendingReps = null
+                    // proceed
+                    isAdding = true
+                    errorMsg = null
+                    onAddSet(reps, exercise.id ?: return@TextButton, workoutDayId) { newSet ->
+                        isAdding = false
+                        if (newSet != null) {
+                            editableSetId = newSet.id
+                            desiredRepsText = defaultReps.toString()
+                        } else {
+                            errorMsg = "Could not add set. Try again."
+                        }
+                    }
+                }) { Text("Add anyway") }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showExpectedSetsDialog = false; pendingReps = null }) {
+                    Text("Cancel")
+                }
+            },
+            shape = RoundedCornerShape(16.dp)
+        )
     }
 }
 

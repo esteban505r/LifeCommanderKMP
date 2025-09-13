@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.AppBar
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
-import com.esteban.ruano.workout_domain.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
 import com.esteban.ruano.workout_presentation.ui.composable.ExerciseCard
 import com.esteban.ruano.workout_presentation.ui.composable.WorkoutCompletionDialog

@@ -2,11 +2,10 @@ package com.esteban.ruano.workout_data.mappers
 
 import com.esteban.ruano.workout_domain.model.MuscleGroup
 import com.esteban.ruano.workout_data.remote.dto.ExerciseResponse
-import com.esteban.ruano.workout_domain.model.Exercise
 import com.esteban.ruano.workout_domain.model.toMuscleGroupString
 import com.esteban.ruano.workout_data.local.model.Exercise as LocalExercise
 
-fun LocalExercise.toExercise(): Exercise {
+fun LocalExercise.toExercise(): LocalExercise {
     return Exercise(
         id = id?.toString()?:"-1",
         name = name,

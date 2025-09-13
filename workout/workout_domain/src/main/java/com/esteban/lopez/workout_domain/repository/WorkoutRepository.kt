@@ -1,22 +1,22 @@
 package com.esteban.ruano.workout_domain.repository
 
-import com.esteban.ruano.workout_domain.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
-import com.esteban.ruano.workout_domain.model.WorkoutDay
+import com.esteban.ruano.workout_domain.model.Workout
 
 
 interface WorkoutRepository {
     suspend fun getWorkoutDays(
 
-    ): Result<List<WorkoutDay>>
+    ): Result<List<Workout>>
 
     suspend fun getWorkoutDayById(
         workoutId: Int
-    ): Result<WorkoutDay>
+    ): Result<Workout>
 
     suspend fun getWorkoutDayByNumber(
         number: Int
-    ): Result<WorkoutDay>
+    ): Result<Workout>
 
     suspend fun getExercisesByWorkoutDay(
         workoutDayId:Int
@@ -30,19 +30,19 @@ interface WorkoutRepository {
     ): Result<List<Exercise>>
 
     suspend fun getWorkoutDaysWithExercises(
-    ): Result<List<WorkoutDay>>
+    ): Result<List<Workout>>
 
     suspend fun saveExercise(
         exercise: Exercise
     ): Result<Unit>
 
     suspend fun saveWorkoutDay(
-        workoutDay: WorkoutDay
+        workout: Workout
     ): Result<Unit>
 
     suspend fun updateWorkoutDay(
         id: String,
-        workoutDay: WorkoutDay
+        workout: Workout
     ): Result<Unit>
 
     suspend fun linkExerciseWithWorkoutDay(

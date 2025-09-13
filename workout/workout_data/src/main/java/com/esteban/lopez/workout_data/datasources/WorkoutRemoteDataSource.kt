@@ -1,23 +1,23 @@
 package com.esteban.ruano.workout_data.datasources
 
+import com.esteban.ruano.workout_data.local.model.Exercise
 import com.esteban.ruano.workout_data.mappers.toExercise
 import com.esteban.ruano.workout_data.mappers.toExerciseResponse
 import com.esteban.ruano.workout_data.mappers.toDomainModel
 import com.esteban.ruano.workout_data.mappers.toResponseModel
 import com.esteban.ruano.workout_data.remote.WorkoutApi
-import com.esteban.ruano.workout_domain.model.Exercise
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
-import com.esteban.ruano.workout_domain.model.WorkoutDay
+import com.esteban.ruano.workout_domain.model.Workout
 
 class WorkoutRemoteDataSource(
     private val api:WorkoutApi
 ): WorkoutDataSource {
-    override suspend fun getWorkoutDays(): List<WorkoutDay> = api.getWorkoutDays().map { it.toDomainModel() }
-    override suspend fun getWorkoutDaysWithExercises(): List<WorkoutDay> {
+    override suspend fun getWorkoutDays(): List<Workout> = api.getWorkoutDays().map { it.toDomainModel() }
+    override suspend fun getWorkoutDaysWithExercises(): List<Workout> {
         return api.getWorkoutDays().map { it.toDomainModel() }
     }
 
-    override suspend fun getWorkoutDayById(workoutId: String): WorkoutDay {
+    override suspend fun getWorkoutDayById(workoutId: String): Workout {
         return api.getWorkoutDayById(workoutId).toDomainModel()
     }
 
@@ -32,11 +32,11 @@ class WorkoutRemoteDataSource(
     override suspend fun saveExercise(exercise: Exercise) = api.saveExercise(exercise.toExerciseResponse())
 
 
-    override suspend fun saveWorkoutDay(workoutDay: WorkoutDay) {
+    override suspend fun saveWorkoutDay(workout: Workout) {
         api.saveWorkoutDay(workoutDay.toResponseModel())
     }
 
-    override suspend fun getWorkoutDayByNumber(number: Int): WorkoutDay {
+    override suspend fun getWorkoutDayByNumber(number: Int): Workout {
         return api.getWorkoutDayByNumber(number).toDomainModel()
     }
 
@@ -44,7 +44,7 @@ class WorkoutRemoteDataSource(
         api.linkExerciseWithWorkoutDay(workoutDayId, exerciseId)
     }
 
-    override suspend fun updateWorkoutDay(workoutDayId:String,workoutDay: WorkoutDay) {
+    override suspend fun updateWorkoutDay(workoutDayId:String, workout: Workout) {
         api.updateWorkoutDay(workoutDayId,workoutDay.toResponseModel())
     }
 

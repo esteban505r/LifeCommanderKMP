@@ -1,26 +1,26 @@
 package com.esteban.ruano.workout_data.datasources
 
 import com.esteban.ruano.workout_data.local.WorkoutDao
+import com.esteban.ruano.workout_data.local.model.Exercise
 import com.esteban.ruano.workout_data.mappers.toExercise
 import com.esteban.ruano.workout_data.mappers.toLocalExercise
 import com.esteban.ruano.workout_data.mappers.toLocalWorkoutDay
 import com.esteban.ruano.workout_data.mappers.toDomainModel
-import com.esteban.ruano.workout_domain.model.Exercise
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
-import com.esteban.ruano.workout_domain.model.WorkoutDay
+import com.esteban.ruano.workout_domain.model.Workout
 
 class WorkoutLocalDataSource(
     private val workoutDao: WorkoutDao
 ): WorkoutDataSource {
-    override suspend fun getWorkoutDays(): List<WorkoutDay> {
+    override suspend fun getWorkoutDays(): List<Workout> {
         return workoutDao.getWorkoutDays().map { it.toDomainModel() }
     }
 
-    override suspend fun getWorkoutDaysWithExercises(): List<WorkoutDay> {
+    override suspend fun getWorkoutDaysWithExercises(): List<Workout> {
         return workoutDao.getWorkoutDaysWithExercises().map { it.toDomainModel() }
     }
 
-    override suspend fun getWorkoutDayById(workoutId: String): WorkoutDay {
+    override suspend fun getWorkoutDayById(workoutId: String): Workout {
         return workoutDao.getWorkoutDayById(workoutId).toDomainModel()
     }
 
@@ -42,13 +42,13 @@ class WorkoutLocalDataSource(
         )
     }
 
-    override suspend fun saveWorkoutDay(workoutDay: WorkoutDay) {
+    override suspend fun saveWorkoutDay(workout: Workout) {
         workoutDao.saveWorkoutDay(
             workoutDay.toLocalWorkoutDay()
         )
     }
 
-    override suspend fun getWorkoutDayByNumber(number: Int): WorkoutDay {
+    override suspend fun getWorkoutDayByNumber(number: Int): Workout {
         return workoutDao.getWorkoutDayByNumber(number).toDomainModel()
     }
 
@@ -56,7 +56,7 @@ class WorkoutLocalDataSource(
         workoutDao.linkExerciseWithWorkoutDay(workoutDayId, exerciseId)
     }
 
-    override suspend fun updateWorkoutDay(workoutDayId: String, workoutDay: WorkoutDay) {
+    override suspend fun updateWorkoutDay(workoutDayId: String, workout: Workout) {
         throw UnsupportedOperationException("Local data source does not support this operation")
     }
 

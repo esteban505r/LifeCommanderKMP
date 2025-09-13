@@ -1,12 +1,12 @@
 package com.esteban.ruano.workout_presentation.ui.viewmodel.state
 
 import com.esteban.ruano.core_ui.view_model.ViewState
-import com.esteban.ruano.workout_domain.model.WorkoutDay
+import com.esteban.ruano.workout_domain.model.Workout
 
 data class WorkoutState(
-    val workoutDays: List<WorkoutDay> = emptyList(),
+    val workouts: List<Workout> = emptyList(),
     val totalExercises: Long = 0,
-    val selectedWorkoutDay: WorkoutDay? = null,
+    val selectedWorkout: Workout? = null,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isError: Boolean = false,

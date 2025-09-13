@@ -4,12 +4,12 @@ import com.esteban.ruano.workout_data.local.model.WorkoutDayWithExercises
 import com.esteban.ruano.workout_data.remote.dto.WorkoutDashboardResponse
 import com.esteban.ruano.workout_data.remote.dto.WorkoutDayResponse
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
-import com.esteban.ruano.workout_domain.model.WorkoutDay
+import com.esteban.ruano.workout_domain.model.Workout
 import com.esteban.ruano.workout_data.local.model.WorkoutDay as LocalWorkoutDay
 
 
-fun WorkoutDayResponse.toDomainModel():WorkoutDay{
-    return WorkoutDay(
+fun WorkoutDayResponse.toDomainModel():Workout{
+    return Workout(
         id = id?.toString()?:"",
         day = day,
         time = time,
@@ -18,7 +18,7 @@ fun WorkoutDayResponse.toDomainModel():WorkoutDay{
     )
 }
 
-fun WorkoutDay.toResponseModel():WorkoutDayResponse{
+fun Workout.toResponseModel():WorkoutDayResponse{
     return WorkoutDayResponse(
         id = id?:"",
         day = day,
@@ -28,8 +28,8 @@ fun WorkoutDay.toResponseModel():WorkoutDayResponse{
     )
 }
 
-fun LocalWorkoutDay.toDomainModel():WorkoutDay{
-    return WorkoutDay(
+fun LocalWorkoutDay.toDomainModel():Workout{
+    return Workout(
         id = id?.toString()?:"",
         day = day,
         time = time,
@@ -38,7 +38,7 @@ fun LocalWorkoutDay.toDomainModel():WorkoutDay{
     )
 }
 
-fun WorkoutDay.toLocalWorkoutDay():LocalWorkoutDay{
+fun Workout.toLocalWorkoutDay():LocalWorkoutDay{
     return LocalWorkoutDay(
         id = 0,
         day = day,
@@ -47,8 +47,8 @@ fun WorkoutDay.toLocalWorkoutDay():LocalWorkoutDay{
     )
 }
 
-fun WorkoutDayWithExercises.toDomainModel():WorkoutDay{
-    return WorkoutDay(
+fun WorkoutDayWithExercises.toDomainModel():Workout{
+    return Workout(
         id = workoutDay.id?.toString()?:"",
         day = workoutDay.day,
         time = workoutDay.time,

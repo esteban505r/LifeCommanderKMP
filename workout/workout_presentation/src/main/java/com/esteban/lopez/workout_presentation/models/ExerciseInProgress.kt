@@ -1,6 +1,6 @@
 package com.esteban.ruano.workout_presentation.models
 
-import com.esteban.ruano.workout_domain.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
 
 data class ExerciseInProgress(
     val exercise: Exercise,

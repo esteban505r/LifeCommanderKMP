@@ -1,6 +1,8 @@
 package com.esteban.ruano.workout_domain.model
 
-data class WorkoutDay(
+import com.esteban.ruano.lifecommander.models.Exercise
+
+data class Workout(
     val id: String? = null,
     val day: Int,
     val name:String,
