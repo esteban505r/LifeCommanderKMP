@@ -16,6 +16,7 @@ import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.sql.Connection
@@ -27,6 +28,15 @@ class TasksServiceTest {
 
 
     private lateinit var service : TaskService
+
+    @After
+    fun deleteAll(){
+        transaction {
+            Tasks.deleteAll()
+            Reminders.deleteAll()
+            Users.deleteAll()
+        }
+    }
 
     @Before
     fun setup() {
