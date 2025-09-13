@@ -105,9 +105,7 @@ fun NewExerciseScreen(
                                             restSecs = restSecs.toInt(),
                                             baseSets = baseSets.toInt(),
                                             baseReps = baseReps.toInt(),
-                                            muscleGroup = MuscleGroup.fromValue(muscleGroup),
-                                            equipment = emptyList(),
-                                            resource = null,
+                                            muscleGroup = muscleGroup,
                                         )
                                     )
                                 )

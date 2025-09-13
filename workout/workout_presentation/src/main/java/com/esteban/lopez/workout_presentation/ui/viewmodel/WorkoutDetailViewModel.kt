@@ -59,7 +59,7 @@ class WorkoutDetailViewModel @Inject constructor(
     private fun updateWorkoutDayExercises(id: String, exercises: List<Exercise>) {
         viewModelScope.launch {
             val result = workoutUseCases.updateWorkoutDay(
-                id, currentState.workoutDay?.copy(
+                id, currentState.workout?.copy(
                     exercises = exercises
                 )?: return@launch
             )
@@ -101,7 +101,7 @@ private fun doRep(id: String) {
         val updatedExercises = currentState.exercisesInProgress.map { exerciseInProgress ->
             if (exerciseInProgress.exercise.id == id) {
                 val (repsDone, setsDone) = increaseRepsAndSetsDone(exerciseInProgress)
-                val done = setsDone >= exerciseInProgress.exercise.baseSets
+                val done = setsDone >= (exerciseInProgress.exercise.baseSets?:0)
                 exerciseInProgress.copy(
                     setsDone = setsDone,
                     repsDone = repsDone,
@@ -113,7 +113,7 @@ private fun doRep(id: String) {
         }
 
         val toUpdate = updatedExercises.first { it.exercise.id == id }
-        if (toUpdate.setsDone >= toUpdate.exercise.baseSets) {
+        if (toUpdate.setsDone >= (toUpdate.exercise.baseSets?:0)) {
             sendEffect {
                 WorkoutDayDetailEffect.AnimateToNextExercise
             }
@@ -125,12 +125,12 @@ private fun doRep(id: String) {
 }
 
 private fun increaseRepsAndSetsDone(exerciseInProgress: ExerciseInProgress): Pair<Int, Int> {
-    return if (exerciseInProgress.repsDone < exerciseInProgress.exercise.baseReps) {
+    return if (exerciseInProgress.repsDone < (exerciseInProgress.exercise.baseReps?:0)) {
         Pair(exerciseInProgress.repsDone + 1, exerciseInProgress.setsDone)
     } else {
-        if (exerciseInProgress.setsDone < exerciseInProgress.exercise.baseSets) {
+        if (exerciseInProgress.setsDone < (exerciseInProgress.exercise.baseSets?:0)) {
             val repsDone =
-                if (exerciseInProgress.setsDone + 1 >= exerciseInProgress.exercise.baseSets) exerciseInProgress.repsDone else 0
+                if (exerciseInProgress.setsDone + 1 >= (exerciseInProgress.exercise.baseSets?:0)) exerciseInProgress.repsDone else 0
             Pair(repsDone, exerciseInProgress.setsDone + 1)
         } else {
             Pair(exerciseInProgress.repsDone, exerciseInProgress.setsDone)
@@ -143,7 +143,7 @@ private fun decreaseRepsAndSetsDone(exerciseInProgress: ExerciseInProgress): Pai
         Pair(exerciseInProgress.repsDone - 1, exerciseInProgress.setsDone)
     } else {
         if (exerciseInProgress.setsDone > 0) {
-            Pair(exerciseInProgress.exercise.baseReps, exerciseInProgress.setsDone - 1)
+            Pair((exerciseInProgress.exercise.baseReps?:0), exerciseInProgress.setsDone - 1)
         } else {
             Pair(0, 0)
         }
@@ -160,7 +160,7 @@ private fun fetchWorkoutDayById(
             onSuccess = {
                 emitState {
                     copy(
-                        workoutDay = it,
+                        workout = it,
                     )
                 }
             },

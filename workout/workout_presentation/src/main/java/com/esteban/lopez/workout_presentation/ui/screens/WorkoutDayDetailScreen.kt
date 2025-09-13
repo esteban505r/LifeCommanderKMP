@@ -73,15 +73,15 @@ fun WorkoutDayDetailScreen(
         })
 
     // Fetch completed exercises when workout day is loaded
-    LaunchedEffect(state.workoutDay?.id) {
-        state.workoutDay?.id?.let { dayId ->
+    LaunchedEffect(state.workout?.id) {
+        state.workout?.id?.let { dayId ->
             userIntent(WorkoutIntent.GetCompletedExercisesForDay(dayId))
         }
     }
 
     Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState)) {
 
-        val exercises = state.workoutDay?.exercises ?: emptyList()
+        val exercises = state.workout?.exercises ?: emptyList()
         if (exercises.isEmpty()) {
             NotFoundScreen(
                 context = context,
@@ -168,12 +168,23 @@ fun WorkoutDayDetailScreen(
                                 userIntent(WorkoutIntent.DeleteExercise(exerciseId))
                             },
                             onCompleteExercise = {
-                                state.workoutDay?.id?.let { dayId ->
+                                state.workout?.id?.let { dayId ->
                                     userIntent(WorkoutIntent.CompleteExerciseById(exercise.id ?: "", dayId))
                                 }
                             },
                             isCompleted = state.completedExercises.contains(exercise.id),
-                            showActionButtons = true
+                            showActionButtons = true,
+                            sets = listOf(),
+                            workoutDayId = "",
+                            onAddSet = {_,_,_,_ ->
+
+                            },
+                            onUpdateSetReps = { _,_ ->
+
+                            },
+                            onRemoveSet = {
+
+                            },
                         )
                     }
                     
@@ -258,12 +269,12 @@ fun WorkoutDayDetailScreen(
             show = showCompletionDialog,
             onDismiss = { showCompletionDialog = false },
             onConfirm = {
-                state.workoutDay?.day?.let { day ->
+                state.workout?.day?.let { day ->
                     userIntent(WorkoutIntent.CompleteWorkout(day))
                 }
                 showCompletionDialog = false
             },
-            workoutName = state.workoutDay?.name ?: "Workout",
+            workoutName = state.workout?.name ?: "Workout",
             totalExercises = exercises.size,
             completedExercises = state.completedExercises.size
         )

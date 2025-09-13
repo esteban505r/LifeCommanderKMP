@@ -43,7 +43,7 @@ fun WorkoutDayProgressScreen(
     pagerState: PagerState
 ) {
 
-    val exercises = state.workoutDay?.exercises ?: emptyList()
+    val exercises = state.workout?.exercises ?: emptyList()
     val inProgress = state.exercisesInProgress
 
 
@@ -53,7 +53,7 @@ fun WorkoutDayProgressScreen(
         HorizontalPager(state = pagerState) { index ->
             val done = inProgress.firstOrNull {
                 it.exercise.id == exercises[index].id
-                        && it.setsDone >= exercises[index].baseSets
+                        && it.setsDone >= (exercises[index].baseSets?:0)
             } != null
             ExerciseProgress(
                 inProgress = state.exercisesInProgress[index],
@@ -88,7 +88,7 @@ fun ExerciseProgress(
     onRepDone: () -> Unit,
     onRepUndone: () -> Unit
 ) {
-    val done = inProgress.setsDone >= inProgress.exercise.baseSets
+    val done = inProgress.setsDone >= (inProgress.exercise.baseSets?:0)
     val repsDone = inProgress.repsDone
     val setsDone = inProgress.setsDone
     Column(
@@ -135,7 +135,7 @@ fun ExerciseProgress(
                 modifier = Modifier.size(150.dp)
             ) {
                 CircularProgressIndicator(
-                    progress = (repsDone.toFloat() / inProgress.exercise.baseReps),
+                    progress = (repsDone.toFloat() / (inProgress.exercise.baseReps?:0)),
                     strokeWidth = 4.dp,
                     color = MaterialTheme.colors.primaryVariant,
                     modifier = Modifier.fillMaxSize()

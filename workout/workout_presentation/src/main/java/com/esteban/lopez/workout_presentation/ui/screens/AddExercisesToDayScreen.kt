@@ -2,25 +2,33 @@ package com.esteban.ruano.workout_presentation.ui.screens
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DismissDirection.EndToStart
 import androidx.compose.material.DismissValue.DismissedToStart
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
+import androidx.compose.material.IconToggleButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -35,6 +43,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -73,7 +82,7 @@ fun AddExerciseToDayScreen(
 
     LaunchedEffect(workoutDayState) {
         workoutDayExercises =
-            workoutDayState.workoutDay?.exercises
+            workoutDayState.workout?.exercises
                 ?: emptyList()
     }
 
@@ -215,9 +224,19 @@ private fun ColumnScope.WorkoutExercises(
                     state = dismissState,
                 ) {
                     ExerciseCard(
-                        exercise = workoutExercises[index], modifier = Modifier.background(
-                            MaterialTheme.colors.background
-                        )
+                        exercise = workoutExercises[index],
+                        modifier = Modifier.background(MaterialTheme.colors.background),
+                        sets = emptyList(),                 // no sets shown
+                        workoutDayId = "",                  // unused since sets are hidden
+                        onUpdate = { },
+                        onDelete = {},
+                        onCompleteExercise = {  },
+                        onAddSet = { _, _, _, onResult -> onResult(null) }, // no-op
+                        onUpdateSetReps = { _, _ -> },      // no-op
+                        onRemoveSet = { _ -> },             // no-op
+                        isCompleted = false,
+                        showActionButtons = true,
+                        defaultReps = 0
                     )
                 }
             }
@@ -238,6 +257,10 @@ private fun ColumnScope.AllExercises(
     workoutExercises: List<Exercise> = emptyList(),
     onSelectedExercise: (Exercise, Boolean) -> Unit
 ) {
+    val selectedIds = remember(workoutExercises) {
+        workoutExercises.mapNotNull { it.id }.toSet()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -253,10 +276,69 @@ private fun ColumnScope.AllExercises(
                     modifier = Modifier.padding(16.dp)
                 )
             }
-            items(exercises.size) { index ->
-                ExerciseCard(exercise = exercises[index],)
+            items(exercises.size, key = { exercises[it].id ?: "" }) { exerciseIndex ->
+                val exercise = exercises[exerciseIndex]
+                val id = exercise.id
+                val isSelected = id != null && selectedIds.contains(id)
+
+                // Row wrapper: card + trailing toggle
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(MaterialTheme.colors.background)
+                        .clickable {
+                            // Toggle on card tap too (when it has an id)
+                            if (id != null) onSelectedExercise(exercise, !isSelected)
+                        },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Your simple mobile card (no extra actions)
+                    ExerciseCard(
+                        exercise = exercise,
+                        sets = listOf(),
+                        workoutDayId = "",
+                        onAddSet = {_,_,_,_ ->
+
+                        },
+                        onUpdate = {
+
+                        },
+                        onUpdateSetReps = { _,_ ->
+
+                        },
+                        onRemoveSet = {
+
+                        },
+                        isCompleted = false,
+                        showActionButtons = false,
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(MaterialTheme.colors.background)
+                    )
+
+                    // Trailing toggle button (Add/Remove)
+                    IconToggleButton(
+                        checked = isSelected,
+                        onCheckedChange = { checked ->
+                            if (id != null) onSelectedExercise(exercise, checked)
+                        },
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isSelected) Icons.Filled.CheckCircle else Icons.Outlined.AddCircle,
+                            contentDescription = if (isSelected) "Remove from workout" else "Add to workout",
+                            tint = if (isSelected) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
             }
+            item { Spacer(Modifier.height(64.dp)) }
         }
+
         if (exercises.isEmpty()) {
             Text(
                 text = stringResource(R.string.add_some_exercises),
@@ -266,6 +348,8 @@ private fun ColumnScope.AllExercises(
     }
 }
 
+
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Preview
 @Composable
@@ -274,46 +358,42 @@ fun PreviewAddExercisesToDayScreen() {
         AddExercisesComponent(
             listOf(
                 Exercise(
+                    id = "",
                     name = "Bench Press",
                     description = "Bench Press",
                     restSecs = 60,
                     baseSets = 3,
                     baseReps = 10,
-                    muscleGroup = MuscleGroup.CORE,
-                    equipment = emptyList(),
-                    resource = null
+                    muscleGroup = MuscleGroup.CORE.toString(),
                 ),
                 Exercise(
+                    id = "",
                     name = "Squats",
                     description = "Squats",
                     restSecs = 60,
                     baseSets = 3,
                     baseReps = 10,
-                    muscleGroup = MuscleGroup.LEGS,
-                    equipment = emptyList(),
-                    resource = null
+                    muscleGroup = MuscleGroup.LEGS.toString(),
                 ),
                 Exercise(
+                    id = "",
                     name = "Deadlift",
                     description = "Deadlift",
                     restSecs = 60,
                     baseSets = 3,
                     baseReps = 10,
-                    muscleGroup = MuscleGroup.UPPER_BODY,
-                    equipment = emptyList(),
-                    resource = null
+                    muscleGroup = MuscleGroup.UPPER_BODY.toString(),
                 ),
             ),
             listOf(
                 Exercise(
+                    id = "",
                     name = "Bench Press",
                     description = "Bench Press",
                     restSecs = 60,
                     baseSets = 3,
                     baseReps = 10,
-                    muscleGroup = MuscleGroup.CORE,
-                    equipment = emptyList(),
-                    resource = null
+                    muscleGroup = MuscleGroup.CORE.toString(),
                 ),
             ),
             onWorkoutDayExercisesChange = {}

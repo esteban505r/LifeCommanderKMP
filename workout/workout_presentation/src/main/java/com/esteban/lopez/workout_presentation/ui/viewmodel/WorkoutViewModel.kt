@@ -23,7 +23,7 @@ class WorkoutViewModel @Inject constructor(
                 {
                     emitState {
                         currentState.copy(
-                            workoutDays = it.workoutDays,
+                            workouts = it.workouts,
                             totalExercises = it.totalExercises,
                         )
                     }

@@ -59,14 +59,14 @@ fun WorkoutDayWithExercises.toDomainModel():Workout{
 
 fun WorkoutDashboardResponse.toDomainModel():WorkoutDashboard{
     return WorkoutDashboard(
-        workoutDays = workoutDays.map { it.toDomainModel() },
+        workouts = workoutDays.map { it.toDomainModel() },
         totalExercises = totalExercises
     )
 }
 
 fun WorkoutDashboard.toResponseModel():WorkoutDashboardResponse{
     return WorkoutDashboardResponse(
-        workoutDays = workoutDays.map { it.toResponseModel() },
+        workoutDays = workouts.map { it.toResponseModel() },
         totalExercises = totalExercises
     )
 }

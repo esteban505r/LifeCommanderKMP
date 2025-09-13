@@ -1,7 +1,7 @@
 package com.esteban.ruano.workout_data.datasources
 
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_data.local.WorkoutDao
-import com.esteban.ruano.workout_data.local.model.Exercise
 import com.esteban.ruano.workout_data.mappers.toExercise
 import com.esteban.ruano.workout_data.mappers.toLocalExercise
 import com.esteban.ruano.workout_data.mappers.toLocalWorkoutDay
@@ -44,7 +44,7 @@ class WorkoutLocalDataSource(
 
     override suspend fun saveWorkoutDay(workout: Workout) {
         workoutDao.saveWorkoutDay(
-            workoutDay.toLocalWorkoutDay()
+            workout.toLocalWorkoutDay()
         )
     }
 

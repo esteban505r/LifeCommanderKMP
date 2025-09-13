@@ -75,7 +75,7 @@ fun ExerciseDetailScreen(
             DetailRow(label = "Base Reps", value = exercise?.baseReps.toString() ?: "")
             DetailRow(
                 label = "Muscle Group",
-                value = exercise?.muscleGroup?.toResourceString(context) ?: ""
+                value = exercise?.muscleGroup ?: ""
             )
 
             // You could also add more info like equipment if you have it.

@@ -14,5 +14,6 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":core-data"))
     implementation(project(":workout:workout_domain"))
+    implementation(projects.shared)
     implementation(libs.kotlinx.coroutines.core)
 }

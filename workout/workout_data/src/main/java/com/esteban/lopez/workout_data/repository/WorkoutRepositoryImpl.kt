@@ -99,8 +99,8 @@ class WorkoutRepositoryImpl (
         return doRequest(
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
             lastFetchTime = preferences.loadLastFetchTime().first(),
-            localFetch = { localDataSource.saveWorkoutDay(workoutDay) },
-            remoteFetch = { remoteDataSource.saveWorkoutDay(workoutDay) },
+            localFetch = { localDataSource.saveWorkoutDay(workout) },
+            remoteFetch = { remoteDataSource.saveWorkoutDay(workout) },
             forceRefresh = false,
         )
     }
@@ -109,8 +109,8 @@ class WorkoutRepositoryImpl (
         return doRequest(
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
             lastFetchTime = preferences.loadLastFetchTime().first(),
-            localFetch = { localDataSource.updateWorkoutDay(id,workoutDay) },
-            remoteFetch = { remoteDataSource.updateWorkoutDay(id,workoutDay) },
+            localFetch = { localDataSource.updateWorkoutDay(id,workout) },
+            remoteFetch = { remoteDataSource.updateWorkoutDay(id,workout) },
             forceRefresh = false,
         )
     }

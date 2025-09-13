@@ -57,7 +57,7 @@ fun WorkoutScreen(
     val context = LocalContext.current
 
     val today =
-        state.workoutDays.firstOrNull { it.day == LocalDate.now().dayOfWeek.value }
+        state.workouts.firstOrNull { it.day == LocalDate.now().dayOfWeek.value }
 
     Scaffold (
     ) {
@@ -198,7 +198,7 @@ fun WorkoutScreen(
                 }
                 items(DAYS_OF_THE_WEEK) { dayIndex ->
                     val day = dayIndex + 1
-                    val workoutDay = state.workoutDays.firstOrNull { it.day == day }
+                    val workoutDay = state.workouts.firstOrNull { it.day == day }
                     val isCompleted = state.weeklyWorkoutsCompleted.contains(day)
                     
                     ListTile(

@@ -1,6 +1,6 @@
 [versions]
 # Android
-agp = "8.9.3"
+agp = "8.8.1"
 android-compileSdk = "35"
 android-minSdk = "26"
 android-targetSdk = "35"
@@ -16,11 +16,11 @@ firebase-admin = "9.5.0"
 
 
 # Kotlin
-kotlin = "2.2.20"
+kotlin = "2.2.10"
 kotlinx-datetime = "0.6.2"
 kotlin-test = "2.1.21"
 kotlinx-coroutines-test = "1.10.1"
-kotlin-serialization = "2.2.20"
+kotlin-serialization = "2.2.10"
 
 #Calendar
 calendar = "2.6.0-beta02"

@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.models.Exercise
@@ -115,9 +117,9 @@ fun ExerciseCard(
                                 )
                             }
                         }
-                        if (exercise.description.isNotBlank()) {
+                        if (exercise.description?.isEmpty() == false) {
                             Text(
-                                exercise.description,
+                                exercise.description?:"",
                                 style = MaterialTheme.typography.body2.copy(
                                     color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                                 ),
@@ -178,7 +180,7 @@ fun ExerciseCard(
             }
 
             // Stats row
-            if (exercise.baseSets > 0 || exercise.baseReps > 0 || exercise.restSecs > 0) {
+            if ((exercise.baseSets?:0) > 0 || (exercise.baseReps?:0) > 0 || (exercise.restSecs?:0) > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Divider(
                     color = CardBorder.copy(alpha = 0.3f),
@@ -266,7 +268,7 @@ fun ExerciseCard(
                                     unfocusedIndicatorColor = MaterialTheme.colors.onSurface.copy(alpha = 0.3f),
                                     textColor = MaterialTheme.colors.onSurface
                                 ),
-                                keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                             )
                             Spacer(Modifier.width(6.dp))
                             Text("reps", style = MaterialTheme.typography.caption)
@@ -324,7 +326,7 @@ fun ExerciseCard(
                                 return@Button
                             }
                             val expected = exercise.baseSets
-                            if (expected > 0 && sets.size >= expected) {
+                            if ((expected?:0) > 0 && sets.size >= (expected?:0)) {
                                 pendingReps = reps
                                 showExpectedSetsDialog = true
                                 return@Button

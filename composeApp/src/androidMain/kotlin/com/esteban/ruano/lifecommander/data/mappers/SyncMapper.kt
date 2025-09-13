@@ -8,6 +8,7 @@ import com.lifecommander.models.Habit
 import com.esteban.ruano.lifecommander.data.remote.model.SyncItemResponse
 import com.esteban.ruano.lifecommander.data.remote.model.SyncResponse
 import com.esteban.ruano.lifecommander.database.SyncDTO
+import com.esteban.ruano.lifecommander.models.Workout
 import com.esteban.ruano.tasks_data.mappers.toDomainModel
 import com.esteban.ruano.tasks_data.mappers.toResponseModel
 import com.esteban.ruano.tasks_data.remote.model.TaskResponse
@@ -57,7 +58,7 @@ fun SyncDTO.toResponseModel() = SyncResponse(
         Habit::toResponseModel
     ) },
     workoutDays = workoutDays.map { it.toResponseModel(
-        WorkoutDay::toResponseModel
+        com.esteban.ruano.workout_domain.model.Workout::toResponseModel
     ) },
     lastTimeStamp = lastTimeStamp,
     tasksSynced = tasksSynced.map { it.toResponseModel(

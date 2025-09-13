@@ -16,7 +16,7 @@ data class Workout(
 
 @Serializable
 data class Exercise(
-    val id: String,
+    val id: String? = null,
     val name: String,
     val description: String? = null,
     val restSecs: Int? = null,

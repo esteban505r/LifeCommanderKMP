@@ -1,6 +1,6 @@
 package com.esteban.ruano.workout_data.datasources
 
-import com.esteban.ruano.workout_data.local.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_data.mappers.toExercise
 import com.esteban.ruano.workout_data.mappers.toExerciseResponse
 import com.esteban.ruano.workout_data.mappers.toDomainModel
@@ -33,7 +33,7 @@ class WorkoutRemoteDataSource(
 
 
     override suspend fun saveWorkoutDay(workout: Workout) {
-        api.saveWorkoutDay(workoutDay.toResponseModel())
+        api.saveWorkoutDay(workout.toResponseModel())
     }
 
     override suspend fun getWorkoutDayByNumber(number: Int): Workout {
@@ -45,7 +45,7 @@ class WorkoutRemoteDataSource(
     }
 
     override suspend fun updateWorkoutDay(workoutDayId:String, workout: Workout) {
-        api.updateWorkoutDay(workoutDayId,workoutDay.toResponseModel())
+        api.updateWorkoutDay(workoutDayId,workout.toResponseModel())
     }
 
     override suspend fun getWorkoutDashboard(): WorkoutDashboard {

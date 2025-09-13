@@ -1,6 +1,6 @@
 package com.esteban.ruano.workout_data.datasources
 
-import com.esteban.ruano.workout_data.local.model.Exercise
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
 import com.esteban.ruano.workout_domain.model.Workout
 

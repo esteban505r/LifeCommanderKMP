@@ -40,6 +40,7 @@ import com.esteban.ruano.workout_presentation.ui.viewmodel.WorkoutDetailViewMode
 import com.esteban.ruano.home_presentation.viewmodel.HomeViewModel
 import com.esteban.ruano.core_ui.utils.LocalMainIntent
 import com.esteban.ruano.core_ui.view_model.intent.MainIntent
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.lifecommander.models.Habit
 import com.lifecommander.models.Task
 import kotlinx.coroutines.launch
@@ -182,10 +183,10 @@ fun HomeScreen(
                     }
                     
                     // Workout section
-                    if (workoutState.value.workoutDay?.exercises?.isNotEmpty() == true) {
+                    if (workoutState.value.workout?.exercises?.isNotEmpty() == true) {
                         item {
                             WorkoutSection(
-                                exercises = workoutState.value.workoutDay?.exercises ?: emptyList(),
+                                exercises = workoutState.value.workout?.exercises ?: emptyList(),
                                 onGoToWorkout = onGoToWorkout
                             )
                         }
@@ -280,7 +281,7 @@ private fun TasksSection(
 
 @Composable
 private fun WorkoutSection(
-    exercises: List<com.esteban.ruano.workout_domain.model.Exercise>,
+    exercises: List<Exercise>,
     onGoToWorkout: () -> Unit
 ) {
     SharedSectionCard(
