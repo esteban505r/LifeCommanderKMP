@@ -1,7 +1,6 @@
 package com.esteban.ruano.workout_presentation.navigation
 
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -11,14 +10,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.esteban.ruano.core.routes.Routes
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.Error
 import com.esteban.ruano.core_ui.composables.Loading
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
-import com.esteban.ruano.workout_presentation.ui.screens.WorkoutDayDetailScreen
 import com.esteban.ruano.workout_presentation.ui.screens.WorkoutDayProgressScreen
 import com.esteban.ruano.workout_presentation.ui.viewmodel.WorkoutDetailViewModel
 import com.esteban.ruano.workout_presentation.ui.viewmodel.state.WorkoutDayDetailEffect
@@ -67,7 +64,7 @@ fun WorkoutDayProgressDestination(
         coroutineScope.launch {
             workoutId?.let {
                 viewModel.performAction(
-                    WorkoutIntent.FetchWorkoutDayById(it)
+                    WorkoutIntent.FetchWorkoutByDay(it)
                 )
             } ?: navController.navigateUp()
         }

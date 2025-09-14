@@ -43,17 +43,18 @@ import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.AppBar
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
-import com.esteban.ruano.lifecommander.models.Exercise
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
 import com.esteban.ruano.workout_presentation.ui.composable.ExerciseCard
 import com.esteban.ruano.workout_presentation.ui.composable.WorkoutCompletionDialog
 import com.esteban.ruano.workout_presentation.ui.viewmodel.state.WorkoutDayDetailState
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun WorkoutDayDetailScreen(
-    workoutId: String,
+    day: String,
     onClose: () -> Unit,
     onStartWorkout: () -> Unit,
     onAddExercisesClick: () -> Unit,
@@ -68,7 +69,7 @@ fun WorkoutDayDetailScreen(
     val isRefreshing = state.isLoading
     val pullRefreshState = rememberPullRefreshState(refreshing = isRefreshing, onRefresh = {
             coroutineScope.launch {
-                userIntent(WorkoutIntent.FetchWorkoutDayById(workoutId))
+                userIntent(WorkoutIntent.FetchWorkoutByDay(day))
             }
         })
 
@@ -85,7 +86,7 @@ fun WorkoutDayDetailScreen(
         if (exercises.isEmpty()) {
             NotFoundScreen(
                 context = context,
-                workoutId = workoutId,
+                workoutId = day,
             )
             Button(
                 onClick = {
@@ -175,9 +176,10 @@ fun WorkoutDayDetailScreen(
                             isCompleted = state.completedExercises.contains(exercise.id),
                             showActionButtons = true,
                             sets = listOf(),
-                            workoutDayId = "",
-                            onAddSet = {_,_,_,_ ->
-
+                            day = day,
+                            workoutId = state.workout?.id,
+                            onAddSet = {reps,exerciseId,workoutDayId,_ ->
+                                userIntent(WorkoutIntent.AddSet(exerciseId,reps,workoutDayId))
                             },
                             onUpdateSetReps = { _,_ ->
 
@@ -185,6 +187,10 @@ fun WorkoutDayDetailScreen(
                             onRemoveSet = {
 
                             },
+                            isAddingSet = state.isAddingSet,
+                            inProgress = getCurrentDateTime(
+                                TimeZone.currentSystemDefault()
+                            ).date.dayOfWeek.value == state.workout?.day
                         )
                     }
                     

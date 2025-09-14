@@ -1,6 +1,7 @@
 package com.esteban.ruano.workout_domain.di
 
 import com.esteban.ruano.workout_domain.repository.WorkoutRepository
+import com.esteban.ruano.workout_domain.use_cases.AddSet
 import com.esteban.ruano.workout_domain.use_cases.GetExerciseById
 import com.esteban.ruano.workout_domain.use_cases.GetExercises
 import com.esteban.ruano.workout_domain.use_cases.GetExercisesByWorkoutDay
@@ -41,7 +42,8 @@ object WorkoutDomainModule {
             getExercises = GetExercises(repository),
             updateWorkoutDay = UpdateWorkoutDay(repository),
             getWorkoutDashboard = GetWorkoutDashboard(repository),
-            getExerciseById = GetExerciseById(repository)
+            getExerciseById = GetExerciseById(repository),
+            addSet = AddSet(repository)
         )
     }
 }

@@ -274,7 +274,7 @@ fun WorkoutScreen(
                         onDeleteExercise = onDelete,
                         boundDays = boundDays.toList(),
                         onUnbindDay = { day ->
-                            onUnbindExerciseFromDay(exercise.id, day) { success ->
+                            onUnbindExerciseFromDay(exercise.id?:"", day) { success ->
                                 if (success) onGetAllExercises()
                             }
                         },
@@ -293,7 +293,7 @@ fun WorkoutScreen(
                             {
                                 val workoutDayId = state.workoutDays.firstOrNull()?.id
                                 if (workoutDayId != null) {
-                                    onCompleteExercise(exercise.id, state.daySelected,workoutDayId)
+                                    onCompleteExercise(exercise.id?:"", state.daySelected,workoutDayId)
                                 }
                             }
                         } else null,
@@ -384,12 +384,12 @@ fun WorkoutScreen(
                     val toBind = selectedDays - initialBoundDays
                     val toUnbind = initialBoundDays - selectedDays
                     toBind.forEach { day ->
-                        onBindExerciseToDay(exercise.id, day) { success ->
+                        onBindExerciseToDay(exercise.id?:"", day) { success ->
                             if (success) onGetAllExercises()
                         }
                     }
                     toUnbind.forEach { day ->
-                        onUnbindExerciseFromDay(exercise.id, day) { success ->
+                        onUnbindExerciseFromDay(exercise.id?:"", day) { success ->
                             if (success) onGetAllExercises()
                         }
                     }
@@ -487,7 +487,7 @@ fun ExerciseCard(
                             // Proceed with the same backend-driven add flow
                             isAdding = true
                             errorMsg = null
-                            onAddSet(reps, exercise.id, workoutDayId) { newSetOrNull ->
+                            onAddSet(reps, exercise.id?:"", workoutDayId) { newSetOrNull ->
                                 isAdding = false
                                 if (newSetOrNull != null) {
                                     editableSetId = newSetOrNull.id
@@ -791,7 +791,7 @@ fun ExerciseCard(
                             isAdding = true
                             errorMsg = null
                             // Ask parent to add; when backend confirms, parent calls onResult with the new set
-                            onAddSet(reps,exercise.id, workoutDayId) { newSetOrNull ->
+                            onAddSet(reps,exercise.id?:"", workoutDayId) { newSetOrNull ->
                                 isAdding = false
                                 if (newSetOrNull != null) {
                                     // Allow editing ONLY for the fresh set
@@ -839,7 +839,7 @@ fun ExerciseCard(
                 }
 
                 OutlinedButton(
-                    onClick = { onDeleteExercise(exercise.id) },
+                    onClick = { onDeleteExercise(exercise.id?:"") },
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.error),
                     modifier = Modifier.weight(1f)
                 ) {

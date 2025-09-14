@@ -1,11 +1,9 @@
 package com.esteban.ruano.home_presentation
 
 import android.content.pm.PackageManager
-import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -98,7 +96,7 @@ fun HomeScreen(
                 habitViewModel.performAction(HabitIntent.FetchHabits())
                 taskViewModel.performAction(TaskIntent.FetchTasks())
                 workoutViewModel.performAction(
-                    WorkoutIntent.FetchWorkoutDayById(
+                    WorkoutIntent.FetchWorkoutByDay(
                         id = LocalDate.now().dayOfWeek.value.toString()
                     )
                 )
@@ -111,7 +109,7 @@ fun HomeScreen(
         habitViewModel.performAction(HabitIntent.FetchHabits())
         taskViewModel.performAction(TaskIntent.FetchTasks())
         workoutViewModel.performAction(
-            WorkoutIntent.FetchWorkoutDayById(
+            WorkoutIntent.FetchWorkoutByDay(
                 id = LocalDate.now().dayOfWeek.value.toString()
             )
         )

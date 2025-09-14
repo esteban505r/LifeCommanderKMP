@@ -51,10 +51,7 @@ fun WorkoutDayProgressScreen(
         AppBar(title = state.time)
         Spacer(modifier = Modifier.height(16.dp))
         HorizontalPager(state = pagerState) { index ->
-            val done = inProgress.firstOrNull {
-                it.exercise.id == exercises[index].id
-                        && it.setsDone >= (exercises[index].baseSets?:0)
-            } != null
+
             ExerciseProgress(
                 inProgress = state.exercisesInProgress[index],
                 onRepDone = {

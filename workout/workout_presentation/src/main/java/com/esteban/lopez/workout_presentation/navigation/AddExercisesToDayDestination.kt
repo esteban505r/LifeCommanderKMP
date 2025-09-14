@@ -12,7 +12,6 @@ import com.esteban.ruano.core.utils.UiText
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.Error
 import com.esteban.ruano.core_ui.composables.Loading
-import com.esteban.ruano.core_ui.utils.CustomSnackBarVisuals
 import com.esteban.ruano.core_ui.utils.CustomSnackbarVisualsWithUiText
 import com.esteban.ruano.core_ui.utils.SnackbarController
 import com.esteban.ruano.core_ui.utils.SnackbarEvent
@@ -21,7 +20,6 @@ import com.esteban.ruano.workout_presentation.intent.ExercisesEffect
 import com.esteban.ruano.workout_presentation.intent.ExercisesIntent
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
 import com.esteban.ruano.workout_presentation.ui.screens.AddExerciseToDayScreen
-import com.esteban.ruano.workout_presentation.ui.screens.ExerciseScreen
 import com.esteban.ruano.workout_presentation.ui.viewmodel.ExercisesViewModel
 import com.esteban.ruano.workout_presentation.ui.viewmodel.WorkoutDetailViewModel
 import com.esteban.ruano.workout_presentation.ui.viewmodel.state.WorkoutDayDetailEffect
@@ -83,7 +81,7 @@ fun AddExercisesToDayDestination(
 
         coroutineScope.launch {
             viewModel.performAction(ExercisesIntent.FetchExercises)
-            workoutDayId?.let {  workoutDayViewmodel.performAction(WorkoutIntent.FetchWorkoutDayById(it)) }?: navController.navigateUp()
+            workoutDayId?.let {  workoutDayViewmodel.performAction(WorkoutIntent.FetchWorkoutByDay(it)) }?: navController.navigateUp()
         }
     }
 

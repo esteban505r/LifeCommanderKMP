@@ -1,5 +1,6 @@
 package com.esteban.ruano.workout_domain.repository
 
+import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
 import com.esteban.ruano.workout_domain.model.Workout
@@ -51,4 +52,8 @@ interface WorkoutRepository {
     ): Result<Unit>
 
     suspend fun getWorkoutDashboard(): Result<WorkoutDashboard>
+
+    suspend fun addSet(
+        dto: CreateExerciseSetTrackDTO,
+    ):Result<Unit>
 }

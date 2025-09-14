@@ -1,5 +1,7 @@
 package com.esteban.ruano.workout_presentation.navigation
 
+import androidx.compose.runtime.remember
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -9,9 +11,10 @@ import com.esteban.ruano.workout_presentation.ui.screens.ExerciseScreen
 import com.esteban.ruano.workout_presentation.ui.screens.WorkoutDayDetailScreen
 import com.esteban.ruano.workout_presentation.ui.screens.WorkoutDayProgressScreen
 import com.esteban.ruano.workout_presentation.ui.screens.WorkoutScreen
+import com.esteban.ruano.workout_presentation.ui.viewmodel.WorkoutDetailViewModel
 
 fun NavGraphBuilder.workoutGraph(
-    navController: NavController
+    navController: NavController,
 ) {
 
     composable(Routes.BASE.WORKOUT.name) {
@@ -21,8 +24,10 @@ fun NavGraphBuilder.workoutGraph(
     }
 
     composable("${Routes.WORKOUT_DAY_DETAIL}/{workoutDayId}") {
+        val parentEntry = remember(it) { navController.getBackStackEntry("${Routes.WORKOUT_DAY_DETAIL}/{workoutDayId}") }
+        val workoutDetailViewModel:WorkoutDetailViewModel = hiltViewModel(parentEntry)
         val workoutDayId = it.arguments?.getString("workoutDayId")
-        WorkoutDayDetailDestination(workoutDayId, navController)
+        WorkoutDayDetailDestination(workoutDayId, navController, viewModel = workoutDetailViewModel)
     }
 
     composable("${Routes.WORKOUT_DAY_EXERCISES}/{workoutDayId}") {
@@ -71,8 +76,10 @@ fun NavGraphBuilder.workoutGraph(
     }
 
     composable("${Routes.WORKOUT_PROGRESS}/{workoutDayId}") {
+        val parentEntry = remember(it) { navController.getBackStackEntry("${Routes.WORKOUT_DAY_DETAIL}/{workoutDayId}") }
+        val workoutDetailViewModel:WorkoutDetailViewModel = hiltViewModel(parentEntry)
         val workoutDayId = it.arguments?.getString("workoutDayId")
-        WorkoutDayProgressDestination(workoutDayId, navController)
+        WorkoutDayProgressDestination(workoutDayId, navController, viewModel = workoutDetailViewModel)
     }
 
     composable("${Routes.ADD_EXERCISES_TO_WORKOUT_DAY}/{workoutDayId}") {

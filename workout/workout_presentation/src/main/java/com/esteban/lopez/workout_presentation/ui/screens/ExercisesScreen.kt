@@ -107,17 +107,13 @@ private fun Exercises(
                     // required params for the rich ExerciseCard
                     exercise = exercise,
                     sets = emptyList(),                                      // no sets in this screen
-                    workoutDayId = "",                                        // not used here
+                    day = "",                                        // not used here
                     onAddSet = { _, _, _, onResult -> onResult(null) },      // no-op
                     onUpdateSetReps = { _, _ -> },                            // no-op
                     onRemoveSet = { _ -> },                                   // no-op
 
                     // keep the simple-card behavior
-                    onUpdate = {},
-                    onDelete = {},
-                    onCompleteExercise = null,
-                    isCompleted = false,
-                    showActionButtons = false
+                    showActionButtons = false,
                 )
             }
 

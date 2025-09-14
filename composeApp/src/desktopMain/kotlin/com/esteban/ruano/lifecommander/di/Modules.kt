@@ -60,7 +60,6 @@ import javax.net.ssl.X509TrustManager
 // Network Module
 val socketQualifier = named("socketHttpClient")
 
-/*
 fun trustManagerFromPem(pemPath: String): X509TrustManager {
     val cf = CertificateFactory.getInstance("X.509")
     val cert = FileInputStream(pemPath).use { cf.generateCertificate(it) }
@@ -71,7 +70,7 @@ fun trustManagerFromPem(pemPath: String): X509TrustManager {
     return tmf.trustManagers.single() as X509TrustManager
 }
 
-val tm = trustManagerFromPem("/home/bansyne/.config/httptoolkit/ca.pem")*/
+val tm = trustManagerFromPem("/home/bansyne/.config/httptoolkit/ca.pem")
 
 val networkModule = module {
     single {
@@ -80,7 +79,7 @@ val networkModule = module {
                 engine {
                     //Proxy for debugging
                     proxy = ProxyBuilder.http("https://localhost:8000")
-//                    https { trustManager = tm }
+                    https { trustManager = tm }
                 }
             }
             install(ContentNegotiation) {

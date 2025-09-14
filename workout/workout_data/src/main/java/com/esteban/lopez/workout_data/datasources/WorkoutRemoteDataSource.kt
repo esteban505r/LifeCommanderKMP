@@ -1,5 +1,6 @@
 package com.esteban.ruano.workout_data.datasources
 
+import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_data.mappers.toExercise
 import com.esteban.ruano.workout_data.mappers.toExerciseResponse
@@ -54,6 +55,10 @@ class WorkoutRemoteDataSource(
 
     override suspend fun getExerciseById(exerciseId: String): Exercise {
         return api.getExerciseById(exerciseId).toExercise()
+    }
+
+    override suspend fun addSet(dto: CreateExerciseSetTrackDTO,): Unit {
+        return api.addSet(dto)
     }
 
 }

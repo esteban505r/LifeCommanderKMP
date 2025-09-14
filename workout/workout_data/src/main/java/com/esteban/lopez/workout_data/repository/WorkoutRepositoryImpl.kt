@@ -2,6 +2,7 @@ package com.esteban.ruano.workout_data.repository
 import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.helpers.NetworkHelper
 import com.esteban.ruano.core_data.repository.BaseRepository
+import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
 import com.esteban.ruano.workout_data.datasources.WorkoutDataSource
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
@@ -131,6 +132,16 @@ class WorkoutRepositoryImpl (
             lastFetchTime = preferences.loadLastFetchTime().first(),
             localFetch = { localDataSource.getWorkoutDashboard() },
             remoteFetch = { remoteDataSource.getWorkoutDashboard() },
+            forceRefresh = false,
+        )
+    }
+
+    override suspend fun addSet(dto: CreateExerciseSetTrackDTO) : Result<Unit> {
+        return doRequest(
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            lastFetchTime = preferences.loadLastFetchTime().first(),
+            localFetch = {  },
+            remoteFetch = { remoteDataSource.addSet(dto) },
             forceRefresh = false,
         )
     }

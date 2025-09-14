@@ -1,9 +1,11 @@
 package com.esteban.ruano.workout_data.remote
 
 
+import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
 import com.esteban.ruano.workout_data.remote.dto.ExerciseResponse
 import com.esteban.ruano.workout_data.remote.dto.WorkoutDashboardResponse
 import com.esteban.ruano.workout_data.remote.dto.WorkoutDayResponse
+import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
@@ -64,4 +66,7 @@ interface WorkoutApi {
     suspend fun getExerciseById(
         @Path("exerciseId") exerciseId: String
     ): ExerciseResponse
+
+    @POST("workout/exercise-tracking/sets/complete")
+    suspend fun addSet(@Body dto: CreateExerciseSetTrackDTO)
 }

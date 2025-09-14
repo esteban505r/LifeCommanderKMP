@@ -35,7 +35,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +47,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.AppBar
 import com.esteban.ruano.lifecommander.models.Exercise
@@ -224,19 +222,15 @@ private fun ColumnScope.WorkoutExercises(
                     state = dismissState,
                 ) {
                     ExerciseCard(
-                        exercise = workoutExercises[index],
                         modifier = Modifier.background(MaterialTheme.colors.background),
+                        exercise = workoutExercises[index],
                         sets = emptyList(),                 // no sets shown
-                        workoutDayId = "",                  // unused since sets are hidden
+                        day = "",                  // unused since sets are hidden
                         onUpdate = { },
-                        onDelete = {},
                         onCompleteExercise = {  },
-                        onAddSet = { _, _, _, onResult -> onResult(null) }, // no-op
-                        onUpdateSetReps = { _, _ -> },      // no-op
-                        onRemoveSet = { _ -> },             // no-op
-                        isCompleted = false,
-                        showActionButtons = true,
-                        defaultReps = 0
+                        onAddSet = { _, _, _, onResult -> onResult(null) },
+                        onUpdateSetReps = { _, _ -> }, // no-op
+                        onRemoveSet = { _ -> },      // no-op
                     )
                 }
             }
@@ -296,13 +290,16 @@ private fun ColumnScope.AllExercises(
                 ) {
                     // Your simple mobile card (no extra actions)
                     ExerciseCard(
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(MaterialTheme.colors.background),
                         exercise = exercise,
                         sets = listOf(),
-                        workoutDayId = "",
-                        onAddSet = {_,_,_,_ ->
+                        day = "",
+                        onUpdate = {
 
                         },
-                        onUpdate = {
+                        onAddSet = {_,_,_,_ ->
 
                         },
                         onUpdateSetReps = { _,_ ->
@@ -311,11 +308,7 @@ private fun ColumnScope.AllExercises(
                         onRemoveSet = {
 
                         },
-                        isCompleted = false,
                         showActionButtons = false,
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(MaterialTheme.colors.background)
                     )
 
                     // Trailing toggle button (Add/Remove)

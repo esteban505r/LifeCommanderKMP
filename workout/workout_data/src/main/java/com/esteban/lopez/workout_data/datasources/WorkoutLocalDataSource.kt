@@ -1,5 +1,6 @@
 package com.esteban.ruano.workout_data.datasources
 
+import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_data.local.WorkoutDao
 import com.esteban.ruano.workout_data.mappers.toExercise
@@ -66,6 +67,10 @@ class WorkoutLocalDataSource(
 
     override suspend fun getExerciseById(exerciseId: String): Exercise {
         throw UnsupportedOperationException("Local data source does not support this operation")
+    }
+
+    override suspend fun addSet(dto: CreateExerciseSetTrackDTO,) {
+        TODO("Not yet implemented")
     }
 
 

@@ -268,7 +268,7 @@ class WorkoutViewModel(
             days.forEach { day ->
                 day.day?.let { d ->
                     day.exercises?.forEach { ex ->
-                        map.getOrPut(ex.id) { mutableSetOf() }.add(d)
+                        map.getOrPut(ex.id?:"") { mutableSetOf() }.add(d)
                     }
                 }
             }

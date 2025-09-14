@@ -133,9 +133,11 @@ fun WorkoutScreen(
                         
                         // Enhanced today's workout card
                         Card(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().clickable{
+                                onWorkoutClick(today.day)
+                            },
                             shape = RoundedCornerShape(16.dp),
-                            backgroundColor = MaterialTheme.colors.surface
+                            backgroundColor = MaterialTheme.colors.surface,
                         ) {
                             Column(
                                 modifier = Modifier.padding(16.dp)

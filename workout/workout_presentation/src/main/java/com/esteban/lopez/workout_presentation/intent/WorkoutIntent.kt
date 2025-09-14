@@ -6,7 +6,7 @@ import com.esteban.ruano.lifecommander.models.Exercise
 
 sealed class WorkoutIntent : UserIntent {
     data object FetchDashboard : WorkoutIntent()
-    data class FetchWorkoutDayById(val id: String) : WorkoutIntent()
+    data class FetchWorkoutByDay(val id: String) : WorkoutIntent()
     data class CompleteExercise(val id: Int) : WorkoutIntent()
     data class UpdateWorkoutDayExercises(val id: String, val exercises: List<Exercise>) : WorkoutIntent()
 
@@ -23,6 +23,7 @@ sealed class WorkoutIntent : UserIntent {
     data class GetCompletedExercisesForDay(val workoutDayId: String) : WorkoutIntent()
     data object GetWorkoutsCompletedPerDayThisWeek : WorkoutIntent()
     data class DeleteExercise(val exerciseId: String) : WorkoutIntent()
+    data class AddSet(val exerciseId: String, val reps:Int,val workoutDayId: String) : WorkoutIntent()
     data class UpdateExercise(val exercise: Exercise) : WorkoutIntent()
 }
 sealed class WorkoutEffect : Effect {

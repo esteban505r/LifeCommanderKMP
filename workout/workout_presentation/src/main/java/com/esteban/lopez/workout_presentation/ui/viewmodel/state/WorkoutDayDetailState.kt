@@ -12,7 +12,8 @@ data class WorkoutDayDetailState(
     val errorMessage: String? = null,
     val isLoading: Boolean = false,
     val completedExercises: Set<String> = emptySet(),
-    val isWorkoutCompleted: Boolean = false
+    val isWorkoutCompleted: Boolean = false,
+    val isAddingSet: Boolean = false,
 ) : ViewState
 
 sealed class WorkoutDayDetailEffect: Effect {

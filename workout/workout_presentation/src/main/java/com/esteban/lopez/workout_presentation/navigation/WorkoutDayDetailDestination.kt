@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun WorkoutDayDetailDestination(
-    workoutId: String? = null,
+    day: String? = null,
     navController: NavController,
     viewModel: WorkoutDetailViewModel = hiltViewModel(),
     ) {
@@ -45,9 +45,9 @@ fun WorkoutDayDetailDestination(
         coroutineScope.launch { viewModel.effect.collect { handleNavigation(it) } }
 
         coroutineScope.launch {
-           workoutId?.let {
+           day?.let {
                viewModel.performAction(
-                   WorkoutIntent.FetchWorkoutDayById(it)
+                   WorkoutIntent.FetchWorkoutByDay(it)
                )
            } ?: navController.navigateUp()
         }
@@ -71,15 +71,15 @@ fun WorkoutDayDetailDestination(
                     viewModel.performAction(it)
                 },
                 state = state,
-                workoutId = workoutId?: "",
+                day = day?: "",
                 onClose = {
                     navController.navigateUp()
                 },
                 onStartWorkout = {
-                    navController.navigate("${Routes.WORKOUT_PROGRESS}/$workoutId")
+                    navController.navigate("${Routes.WORKOUT_PROGRESS}/$day")
                 },
                 onAddExercisesClick = {
-                    navController.navigate("${Routes.ADD_EXERCISES_TO_WORKOUT_DAY}/$workoutId")
+                    navController.navigate("${Routes.ADD_EXERCISES_TO_WORKOUT_DAY}/$day")
                 },
             )
         }

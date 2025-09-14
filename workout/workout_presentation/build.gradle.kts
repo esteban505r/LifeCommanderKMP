@@ -14,5 +14,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":core-ui"))
     implementation(project(":workout:workout_domain"))
+    implementation(libs.kotlinx.datetime)
     implementation(projects.shared)
+    debugImplementation(libs.compose.ui.tooling)
 }
