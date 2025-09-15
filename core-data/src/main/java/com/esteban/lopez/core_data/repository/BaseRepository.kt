@@ -41,11 +41,11 @@ abstract class BaseRepository {
     }
 
     suspend fun <T> doRemoteRequest(
-        networkAvailable: Boolean,
+        isNetworkAvailable: Boolean,
         remoteFetch: suspend () -> T
     ): Result<T> {
         return ErrorHandlingUtils.handleDataError {
-            if (networkAvailable) {
+            if (isNetworkAvailable) {
                 val data = remoteFetch()
                 Result.success(data)
             } else {

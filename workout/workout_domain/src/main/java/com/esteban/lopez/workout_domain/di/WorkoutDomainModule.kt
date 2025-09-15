@@ -8,9 +8,11 @@ import com.esteban.ruano.workout_domain.use_cases.GetExercisesByWorkoutDay
 import com.esteban.ruano.workout_domain.use_cases.GetWorkoutDashboard
 import com.esteban.ruano.workout_domain.use_cases.GetWorkoutDayById
 import com.esteban.ruano.workout_domain.use_cases.GetWorkoutDayByNumber
+import com.esteban.ruano.workout_domain.use_cases.GetWorkoutDayStatus
 import com.esteban.ruano.workout_domain.use_cases.GetWorkoutDays
 import com.esteban.ruano.workout_domain.use_cases.GetWorkoutDaysWithExercises
 import com.esteban.ruano.workout_domain.use_cases.LinkExerciseWithWorkoutDay
+import com.esteban.ruano.workout_domain.use_cases.RemoveSet
 import com.esteban.ruano.workout_domain.use_cases.SaveExercise
 import com.esteban.ruano.workout_domain.use_cases.SaveWorkoutDay
 import com.esteban.ruano.workout_domain.use_cases.UpdateWorkoutDay
@@ -43,7 +45,9 @@ object WorkoutDomainModule {
             updateWorkoutDay = UpdateWorkoutDay(repository),
             getWorkoutDashboard = GetWorkoutDashboard(repository),
             getExerciseById = GetExerciseById(repository),
-            addSet = AddSet(repository)
+            addSet = AddSet(repository),
+            getWorkoutDayStatus = GetWorkoutDayStatus(repository),
+            removeSet = RemoveSet(repository)
         )
     }
 }

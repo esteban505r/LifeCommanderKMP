@@ -89,11 +89,14 @@ class WorkoutDetailViewModel @Inject constructor(
                     addSet(it.exerciseId, it.reps, it.workoutDayId)
                 }
 
+                is WorkoutIntent.RemoveSet -> {
+                    removeSet(it.setId,it.onSuccess)
+                }
+
                 else -> {}
             }
         }
     }
-
 
 
     private fun updateWorkoutDayExercises(id: String, exercises: List<Exercise>) {
@@ -194,15 +197,20 @@ class WorkoutDetailViewModel @Inject constructor(
 
 
     private fun fetchWorkoutByDay(
-        id: Int
+        id: Int,
     ) {
         viewModelScope.launch {
             val result = workoutUseCases.getWorkoutDayById(id)
             result.fold(
                 onSuccess = {
+                    val status = workoutUseCases.getWorkoutDayStatus(
+                        it.id ?: "",
+                        getCurrentDateTime(TimeZone.currentSystemDefault()).formatDefault()
+                    )
                     emitState {
                         copy(
                             workout = it,
+                            workoutStatus = status.getOrNull() ?: listOf()
                         )
                     }
                 },
@@ -225,7 +233,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
     private fun addSet(exerciseId: String, reps: Int, workoutDayId: String) {
         viewModelScope.launch {
-            emitState { copy(isAddingSet = true) }
+            emitState { copy(isLoadingSet = true) }
             workoutUseCases.addSet(
                 exerciseId, reps,
                 getCurrentDateTime(
@@ -239,18 +247,41 @@ class WorkoutDetailViewModel @Inject constructor(
                         )
                     }
                     emitState {
-                        copy(isAddingSet = false)
+                        copy(isLoadingSet = false)
                     }
                 },
                 onFailure = {
                     emitState {
                         copy(
                             errorMessage = it.message,
-                            isAddingSet = false
+                            isLoadingSet = false
                         )
                     }
                 }
             )
+        }
+    }
+
+    private fun removeSet(setId: String,onSuccess:()->Unit) {
+        viewModelScope.launch {
+            emitState { copy(isLoadingSet = true) }
+            workoutUseCases.removeSet(
+                setId
+            ).fold(
+                {
+                    onSuccess.invoke()
+                    emitState {
+                        copy(isLoadingSet = false)
+                    }
+                },
+                {
+                    emitState {
+                        copy(
+                            errorMessage = it.message,
+                            isLoadingSet = false
+                        )
+                    }
+                })
         }
     }
 

@@ -2,6 +2,7 @@ package com.esteban.ruano.workout_data.datasources
 
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
 import com.esteban.ruano.lifecommander.models.Exercise
+import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
 import com.esteban.ruano.workout_data.local.WorkoutDao
 import com.esteban.ruano.workout_data.mappers.toExercise
 import com.esteban.ruano.workout_data.mappers.toLocalExercise
@@ -23,6 +24,10 @@ class WorkoutLocalDataSource(
 
     override suspend fun getWorkoutDayById(workoutId: String): Workout {
         return workoutDao.getWorkoutDayById(workoutId).toDomainModel()
+    }
+
+    override suspend fun getWorkoutDayStatus(workoutDayId: String,dateTime:String): List<ExerciseDayStatus> {
+        TODO("Not yet implemented")
     }
 
     override suspend fun getExercisesByWorkoutDay(
@@ -70,6 +75,10 @@ class WorkoutLocalDataSource(
     }
 
     override suspend fun addSet(dto: CreateExerciseSetTrackDTO,) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun removeSet(id: String) {
         TODO("Not yet implemented")
     }
 

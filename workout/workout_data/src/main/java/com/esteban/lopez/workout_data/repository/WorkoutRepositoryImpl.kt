@@ -5,6 +5,7 @@ import com.esteban.ruano.core_data.repository.BaseRepository
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
 import com.esteban.ruano.workout_data.datasources.WorkoutDataSource
 import com.esteban.ruano.lifecommander.models.Exercise
+import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
 import com.esteban.ruano.workout_domain.repository.WorkoutRepository
 import com.esteban.ruano.workout_domain.model.Workout
@@ -33,6 +34,13 @@ class WorkoutRepositoryImpl (
             localFetch = { localDataSource.getWorkoutDayById(workoutId.toString()) },
             remoteFetch = { remoteDataSource.getWorkoutDayById(workoutId.toString()) },
             forceRefresh = false,
+        )
+    }
+
+    override suspend fun getWorkoutDayStatus(workoutDayId: String,dateTime:String): Result<List<ExerciseDayStatus>> {
+        return doRemoteRequest(
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            remoteFetch = { remoteDataSource.getWorkoutDayStatus(workoutDayId,dateTime) },
         )
     }
 
@@ -143,6 +151,15 @@ class WorkoutRepositoryImpl (
             localFetch = {  },
             remoteFetch = { remoteDataSource.addSet(dto) },
             forceRefresh = false,
+        )
+    }
+
+    override suspend fun removeSet(id: String): Result<Unit> {
+        return doRemoteRequest(
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            remoteFetch = {
+                remoteDataSource.removeSet(id)
+            }
         )
     }
 }

@@ -2,6 +2,7 @@ package com.esteban.ruano.workout_data.datasources
 
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
 import com.esteban.ruano.lifecommander.models.Exercise
+import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
 import com.esteban.ruano.workout_domain.model.Workout
 
@@ -11,6 +12,7 @@ interface WorkoutDataSource {
     suspend fun getWorkoutDaysWithExercises(): List<Workout>
 
     suspend fun getWorkoutDayById(workoutId: String): Workout
+    suspend fun getWorkoutDayStatus(workoutDayId: String,dateTime:String): List<ExerciseDayStatus>
 
     suspend fun getExercisesByWorkoutDay(workoutDayId:String): List<Exercise>
 
@@ -31,4 +33,5 @@ interface WorkoutDataSource {
     suspend fun getExerciseById(exerciseId: String): Exercise
 
     suspend fun addSet(dto: CreateExerciseSetTrackDTO): Unit
+    suspend fun removeSet(id:String): Unit
 }

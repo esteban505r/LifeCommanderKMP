@@ -8,6 +8,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -29,6 +30,7 @@ import com.esteban.ruano.core_ui.theme.SoftRed
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.ExerciseSet
 import com.esteban.ruano.lifecommander.ui.components.ActionButton
+import com.esteban.ruano.lifecommander.ui.components.AddSetRow
 import com.esteban.ruano.lifecommander.ui.components.BannerError
 import com.esteban.ruano.lifecommander.ui.components.BannerInfo
 import com.esteban.ruano.lifecommander.ui.components.SetRow
@@ -234,9 +236,46 @@ fun ExerciseCard(
 
                         Spacer(Modifier.height(12.dp))
 
+                        AddSetRow(
+                            enabled = canMutateSets && !isAddingSet,
+                            isLoading = isAddingSet,
+                            initialReps = defaultReps,
+                            onValidate = { reps ->
+                                when {
+                                    reps <= 0 -> "Reps must be greater than 0."
+                                    else -> null
+                                }
+                            },
+                            onAdd = { reps ->
+                                val expected = exercise.baseSets ?: 0
+                                if (expected > 0 && sets.size >= expected) {
+                                    pendingReps = reps
+                                    showExpectedSetsDialog = true
+                                    return@AddSetRow
+                                }
+
+                                errorMsg = null
+                                onAddSet(
+                                    reps,
+                                    exercise.id ?: return@AddSetRow,
+                                    workoutId ?: ""
+                                ) { newSet ->
+                                    if (newSet != null) {
+                                        editableSetId = newSet.id     // immediately jump into edit mode for the new set
+                                        // leave AddSetRow’s field at default again
+                                    } else {
+                                        errorMsg = "Could not add set. Try again."
+                                    }
+                                }
+                            }
+                        )
+
+                        Spacer(Modifier.height(12.dp))
+
                         // List (caps height if many sets)
                         val listMaxHeight = 220.dp
                         val useLazy = sets.size > 5
+                        Log.d("Sets",sets.toString())
                         if (useLazy) {
                             Box(
                                 Modifier
@@ -296,80 +335,19 @@ fun ExerciseCard(
 
                         // Add set row
                         Spacer(Modifier.height(12.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            OutlinedTextField(
-                                value = desiredRepsText,
-                                onValueChange = {
-                                    desiredRepsText = it.filter(Char::isDigit).take(4)
-                                },
-                                label = { Text("Reps") },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f),
-                                enabled = canMutateSets && !isAddingSet,
-                                keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
-                            )
-                            Button(
-                                onClick = {
-                                    if (!canMutateSets) return@Button
-                                    val reps = desiredRepsText.toIntOrNull()
-                                    if (reps == null) {
-                                        errorMsg = "Enter a valid number of reps."
-                                        return@Button
-                                    }
-                                    if(reps<=0){
-                                        errorMsg = "Reps must be greater than 0."
-                                        return@Button
-                                    }
-                                    val expected = exercise.baseSets ?: 0
-                                    if (expected > 0 && sets.size >= expected) {
-                                        pendingReps = reps
-                                        showExpectedSetsDialog = true
-                                        return@Button
-                                    }
-                                    errorMsg = null
-                                    Log.d("ADDING SET", "ExerciseCard: $reps")
-                                    onAddSet(
-                                        reps,
-                                        exercise.id ?: return@Button,
-                                        workoutId?:""
-                                    ) { newSet ->
-                                        if (newSet != null) {
-                                            editableSetId = newSet.id
-                                            desiredRepsText = defaultReps.toString()
-                                        } else {
-                                            errorMsg = "Could not add set. Try again."
-                                        }
-                                    }
-                                },
-                                enabled = canMutateSets && !isAddingSet,
-                                shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(
-                                    horizontal = 12.dp,
-                                    vertical = 10.dp
-                                ),
-                                modifier = Modifier.defaultMinSize(minHeight = 40.dp)
-                            ) {
-                                if (isAddingSet) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(18.dp),
-                                        strokeWidth = 2.dp,
-                                        color = Color.White
-                                    )
-                                } else {
-                                    Icon(
-                                        Icons.Filled.Add,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Add set", maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                }
-                            }
+
+
+                        if (errorMsg != null) {
+                            Spacer(Modifier.height(8.dp))
+                            BannerError(errorMsg!!)
                         }
+
+                        Spacer(Modifier.height(12.dp))
+
+
+
+
+
                     }
                 }
             }

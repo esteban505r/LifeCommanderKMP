@@ -17,7 +17,7 @@ class AuthRepositoryImpl(
             remoteFetch = {
                 remoteDataSource.login(email, password, fcmToken, timezone)
             },
-            networkAvailable = networkHelper.isNetworkAvailable(),
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
         )
     }
 
@@ -26,7 +26,7 @@ class AuthRepositoryImpl(
             remoteFetch = {
                 remoteDataSource.register(email, password, name)
             },
-            networkAvailable = networkHelper.isNetworkAvailable(),
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
         )
     }
 

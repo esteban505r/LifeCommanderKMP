@@ -1,6 +1,7 @@
 package com.esteban.ruano.workout_presentation.ui.screens
 
 import android.content.Context
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -159,7 +160,7 @@ fun WorkoutDayDetailScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 LazyColumn(
-                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(exercises) { exercise ->
                         ExerciseCard(
@@ -175,7 +176,7 @@ fun WorkoutDayDetailScreen(
                             },
                             isCompleted = state.completedExercises.contains(exercise.id),
                             showActionButtons = true,
-                            sets = listOf(),
+                            sets = state.workoutStatus.firstOrNull{it.exerciseId == exercise.id}?.setsDone?:emptyList(),
                             day = day,
                             workoutId = state.workout?.id,
                             onAddSet = {reps,exerciseId,workoutDayId,_ ->
@@ -185,9 +186,11 @@ fun WorkoutDayDetailScreen(
 
                             },
                             onRemoveSet = {
-
+                                userIntent(WorkoutIntent.RemoveSet(it,{
+                                    userIntent(WorkoutIntent.FetchWorkoutByDay(day))
+                                }))
                             },
-                            isAddingSet = state.isAddingSet,
+                            isAddingSet = state.isLoadingSet,
                             inProgress = getCurrentDateTime(
                                 TimeZone.currentSystemDefault()
                             ).date.dayOfWeek.value == state.workout?.day

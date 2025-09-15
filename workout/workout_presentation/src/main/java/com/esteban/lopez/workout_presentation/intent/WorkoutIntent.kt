@@ -24,6 +24,7 @@ sealed class WorkoutIntent : UserIntent {
     data object GetWorkoutsCompletedPerDayThisWeek : WorkoutIntent()
     data class DeleteExercise(val exerciseId: String) : WorkoutIntent()
     data class AddSet(val exerciseId: String, val reps:Int,val workoutDayId: String) : WorkoutIntent()
+    data class RemoveSet(val setId: String,val onSuccess:()->Unit) : WorkoutIntent()
     data class UpdateExercise(val exercise: Exercise) : WorkoutIntent()
 }
 sealed class WorkoutEffect : Effect {

@@ -2,15 +2,18 @@ package com.esteban.ruano.workout_data.remote
 
 
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
+import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
 import com.esteban.ruano.workout_data.remote.dto.ExerciseResponse
 import com.esteban.ruano.workout_data.remote.dto.WorkoutDashboardResponse
 import com.esteban.ruano.workout_data.remote.dto.WorkoutDayResponse
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface WorkoutApi {
 
@@ -67,6 +70,17 @@ interface WorkoutApi {
         @Path("exerciseId") exerciseId: String
     ): ExerciseResponse
 
+    @GET("workout/exercise-tracking/completed/{workoutDayId}")
+    suspend fun getWorkoutDayStatus(
+        @Path("workoutDayId") workoutDayId:String,
+        @Query("dateTime") dateTime:String
+    ): List<ExerciseDayStatus>
+
     @POST("workout/exercise-tracking/sets/complete")
     suspend fun addSet(@Body dto: CreateExerciseSetTrackDTO)
+
+    @DELETE("workout/exercise-tracking/sets/{id}")
+    suspend fun removeSet(@Path("id") id: String)
+
+
 }
