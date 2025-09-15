@@ -59,7 +59,12 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
             }
         }
 
-        route("/exercises") {
+        route("/exercises/{id}") {
+            get{
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val id = call.parameters["id"]?:""
+                call.respond(workoutRepository.getExercise(userId,id))
+            }
             get {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val filter = call.request.queryParameters["filter"] ?: ""

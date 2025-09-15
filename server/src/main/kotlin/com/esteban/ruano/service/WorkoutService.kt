@@ -694,4 +694,11 @@ class WorkoutService : BaseService() {
             )
         }
     }
+
+    fun getExercise(userId: Int, id: String) : ExerciseDTO {
+        return transaction {
+            val exercise =  Exercise.find { (Exercises.user eq userId) and (Exercises.id eq UUID.fromString(id))}.limit(1).toList().firstOrNull()?.toDTO()
+            exercise ?:throw BadRequestException("Exercise not found")
+        }
+    }
 }

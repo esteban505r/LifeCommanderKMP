@@ -12,15 +12,12 @@ import com.esteban.ruano.core.utils.UiText
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.Error
 import com.esteban.ruano.core_ui.composables.Loading
-import com.esteban.ruano.core_ui.utils.CustomSnackBarVisuals
 import com.esteban.ruano.core_ui.utils.CustomSnackbarVisualsWithUiText
 import com.esteban.ruano.core_ui.utils.SnackbarController
 import com.esteban.ruano.core_ui.utils.SnackbarEvent
 import com.esteban.ruano.core_ui.utils.SnackbarType
 import com.esteban.ruano.workout_presentation.intent.ExercisesEffect
-import com.esteban.ruano.workout_presentation.intent.ExercisesIntent
-import com.esteban.ruano.workout_presentation.ui.screens.ExerciseScreen
-import com.esteban.ruano.workout_presentation.ui.screens.NewExerciseScreen
+import com.esteban.ruano.workout_presentation.ui.screens.NewEditExerciseScreen
 import com.esteban.ruano.workout_presentation.ui.viewmodel.ExercisesViewModel
 import kotlinx.coroutines.launch
 
@@ -28,6 +25,7 @@ import kotlinx.coroutines.launch
 fun NewExerciseDestination(
     viewModel: ExercisesViewModel = hiltViewModel(),
     navController: NavController,
+    exerciseToEditId: String? = null
 ) {
 
     val state = viewModel.viewState.collectAsState().value
@@ -74,10 +72,12 @@ fun NewExerciseDestination(
 
 
         else -> {
-            NewExerciseScreen (
+            NewEditExerciseScreen (
                 userIntent = {
                     viewModel.performAction(it)
                 },
+                exerciseToEditId = exerciseToEditId,
+                state = state
             )
         }
     }

@@ -5,6 +5,7 @@ import android.os.Looper
 import androidx.lifecycle.viewModelScope
 import com.esteban.ruano.core.utils.DateUtils.formatElapsedTime
 import com.esteban.ruano.core_ui.view_model.BaseViewModel
+import com.esteban.ruano.lifecommander.models.CreateExerciseTrack
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
@@ -93,8 +94,52 @@ class WorkoutDetailViewModel @Inject constructor(
                     removeSet(it.setId,it.onSuccess)
                 }
 
+                is WorkoutIntent.UndoExercise -> {
+                    undoExercise(it.exerciseId,it.onSuccess)
+                }
+
+                is WorkoutIntent.CompleteExerciseById ->{
+                    completeExercise(
+                        it.exerciseId,
+                        it.workoutDayId,
+                        it.doneDateTime,
+                        it.onSuccess
+                    )
+                }
+
                 else -> {}
             }
+        }
+    }
+
+    private fun completeExercise(id:String,workoutDayId:String,doneDateTime:String,onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            emitState {
+                copy(isLoading = true)
+            }
+            val result = workoutUseCases.completeExercise(
+                track = CreateExerciseTrack(
+                    id,
+                    workoutDayId,
+                    doneDateTime
+                )
+            )
+            result.fold(
+                onSuccess = {
+                    emitState {
+                        copy(isLoading = false)
+                    }
+                    onSuccess.invoke()
+                },
+                onFailure = {
+                    emitState {
+                        copy(
+                            isLoading = false,
+                            errorMessage = it.message
+                        )
+                    }
+                }
+            )
         }
     }
 
@@ -136,6 +181,42 @@ class WorkoutDetailViewModel @Inject constructor(
             emitState {
                 copy(exercisesInProgress = updatedExercises)
             }
+        }
+    }
+
+    private fun undoExercise(exerciseId: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            emitState {
+                copy(isLoading = true)
+            }
+            val trackId = currentState.workoutStatus.firstOrNull{it.exerciseId == exerciseId}?.exerciseTrackId
+            if(trackId==null){
+                emitState {
+                    copy(
+                        errorMessage = "Exercise not found"
+                    )
+                }
+                return@launch
+            }
+            val result = workoutUseCases.undoExercise(trackId)
+            result.fold(
+                onSuccess = {
+                    emitState {
+                        copy(
+                            isLoading = false
+                        )
+                    }
+                    onSuccess()
+                },
+                onFailure = {
+                    emitState {
+                        copy(
+                            isLoading = false,
+                            errorMessage = it.message
+                        )
+                    }
+                }
+            )
         }
     }
 
@@ -210,7 +291,10 @@ class WorkoutDetailViewModel @Inject constructor(
                     emitState {
                         copy(
                             workout = it,
-                            workoutStatus = status.getOrNull() ?: listOf()
+                            workoutStatus = status.getOrNull() ?: listOf(),
+                            completedExercises = status.getOrNull()?.mapNotNull { status ->
+                                if(status.exerciseDone) status.exerciseId else null
+                            }?.toSet()?:setOf()
                         )
                     }
                 },

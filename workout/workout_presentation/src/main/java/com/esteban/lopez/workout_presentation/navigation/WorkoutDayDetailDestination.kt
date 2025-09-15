@@ -78,6 +78,9 @@ fun WorkoutDayDetailDestination(
                 onStartWorkout = {
                     navController.navigate("${Routes.WORKOUT_PROGRESS}/$day")
                 },
+                onEditExercise = {
+                    navController.navigate("${Routes.NEW_EDIT_EXERCISE}/$it")
+                },
                 onAddExercisesClick = {
                     navController.navigate("${Routes.ADD_EXERCISES_TO_WORKOUT_DAY}/$day")
                 },

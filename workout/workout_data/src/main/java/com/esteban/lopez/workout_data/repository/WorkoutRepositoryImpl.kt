@@ -3,6 +3,7 @@ import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.helpers.NetworkHelper
 import com.esteban.ruano.core_data.repository.BaseRepository
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
+import com.esteban.ruano.lifecommander.models.CreateExerciseTrack
 import com.esteban.ruano.workout_data.datasources.WorkoutDataSource
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
@@ -71,6 +72,17 @@ class WorkoutRepositoryImpl (
             localFetch = { localDataSource.getExerciseById(exerciseId) },
             remoteFetch = { remoteDataSource.getExerciseById(exerciseId) },
             forceRefresh = false,
+        )
+    }
+
+    override suspend fun undoExercise(trackId: String): Result<Unit> {
+        return doRemoteRequest(
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            remoteFetch = {
+                remoteDataSource.undoExercise(
+                    trackId
+                )
+            }
         )
     }
 
@@ -162,4 +174,15 @@ class WorkoutRepositoryImpl (
             }
         )
     }
+
+    override suspend fun completeExercise(track: CreateExerciseTrack): Result<Unit> {
+        return doRemoteRequest(
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            remoteFetch = {
+                remoteDataSource.completeExercise(track)
+            }
+        )
+    }
+
+
 }

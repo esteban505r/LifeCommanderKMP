@@ -8,12 +8,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
@@ -27,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.theme.SoftGreen
 import com.esteban.ruano.core_ui.theme.SoftRed
+import com.esteban.ruano.core_ui.theme.SoftYellow
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.ExerciseSet
 import com.esteban.ruano.lifecommander.ui.components.ActionButton
@@ -56,9 +56,10 @@ fun ExerciseCard(
     sets: List<ExerciseSet>,
     day: String,
     // Actions
-    onUpdate: (Exercise) -> Unit = {},
+    onEdit: (Exercise) -> Unit = {},
     onDelete: (String) -> Unit = {},
     onCompleteExercise: (() -> Unit)? = null,
+    onUndoExercise: ((String) -> Unit)? = null,
     onAddSet: (repsDone: Int, exerciseId: String, workoutDayId: String, onResult: (ExerciseSet?) -> Unit) -> Unit,
     onUpdateSetReps: (setId: String, newReps: Int) -> Unit,
     onRemoveSet: (setId: String) -> Unit,
@@ -222,6 +223,13 @@ fun ExerciseCard(
                 }
             }
 
+            Spacer(Modifier.height(12.dp))
+
+            if (topError != null) {
+                BannerError(topError!!)
+                Spacer(Modifier.height(12.dp))
+            }
+
             // ---------- Sets ----------
             if(inProgress){
                 AnimatedVisibility(visible = expanded) {
@@ -233,6 +241,7 @@ fun ExerciseCard(
                                 icon = Icons.Filled.Lock
                             )
                         }
+
 
                         Spacer(Modifier.height(12.dp))
 
@@ -355,11 +364,6 @@ fun ExerciseCard(
             if (showActionButtons) {
                 Spacer(Modifier.height(16.dp))
 
-                if (topError != null) {
-                    BannerError(topError!!)
-                    Spacer(Modifier.height(12.dp))
-                }
-
                 Divider(color = MaterialTheme.colors.onSurface.copy(.08f), thickness = 1.dp)
                 Spacer(Modifier.height(12.dp))
 
@@ -374,42 +378,56 @@ fun ExerciseCard(
                         if (onCompleteExercise != null && inProgress) {
                             ActionButton(
                                 onClick = {
-                                    val expectedSets = exercise.baseSets ?: 0
-                                    val expectedReps = (exercise.baseReps ?: defaultReps).coerceAtLeast(0)
+                                    if(!isCompleted){
+                                        val expectedSets = exercise.baseSets ?: 0
+                                        val expectedReps =
+                                            (exercise.baseReps ?: defaultReps).coerceAtLeast(0)
 
-                                    // Case A: no sets at all -> block with error
-                                    if (sets.isEmpty()) {
-                                        topError = "Add at least one set before completing."
-                                        return@ActionButton
+                                        // Case A: no sets at all -> block with error
+                                        if (sets.isEmpty()) {
+                                            topError = "Add at least one set before completing."
+                                            return@ActionButton
+                                        }
+
+                                        // Case B: sets hidden & not all expected done -> propose auto-fill or edit
+                                        if (!expanded && expectedSets > 0 && sets.size < expectedSets) {
+                                            completePrompt =
+                                                CompletePrompt.AutoFill(expectedSets, expectedReps)
+                                            return@ActionButton
+                                        }
+
+                                        // Case C: partially done (some < expected) -> warn
+                                        if (expectedSets > 0 && sets.size in 1 until expectedSets) {
+                                            completePrompt =
+                                                CompletePrompt.Incomplete(expectedSets, sets.size)
+                                            return@ActionButton
+                                        }
+
+                                        // Case D: good to complete
+                                        onCompleteExercise()
                                     }
-
-                                    // Case B: sets hidden & not all expected done -> propose auto-fill or edit
-                                    if (!expanded && expectedSets > 0 && sets.size < expectedSets) {
-                                        completePrompt = CompletePrompt.AutoFill(expectedSets, expectedReps)
-                                        return@ActionButton
+                                    else{
+                                        onUndoExercise?.invoke(
+                                            exercise.id?:""
+                                        )
                                     }
-
-                                    // Case C: partially done (some < expected) -> warn
-                                    if (expectedSets > 0 && sets.size in 1 until expectedSets) {
-                                        completePrompt = CompletePrompt.Incomplete(expectedSets, sets.size)
-                                        return@ActionButton
-                                    }
-
-                                    // Case D: good to complete
-                                    onCompleteExercise()
                                 },
-                                icon = if (isCompleted) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                                label = if (isCompleted) "Completed" else "Mark complete",
+                                icon = if (!isCompleted) Icons.Filled.CheckCircle else Icons.AutoMirrored.Filled.Undo,
+                                label = if (!isCompleted) "Completed" else "Undo",
                                 colors = ButtonDefaults.buttonColors(
-                                    backgroundColor = SoftGreen,
+                                    backgroundColor = if(!isCompleted ) SoftGreen else SoftYellow,
                                     contentColor = Color.White
                                 ),
-                                border = BorderStroke(1.dp, SoftGreen.copy(.25f))
+                                border = BorderStroke(1.dp,
+                                    if(!isCompleted)
+                                    SoftGreen.copy(.25f)
+                                    else SoftYellow.copy(.25f)
+                                )
                             )
                         }
 
                         ActionButton(
-                            onClick = { onUpdate(exercise) },
+                            onClick = { onEdit(exercise) },
                             icon = Icons.Outlined.Edit,
                             label = "Edit",
                             colors = ButtonDefaults.outlinedButtonColors(
@@ -559,7 +577,7 @@ fun Preview_ExerciseCard_Active() {
                 exercise = exercise,
                 sets = sets,
                 day = "wd-123",
-                onUpdate = { /* no-op preview */ },
+                onEdit = { /* no-op preview */ },
                 // Callbacks (no-ops / simple stubs for preview)
                 onDelete = { /* no-op preview */ },
                 onCompleteExercise = { /* no-op preview */ },

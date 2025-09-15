@@ -226,7 +226,7 @@ private fun ColumnScope.WorkoutExercises(
                         exercise = workoutExercises[index],
                         sets = emptyList(),                 // no sets shown
                         day = "",                  // unused since sets are hidden
-                        onUpdate = { },
+                        onEdit = { },
                         onCompleteExercise = {  },
                         onAddSet = { _, _, _, onResult -> onResult(null) },
                         onUpdateSetReps = { _, _ -> }, // no-op
@@ -296,7 +296,7 @@ private fun ColumnScope.AllExercises(
                         exercise = exercise,
                         sets = listOf(),
                         day = "",
-                        onUpdate = {
+                        onEdit = {
 
                         },
                         onAddSet = {_,_,_,_ ->

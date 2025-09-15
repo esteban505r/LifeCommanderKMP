@@ -125,4 +125,10 @@ class WorkoutRepository(private val workoutService: WorkoutService) {
             userId,trackId
         )
     }
+
+    fun getExercise(userId: Int, id: String): ExerciseDTO {
+        return workoutService.getExercise(
+            userId,id
+        )
+    }
 }

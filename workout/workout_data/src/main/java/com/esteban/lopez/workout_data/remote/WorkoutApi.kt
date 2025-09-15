@@ -2,6 +2,8 @@ package com.esteban.ruano.workout_data.remote
 
 
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
+import com.esteban.ruano.lifecommander.models.CreateExerciseTrack
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
 import com.esteban.ruano.workout_data.remote.dto.ExerciseResponse
 import com.esteban.ruano.workout_data.remote.dto.WorkoutDashboardResponse
@@ -68,7 +70,7 @@ interface WorkoutApi {
     @GET("workout/exercises/{exerciseId}")
     suspend fun getExerciseById(
         @Path("exerciseId") exerciseId: String
-    ): ExerciseResponse
+    ): Exercise
 
     @GET("workout/exercise-tracking/completed/{workoutDayId}")
     suspend fun getWorkoutDayStatus(
@@ -82,5 +84,10 @@ interface WorkoutApi {
     @DELETE("workout/exercise-tracking/sets/{id}")
     suspend fun removeSet(@Path("id") id: String)
 
+    @DELETE("workout/exercise-tracking/{trackId}")
+    suspend fun undoExercise(@Path("trackId") trackId: String)
+
+    @POST("workout/exercise-tracking/complete")
+    suspend fun completeExercise(@Body() track: CreateExerciseTrack)
 
 }

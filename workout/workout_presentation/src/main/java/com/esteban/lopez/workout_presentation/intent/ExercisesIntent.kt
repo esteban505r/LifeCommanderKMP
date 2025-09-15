@@ -6,9 +6,17 @@ import com.esteban.ruano.lifecommander.models.Exercise
 
 sealed class ExercisesIntent : UserIntent{
     data object FetchExercises : ExercisesIntent()
+    data class FetchExercise(
+        val id:String
+    ) : ExercisesIntent()
     data class FetchExercisesByWorkoutDay(
         val workoutDayId: Int
     ) : ExercisesIntent()
+    data class UpdateExercise(
+        val id:String,
+        val exercise: Exercise
+    ): ExercisesIntent()
+
     data class SaveExercise(
         val exercise: Exercise
     ) : ExercisesIntent()

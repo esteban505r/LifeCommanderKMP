@@ -8,4 +8,5 @@ data class ExercisesState (
     val loading : Boolean = false,
     val errorMessage: String? = null,
     val showNewExerciseDialog: Boolean = false,
+    val editingExercise: Exercise? = null
 ): ViewState

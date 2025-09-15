@@ -1,6 +1,7 @@
 package com.esteban.ruano.workout_data.datasources
 
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
+import com.esteban.ruano.lifecommander.models.CreateExerciseTrack
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
 import com.esteban.ruano.workout_data.mappers.toExercise
@@ -59,7 +60,7 @@ class WorkoutRemoteDataSource(
     }
 
     override suspend fun getExerciseById(exerciseId: String): Exercise {
-        return api.getExerciseById(exerciseId).toExercise()
+        return api.getExerciseById(exerciseId)
     }
 
     override suspend fun addSet(dto: CreateExerciseSetTrackDTO,): Unit {
@@ -68,6 +69,14 @@ class WorkoutRemoteDataSource(
 
     override suspend fun removeSet(id: String) {
         return api.removeSet(id)
+    }
+
+    override suspend fun undoExercise(trackId: String) {
+        return api.undoExercise(trackId)
+    }
+
+    override suspend fun completeExercise(track: CreateExerciseTrack) {
+        return api.completeExercise(track)
     }
 
 }

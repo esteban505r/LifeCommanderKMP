@@ -1,6 +1,7 @@
 package com.esteban.ruano.workout_data.datasources
 
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
+import com.esteban.ruano.lifecommander.models.CreateExerciseTrack
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
 import com.esteban.ruano.workout_data.local.WorkoutDao
@@ -79,6 +80,14 @@ class WorkoutLocalDataSource(
     }
 
     override suspend fun removeSet(id: String) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun undoExercise(trackId: String) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun completeExercise(track: CreateExerciseTrack) {
         TODO("Not yet implemented")
     }
 

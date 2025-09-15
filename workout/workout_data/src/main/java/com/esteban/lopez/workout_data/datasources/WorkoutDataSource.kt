@@ -1,6 +1,7 @@
 package com.esteban.ruano.workout_data.datasources
 
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
+import com.esteban.ruano.lifecommander.models.CreateExerciseTrack
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
@@ -34,4 +35,7 @@ interface WorkoutDataSource {
 
     suspend fun addSet(dto: CreateExerciseSetTrackDTO): Unit
     suspend fun removeSet(id:String): Unit
+
+    suspend fun undoExercise(trackId:String)
+    suspend fun completeExercise(track:CreateExerciseTrack)
 }

@@ -1,6 +1,7 @@
 package com.esteban.ruano.workout_domain.repository
 
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
+import com.esteban.ruano.lifecommander.models.CreateExerciseTrack
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
 import com.esteban.ruano.workout_domain.model.WorkoutDashboard
@@ -33,6 +34,10 @@ interface WorkoutRepository {
         exerciseId: String
     ): Result<Exercise>
 
+    suspend fun undoExercise(
+        trackId: String
+    ): Result<Unit>
+
     suspend fun getExercises(
     ): Result<List<Exercise>>
 
@@ -64,4 +69,5 @@ interface WorkoutRepository {
     ):Result<Unit>
 
     suspend fun removeSet(id: String): Result<Unit>
+    suspend fun completeExercise(track: CreateExerciseTrack): Result<Unit>
 }

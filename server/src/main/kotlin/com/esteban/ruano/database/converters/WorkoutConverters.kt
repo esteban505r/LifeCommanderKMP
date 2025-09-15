@@ -20,7 +20,7 @@ fun WorkoutDay.toDTO(exercises: List<ExerciseDTO>): WorkoutDayDTO {
 }
 
 fun Exercise.toDTO(
-    equipmentDTO: List<EquipmentDTO>
+    equipmentDTO: List<EquipmentDTO> = listOf()
 ): ExerciseDTO {
     return ExerciseDTO(
         id = this.id.toString(),

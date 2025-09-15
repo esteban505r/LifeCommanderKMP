@@ -2,6 +2,7 @@ package com.esteban.ruano.workout_domain.di
 
 import com.esteban.ruano.workout_domain.repository.WorkoutRepository
 import com.esteban.ruano.workout_domain.use_cases.AddSet
+import com.esteban.ruano.workout_domain.use_cases.CompleteExercise
 import com.esteban.ruano.workout_domain.use_cases.GetExerciseById
 import com.esteban.ruano.workout_domain.use_cases.GetExercises
 import com.esteban.ruano.workout_domain.use_cases.GetExercisesByWorkoutDay
@@ -15,6 +16,7 @@ import com.esteban.ruano.workout_domain.use_cases.LinkExerciseWithWorkoutDay
 import com.esteban.ruano.workout_domain.use_cases.RemoveSet
 import com.esteban.ruano.workout_domain.use_cases.SaveExercise
 import com.esteban.ruano.workout_domain.use_cases.SaveWorkoutDay
+import com.esteban.ruano.workout_domain.use_cases.UndoExercise
 import com.esteban.ruano.workout_domain.use_cases.UpdateWorkoutDay
 import com.esteban.ruano.workout_domain.use_cases.WorkoutUseCases
 import dagger.Module
@@ -47,7 +49,9 @@ object WorkoutDomainModule {
             getExerciseById = GetExerciseById(repository),
             addSet = AddSet(repository),
             getWorkoutDayStatus = GetWorkoutDayStatus(repository),
-            removeSet = RemoveSet(repository)
+            removeSet = RemoveSet(repository),
+            undoExercise = UndoExercise(repository),
+            completeExercise = CompleteExercise(repository),
         )
     }
 }

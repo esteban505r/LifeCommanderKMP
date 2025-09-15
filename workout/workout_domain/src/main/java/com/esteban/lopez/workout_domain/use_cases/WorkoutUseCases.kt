@@ -12,6 +12,8 @@ data class WorkoutUseCases(
     val saveExercise: SaveExercise,
     val addSet: AddSet,
     val removeSet: RemoveSet,
+    val completeExercise: CompleteExercise,
+    val undoExercise: UndoExercise,
     val saveWorkoutDay: SaveWorkoutDay,
     val updateWorkoutDay: UpdateWorkoutDay,
     val linkExerciseToWorkoutDay: LinkExerciseWithWorkoutDay,

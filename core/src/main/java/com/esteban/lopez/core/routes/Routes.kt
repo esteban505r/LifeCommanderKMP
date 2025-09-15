@@ -2,6 +2,7 @@ package com.esteban.ruano.core.routes
 
 object Routes {
 
+
     const val KEY_ROUTE = "androidx.navigation.compose.KEY_ROUTE"
 
     object BASE {
@@ -29,7 +30,7 @@ object Routes {
     const val WORKOUT_DAY_EXERCISES = "workout_exercises"
     const val EXERCISES = "exercises"
     const val EXERCISE_DETAIL = "exercise_detail"
-    const val NEW_EXERCISE = "new_exercise"
+    const val NEW_EDIT_EXERCISE = "new_exercise"
     const val ADD_EXERCISES_TO_WORKOUT_DAY = "add_exercises_to_workout_day"
     //Nutrition
     const val RECIPES = "recipes"

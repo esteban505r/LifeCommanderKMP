@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.composables.AppBar
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
 import com.esteban.ruano.workout_presentation.ui.composable.ExerciseCard
@@ -59,6 +60,7 @@ fun WorkoutDayDetailScreen(
     onClose: () -> Unit,
     onStartWorkout: () -> Unit,
     onAddExercisesClick: () -> Unit,
+    onEditExercise: (String) -> Unit,
     state: WorkoutDayDetailState,
     userIntent: (WorkoutIntent) -> Unit,
 ) {
@@ -69,10 +71,10 @@ fun WorkoutDayDetailScreen(
 
     val isRefreshing = state.isLoading
     val pullRefreshState = rememberPullRefreshState(refreshing = isRefreshing, onRefresh = {
-            coroutineScope.launch {
-                userIntent(WorkoutIntent.FetchWorkoutByDay(day))
-            }
-        })
+        coroutineScope.launch {
+            userIntent(WorkoutIntent.FetchWorkoutByDay(day))
+        }
+    })
 
     // Fetch completed exercises when workout day is loaded
     LaunchedEffect(state.workout?.id) {
@@ -81,7 +83,11 @@ fun WorkoutDayDetailScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState)
+    ) {
 
         val exercises = state.workout?.exercises ?: emptyList()
         if (exercises.isEmpty()) {
@@ -109,84 +115,124 @@ fun WorkoutDayDetailScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 AppBar(title = "Workout Detail")
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // Workout completion status
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    backgroundColor = if (state.isWorkoutCompleted) 
-                        MaterialTheme.colors.primary.copy(alpha = 0.1f) 
-                    else 
+                    backgroundColor = if (state.isWorkoutCompleted)
+                        MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                    else
                         MaterialTheme.colors.surface
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier.padding(16.dp)
                         ) {
-                            Icon(
-                                if (state.isWorkoutCompleted) Icons.Default.CheckCircle else Icons.Default.CheckCircleOutline,
-                                contentDescription = if (state.isWorkoutCompleted) "Completed" else "Not Completed",
-                                tint = if (state.isWorkoutCompleted) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                if (state.isWorkoutCompleted) "Workout Completed" else "Workout In Progress",
-                                style = MaterialTheme.typography.h6.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (state.isWorkoutCompleted) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    if (state.isWorkoutCompleted) Icons.Default.CheckCircle else Icons.Default.CheckCircleOutline,
+                                    contentDescription = if (state.isWorkoutCompleted) "Completed" else "Not Completed",
+                                    tint = if (state.isWorkoutCompleted) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface.copy(
+                                        alpha = 0.6f
+                                    )
                                 )
-                            )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    if (state.isWorkoutCompleted) "Workout Completed" else "Workout In Progress",
+                                    style = MaterialTheme.typography.h6.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (state.isWorkoutCompleted) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
+                                    )
+                                )
+                            }
+
+                            if (!state.isWorkoutCompleted) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "${state.completedExercises.size} of ${exercises.size} exercises completed",
+                                    style = MaterialTheme.typography.body2.copy(
+                                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                                    )
+                                )
+                            }
                         }
-                        
                         if (!state.isWorkoutCompleted) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                "${state.completedExercises.size} of ${exercises.size} exercises completed",
-                                style = MaterialTheme.typography.body2.copy(
-                                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
-                                )
-                            )
+                            Button(
+                                onClick = {
+                                    if (state.completedExercises.size >= exercises.size) {
+                                        state.workout?.day?.let { day ->
+                                            userIntent(WorkoutIntent.CompleteWorkout(day))
+                                        }
+                                        return@Button
+                                    }
+                                    showCompletionDialog = true
+                                }
+                            ) {
+                                Text("Complete")
+                            }
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
                     stringResource(id = R.string.sets_and_reps),
                     style = MaterialTheme.typography.h4
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(exercises) { exercise ->
                         ExerciseCard(
                             exercise = exercise,
-                            onUpdate = { /* TODO: Implement edit exercise */ },
+                            onEdit = {
+                                onEditExercise(
+                                    it.id?:""
+                                )
+                            },
                             onDelete = { exerciseId ->
                                 userIntent(WorkoutIntent.DeleteExercise(exerciseId))
                             },
                             onCompleteExercise = {
                                 state.workout?.id?.let { dayId ->
-                                    userIntent(WorkoutIntent.CompleteExerciseById(exercise.id ?: "", dayId))
+                                    userIntent(
+                                        WorkoutIntent.CompleteExerciseById(
+                                            exercise.id ?: "", dayId, getCurrentDateTime(
+                                                TimeZone.currentSystemDefault()
+                                            ).formatDefault()
+                                        ) {
+                                            userIntent(WorkoutIntent.FetchWorkoutByDay(day))
+                                        }
+                                    )
                                 }
                             },
                             isCompleted = state.completedExercises.contains(exercise.id),
                             showActionButtons = true,
-                            sets = state.workoutStatus.firstOrNull{it.exerciseId == exercise.id}?.setsDone?:emptyList(),
+                            sets = state.workoutStatus.firstOrNull { it.exerciseId == exercise.id }?.setsDone
+                                ?: emptyList(),
                             day = day,
                             workoutId = state.workout?.id,
-                            onAddSet = {reps,exerciseId,workoutDayId,_ ->
-                                userIntent(WorkoutIntent.AddSet(exerciseId,reps,workoutDayId))
+                            onAddSet = { reps, exerciseId, workoutDayId, _ ->
+                                userIntent(WorkoutIntent.AddSet(exerciseId, reps, workoutDayId))
                             },
-                            onUpdateSetReps = { _,_ ->
+                            onUpdateSetReps = { _, _ ->
 
                             },
                             onRemoveSet = {
-                                userIntent(WorkoutIntent.RemoveSet(it,{
+                                userIntent(WorkoutIntent.RemoveSet(it, {
+                                    userIntent(WorkoutIntent.FetchWorkoutByDay(day))
+                                }))
+                            },
+                            onUndoExercise = {
+                                userIntent(WorkoutIntent.UndoExercise(it, {
                                     userIntent(WorkoutIntent.FetchWorkoutByDay(day))
                                 }))
                             },
@@ -196,7 +242,7 @@ fun WorkoutDayDetailScreen(
                             ).date.dayOfWeek.value == state.workout?.day
                         )
                     }
-                    
+
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -233,7 +279,7 @@ fun WorkoutDayDetailScreen(
             }
 
             // Bottom action buttons
-            Column(
+            /*Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
@@ -264,15 +310,15 @@ fun WorkoutDayDetailScreen(
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
-            }
-            
+            }*/
+
             PullRefreshIndicator(
                 isRefreshing,
                 pullRefreshState,
                 Modifier.align(Alignment.TopCenter)
             )
         }
-        
+
         // Workout completion dialog
         WorkoutCompletionDialog(
             show = showCompletionDialog,
@@ -293,12 +339,12 @@ fun WorkoutDayDetailScreen(
 @Composable
 fun NotFoundScreen(
     context: Context,
-    workoutId:String,
-){
+    workoutId: String,
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
-        AppBar(title = workoutId.toIntOrNull()?.toDayOfTheWeekString(context)?: "")
+        AppBar(title = workoutId.toIntOrNull()?.toDayOfTheWeekString(context) ?: "")
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 text = stringResource(R.string.empty_workout_day),

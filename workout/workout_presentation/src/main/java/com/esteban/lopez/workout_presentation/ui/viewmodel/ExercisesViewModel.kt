@@ -34,7 +34,37 @@ class ExercisesViewModel @Inject constructor(
                         ExercisesEffect.NavigateUp
                     }
                 }
+
+                is ExercisesIntent.FetchExercise -> {
+                    fetchExercise(it.id)
+                }
+                is ExercisesIntent.UpdateExercise -> {
+
+                }
             }
+        }
+    }
+
+
+    private fun fetchExercise(id:String) {
+        viewModelScope.launch {
+            val result = workoutUseCases.getExerciseById(id)
+            result.fold(
+                onSuccess = {
+                    emitState {
+                        copy(
+                            editingExercise = it
+                        )
+                    }
+                },
+                onFailure = {
+                    emitState {
+                        copy(
+                            errorMessage = it.message
+                        )
+                    }
+                }
+            )
         }
     }
 
