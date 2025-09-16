@@ -2,6 +2,7 @@ package com.esteban.ruano.workout_presentation.ui.viewmodel
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.esteban.ruano.core.utils.DateUtils.formatElapsedTime
 import com.esteban.ruano.core_ui.view_model.BaseViewModel
@@ -107,8 +108,81 @@ class WorkoutDetailViewModel @Inject constructor(
                     )
                 }
 
+                is WorkoutIntent.DeleteExercise -> {
+                    deleteExercise(
+                        it.exerciseId,
+                        it.onSuccess
+                    )
+                }
+
+                is WorkoutIntent.UnlinkExerciseFromDay -> {
+                    Log.d("WorkoutDetailViewModel","CALLING unlink")
+                    unlinkExerciseFromDay(
+                        it.exerciseId,
+                        it.day,
+                        it.onSuccess
+                    )
+                }
+
+
                 else -> {}
             }
+        }
+    }
+
+    private fun unlinkExerciseFromDay(exerciseId: String, day: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            emitState {
+                copy(isLoading = true)
+            }
+            val result = workoutUseCases.unlinkExerciseFromDay(
+                day.toIntOrNull()?:-1,
+                exerciseId
+            )
+            result.fold(
+                onSuccess = {
+                    emitState {
+                        copy(isLoading = false)
+                    }
+                    onSuccess.invoke()
+                },
+                onFailure = {
+                    emitState {
+                        copy(
+                            isLoading = false,
+                            errorMessage = it.message
+                        )
+                    }
+                }
+            )
+        }
+
+    }
+
+    private fun deleteExercise(exerciseId: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            emitState {
+                copy(isLoading = true)
+            }
+            val result = workoutUseCases.deleteExercise(
+                exerciseId
+            )
+            result.fold(
+                onSuccess = {
+                    emitState {
+                        copy(isLoading = false)
+                    }
+                    onSuccess.invoke()
+                },
+                onFailure = {
+                    emitState {
+                        copy(
+                            isLoading = false,
+                            errorMessage = it.message
+                        )
+                    }
+                }
+            )
         }
     }
 
@@ -281,6 +355,11 @@ class WorkoutDetailViewModel @Inject constructor(
         id: Int,
     ) {
         viewModelScope.launch {
+            emitState {
+                copy(
+                    isLoading = true
+                )
+            }
             val result = workoutUseCases.getWorkoutDayById(id)
             result.fold(
                 onSuccess = {
@@ -292,6 +371,7 @@ class WorkoutDetailViewModel @Inject constructor(
                         copy(
                             workout = it,
                             workoutStatus = status.getOrNull() ?: listOf(),
+                            isLoading = false,
                             completedExercises = status.getOrNull()?.mapNotNull { status ->
                                 if(status.exerciseDone) status.exerciseId else null
                             }?.toSet()?:setOf()
@@ -301,6 +381,7 @@ class WorkoutDetailViewModel @Inject constructor(
                 onFailure = {
                     emitState {
                         copy(
+                            isLoading = false,
                             errorMessage = it.message
                         )
                     }

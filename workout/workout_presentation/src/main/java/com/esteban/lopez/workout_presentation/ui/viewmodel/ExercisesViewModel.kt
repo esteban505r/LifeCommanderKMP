@@ -39,9 +39,39 @@ class ExercisesViewModel @Inject constructor(
                     fetchExercise(it.id)
                 }
                 is ExercisesIntent.UpdateExercise -> {
-
+                    updateExercise(it.id,it.exercise,it.onSuccess)
                 }
             }
+        }
+    }
+
+    private fun updateExercise(
+        id: String,
+        exercise: Exercise,
+        onSuccess: () -> Unit
+    ) {
+        viewModelScope.launch {
+            emitState {
+                copy(
+                    loading = true
+                )
+            }
+            val result = workoutUseCases.updateExercise(id,exercise)
+            result.fold({
+                emitState {
+                    copy(
+                        loading = true
+                    )
+                }
+                onSuccess()
+            },{
+                emitState {
+                    copy(
+                        loading = false,
+                        errorMessage = it.message
+                    )
+                }
+            })
         }
     }
 
@@ -71,6 +101,11 @@ class ExercisesViewModel @Inject constructor(
 
     private fun fetchExercises() {
         viewModelScope.launch {
+            emitState {
+                copy(
+                    loading = true
+                )
+            }
             val result = workoutUseCases.getExercises()
             result.fold(
                 onSuccess = {
@@ -79,11 +114,17 @@ class ExercisesViewModel @Inject constructor(
                             exercises = it
                         )
                     }
+                    emitState {
+                        copy(
+                            loading = false
+                        )
+                    }
                 },
                 onFailure = {
                     emitState {
                         copy(
-                            errorMessage = it.message
+                            errorMessage = it.message,
+                            loading = false
                         )
                     }
                 }

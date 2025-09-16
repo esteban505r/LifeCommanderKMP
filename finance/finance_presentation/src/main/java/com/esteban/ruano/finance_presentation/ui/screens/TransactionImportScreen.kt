@@ -13,12 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.theme.Orange
 import com.esteban.ruano.finance_presentation.ui.viewmodel.FinanceViewModel
+import com.esteban.ruano.ui.Orange
 import com.esteban.ruano.utils.DateUIUtils.formatCurrency
 import com.lifecommander.finance.model.*
 import kotlinx.coroutines.launch

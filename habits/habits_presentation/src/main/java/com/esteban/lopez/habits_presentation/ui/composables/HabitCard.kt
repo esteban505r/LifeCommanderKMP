@@ -14,7 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.theme.Gray3
+import com.esteban.ruano.ui.Gray3
 import com.lifecommander.models.Habit
 import kotlinx.coroutines.launch
 

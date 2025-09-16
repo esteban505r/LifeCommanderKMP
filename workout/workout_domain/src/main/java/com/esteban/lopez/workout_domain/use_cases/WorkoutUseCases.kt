@@ -10,6 +10,8 @@ data class WorkoutUseCases(
     val getExercisesByWorkoutDay: GetExercisesByWorkoutDay,
     val getExercises: GetExercises,
     val saveExercise: SaveExercise,
+    val updateExercise: UpdateExercise,
+    val deleteExercise: DeleteExercise,
     val addSet: AddSet,
     val removeSet: RemoveSet,
     val completeExercise: CompleteExercise,
@@ -18,4 +20,5 @@ data class WorkoutUseCases(
     val updateWorkoutDay: UpdateWorkoutDay,
     val linkExerciseToWorkoutDay: LinkExerciseWithWorkoutDay,
     val getExerciseById: GetExerciseById,
+    val unlinkExerciseFromDay:UnLinkExerciseWithWorkoutDay
 )

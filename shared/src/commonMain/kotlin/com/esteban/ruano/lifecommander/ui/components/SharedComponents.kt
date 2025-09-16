@@ -35,7 +35,8 @@ fun SharedAppBar(
     title: String,
     onSettingsClick: () -> Unit,
     onLogoutClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     
@@ -61,79 +62,9 @@ fun SharedAppBar(
                     color = LifeCommanderDesignSystem.colors.OnSurface
                 )
             )
-            
-            Box {
-                IconButton(
-                    onClick = { showMenu = true },
-                    modifier = Modifier
-                        .size(LifeCommanderDesignSystem.dimensions.TouchRecommended)
-                        .clip(CircleShape)
-                        .background(LifeCommanderDesignSystem.colors.Surface)
-                        .border(
-                            LifeCommanderDesignSystem.dimensions.BorderMedium,
-                            LifeCommanderDesignSystem.colors.Border,
-                            CircleShape
-                        )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Menu",
-                        modifier = Modifier.size(LifeCommanderDesignSystem.dimensions.IconLarge),
-                        tint = LifeCommanderDesignSystem.colors.OnSurfaceVariant
-                    )
-                }
-                
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false },
-                    modifier = Modifier.background(LifeCommanderDesignSystem.colors.Surface)
-                ) {
-                    DropdownMenuItem(
-                        onClick = {
-                            showMenu = false
-                            onSettingsClick()
-                        }
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = null,
-                                tint = LifeCommanderDesignSystem.colors.OnSurfaceVariant
-                            )
-                            Text(
-                                text = "Settings",
-                                style = MaterialTheme.typography.body1,
-                                color = LifeCommanderDesignSystem.colors.OnSurface
-                            )
-                        }
-                    }
-                    
-                    DropdownMenuItem(
-                        onClick = {
-                            showMenu = false
-                            onLogoutClick()
-                        }
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ExitToApp,
-                                contentDescription = null,
-                                tint = LifeCommanderDesignSystem.colors.Error
-                            )
-                            Text(
-                                text = "Logout",
-                                style = MaterialTheme.typography.body1,
-                                color = LifeCommanderDesignSystem.colors.Error
-                            )
-                        }
-                    }
-                }
+
+            Row {
+                actions()
             }
         }
     }

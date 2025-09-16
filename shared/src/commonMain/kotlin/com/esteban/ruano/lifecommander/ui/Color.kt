@@ -4,6 +4,10 @@ import androidx.compose.ui.graphics.Color
 
 // Legacy Colors (keeping for backward compatibility)
 val Blue = Color(0xFF617AFA)
+val Blue2 = Color(0xFF31326F)
+val SoftBlue2 = Color(0xFF527bca)
+val SoftGreen2 = Color(0xFF4FB7B3)
+val LightGreen2 = Color(0xFFA8FBD3)
 val BlueVariant = Color(0xFF3F51B5)
 val Orange =  Color(0xFFFFAA00)
 val CarbColor = Color(0xFFEEFF00)
@@ -27,9 +31,9 @@ val SoftBlue = Color(0xFF3F51B5)
 val DarkGreen = Color(0xFF00790C)
 val TextWhite = Color(0xFFEEEEEE)
 
-val PrimaryColor = Blue
-val PrimaryVariantColor = BlueVariant
-val SecondaryColor = Orange
+val PrimaryColor = SoftBlue2
+val PrimaryVariantColor = Blue2
+val SecondaryColor = LightGreen2
 val DangerColor = Color(0xFFB00020)
 val WarningColor = Color(0xFFFFAB00)
 val InfoColor = Color(0xFF018786)
@@ -38,13 +42,13 @@ val SuccessColor = Color(0xFF00C853)
 // Modern Cross-Platform Design System
 object LifeCommanderColors {
     // Primary Colors
-    val Primary = Color(0xFF2196F3)
-    val PrimaryDark = Color(0xFF1976D2)
-    val PrimaryLight = Color(0xFF64B5F6)
+    val Primary = SoftBlue2
+    val PrimaryDark = Blue2
+    val PrimaryLight = SoftGreen2
     
     // Secondary Colors
     val Secondary = Color(0xFF4CAF50)
-    val SecondaryDark = Color(0xFF388E3C)
+    val SecondaryDark = Blue2
     val SecondaryLight = Color(0xFF81C784)
     
     // Accent Colors
@@ -152,5 +156,38 @@ object LifeCommanderGradients {
         LifeCommanderColors.Background,
         Color.White
     )
+
+    object HomeColors {
+        val PrimaryBlue = Color(0xFF2196F3)
+        val PrimaryDark = Color(0xFF1976D2)
+        val AccentPink = Color(0xFFE91E63)
+        val AccentOrange = Color(0xFFFF5722)
+        val SoftGreen = Color(0xFF4CAF50)
+        val SoftPurple = Color(0xFF9C27B0)
+        val LightBackground = Color(0xFFF8F9FA)
+        val CardBackground = Color(0xFFFFFFFF)
+
+        // Text Colors
+        val TextPrimary = Color(0xFF1E293B)
+        val TextSecondary = Color(0xFF64748B)
+        val TextTertiary = Color(0xFF94A3B8)
+
+        // Status Colors
+        val StatusHigh = Color(0xFFDC2626)
+        val StatusMedium = Color(0xFFF59E0B)
+        val StatusLow = Color(0xFF06B6D4)
+
+        // Surface Colors
+        val SurfaceLight = Color(0xFFF1F5F9)
+        val SurfaceBorder = Color(0xFFE2E8F0)
+
+        // Category Colors
+        val CategoryBlue = Color(0xFF3B82F6)
+        val CategoryGreen = Color(0xFF10B981)
+        val CategoryYellow = Color(0xFFF59E0B)
+        val CategoryRed = Color(0xFFEF4444)
+        val CategoryPurple = Color(0xFF8B5CF6)
+        val CategoryCyan = Color(0xFF06B6D4)
+    }
 }
 

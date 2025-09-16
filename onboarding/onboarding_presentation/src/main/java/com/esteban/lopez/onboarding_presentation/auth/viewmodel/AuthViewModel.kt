@@ -2,9 +2,9 @@ package com.esteban.ruano.onboarding_presentation.auth.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.esteban.lopez.core.utils.SnackbarType
 import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core_ui.services.FcmTokenService
-import com.esteban.ruano.core_ui.utils.SnackbarType
 import com.esteban.ruano.core_ui.view_model.BaseViewModel
 import com.esteban.ruano.onboarding_domain.use_case.AuthUseCases
 import com.esteban.ruano.onboarding_presentation.auth.intent.AuthIntent

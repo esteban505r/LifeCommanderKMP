@@ -1,4 +1,4 @@
-package com.esteban.ruano.core_ui.utils
+package com.esteban.lopez.core.utils
 
 enum class SnackbarType {
     SUCCESS,

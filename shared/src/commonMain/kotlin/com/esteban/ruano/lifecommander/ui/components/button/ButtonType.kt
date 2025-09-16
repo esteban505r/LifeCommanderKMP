@@ -1,12 +1,12 @@
-package com.esteban.ruano.core_ui.composables.button
+package com.esteban.ruano.lifecommander.ui.components.button
 
 import androidx.compose.ui.graphics.Color
-import com.esteban.ruano.core_ui.theme.DangerColor
-import com.esteban.ruano.core_ui.theme.InfoColor
-import com.esteban.ruano.core_ui.theme.PrimaryColor
-import com.esteban.ruano.core_ui.theme.PrimaryVariantColor
-import com.esteban.ruano.core_ui.theme.SuccessColor
-import com.esteban.ruano.core_ui.theme.WarningColor
+import com.esteban.ruano.ui.DangerColor
+import com.esteban.ruano.ui.InfoColor
+import com.esteban.ruano.ui.PrimaryColor
+import com.esteban.ruano.ui.PrimaryVariantColor
+import com.esteban.ruano.ui.SuccessColor
+import com.esteban.ruano.ui.WarningColor
 
 enum class ButtonType {
     PRIMARY,

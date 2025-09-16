@@ -14,6 +14,7 @@ import com.esteban.ruano.models.workout.CreateExerciseTrackDTO
 import com.esteban.ruano.models.workout.day.UpdateWorkoutDayDTO
 import com.esteban.ruano.models.workout.exercise.ExerciseDTO
 import com.esteban.ruano.repository.WorkoutRepository
+import java.util.UUID
 
 fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
 
@@ -59,8 +60,8 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
             }
         }
 
-        route("/exercises/{id}") {
-            get{
+        route("/exercises") {
+            get("/{id}"){
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val id = call.parameters["id"]?:""
                 call.respond(workoutRepository.getExercise(userId,id))
@@ -71,6 +72,27 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
                 val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
                 val offset = call.request.queryParameters["offset"]?.toLong() ?: 0
                 call.respond(workoutRepository.getExercises(userId, filter, limit, offset))
+            }
+            patch("/{id}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val id = call.parameters["id"]?:""
+                val exercise = call.receive<ExerciseDTO>()
+                val wasUpdated = workoutRepository.updateExercise(userId, UUID.fromString(id),exercise)
+                if (wasUpdated) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+            delete("/{id}") {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val id = call.parameters["id"]?:""
+                val wasDeleted = workoutRepository.deleteExercise(userId, UUID.fromString(id))
+                if (wasDeleted) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
             }
             post {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
@@ -100,7 +122,7 @@ fun Route.workoutRouting(workoutRepository: WorkoutRepository) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid request format")
                 }
             }
-            delete("/bind") {
+            post("/unbind") {
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
                 val params = call.receive<Map<String, String>>()
                 val exerciseId = params["exerciseId"]

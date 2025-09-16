@@ -59,7 +59,12 @@ interface WorkoutRepository {
 
     suspend fun linkExerciseWithWorkoutDay(
         workoutDayId: Int,
-        exerciseId: Int
+        exerciseId: String
+    ): Result<Unit>
+
+    suspend fun unlinkExerciseWithWorkoutDay(
+        workoutDayId: Int,
+        exerciseId: String
     ): Result<Unit>
 
     suspend fun getWorkoutDashboard(): Result<WorkoutDashboard>
@@ -70,4 +75,6 @@ interface WorkoutRepository {
 
     suspend fun removeSet(id: String): Result<Unit>
     suspend fun completeExercise(track: CreateExerciseTrack): Result<Unit>
+    suspend fun updateExercise(id: String, exercise: Exercise): Result<Unit>
+    suspend fun deleteExercise(id: String): Result<Unit>
 }

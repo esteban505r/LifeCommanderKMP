@@ -1,7 +1,5 @@
 package com.esteban.ruano.habits_presentation.ui.screens
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +25,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,18 +40,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.AppBar
-import com.esteban.ruano.core_ui.composables.button.BaseButton
-import com.esteban.ruano.core_ui.theme.LightGray2
-import com.esteban.ruano.core_ui.theme.LightGray3
-import com.esteban.ruano.core_ui.theme.MediumGray
-import com.esteban.ruano.core_ui.theme.SoftYellow
+import com.esteban.ruano.lifecommander.ui.components.AppBar
+import com.esteban.ruano.lifecommander.ui.components.button.BaseButton
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDate
 import com.lifecommander.models.Frequency
 import com.esteban.ruano.habits_presentation.ui.composables.HabitReminderItem
 import com.esteban.ruano.habits_presentation.ui.intent.HabitIntent
 import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.state.HabitDetailState
 import com.esteban.ruano.habits_presentation.ui.utils.FrequencyUtils
+import com.esteban.ruano.ui.LightGray2
+import com.esteban.ruano.ui.LightGray3
+import com.esteban.ruano.ui.SoftYellow
 import com.esteban.ruano.utils.HabitsUtils.date
 import com.esteban.ruano.utils.HabitsUtils.time
 import com.lifecommander.models.Habit

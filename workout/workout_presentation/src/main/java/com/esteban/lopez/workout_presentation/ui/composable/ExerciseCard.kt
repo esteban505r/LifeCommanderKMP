@@ -24,9 +24,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.esteban.ruano.core_ui.theme.SoftGreen
-import com.esteban.ruano.core_ui.theme.SoftRed
-import com.esteban.ruano.core_ui.theme.SoftYellow
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.ExerciseSet
 import com.esteban.ruano.lifecommander.ui.components.ActionButton
@@ -36,6 +33,10 @@ import com.esteban.ruano.lifecommander.ui.components.BannerInfo
 import com.esteban.ruano.lifecommander.ui.components.SetRow
 import com.esteban.ruano.lifecommander.ui.components.StatChip
 import com.esteban.ruano.lifecommander.ui.components.StatusChip
+import com.esteban.ruano.ui.SoftBlue
+import com.esteban.ruano.ui.SoftGreen
+import com.esteban.ruano.ui.SoftRed
+import com.esteban.ruano.ui.SoftYellow
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import kotlinx.datetime.TimeZone
@@ -54,7 +55,6 @@ fun ExerciseCard(
     modifier: Modifier = Modifier,
     exercise: Exercise,
     sets: List<ExerciseSet>,
-    day: String,
     // Actions
     onEdit: (Exercise) -> Unit = {},
     onDelete: (String) -> Unit = {},
@@ -69,7 +69,8 @@ fun ExerciseCard(
     showActionButtons: Boolean = true,
     inProgress: Boolean = false,
     defaultReps: Int = 0,
-    workoutId: String? = null
+    workoutId: String? = null,
+    onShowMoreOptions: (String) -> Unit = {}
 ) {
     // --- Local UI state ---
     var expanded by remember { mutableStateOf(false) }
@@ -437,11 +438,11 @@ fun ExerciseCard(
                         )
 
                         ActionButton(
-                            onClick = { onDelete(exercise.id.orEmpty()) },
-                            icon = Icons.Outlined.Delete,
-                            label = "Delete",
+                            onClick = { exercise.id?.let { onShowMoreOptions.invoke(it) } },
+                            icon = Icons.Outlined.Menu,
+                            label = "Show menu",
                             colors = ButtonDefaults.buttonColors(
-                                backgroundColor = SoftRed,
+                                backgroundColor = SoftBlue,
                                 contentColor = Color.White
                             ),
                             border = BorderStroke(1.dp, SoftRed.copy(.25f))
@@ -576,7 +577,6 @@ fun Preview_ExerciseCard_Active() {
             ExerciseCard(
                 exercise = exercise,
                 sets = sets,
-                day = "wd-123",
                 onEdit = { /* no-op preview */ },
                 // Callbacks (no-ops / simple stubs for preview)
                 onDelete = { /* no-op preview */ },
@@ -609,7 +609,6 @@ fun Preview_ExerciseCard_Completed() {
             ExerciseCard(
                 exercise = exercise,
                 sets = sets,
-                day = "wd-456",
                 onCompleteExercise = {},
                 onAddSet = { _, _, _, onResult -> onResult(null) },
                 onUpdateSetReps = { _, _ -> },
@@ -637,7 +636,6 @@ fun Preview_ExerciseCard_LongList() {
             ExerciseCard(
                 exercise = exercise,
                 sets = sets,
-                day = "wd-789",
                 onCompleteExercise = {},
                 onAddSet = { repsDone, _, _, onResult -> onResult(sampleSet(repsDone)) },
                 onUpdateSetReps = { _, _ -> },

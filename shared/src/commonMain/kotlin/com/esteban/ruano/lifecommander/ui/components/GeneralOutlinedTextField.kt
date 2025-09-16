@@ -1,4 +1,4 @@
-package com.esteban.ruano.core_ui.composables
+package com.esteban.ruano.lifecommander.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,11 +8,9 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.esteban.ruano.core_ui.theme.Gray
-import com.esteban.ruano.core_ui.theme.Gray2
-import com.esteban.ruano.core_ui.R
+import com.esteban.ruano.ui.Gray
+import com.esteban.ruano.ui.Gray2
 
 @Composable
 fun GeneralOutlinedTextField(value: String,placeHolder: String? = null, onValueChange: (String) -> Unit){
@@ -31,7 +29,7 @@ fun GeneralOutlinedTextField(value: String,placeHolder: String? = null, onValueC
     )
 }
 
-@Composable
+/*@Composable
 fun GeneralOutlinedTextField(value: String,placeHolder: Int? = null, onValueChange: (String) -> Unit){
     OutlinedTextField(
         modifier = Modifier.fillMaxWidth(),
@@ -46,7 +44,7 @@ fun GeneralOutlinedTextField(value: String,placeHolder: Int? = null, onValueChan
         onValueChange = onValueChange,
         label =  if(placeHolder!=null) { { Text(stringResource(id = placeHolder)) } } else null
     )
-}
+}*/
 
 @Composable
 fun GeneralOutlinedTextField(value: String, onValueChange: (String) -> Unit){

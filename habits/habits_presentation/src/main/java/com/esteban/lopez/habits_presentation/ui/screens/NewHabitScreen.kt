@@ -2,11 +2,9 @@ package com.esteban.ruano.habits_presentation.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -29,7 +26,6 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,33 +37,30 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.esteban.ruano.core.utils.DateUtils.parseDateTime
-import com.esteban.ruano.core_ui.composables.AppBar
-import com.esteban.ruano.core_ui.composables.GeneralOutlinedTextField
-import com.esteban.ruano.core_ui.composables.ToggleButtons
-import com.esteban.ruano.core_ui.composables.text.TitleH3
-import com.esteban.ruano.core_ui.theme.Gray
-import com.esteban.ruano.core_ui.theme.Gray2
+import com.esteban.ruano.lifecommander.ui.components.AppBar
+import com.esteban.ruano.lifecommander.ui.components.GeneralOutlinedTextField
+import com.esteban.ruano.lifecommander.ui.components.ToggleButtons
+import com.esteban.ruano.lifecommander.ui.components.text.TitleH3
 import com.esteban.ruano.core_ui.utils.DateUIUtils.formatTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.parseTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDate
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toMillis
 import com.esteban.ruano.core_ui.utils.toResourceString
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.RemindersDialog
+import com.esteban.ruano.lifecommander.ui.components.RemindersDialog
 import com.esteban.ruano.core_ui.utils.DateUIUtils
 import com.esteban.ruano.core_ui.utils.DateUIUtils.getTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.core_ui.utils.ReminderType
 import com.lifecommander.models.Frequency
-import com.lifecommander.models.Habit
 import com.esteban.ruano.lifecommander.models.HabitReminder
 import com.esteban.ruano.habits_presentation.ui.composables.HabitReminderItem
 import com.esteban.ruano.habits_presentation.ui.intent.HabitIntent
-import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.HabitDetailViewModel
 import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.state.HabitDetailState
 import com.esteban.ruano.habits_presentation.ui.utils.FrequencyUtils
+import com.esteban.ruano.ui.Gray
+import com.esteban.ruano.ui.Gray2
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -239,10 +232,10 @@ fun NewHabitScreen(
                 it != Frequency.ONE_TIME
             }.indexOfFirst { it.value == frequency },
             buttons = Frequency.entries.filter {
-            it != Frequency.ONE_TIME
-        }, onCheckedChange = {
+                it != Frequency.ONE_TIME
+            }, onCheckedChange = {
                 frequency = it.value
-        }, toString = { FrequencyUtils.getResourceByFrequency(frequency = it) })
+            }, toString = { FrequencyUtils.getResourceByFrequency(frequency = it) })
         Spacer(modifier = Modifier.height(16.dp))
         TitleH3(R.string.reminders)
         Column {

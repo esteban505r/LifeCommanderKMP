@@ -12,7 +12,7 @@ data class WorkoutDayDetailState(
     val workoutStatus: List<ExerciseDayStatus> = listOf(),
     val time: String = "00:00",
     val errorMessage: String? = null,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val completedExercises: Set<String> = emptySet(),
     val isWorkoutCompleted: Boolean = false,
     val isLoadingSet: Boolean = false,

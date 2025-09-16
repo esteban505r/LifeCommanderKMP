@@ -2,9 +2,9 @@ package com.esteban.ruano.habits_presentation.ui.screens.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
+import com.esteban.lopez.core.utils.SnackbarType
 import com.esteban.ruano.core.utils.DateUtils.parseDate
 import com.esteban.ruano.core_ui.WorkManagerUtils
-import com.esteban.ruano.core_ui.utils.SnackbarType
 import com.esteban.ruano.core_ui.view_model.BaseViewModel
 import com.lifecommander.models.Habit
 import com.esteban.ruano.habits_domain.use_case.HabitUseCases

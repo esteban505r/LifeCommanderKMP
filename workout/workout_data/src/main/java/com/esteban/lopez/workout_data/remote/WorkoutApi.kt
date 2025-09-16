@@ -1,10 +1,12 @@
 package com.esteban.ruano.workout_data.remote
 
 
+import com.esteban.ruano.lifecommander.models.BindExercise
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
 import com.esteban.ruano.lifecommander.models.CreateExerciseTrack
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
+import com.esteban.ruano.lifecommander.models.UnBindExercise
 import com.esteban.ruano.workout_data.remote.dto.ExerciseResponse
 import com.esteban.ruano.workout_data.remote.dto.WorkoutDashboardResponse
 import com.esteban.ruano.workout_data.remote.dto.WorkoutDayResponse
@@ -37,6 +39,12 @@ interface WorkoutApi {
     @GET("workout/exercises")
     suspend fun getExercises(): List<ExerciseResponse>
 
+    @PATCH("workout/exercises/{id}")
+    suspend fun updateExercise(@Path("id") id:String,@Body exercise: Exercise)
+
+    @DELETE("workout/exercises/{id}")
+    suspend fun deleteExercise(@Path("id") id:String)
+
     @POST("workout/exercises")
     suspend fun saveExercise(
         @Body exercise: ExerciseResponse
@@ -52,10 +60,14 @@ interface WorkoutApi {
         @Path("number") number: Int
     ): WorkoutDayResponse
 
-    @POST("workout/days/{workoutDayId}/exercises/{exerciseId}")
+    @POST("workout/exercises/bind")
     suspend fun linkExerciseWithWorkoutDay(
-        @Path("workoutDayId") workoutDayId: String,
-        @Path("exerciseId") exerciseId: String
+        @Body dto: BindExercise
+    )
+
+    @POST("workout/exercises/unbind")
+    suspend fun unLinkExerciseWithWorkoutDay(
+        @Body dto: UnBindExercise
     )
 
     @PATCH("workout/days/{workoutDayId}")
@@ -89,5 +101,7 @@ interface WorkoutApi {
 
     @POST("workout/exercise-tracking/complete")
     suspend fun completeExercise(@Body() track: CreateExerciseTrack)
+
+
 
 }

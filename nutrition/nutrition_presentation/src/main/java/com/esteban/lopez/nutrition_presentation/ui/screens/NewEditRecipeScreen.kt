@@ -18,15 +18,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.AppBar
-import com.esteban.ruano.core_ui.theme.Gray
-import com.esteban.ruano.core_ui.theme.Gray2
+import com.esteban.ruano.lifecommander.ui.components.AppBar
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
 import com.esteban.ruano.lifecommander.models.Recipe
 import com.esteban.ruano.nutrition_domain.model.MealTag
 import com.esteban.ruano.nutrition_presentation.intent.NewEditRecipeIntent
+import com.esteban.ruano.ui.Gray
+import com.esteban.ruano.ui.Gray2
 import kotlinx.coroutines.launch
-import com.esteban.ruano.core_ui.composables.text.TitleH4 as CoreTitleH4
+import com.esteban.ruano.lifecommander.ui.components.text.TitleH4 as CoreTitleH4
 
 @Composable
 fun NewEditRecipeScreen(

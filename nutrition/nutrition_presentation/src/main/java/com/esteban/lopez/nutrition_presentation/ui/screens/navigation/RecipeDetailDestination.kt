@@ -7,16 +7,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.Error
-import com.esteban.ruano.core_ui.composables.Loading
-import com.esteban.ruano.nutrition_presentation.intent.NewEditRecipeEffect
-import com.esteban.ruano.nutrition_presentation.intent.NewEditRecipeIntent
+import com.esteban.ruano.lifecommander.ui.components.Error
+import com.esteban.ruano.lifecommander.ui.components.Loading
 import com.esteban.ruano.nutrition_presentation.intent.RecipeDetailEffect
 import com.esteban.ruano.nutrition_presentation.intent.RecipeDetailIntent
 import com.esteban.ruano.nutrition_presentation.intent.RecipesEffect
-import com.esteban.ruano.nutrition_presentation.ui.screens.NewEditRecipeScreen
 import com.esteban.ruano.nutrition_presentation.ui.screens.RecipeDetailScreen
-import com.esteban.ruano.nutrition_presentation.ui.viewmodel.NewEditRecipeViewModel
 import com.esteban.ruano.nutrition_presentation.ui.viewmodel.RecipeDetailViewModel
 import kotlinx.coroutines.launch
 

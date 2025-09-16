@@ -16,10 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.esteban.ruano.core_ui.composables.AppBar
+import com.esteban.ruano.lifecommander.ui.components.AppBar
 import com.esteban.ruano.workout_presentation.intent.ExerciseDetailIntent
 import com.esteban.ruano.workout_presentation.ui.viewmodel.state.ExerciseDetailState
-import com.esteban.ruano.workout_presentation.utils.toResourceString
 import kotlinx.coroutines.launch
 
 @Composable

@@ -22,7 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.AppBar
+import com.esteban.ruano.lifecommander.ui.components.AppBar
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_domain.model.MuscleGroup
 import com.esteban.ruano.workout_presentation.intent.ExercisesIntent
@@ -106,14 +106,14 @@ private fun Exercises(
 
                     // required params for the rich ExerciseCard
                     exercise = exercise,
-                    sets = emptyList(),                                      // no sets in this screen
-                    day = "",                                        // not used here
+                    sets = emptyList(),
+                    inProgress = false,
                     onAddSet = { _, _, _, onResult -> onResult(null) },      // no-op
                     onUpdateSetReps = { _, _ -> },                            // no-op
                     onRemoveSet = { _ -> },                                   // no-op
 
                     // keep the simple-card behavior
-                    showActionButtons = false,
+                    showActionButtons = true,
                 )
             }
 

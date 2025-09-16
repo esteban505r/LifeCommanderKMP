@@ -1,6 +1,6 @@
 package com.esteban.ruano.nutrition_presentation.intent;
 
-import com.esteban.ruano.core_ui.utils.SnackbarType
+import com.esteban.lopez.core.utils.SnackbarType
 import com.esteban.ruano.core_ui.view_model.Effect
 import com.esteban.ruano.core_ui.view_model.UserIntent
 

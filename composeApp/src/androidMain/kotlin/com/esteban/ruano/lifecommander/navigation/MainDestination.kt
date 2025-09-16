@@ -10,7 +10,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.esteban.ruano.core_ui.composables.ObserveAsEvents
+import com.esteban.ruano.lifecommander.ui.components.ObserveAsEvents
 import com.esteban.ruano.core_ui.utils.CustomSnackBarVisuals
 import com.esteban.ruano.core_ui.utils.SnackbarController
 import com.esteban.ruano.core_ui.view_model.MainViewModel

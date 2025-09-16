@@ -1,4 +1,4 @@
-package com.esteban.ruano.core_ui.composables
+package com.esteban.ruano.lifecommander.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,26 +21,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.esteban.ruano.core_ui.utils.ReminderType
-import com.esteban.ruano.core_ui.utils.ReminderType.Companion.toResource
-import com.esteban.ruano.core_ui.utils.ReminderType.EightHours
-import com.esteban.ruano.core_ui.utils.ReminderType.FifteenMinutes
-import com.esteban.ruano.core_ui.utils.ReminderType.OneHour
-import com.esteban.ruano.core_ui.R
+import com.lifecommander.models.ReminderTimes
+import com.lifecommander.models.ReminderType
+
 
 @Composable
 fun RemindersDialog(
     onDismiss: () -> Unit,
     onConfirm: (Long) -> Unit,
 ){
-    var selectedReminderType: ReminderType by remember{
-        mutableStateOf(ReminderType.FifteenMinutes)
+    var selectedReminderType: ReminderTimes by remember{
+        mutableStateOf(ReminderTimes.FIFTEEN_MINUTES)
     }
     val reminderTypes = listOf(
-        FifteenMinutes, OneHour, EightHours)
+        ReminderTimes.FIFTEEN_MINUTES, ReminderTimes.ONE_HOUR, ReminderTimes.EIGHT_HOURS)
 
     Dialog(
         onDismissRequest = {
@@ -77,7 +73,7 @@ fun RemindersDialog(
                 ) {
                     Button(
                         onClick = {
-                            onConfirm(selectedReminderType.time)
+                            onConfirm(selectedReminderType.toTime())
                         }
                     ) {
                         Text(text = "Confirm")
@@ -99,8 +95,8 @@ fun RemindersDialog(
 @Composable
 fun ReminderItem(
     selected: Boolean,
-    reminderType: ReminderType,
-    onSelected: (ReminderType) -> Unit
+    reminderType: ReminderTimes,
+    onSelected: (ReminderTimes) -> Unit
 ){
     Row(
         horizontalArrangement = Arrangement.Center,
@@ -117,6 +113,7 @@ fun ReminderItem(
                 onSelected(reminderType)
             }
     ) {
-        Text(text = "${stringResource(id = reminderType.toResource())} ${stringResource(id = R.string.before)}")
+//        Text(text = "${stringResource(id = reminderType.toResource())} ${stringResource(id = R.string.before)}")
+        Text(text = reminderType.name)
     }
 }

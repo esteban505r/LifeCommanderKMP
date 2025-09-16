@@ -1,6 +1,6 @@
 package com.esteban.ruano.finance_presentation.ui.intent
 
-import com.esteban.ruano.core_ui.utils.SnackbarType
+import com.esteban.lopez.core.utils.SnackbarType
 import com.esteban.ruano.core_ui.view_model.Effect
 import com.esteban.ruano.core_ui.view_model.UserIntent
 import com.esteban.ruano.lifecommander.ui.state.FinanceTab
@@ -65,7 +65,7 @@ sealed class FinanceIntent : UserIntent{
     ) : FinanceIntent()
     data class ShowSnackBar(
         val message: String,
-        val type: com.esteban.ruano.core_ui.utils.SnackbarType
+        val type: SnackbarType
     ) : FinanceIntent()
 }
 

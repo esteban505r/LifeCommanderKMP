@@ -5,7 +5,7 @@ import com.esteban.ruano.lifecommander.models.Exercise
 
 data class ExerciseDetailState (
     val exercise: Exercise? = null,
-    val loading : Boolean = false,
+    val loading : Boolean = true,
     val errorMessage: String? = null,
     val showNewExerciseDialog: Boolean = false,
 ): ViewState

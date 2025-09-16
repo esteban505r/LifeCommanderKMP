@@ -31,15 +31,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.esteban.lopez.core.utils.SnackbarType
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.button.BaseButton
-import com.esteban.ruano.core_ui.theme.Gray
-import com.esteban.ruano.core_ui.theme.Gray2
 import com.esteban.ruano.core_ui.utils.LocalMainIntent
-import com.esteban.ruano.core_ui.utils.SnackbarType
 import com.esteban.ruano.core_ui.view_model.intent.MainIntent
+import com.esteban.ruano.lifecommander.ui.components.button.BaseButton
 import com.esteban.ruano.onboarding_presentation.auth.intent.AuthIntent
-import com.esteban.ruano.onboarding_presentation.components.ActionButton
+import com.esteban.ruano.ui.Gray
+import com.esteban.ruano.ui.Gray2
 
 @Composable
 fun LoginScreen(

@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.ui.graphics.Color
+import com.esteban.lopez.core.utils.SnackbarType
 import com.esteban.ruano.core.utils.UiText
-import com.esteban.ruano.core_ui.theme.FatColor
 
 data class CustomSnackBarVisuals(
     override val message: String,
@@ -20,7 +20,7 @@ data class CustomSnackBarVisuals(
             return when (snackbarType) {
                 SnackbarType.ERROR -> CustomSnackBarVisuals(
                     message = message,
-                    containerColor = FatColor,
+                    containerColor = Color(0xFFF44336),
                     contentColor = Color.White
                 )
                 SnackbarType.SUCCESS -> CustomSnackBarVisuals(
@@ -57,7 +57,7 @@ data class CustomSnackbarVisualsWithUiText(
             return when (snackbarType) {
                 SnackbarType.ERROR -> CustomSnackbarVisualsWithUiText(
                     message = message,
-                    containerColor = FatColor,
+                    containerColor = Color(0xFFF44336),
                     contentColor = Color.White
                 )
                 SnackbarType.SUCCESS -> CustomSnackbarVisualsWithUiText(

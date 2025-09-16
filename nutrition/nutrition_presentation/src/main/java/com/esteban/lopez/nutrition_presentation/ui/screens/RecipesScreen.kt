@@ -2,7 +2,6 @@ package com.esteban.ruano.nutrition_presentation.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,9 +18,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.ToggleChipsButtons
-import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayNumber
-import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
 import com.esteban.ruano.nutrition_presentation.intent.RecipesIntent
 import com.esteban.ruano.nutrition_presentation.ui.composables.RecipeComposable
 import com.esteban.ruano.nutrition_presentation.ui.composables.RecipeFiltersDialog

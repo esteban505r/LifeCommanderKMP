@@ -1,9 +1,11 @@
 package com.esteban.ruano.workout_data.datasources
 
+import com.esteban.ruano.lifecommander.models.BindExercise
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
 import com.esteban.ruano.lifecommander.models.CreateExerciseTrack
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
+import com.esteban.ruano.lifecommander.models.UnBindExercise
 import com.esteban.ruano.workout_data.mappers.toExercise
 import com.esteban.ruano.workout_data.mappers.toExerciseResponse
 import com.esteban.ruano.workout_data.mappers.toDomainModel
@@ -48,7 +50,24 @@ class WorkoutRemoteDataSource(
     }
 
     override suspend fun linkExerciseWithWorkoutDay(workoutDayId: String, exerciseId: String) {
-        api.linkExerciseWithWorkoutDay(workoutDayId, exerciseId)
+        api.linkExerciseWithWorkoutDay(
+            BindExercise(
+                workoutDayId = workoutDayId,
+                exerciseId = exerciseId
+            )
+        )
+    }
+
+    override suspend fun unLinkExerciseWithWorkoutDay(
+        workoutDayId: String,
+        exerciseId: String
+    ) {
+        api.unLinkExerciseWithWorkoutDay(
+            UnBindExercise(
+                workoutDayId = workoutDayId,
+                exerciseId = exerciseId
+            )
+        )
     }
 
     override suspend fun updateWorkoutDay(workoutDayId:String, workout: Workout) {
@@ -77,6 +96,19 @@ class WorkoutRemoteDataSource(
 
     override suspend fun completeExercise(track: CreateExerciseTrack) {
         return api.completeExercise(track)
+    }
+
+    override suspend fun updateExercise(
+        id: String,
+        exercise: Exercise
+    ) {
+        return api.updateExercise(id,exercise)
+    }
+
+    override suspend fun deleteExercise(
+        id: String,
+    ) {
+        return api.deleteExercise(id,)
     }
 
 }

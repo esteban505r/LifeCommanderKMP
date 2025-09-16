@@ -1,12 +1,14 @@
+package com.esteban.ruano.lifecommander.utils
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.esteban.ruano.core_ui.theme.DarkGray
-import com.esteban.ruano.core_ui.theme.SoftBlue
-import com.esteban.ruano.core_ui.theme.SoftRed
-import com.esteban.ruano.core_ui.theme.SoftYellow
+import com.esteban.ruano.ui.DarkGray
+import com.esteban.ruano.ui.SoftBlue
+import com.esteban.ruano.ui.SoftRed
+import com.esteban.ruano.ui.SoftYellow
 
 object UiUtils{
 

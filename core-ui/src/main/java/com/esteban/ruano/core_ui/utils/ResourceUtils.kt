@@ -5,9 +5,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.esteban.ruano.core.domain.model.DataException
 import com.esteban.ruano.core.domain.model.LifeCommanderException
-import com.esteban.ruano.core_ui.theme.SoftGreen
-import com.esteban.ruano.core_ui.theme.SoftRed
-import com.esteban.ruano.core_ui.theme.SoftYellow
 import com.esteban.ruano.core_ui.utils.DateUIUtils.parseDate
 import com.esteban.ruano.core_ui.utils.DateUIUtils.timeToIntPair
 import com.esteban.ruano.core_ui.R

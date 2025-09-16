@@ -30,28 +30,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.esteban.lopez.core.utils.AppConstants.EMPTY_STRING
-import com.esteban.ruano.core_ui.composables.AppBar
-import com.esteban.ruano.core_ui.composables.text.TitleH3
-import com.esteban.ruano.core_ui.theme.Gray
-import com.esteban.ruano.core_ui.theme.HomeColors
-import com.esteban.ruano.core_ui.R
+import com.esteban.ruano.lifecommander.ui.components.AppBar
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
 import com.esteban.ruano.nutrition_domain.model.MealTag
 import com.esteban.ruano.nutrition_presentation.intent.RecipeDetailIntent
 import com.esteban.ruano.nutrition_presentation.ui.viewmodel.state.RecipeDetailState
+import com.esteban.ruano.ui.LifeCommanderGradients
 
 @Composable
 fun RecipeDetailScreen(
@@ -61,7 +55,7 @@ fun RecipeDetailScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = HomeColors.LightBackground
+        color = LifeCommanderGradients.HomeColors.LightBackground
     ) {
         when {
             state.isLoading -> {
@@ -70,7 +64,7 @@ fun RecipeDetailScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
-                        color = HomeColors.PrimaryBlue,
+                        color = LifeCommanderGradients.HomeColors.PrimaryBlue,
                         modifier = Modifier.size(48.dp)
                     )
                 }
@@ -87,13 +81,13 @@ fun RecipeDetailScreen(
                         Text(
                             text = "Error loading recipe",
                             style = MaterialTheme.typography.h6,
-                            color = HomeColors.StatusHigh
+                            color = LifeCommanderGradients.HomeColors.StatusHigh
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = state.errorMessage,
                             style = MaterialTheme.typography.body2,
-                            color = HomeColors.TextSecondary,
+                            color = LifeCommanderGradients.HomeColors.TextSecondary,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -123,7 +117,7 @@ private fun RecipeDetailContent(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { userIntent(RecipeDetailIntent.EditRecipe) },
-                backgroundColor = HomeColors.PrimaryBlue
+                backgroundColor = LifeCommanderGradients.HomeColors.PrimaryBlue
             ) {
                 Icon(
                     Icons.Default.Edit,
@@ -152,7 +146,7 @@ private fun RecipeDetailContent(
                     Icon(
                         Icons.Default.Edit,
                         contentDescription = "Edit recipe",
-                        tint = HomeColors.PrimaryBlue
+                        tint = LifeCommanderGradients.HomeColors.PrimaryBlue
                     )
                 }
                 IconButton(
@@ -161,7 +155,7 @@ private fun RecipeDetailContent(
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "Delete recipe",
-                        tint = HomeColors.StatusHigh
+                        tint = LifeCommanderGradients.HomeColors.StatusHigh
                     )
                 }
             }
@@ -179,7 +173,7 @@ private fun RecipeDetailContent(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(HomeColors.SurfaceLight),
+                            .background(LifeCommanderGradients.HomeColors.SurfaceLight),
                         contentAlignment = Alignment.Center
                     ) {
                         // Placeholder for image - in a real app, you'd use Coil or similar
@@ -187,7 +181,7 @@ private fun RecipeDetailContent(
                             Icons.Default.Restaurant,
                             contentDescription = "Recipe image",
                             modifier = Modifier.size(64.dp),
-                            tint = HomeColors.TextTertiary
+                            tint = LifeCommanderGradients.HomeColors.TextTertiary
                         )
                     }
                 }
@@ -202,7 +196,7 @@ private fun RecipeDetailContent(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     elevation = 2.dp,
-                    backgroundColor = HomeColors.CardBackground
+                    backgroundColor = LifeCommanderGradients.HomeColors.CardBackground
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp)
@@ -211,7 +205,7 @@ private fun RecipeDetailContent(
                             text = "Recipe Summary",
                             style = MaterialTheme.typography.h6.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = HomeColors.TextPrimary
+                                color = LifeCommanderGradients.HomeColors.TextPrimary
                             )
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -224,13 +218,13 @@ private fun RecipeDetailContent(
                                 Text(
                                     text = "Ingredients",
                                     style = MaterialTheme.typography.caption,
-                                    color = HomeColors.TextSecondary
+                                    color = LifeCommanderGradients.HomeColors.TextSecondary
                                 )
                                 Text(
                                     text = "${recipe.ingredients.size} items",
                                     style = MaterialTheme.typography.body2.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = HomeColors.TextPrimary
+                                        color = LifeCommanderGradients.HomeColors.TextPrimary
                                     )
                                 )
                             }
@@ -238,13 +232,13 @@ private fun RecipeDetailContent(
                                 Text(
                                     text = "Steps",
                                     style = MaterialTheme.typography.caption,
-                                    color = HomeColors.TextSecondary
+                                    color = LifeCommanderGradients.HomeColors.TextSecondary
                                 )
                                 Text(
                                     text = "${recipe.instructions.size} steps",
                                     style = MaterialTheme.typography.body2.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = HomeColors.TextPrimary
+                                        color = LifeCommanderGradients.HomeColors.TextPrimary
                                     )
                                 )
                             }
@@ -252,13 +246,13 @@ private fun RecipeDetailContent(
                                 Text(
                                     text = "Total Calories",
                                     style = MaterialTheme.typography.caption,
-                                    color = HomeColors.TextSecondary
+                                    color = LifeCommanderGradients.HomeColors.TextSecondary
                                 )
                                 Text(
                                     text = "${recipe.calories ?: 0} kcal",
                                     style = MaterialTheme.typography.body2.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = HomeColors.TextPrimary
+                                        color = LifeCommanderGradients.HomeColors.TextPrimary
                                     )
                                 )
                             }
@@ -284,7 +278,7 @@ private fun RecipeDetailContent(
                                     Text(
                                         text = "Meal Type",
                                         style = MaterialTheme.typography.caption.copy(
-                                            color = HomeColors.TextSecondary,
+                                            color = LifeCommanderGradients.HomeColors.TextSecondary,
                                             fontWeight = FontWeight.Normal
                                         )
                                     )
@@ -370,7 +364,7 @@ private fun InfoCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         elevation = 2.dp,
-        backgroundColor = HomeColors.CardBackground
+        backgroundColor = LifeCommanderGradients.HomeColors.CardBackground
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -379,7 +373,7 @@ private fun InfoCard(
                 text = title,
                 style = MaterialTheme.typography.h6.copy(
                     fontWeight = FontWeight.Bold,
-                    color = HomeColors.TextPrimary
+                    color = LifeCommanderGradients.HomeColors.TextPrimary
                 )
             )
         Spacer(modifier = Modifier.height(16.dp))
@@ -399,7 +393,7 @@ private fun InfoRowBlock(
         Text(
             text = label,
             style = MaterialTheme.typography.caption.copy(
-                color = HomeColors.TextSecondary,
+                color = LifeCommanderGradients.HomeColors.TextSecondary,
                 fontWeight = FontWeight.Normal
             )
         )
@@ -407,10 +401,10 @@ private fun InfoRowBlock(
         Text(
             text = value,
             style = if (valueBold) MaterialTheme.typography.body1.copy(
-                color = HomeColors.TextPrimary,
+                color = LifeCommanderGradients.HomeColors.TextPrimary,
                 fontWeight = FontWeight.Medium
             ) else MaterialTheme.typography.body2.copy(
-                color = HomeColors.TextPrimary
+                color = LifeCommanderGradients.HomeColors.TextPrimary
             )
         )
     }
@@ -422,7 +416,7 @@ private fun NutritionCard(recipe: com.esteban.ruano.lifecommander.models.Recipe)
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         elevation = 2.dp,
-        backgroundColor = HomeColors.CardBackground
+        backgroundColor = LifeCommanderGradients.HomeColors.CardBackground
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -431,7 +425,7 @@ private fun NutritionCard(recipe: com.esteban.ruano.lifecommander.models.Recipe)
                 text = "Nutrition Information",
                 style = MaterialTheme.typography.h6.copy(
                     fontWeight = FontWeight.Bold,
-                    color = HomeColors.TextPrimary
+                    color = LifeCommanderGradients.HomeColors.TextPrimary
                 )
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -497,7 +491,7 @@ private fun IngredientsCard(ingredients: List<com.esteban.ruano.lifecommander.mo
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         elevation = 2.dp,
-        backgroundColor = HomeColors.CardBackground
+        backgroundColor = LifeCommanderGradients.HomeColors.CardBackground
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -506,7 +500,7 @@ private fun IngredientsCard(ingredients: List<com.esteban.ruano.lifecommander.mo
                 text = "Ingredients",
                 style = MaterialTheme.typography.h6.copy(
                     fontWeight = FontWeight.Bold,
-                    color = HomeColors.TextPrimary
+                    color = LifeCommanderGradients.HomeColors.TextPrimary
                 )
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -523,7 +517,7 @@ private fun IngredientsCard(ingredients: List<com.esteban.ruano.lifecommander.mo
                         modifier = Modifier
                             .size(6.dp)
                             .clip(CircleShape)
-                            .background(HomeColors.PrimaryBlue)
+                            .background(LifeCommanderGradients.HomeColors.PrimaryBlue)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
 
@@ -534,13 +528,13 @@ private fun IngredientsCard(ingredients: List<com.esteban.ruano.lifecommander.mo
                         Text(
                             text = ingredient.name,
                             style = MaterialTheme.typography.body2,
-                            color = HomeColors.TextPrimary,
+                            color = LifeCommanderGradients.HomeColors.TextPrimary,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
                             text = "${ingredient.quantity} ${ingredient.unit}",
                             style = MaterialTheme.typography.caption,
-                            color = HomeColors.TextSecondary
+                            color = LifeCommanderGradients.HomeColors.TextSecondary
                         )
                     }
 
@@ -548,14 +542,14 @@ private fun IngredientsCard(ingredients: List<com.esteban.ruano.lifecommander.mo
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(HomeColors.PrimaryBlue.copy(alpha = 0.1f))
+                            .background(LifeCommanderGradients.HomeColors.PrimaryBlue.copy(alpha = 0.1f))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = "${ingredient.quantity} ${ingredient.unit}",
                             style = MaterialTheme.typography.caption.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = HomeColors.PrimaryBlue
+                                color = LifeCommanderGradients.HomeColors.PrimaryBlue
                             )
                         )
                     }
@@ -564,7 +558,7 @@ private fun IngredientsCard(ingredients: List<com.esteban.ruano.lifecommander.mo
                 if (index < ingredients.size - 1) {
                     Divider(
                         modifier = Modifier.padding(vertical = 8.dp),
-                        color = HomeColors.SurfaceBorder
+                        color = LifeCommanderGradients.HomeColors.SurfaceBorder
                     )
                 }
             }
@@ -578,7 +572,7 @@ private fun InstructionsCard(instructions: List<com.esteban.ruano.lifecommander.
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         elevation = 2.dp,
-        backgroundColor = HomeColors.CardBackground
+        backgroundColor = LifeCommanderGradients.HomeColors.CardBackground
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -587,7 +581,7 @@ private fun InstructionsCard(instructions: List<com.esteban.ruano.lifecommander.
                 text = "Instructions",
                 style = MaterialTheme.typography.h6.copy(
                     fontWeight = FontWeight.Bold,
-                    color = HomeColors.TextPrimary
+                    color = LifeCommanderGradients.HomeColors.TextPrimary
                 )
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -604,7 +598,7 @@ private fun InstructionsCard(instructions: List<com.esteban.ruano.lifecommander.
                         modifier = Modifier
                             .size(28.dp)
                             .clip(CircleShape)
-                            .background(HomeColors.PrimaryBlue),
+                            .background(LifeCommanderGradients.HomeColors.PrimaryBlue),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -621,7 +615,7 @@ private fun InstructionsCard(instructions: List<com.esteban.ruano.lifecommander.
                     Text(
                         text = instruction.description,
                         style = MaterialTheme.typography.body2,
-                        color = HomeColors.TextPrimary,
+                        color = LifeCommanderGradients.HomeColors.TextPrimary,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -629,7 +623,7 @@ private fun InstructionsCard(instructions: List<com.esteban.ruano.lifecommander.
                 if (instruction.stepNumber < instructions.size) {
                     Divider(
                         modifier = Modifier.padding(vertical = 8.dp),
-                        color = HomeColors.SurfaceBorder
+                        color = LifeCommanderGradients.HomeColors.SurfaceBorder
                     )
                 }
             }

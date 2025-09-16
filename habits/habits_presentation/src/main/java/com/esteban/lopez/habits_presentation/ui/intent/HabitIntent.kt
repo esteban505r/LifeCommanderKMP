@@ -1,6 +1,6 @@
 package com.esteban.ruano.habits_presentation.ui.intent
 
-import com.esteban.ruano.core_ui.utils.SnackbarType
+import com.esteban.lopez.core.utils.SnackbarType
 import com.esteban.ruano.core_ui.view_model.Effect
 import com.esteban.ruano.core_ui.view_model.UserIntent
 import com.esteban.ruano.lifecommander.models.HabitReminder
@@ -42,5 +42,5 @@ sealed class HabitIntent : UserIntent {
 
 sealed class HabitEffect : Effect{
     data object NavigateUp: HabitEffect()
-    data class ShowSnackBar(val message:String, val type:SnackbarType):HabitEffect()
+    data class ShowSnackBar(val message:String, val type: SnackbarType):HabitEffect()
 }

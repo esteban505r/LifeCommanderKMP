@@ -26,6 +26,7 @@ interface WorkoutDataSource {
     suspend fun getWorkoutDayByNumber(number: Int): Workout
 
     suspend fun linkExerciseWithWorkoutDay(workoutDayId: String, exerciseId: String)
+    suspend fun unLinkExerciseWithWorkoutDay(workoutDayId: String, exerciseId: String)
 
     suspend fun updateWorkoutDay(workoutDayId: String, workout: Workout)
 
@@ -38,4 +39,6 @@ interface WorkoutDataSource {
 
     suspend fun undoExercise(trackId:String)
     suspend fun completeExercise(track:CreateExerciseTrack)
+    suspend fun updateExercise(id: String, exercise: Exercise)
+    suspend fun deleteExercise(id: String)
 }

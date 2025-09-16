@@ -3,11 +3,11 @@ package com.esteban.ruano.core_ui.view_model
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.esteban.lopez.core.utils.SnackbarType
 import com.esteban.ruano.core.utils.UiText
 import com.esteban.ruano.core_ui.utils.CustomSnackbarVisualsWithUiText
 import com.esteban.ruano.core_ui.utils.SnackbarController
 import com.esteban.ruano.core_ui.utils.SnackbarEvent
-import com.esteban.ruano.core_ui.utils.SnackbarType
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -11,11 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.esteban.ruano.core_ui.composables.Error
-import com.esteban.ruano.core_ui.composables.Loading
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.utils.LocalMainIntent
 import com.esteban.ruano.core_ui.view_model.intent.MainIntent
+import com.esteban.ruano.lifecommander.ui.components.Error
+import com.esteban.ruano.lifecommander.ui.components.Loading
 import com.esteban.ruano.onboarding_presentation.auth.intent.AuthEffect
 import com.esteban.ruano.onboarding_presentation.auth.state.AuthState
 import com.esteban.ruano.onboarding_presentation.auth.ui.screens.LoginScreen

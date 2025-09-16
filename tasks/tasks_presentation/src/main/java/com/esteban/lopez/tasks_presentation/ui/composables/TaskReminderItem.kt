@@ -19,9 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.theme.SoftRed
 import com.esteban.ruano.core_ui.utils.ReminderType.Companion.toReminderType
 import com.esteban.ruano.core_ui.utils.ReminderType.Companion.toResource
+import com.esteban.ruano.ui.SoftRed
 import com.lifecommander.models.Reminder
 
 @Composable

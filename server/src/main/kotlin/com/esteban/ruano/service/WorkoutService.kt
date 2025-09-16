@@ -104,7 +104,7 @@ class WorkoutService : BaseService() {
             }*/
 
             val exerciseIds = exercisesWithWorkoutDays.map { it.exercise.id.value }
-            val exercises = Exercise.find { Exercises.id inList exerciseIds }.toList()
+            val exercises = Exercise.find { (Exercises.id inList exerciseIds) and (Exercises.status eq Status.ACTIVE) }.toList()
 
             //val equipment = Equipment.find { Equipments.exercise inList exerciseIds }.groupBy { it.exercise.id.value }
 
@@ -132,6 +132,45 @@ class WorkoutService : BaseService() {
             exerciseWithEquipment
         }
     }
+
+    fun updateExercise(userId: Int, id: UUID, exercise: ExerciseDTO): Boolean {
+        return transaction {
+            val updatedRows = Exercises.updateOperation(userId) {
+                val result = update({
+                    Exercises.id eq id
+                }) {
+                    it[name]        = exercise.name
+                    it[description] = exercise.description
+                    it[restSecs]    = exercise.restSecs
+                    it[baseReps]    = exercise.baseReps
+                    it[baseSets]    = exercise.baseSets
+                    it[muscleGroup] = try {
+                        MuscleGroup.valueOf(exercise.muscleGroup.uppercase())
+                    } catch (e: Exception) {
+                        throw IllegalArgumentException("Muscle group not found")
+                    }
+                    it[user]        = userId
+                }
+                if(result > 0) id else null
+            }
+            updatedRows != null
+        }
+    }
+
+    fun deleteExercise(userId: Int, id: UUID): Boolean {
+        return transaction {
+            val updatedRows = Exercises.updateOperation(userId) {
+                val result = update({
+                    Exercises.id eq id
+                }) {
+                   it[status] = Status.DELETED
+                }
+                if(result > 0) id else null
+            }
+            updatedRows != null
+        }
+    }
+
 
     fun createExercise(userId: Int, exercise: ExerciseDTO): UUID? {
         return transaction {

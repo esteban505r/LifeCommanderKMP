@@ -13,8 +13,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.Error
-import com.esteban.ruano.core_ui.composables.Loading
+import com.esteban.ruano.lifecommander.ui.components.Error
+import com.esteban.ruano.lifecommander.ui.components.Loading
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
 import com.esteban.ruano.workout_presentation.ui.screens.WorkoutDayProgressScreen
 import com.esteban.ruano.workout_presentation.ui.viewmodel.WorkoutDetailViewModel

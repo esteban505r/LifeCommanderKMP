@@ -63,6 +63,13 @@ class WorkoutLocalDataSource(
         workoutDao.linkExerciseWithWorkoutDay(workoutDayId, exerciseId)
     }
 
+    override suspend fun unLinkExerciseWithWorkoutDay(
+        workoutDayId: String,
+        exerciseId: String
+    ) {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun updateWorkoutDay(workoutDayId: String, workout: Workout) {
         throw UnsupportedOperationException("Local data source does not support this operation")
     }
@@ -88,6 +95,17 @@ class WorkoutLocalDataSource(
     }
 
     override suspend fun completeExercise(track: CreateExerciseTrack) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun updateExercise(
+        id: String,
+        exercise: Exercise
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteExercise(id: String) {
         TODO("Not yet implemented")
     }
 

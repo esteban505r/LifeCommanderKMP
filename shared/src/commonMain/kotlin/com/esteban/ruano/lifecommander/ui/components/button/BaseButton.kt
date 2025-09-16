@@ -1,4 +1,4 @@
-package com.esteban.ruano.core_ui.composables.button
+package com.esteban.ruano.lifecommander.ui.components.button
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -8,10 +8,7 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.esteban.ruano.core_ui.R
-import kotlinx.coroutines.launch
 
 @Composable
 fun BaseButton(onClick: () -> Unit, text: String,modifier: Modifier = Modifier,buttonType: ButtonType = ButtonType.PRIMARY) {

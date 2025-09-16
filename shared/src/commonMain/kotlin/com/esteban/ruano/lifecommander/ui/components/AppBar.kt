@@ -1,4 +1,4 @@
-package com.esteban.ruano.core_ui.composables
+package com.esteban.ruano.lifecommander.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,13 +15,11 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 
@@ -60,24 +58,3 @@ fun AppBar(
     }
 }
 
-@Preview
-@Composable
-fun AppBarPreview() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colors.background)
-    ) {
-        AppBar(title = "Title",
-            onClose = {
-
-            },
-            actions = {
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = {
-                }) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Edit")
-                }
-            })
-    }
-}

@@ -6,8 +6,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.esteban.ruano.core_ui.composables.Error
-import com.esteban.ruano.core_ui.composables.Loading
 import com.esteban.ruano.finance_presentation.converter.FinanceStateConverter.toDesktopState
 import com.esteban.ruano.finance_presentation.ui.intent.FinanceIntent
 import com.esteban.ruano.finance_presentation.ui.viewmodel.FinanceViewModel

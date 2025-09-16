@@ -1,4 +1,4 @@
-package com.esteban.ruano.core_ui.composables
+package com.esteban.ruano.lifecommander.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

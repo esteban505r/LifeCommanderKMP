@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.compose.ui.graphics.Color
 import com.esteban.ruano.core.utils.DateUtils.parseDateTime
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.theme.DarkGray
-import com.esteban.ruano.core_ui.theme.SoftRed
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -74,23 +72,23 @@ object DateUIUtils {
         context: Context,
     ): Pair<String, Color> {
         if (this.minusDays(7).toLocalDate() > LocalDate.now()) {
-            return Pair(this.parseDateTime(), DarkGray)
+            return Pair(this.parseDateTime(), Color.Gray)
         }
 
         if (LocalDateTime.now().toLocalDate() == this.toLocalDate()) {
-            val color = if (LocalDateTime.now().isAfter(this)) SoftRed else DarkGray
+            val color = if (LocalDateTime.now().isAfter(this)) Color.Red else Color.Gray
             val resource = context.getString(R.string.todayAt, this.getTime())
             return Pair(resource, color)
         }
 
         if(LocalDate.now().minusDays(1) == this.toLocalDate()){
             val resource = context.getString(R.string.yesterdayAt, this.getTime())
-            return Pair(resource, SoftRed)
+            return Pair(resource, Color.Red)
         }
 
         if(LocalDate.now().plusDays(1) == this.toLocalDate()){
             val resource = context.getString(R.string.tomorrowAt, this.getTime())
-            return Pair(resource, DarkGray)
+            return Pair(resource, Color.Gray)
         }
 
         if (LocalDate.now() < this.toLocalDate() && LocalDate.now()
@@ -134,10 +132,10 @@ object DateUIUtils {
 
                 else -> context.getString(R.string.empty)
             }
-            return Pair(first, DarkGray)
+            return Pair(first, Color.Gray)
         }
         if (LocalDate.now().minusDays(7) > this.toLocalDate()) {
-            return Pair(this.parseDateTime(), SoftRed)
+            return Pair(this.parseDateTime(), Color.Red)
         }
         if (this.toLocalDate() < LocalDate.now() && LocalDate.now()
                 .minusDays(7) < this.toLocalDate()
@@ -180,9 +178,9 @@ object DateUIUtils {
 
                 else -> context.getString(R.string.empty)
             }
-            return Pair(first, SoftRed)
+            return Pair(first, Color.Red)
         }
-        return Pair(this.parseDateTime(), SoftRed)
+        return Pair(this.parseDateTime(), Color.Red)
     }
 
     fun Int.toDayOfTheWeekString(context: Context): String {

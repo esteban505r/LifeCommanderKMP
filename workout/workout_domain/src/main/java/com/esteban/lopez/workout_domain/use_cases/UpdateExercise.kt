@@ -1,18 +1,19 @@
 package com.esteban.ruano.workout_domain.use_cases
 
+import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_domain.repository.WorkoutRepository
 
 
-class LinkExerciseWithWorkoutDay(
+class UpdateExercise(
     private val repository: WorkoutRepository
 ) {
     suspend operator fun invoke(
-        workoutDayId: Int,
-        exerciseId: String
+        id:String,
+        exercise: Exercise
     ): Result<Unit> {
-        return repository.linkExerciseWithWorkoutDay(
-            workoutDayId,
-            exerciseId
+        return repository.updateExercise(
+            id,
+            exercise,
         )
     }
 }

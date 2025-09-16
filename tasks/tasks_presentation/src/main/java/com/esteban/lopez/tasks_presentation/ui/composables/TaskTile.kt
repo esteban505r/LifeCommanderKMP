@@ -21,10 +21,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.theme.DarkGray2
-import com.esteban.ruano.core_ui.theme.Gray3
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toResourceStringBasedOnNow
+import com.esteban.ruano.ui.DarkGray2
+import com.esteban.ruano.ui.Gray3
 import com.lifecommander.models.Task
 
 @Composable

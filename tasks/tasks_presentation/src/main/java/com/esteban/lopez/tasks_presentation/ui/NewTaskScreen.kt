@@ -44,13 +44,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.esteban.ruano.core.utils.DateUtils.parseDateTime
-import com.esteban.ruano.core_ui.composables.AppBar
-import com.esteban.ruano.core_ui.composables.text.TitleH3
-import com.esteban.ruano.core_ui.theme.Gray
-import com.esteban.ruano.core_ui.theme.Gray2
+import com.esteban.ruano.lifecommander.ui.components.AppBar
+import com.esteban.ruano.lifecommander.ui.components.text.TitleH3
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toMillis
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.RemindersDialog
+import com.esteban.ruano.lifecommander.ui.components.RemindersDialog
 import com.esteban.ruano.core_ui.utils.DateUIUtils
 import com.esteban.ruano.core_ui.utils.DateUIUtils.formatTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.getTime
@@ -61,6 +59,8 @@ import com.lifecommander.models.Task
 import com.esteban.ruano.tasks_presentation.intent.TaskIntent
 import com.esteban.ruano.tasks_presentation.ui.composables.TaskReminderItem
 import com.esteban.ruano.tasks_presentation.ui.viewmodel.TaskDetailViewModel
+import com.esteban.ruano.ui.Gray
+import com.esteban.ruano.ui.Gray2
 import com.lifecommander.models.Reminder
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime

@@ -1,4 +1,4 @@
-package com.esteban.ruano.core_ui.composables
+package com.esteban.ruano.lifecommander.ui.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

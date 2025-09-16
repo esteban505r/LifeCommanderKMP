@@ -3,7 +3,7 @@ package com.esteban.ruano.nutrition_presentation.ui.viewmodel
 import androidx.lifecycle.viewModelScope
 import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.utils.SnackbarType
+import com.esteban.lopez.core.utils.SnackbarType
 import com.esteban.ruano.core_ui.view_model.BaseViewModel
 import com.esteban.ruano.nutrition_domain.use_cases.NutritionUseCases
 import com.esteban.ruano.nutrition_presentation.intent.NutritionEffect

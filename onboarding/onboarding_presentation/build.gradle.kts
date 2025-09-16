@@ -17,4 +17,5 @@ dependencies {
     //Firebase - only the classes, not the plugin
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    implementation(projects.shared)
 }

@@ -4,7 +4,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,12 +14,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
-import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ExposedDropdownMenuBox
@@ -31,13 +27,9 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Schedule
@@ -63,12 +55,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core.utils.UiText
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.AppBar
-import com.esteban.ruano.core_ui.composables.GeneralOutlinedTextField
 import com.esteban.ruano.core_ui.utils.CustomSnackbarVisualsWithUiText
 import com.esteban.ruano.core_ui.utils.SnackbarController
 import com.esteban.ruano.core_ui.utils.SnackbarEvent
-import com.esteban.ruano.core_ui.utils.SnackbarType
+import com.esteban.lopez.core.utils.SnackbarType
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.ui.SoftGreen
 import com.esteban.ruano.ui.SoftRed
@@ -84,6 +74,7 @@ import kotlinx.coroutines.launch
 fun NewEditExerciseScreen(
     exerciseToEditId: String? = null,
     state: ExercisesState,
+    onDone:()->Unit,
     userIntent: (ExercisesIntent) -> Unit,
 ) {
     val editMode = exerciseToEditId != null
@@ -185,10 +176,14 @@ fun NewEditExerciseScreen(
         )
 
         scope.launch {
-            if (editMode && exerciseToEditId != null) {
-                userIntent(ExercisesIntent.UpdateExercise(exerciseToEditId, model))
+            if (editMode) {
+                userIntent(ExercisesIntent.UpdateExercise(exerciseToEditId, model){
+                    onDone()
+                })
             } else {
-                userIntent(ExercisesIntent.SaveExercise(model))
+                userIntent(ExercisesIntent.SaveExercise(model){
+                    onDone()
+                })
             }
         }
     }
@@ -209,7 +204,7 @@ fun NewEditExerciseScreen(
                     }
                 },
                 actions = {
-                    if (editMode && exerciseToEditId != null) {
+                    if (editMode) {
                         IconButton(
                             onClick = {
 //                                scope.launch { userIntent(ExercisesIntent.DeleteExercise(exerciseToEditId)) }
@@ -219,35 +214,13 @@ fun NewEditExerciseScreen(
                         }
                     }
                     IconButton(onClick = { onSubmit() }) {
-                        Icon(Icons.Filled.Check, contentDescription = "Save")
+                        Icon(Icons.Filled.Check, contentDescription = "Save", tint = SoftGreen)
                     }
                 },
                 elevation = 0.dp,
                 backgroundColor = MaterialTheme.colors.surface
             )
         },
-        bottomBar = {
-            Surface(elevation = 8.dp) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Button(
-                        onClick = { onSubmit() },
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(vertical = 14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = SoftGreen,
-                            contentColor = MaterialTheme.colors.onPrimary
-                        )
-                    ) {
-                        Text(if (editMode) "Update" else "Save")
-                    }
-                }
-            }
-        }
     ) { innerPadding ->
         Box(Modifier.fillMaxSize()) {
             // ===== Content =====
@@ -301,7 +274,10 @@ fun NewEditExerciseScreen(
                             error = showErrors && restSecs.toIntOrNull() == null,
                             ime = ImeAction.Next
                         )
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             NumberField(
                                 modifier = Modifier.weight(1f),
                                 label = "Base Sets",
@@ -332,56 +308,13 @@ fun NewEditExerciseScreen(
                 Spacer(Modifier.height(10.dp))
 
                 // — Muscle Group —
-                Card(elevation = 0.dp, backgroundColor = MaterialTheme.colors.surface) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Muscle Group",
-                            style = MaterialTheme.typography.caption,
-                            color = MaterialTheme.colors.onSurface.copy(.7f)
-                        )
-                        Spacer(Modifier.height(6.dp))
-
-                        ExposedDropdownMenuBox(
-                            expanded = mgExpanded,
-                            onExpandedChange = { mgExpanded = !mgExpanded }
-                        ) {
-                            OutlinedTextField(
-                                value = MuscleGroup.fromValue(muscleGroup).toResourceString(ctx),
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Select group") },
-                                leadingIcon = { Icon(Icons.Outlined.Tag, null) },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = mgExpanded) },
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                isError = showErrors && muscleGroup.isBlank()
-                            )
-                            ExposedDropdownMenuBox (
-                                expanded = mgExpanded,
-                                onExpandedChange = { mgExpanded = it }
-                            ) {
-                                MuscleGroup.entries.forEach { mg ->
-                                    DropdownMenuItem(onClick = {
-                                        muscleGroup = mg.toMuscleGroupString()
-                                        mgExpanded = false
-                                    }) {
-                                        Text(mg.toResourceString(ctx))
-                                    }
-                                }
-                            }
-                        }
-
-                        if (showErrors && muscleGroup.isBlank()) {
-                            Spacer(Modifier.height(6.dp))
-                            Text(
-                                "Please select a muscle group",
-                                color = MaterialTheme.colors.error,
-                                style = MaterialTheme.typography.caption
-                            )
-                        }
-                    }
-                }
-
+                MuscleGroupPicker(
+                    muscleGroup,
+                    onChange = {
+                        muscleGroup = it
+                    },
+                    showErrors
+                )
                 Spacer(Modifier.height(96.dp)) // space for bottom bar
             }
 
@@ -432,7 +365,11 @@ private fun LabeledField(
     )
     if (error) {
         Spacer(Modifier.height(6.dp))
-        Text("$label is required", color = MaterialTheme.colors.error, style = MaterialTheme.typography.caption)
+        Text(
+            "$label is required",
+            color = MaterialTheme.colors.error,
+            style = MaterialTheme.typography.caption
+        )
     }
     Spacer(Modifier.height(12.dp))
 }
@@ -463,7 +400,74 @@ private fun NumberField(
     )
     if (error) {
         Spacer(Modifier.height(6.dp))
-        Text("$label must be a number", color = MaterialTheme.colors.error, style = MaterialTheme.typography.caption)
+        Text(
+            "$label must be a number",
+            color = MaterialTheme.colors.error,
+            style = MaterialTheme.typography.caption
+        )
     }
     Spacer(Modifier.height(12.dp))
 }
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun MuscleGroupPicker(
+    muscleGroup: String,
+    onChange: (String) -> Unit,
+    showErrors: Boolean
+) {
+    var mgExpanded by remember { mutableStateOf(false) }
+
+    Column(Modifier.padding(16.dp)) {
+        Text(
+            text = "Muscle Group",
+            style = MaterialTheme.typography.caption,
+            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+        )
+        Spacer(Modifier.height(6.dp))
+
+        ExposedDropdownMenuBox(
+            expanded = mgExpanded,
+            onExpandedChange = { mgExpanded = !mgExpanded }
+        ) {
+            OutlinedTextField(
+                value = MuscleGroup.fromValue(muscleGroup).toResourceString(LocalContext.current),
+                onValueChange = {},                // readOnly field
+                readOnly = true,
+                label = { Text("Select group") },
+                leadingIcon = { Icon(Icons.Outlined.Tag, null) },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = mgExpanded)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                isError = showErrors && muscleGroup.isBlank(),
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+            )
+
+            // ✅ The menu goes here (not another Box)
+            ExposedDropdownMenu(
+                expanded = mgExpanded,
+                onDismissRequest = { mgExpanded = false }
+            ) {
+                MuscleGroup.entries.forEach { mg ->
+                    DropdownMenuItem(onClick = {
+                        onChange(mg.toMuscleGroupString())
+                        mgExpanded = false
+                    }) {
+                        Text(mg.toResourceString(LocalContext.current))
+                    }
+                }
+            }
+        }
+
+        if (showErrors && muscleGroup.isBlank()) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Please select a muscle group",
+                color = MaterialTheme.colors.error,
+                style = MaterialTheme.typography.caption
+            )
+        }
+    }
+}
+

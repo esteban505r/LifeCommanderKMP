@@ -48,7 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.AppBar
+import com.esteban.ruano.lifecommander.ui.components.AppBar
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.workout_domain.model.MuscleGroup
 import com.esteban.ruano.workout_presentation.intent.ExercisesIntent
@@ -225,13 +225,14 @@ private fun ColumnScope.WorkoutExercises(
                         modifier = Modifier.background(MaterialTheme.colors.background),
                         exercise = workoutExercises[index],
                         sets = emptyList(),                 // no sets shown
-                        day = "",                  // unused since sets are hidden
                         onEdit = { },
                         onCompleteExercise = {  },
                         onAddSet = { _, _, _, onResult -> onResult(null) },
-                        onUpdateSetReps = { _, _ -> }, // no-op
-                        onRemoveSet = { _ -> },      // no-op
-                    )
+                        onUpdateSetReps = { _, _ -> },
+                        onRemoveSet = {}
+                    ) // no-op
+                    { _ -> }      // no-op
+
                 }
             }
         }
@@ -295,7 +296,6 @@ private fun ColumnScope.AllExercises(
                             .background(MaterialTheme.colors.background),
                         exercise = exercise,
                         sets = listOf(),
-                        day = "",
                         onEdit = {
 
                         },

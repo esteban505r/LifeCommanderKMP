@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
@@ -34,12 +33,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.ListTile
-import com.esteban.ruano.core_ui.theme.DarkGray
-import com.esteban.ruano.core_ui.theme.LightGray
-import com.esteban.ruano.core_ui.theme.LightGray4
+import com.esteban.ruano.lifecommander.ui.components.ListTile
 import com.esteban.ruano.core_ui.utils.DateUIUtils.DAYS_OF_THE_WEEK
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
+import com.esteban.ruano.ui.DarkGray
+import com.esteban.ruano.ui.LightGray
+import com.esteban.ruano.ui.LightGray4
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
 import com.esteban.ruano.workout_presentation.ui.composable.WorkoutProgressSummary
 import com.esteban.ruano.workout_presentation.ui.viewmodel.state.WorkoutState

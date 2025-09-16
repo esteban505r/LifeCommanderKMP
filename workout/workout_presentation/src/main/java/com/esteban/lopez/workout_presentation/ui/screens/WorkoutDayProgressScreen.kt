@@ -27,9 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.esteban.ruano.core_ui.composables.AppBar
-import com.esteban.ruano.core_ui.theme.Blue
-import com.esteban.ruano.core_ui.theme.DarkGray
+import com.esteban.ruano.lifecommander.ui.components.AppBar
+import com.esteban.ruano.ui.Blue
+import com.esteban.ruano.ui.DarkGray
 import com.esteban.ruano.workout_presentation.R
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
 import com.esteban.ruano.workout_presentation.models.ExerciseInProgress

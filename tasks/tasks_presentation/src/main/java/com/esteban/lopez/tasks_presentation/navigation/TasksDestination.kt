@@ -9,15 +9,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.esteban.ruano.core.routes.Routes
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.Error
-import com.esteban.ruano.core_ui.composables.Loading
+import com.esteban.ruano.lifecommander.ui.components.Error
 import com.esteban.ruano.core_ui.utils.LocalMainIntent
-import com.esteban.ruano.core_ui.view_model.intent.MainIntent
 import com.esteban.ruano.tasks_presentation.intent.TaskEffect
 import com.esteban.ruano.tasks_presentation.intent.TaskIntent
 import com.esteban.ruano.tasks_presentation.ui.TasksScreen
 import com.esteban.ruano.tasks_presentation.ui.viewmodel.TaskViewModel
-import com.esteban.ruano.tasks_presentation.ui.viewmodel.state.TaskState
 import kotlinx.coroutines.launch
 
 @Composable

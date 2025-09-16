@@ -27,15 +27,16 @@ import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.helpers.NotificationsHelper
 import com.esteban.lopez.core.utils.AppConstants.EMPTY_STRING
 import com.esteban.ruano.core.utils.PermissionManager
-import com.esteban.ruano.core_ui.theme.LifeCommanderTheme
 import com.esteban.ruano.core_ui.utils.LocalMainIntent
 import com.esteban.ruano.core_ui.utils.LocalMainState
-import com.esteban.ruano.core_ui.utils.SnackbarType
+import com.esteban.lopez.core.utils.SnackbarType
+import com.esteban.ruano.core_ui.theme.lexendFontFamily
 import com.esteban.ruano.core_ui.view_model.MainViewModel
 import com.esteban.ruano.core_ui.view_model.intent.MainIntent
 import com.esteban.ruano.lifecommander.R
 import com.esteban.ruano.lifecommander.activities.interfaces.NotificationActivity
 import com.esteban.ruano.lifecommander.navigation.MainDestination
+import com.esteban.ruano.ui.LifeCommanderTheme
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.BuildConfig
 import com.google.firebase.FirebaseApp
@@ -144,7 +145,9 @@ class MainActivity : ComponentActivity(), NotificationActivity {
                 LocalMainState provides mainViewModel.viewState.collectAsState().value
             ) {
                 CompositionLocalProvider(LocalMainIntent provides mainViewModel::performAction) {
-                    LifeCommanderTheme {
+                    LifeCommanderTheme(
+                        fontFamily = lexendFontFamily
+                    ) {
                         val snackbarHostState = remember { SnackbarHostState() }
                         MainDestination(
                             snackbarHostState = snackbarHostState

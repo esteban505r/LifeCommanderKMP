@@ -1,4 +1,4 @@
-package com.esteban.ruano.core_ui.composables.text
+package com.esteban.ruano.lifecommander.ui.components.text
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
@@ -10,19 +10,19 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 
-fun TitleH3(text: String,modifier: Modifier = Modifier) {
+fun TitleH4(text: String,modifier: Modifier = Modifier) {
     Text(
         text = text,
-        style = MaterialTheme.typography.h3,
+        style = MaterialTheme.typography.h4,
         modifier = modifier.padding(vertical = 16.dp)
     )
 }
 
 @Composable
-fun TitleH3(textResource: Int,modifier: Modifier = Modifier) {
+fun TitleH4(textResource: Int,modifier: Modifier = Modifier) {
     Text(
         stringResource(id = textResource),
-        style = MaterialTheme.typography.h3,
+        style = MaterialTheme.typography.h4,
         modifier = modifier.padding(vertical = 16.dp)
     )
 }

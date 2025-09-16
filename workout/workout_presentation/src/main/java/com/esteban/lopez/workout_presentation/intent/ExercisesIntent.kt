@@ -14,11 +14,13 @@ sealed class ExercisesIntent : UserIntent{
     ) : ExercisesIntent()
     data class UpdateExercise(
         val id:String,
-        val exercise: Exercise
+        val exercise: Exercise,
+        val onSuccess: ()-> Unit
     ): ExercisesIntent()
 
     data class SaveExercise(
-        val exercise: Exercise
+        val exercise: Exercise,
+        val onSuccess: ()-> Unit
     ) : ExercisesIntent()
     data object NavigateUp : ExercisesIntent()
 }

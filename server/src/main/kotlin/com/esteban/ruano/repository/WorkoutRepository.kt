@@ -49,6 +49,18 @@ class WorkoutRepository(private val workoutService: WorkoutService) {
         )
     }
 
+    fun updateExercise(userId: Int, id: UUID, exercise: ExerciseDTO):Boolean{
+        return workoutService.updateExercise(
+            userId,id,exercise
+        )
+    }
+
+    fun deleteExercise(userId: Int, id: UUID):Boolean{
+        return workoutService.deleteExercise(
+            userId,id
+        )
+    }
+
     fun createExercise(userId: Int, exercise: ExerciseDTO): UUID? {
         return workoutService.createExercise(
             userId,

@@ -7,24 +7,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.esteban.ruano.core.utils.UiText
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.Error
-import com.esteban.ruano.core_ui.composables.Loading
-import com.esteban.ruano.core_ui.utils.CustomSnackBarVisuals
+import com.esteban.ruano.lifecommander.ui.components.Error
+import com.esteban.ruano.lifecommander.ui.components.Loading
 import com.esteban.ruano.core_ui.utils.CustomSnackbarVisualsWithUiText
 import com.esteban.ruano.core_ui.utils.SnackbarController
 import com.esteban.ruano.core_ui.utils.SnackbarEvent
-import com.esteban.ruano.core_ui.utils.SnackbarType
+import com.esteban.lopez.core.utils.SnackbarType
 import com.esteban.ruano.workout_presentation.intent.ExerciseDetailEffect
 import com.esteban.ruano.workout_presentation.intent.ExerciseDetailIntent
 import com.esteban.ruano.workout_presentation.intent.ExercisesEffect
-import com.esteban.ruano.workout_presentation.intent.ExercisesIntent
 import com.esteban.ruano.workout_presentation.ui.screens.ExerciseDetailScreen
-import com.esteban.ruano.workout_presentation.ui.screens.ExerciseScreen
 import com.esteban.ruano.workout_presentation.ui.viewmodel.ExerciseDetailViewModel
-import com.esteban.ruano.workout_presentation.ui.viewmodel.ExercisesViewModel
 import kotlinx.coroutines.launch
 
 @Composable

@@ -24,11 +24,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.composables.AppBar
-import com.esteban.ruano.core_ui.composables.GeneralOutlinedTextField
+import com.esteban.ruano.lifecommander.ui.components.AppBar
+import com.esteban.ruano.lifecommander.ui.components.GeneralOutlinedTextField
 import com.esteban.ruano.core_ui.utils.LocalMainIntent
 import com.esteban.ruano.core_ui.utils.LocalMainState
-import com.esteban.ruano.core_ui.view_model.intent.MainIntent
 import com.esteban.ruano.lifecommander.models.TaskFilters
 import com.esteban.ruano.lifecommander.ui.components.ToggleChipsButtons
 import com.esteban.ruano.tasks_presentation.intent.TaskIntent
@@ -163,7 +162,7 @@ fun TasksScreen(
                     } else {
                         GeneralOutlinedTextField(
                             value = state.filter,
-                            placeHolder = R.string.search_tasks
+                            placeHolder = stringResource(R.string.search_tasks)
                         ) {
                             userIntent(
                                 TaskIntent.SetFilter(it)

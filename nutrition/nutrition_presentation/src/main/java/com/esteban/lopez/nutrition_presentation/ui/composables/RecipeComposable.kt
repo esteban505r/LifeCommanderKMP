@@ -34,8 +34,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.esteban.ruano.core_ui.composables.ListTile
-import com.esteban.ruano.core_ui.theme.LightGray4
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
 import com.esteban.ruano.lifecommander.models.Recipe
 import com.esteban.ruano.nutrition_presentation.R

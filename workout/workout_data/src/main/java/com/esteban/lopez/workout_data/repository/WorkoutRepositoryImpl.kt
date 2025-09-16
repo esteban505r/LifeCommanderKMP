@@ -136,12 +136,27 @@ class WorkoutRepositoryImpl (
         )
     }
 
-    override suspend fun linkExerciseWithWorkoutDay(workoutDayId: Int, exerciseId: Int): Result<Unit> {
+    override suspend fun linkExerciseWithWorkoutDay(workoutDayId: Int, exerciseId: String): Result<Unit> {
         return doRequest(
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
             lastFetchTime = preferences.loadLastFetchTime().first(),
-            localFetch = { localDataSource.linkExerciseWithWorkoutDay(workoutDayId.toString(), exerciseId.toString()) },
+            localFetch = { localDataSource.linkExerciseWithWorkoutDay(workoutDayId.toString(),
+                exerciseId) },
             remoteFetch = { remoteDataSource.linkExerciseWithWorkoutDay(workoutDayId.toString(), exerciseId.toString()) },
+            forceRefresh = false,
+        )
+    }
+
+    override suspend fun unlinkExerciseWithWorkoutDay(workoutDayId: Int, exerciseId: String): Result<Unit> {
+        return doRequest(
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            lastFetchTime = preferences.loadLastFetchTime().first(),
+            localFetch = { localDataSource.unLinkExerciseWithWorkoutDay(workoutDayId.toString(),
+                exerciseId
+            ) },
+            remoteFetch = { remoteDataSource.unLinkExerciseWithWorkoutDay(workoutDayId.toString(),
+                exerciseId
+            ) },
             forceRefresh = false,
         )
     }
@@ -180,6 +195,27 @@ class WorkoutRepositoryImpl (
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
             remoteFetch = {
                 remoteDataSource.completeExercise(track)
+            }
+        )
+    }
+
+    override suspend fun updateExercise(
+        id: String,
+        exercise: Exercise
+    ): Result<Unit> {
+        return doRemoteRequest(
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            remoteFetch = {
+                remoteDataSource.updateExercise(id,exercise)
+            }
+        )
+    }
+
+    override suspend fun deleteExercise(id: String): Result<Unit> {
+        return doRemoteRequest(
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            remoteFetch = {
+                remoteDataSource.deleteExercise(id)
             }
         )
     }

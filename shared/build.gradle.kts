@@ -93,3 +93,9 @@ android {
 multiplatformResources {
     resourcesPackage.set("com.esteban.ruano")
 }
+
+compose {
+    resources{
+        publicResClass = true
+    }
+}

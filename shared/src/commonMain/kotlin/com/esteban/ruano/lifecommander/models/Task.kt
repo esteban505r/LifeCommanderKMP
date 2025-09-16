@@ -24,6 +24,20 @@ data class Reminder(
     val type: ReminderType = ReminderType.NOTIFICATION,
 )
 
+enum class ReminderTimes{
+    FIFTEEN_MINUTES,
+    ONE_HOUR,
+    EIGHT_HOURS;
+
+    fun toTime():Long{
+        when(this){
+            FIFTEEN_MINUTES -> return 900000
+            ONE_HOUR -> return 3600000
+            EIGHT_HOURS -> return 28800000
+        }
+    }
+}
+
 enum class ReminderType {
     NOTIFICATION,
     EMAIL,

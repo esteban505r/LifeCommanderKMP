@@ -1,7 +1,5 @@
 package com.esteban.ruano.tasks_presentation.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,16 +46,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.esteban.ruano.core_ui.composables.AppBar
-import com.esteban.ruano.core_ui.composables.button.BaseButton
-import com.esteban.ruano.core_ui.composables.button.ButtonType
+import com.esteban.ruano.lifecommander.ui.components.AppBar
+import com.esteban.ruano.lifecommander.ui.components.button.BaseButton
 import com.esteban.ruano.core_ui.R
-import com.esteban.ruano.core_ui.theme.SoftYellow
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toResourceStringBasedOnNow
 import com.esteban.ruano.tasks_presentation.intent.TaskIntent
 import com.esteban.ruano.tasks_presentation.ui.composables.TaskReminderItem
 import com.esteban.ruano.tasks_presentation.ui.viewmodel.TaskDetailViewModel
+import com.esteban.ruano.ui.SoftYellow
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 

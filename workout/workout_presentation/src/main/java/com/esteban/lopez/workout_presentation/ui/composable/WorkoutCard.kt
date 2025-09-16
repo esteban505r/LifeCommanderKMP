@@ -12,9 +12,9 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.esteban.ruano.core_ui.theme.Gray
-import com.esteban.ruano.core_ui.theme.Gray3
 import com.esteban.ruano.lifecommander.models.Exercise
+import com.esteban.ruano.ui.Gray
+import com.esteban.ruano.ui.Gray3
 
 @Composable
 fun WorkoutCard(modifier: Modifier = Modifier, exercises: List<Exercise>) {

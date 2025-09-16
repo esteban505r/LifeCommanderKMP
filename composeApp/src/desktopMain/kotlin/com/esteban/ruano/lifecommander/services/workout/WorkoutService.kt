@@ -1,5 +1,6 @@
 package com.esteban.ruano.lifecommander.services.workout
 
+import com.esteban.ruano.lifecommander.models.BindExercise
 import com.esteban.ruano.lifecommander.models.CreateExerciseSetTrackDTO
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.models.WorkoutTrack
@@ -7,6 +8,7 @@ import com.esteban.ruano.lifecommander.models.CreateWorkoutTrack
 import com.esteban.ruano.lifecommander.models.ExerciseTrack
 import com.esteban.ruano.lifecommander.models.CreateExerciseTrack
 import com.esteban.ruano.lifecommander.models.ExerciseDayStatus
+import com.esteban.ruano.lifecommander.models.UnBindExercise
 import com.esteban.ruano.lifecommander.models.workout.day.UpdateWorkoutDay
 import com.esteban.ruano.lifecommander.models.workout.day.WorkoutDay
 import io.ktor.client.*
@@ -160,7 +162,12 @@ class WorkoutService(
         val response = httpClient.post("$baseUrl/workout/exercises/bind") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
-            setBody(mapOf("exerciseId" to exerciseId, "workoutDayId" to workoutDayId.toString()))
+            setBody(
+                BindExercise(
+                    exerciseId,
+                    workoutDayId.toString()
+                )
+            )
         }
         return response.status == HttpStatusCode.OK
     }
@@ -169,7 +176,12 @@ class WorkoutService(
         val response = httpClient.delete("$baseUrl/workout/exercises/bind") {
             contentType(ContentType.Application.Json)
             appHeaders(tokenStorageImpl.getToken())
-            setBody(mapOf("exerciseId" to exerciseId, "workoutDayId" to workoutDayId.toString()))
+            setBody(
+                UnBindExercise(
+                    exerciseId,
+                    workoutDayId.toString()
+                )
+            )
         }
         return response.status == HttpStatusCode.OK
     }
