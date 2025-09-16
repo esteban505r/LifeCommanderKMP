@@ -225,7 +225,7 @@ fun NewHabitScreen(
             name = it
         }
         Spacer(modifier = Modifier.height(24.dp))
-        TitleH3(R.string.frequency)
+        TitleH3(stringResource(R.string.frequency))
         Spacer(modifier = Modifier.height(16.dp))
         ToggleButtons(
             selectedIndex = Frequency.entries.filter {
@@ -237,7 +237,7 @@ fun NewHabitScreen(
                 frequency = it.value
             }, toString = { FrequencyUtils.getResourceByFrequency(frequency = it) })
         Spacer(modifier = Modifier.height(16.dp))
-        TitleH3(R.string.reminders)
+        TitleH3(stringResource(R.string.reminders))
         Column {
             reminders.forEach { it ->
                 HabitReminderItem(
@@ -284,7 +284,7 @@ fun NewHabitScreen(
             Text(startTime)
         }
         Spacer(modifier = Modifier.height(16.dp))
-        TitleH3(R.string.notes)
+        TitleH3(stringResource(R.string.notes))
         OutlinedTextField(
             value = notes.value,
             colors = TextFieldDefaults.outlinedTextFieldColors(

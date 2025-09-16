@@ -155,7 +155,7 @@ fun NewEditRecipeScreen(
             label = { Text(stringResource(id = R.string.protein)) }
         )
         Spacer(modifier = Modifier.height(16.dp))
-        CoreTitleH4(R.string.days, modifier = Modifier.padding(start = 8.dp))
+        CoreTitleH4(stringResource(R.string.days), modifier = Modifier.padding(start = 8.dp))
         Box(
             modifier = Modifier.padding(start = 16.dp)
         ) {
@@ -221,7 +221,7 @@ fun NewEditRecipeScreen(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        CoreTitleH4(R.string.meal, modifier = Modifier.padding(start = 8.dp))
+        CoreTitleH4(stringResource(R.string.meal), modifier = Modifier.padding(start = 8.dp))
         Box(
             modifier = Modifier.padding(start = 16.dp)
         ) {

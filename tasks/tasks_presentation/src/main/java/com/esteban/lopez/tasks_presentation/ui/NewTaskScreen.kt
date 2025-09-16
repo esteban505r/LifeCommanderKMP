@@ -300,7 +300,7 @@ fun NewTaskScreenComposable(
                 frequency = it
             })*/
         Spacer(modifier = Modifier.height(16.dp))
-        TitleH3(R.string.reminders)
+        TitleH3(stringResource(R.string.reminders))
         Column {
             reminders.forEach { it ->
                 TaskReminderItem(
@@ -327,7 +327,7 @@ fun NewTaskScreenComposable(
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
-        TitleH3(R.string.notes)
+        TitleH3(stringResource(R.string.notes))
         OutlinedTextField(
             value = notes.value,
             colors = TextFieldDefaults.outlinedTextFieldColors(

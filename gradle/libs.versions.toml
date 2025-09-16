@@ -28,6 +28,7 @@ calendar = "2.6.0-beta02"
 # Compose
 compose-desktop = "1.8.0"
 compose-ui = "1.9.1"
+compose-lifecycle = "2.9.2"
 compose-icons = "1.7.8"
 android-compose-compiler = "1.5.15"
 compose-hilt-navigation = "1.3.0"
@@ -153,6 +154,7 @@ kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-co
 # Compose
 # compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose-ui" }
+compose-lifecycle = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "compose-lifecycle" }
 compose-compiler = { module = "androidx.compose.compiler:compiler", version.ref = "android-compose-compiler" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose-ui" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose-ui" }

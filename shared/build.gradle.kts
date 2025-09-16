@@ -50,6 +50,7 @@ kotlin {
 //                implementation(libs.paging)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(compose.runtime)
+                implementation(libs.compose.lifecycle)
                 implementation(compose.foundation)
                 implementation(compose.material)
                 implementation(compose.material3)
