@@ -94,10 +94,10 @@ fun Route.nutritionRouting(nutritionRepository: NutritionRepository) {
         
         route("/dashboard") {
             get {
-                val date = call.request.queryParameters["date"] ?: ""
+                val day = call.request.queryParameters["day"]?.toInt()!!
                 val userId = call.authentication.principal<LoggedUserDTO>()!!.id
 
-                call.respond(nutritionRepository.getDashboard(userId, date))
+                call.respond(nutritionRepository.getDashboard(userId, day))
             }
         }
 

@@ -55,8 +55,8 @@ class NutritionRepository(private val nutritionService: NutritionService) {
         return nutritionService.getRecipesByDayWithFilters(userId, day, limit, offset, filters)
     }
 
-    fun getDashboard(userId: Int, date: String): NutritionDashboardDTO {
-        return nutritionService.getDashboard(userId, date)
+    fun getDashboard(userId: Int, day: Int): NutritionDashboardDTO {
+        return nutritionService.getDashboard(userId, day)
     }
 
     fun create(userId: Int, task: CreateRecipeDTO): UUID? {

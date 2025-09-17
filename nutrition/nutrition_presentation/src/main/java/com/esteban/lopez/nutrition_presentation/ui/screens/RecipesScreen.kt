@@ -333,8 +333,7 @@ fun RecipesScreen(
                     item {
                         RecipeComposable(
                             recipe = recipe,
-                            showDay = state.viewMode == ViewMode.DATABASE,
-                            onClick = { onDetailRecipe(recipe.id) }
+                            onOpen = { onDetailRecipe(recipe.id) }
                         )
                     }
                 }

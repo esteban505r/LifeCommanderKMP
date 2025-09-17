@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.androidLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -18,6 +19,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_18)
         }
     }
+
 
     listOf(
         iosX64(),
@@ -274,5 +276,6 @@ compose.desktop {
 
 compose.resources {
     publicResClass = true
+    packageOfResClass = "com.esteban.ruano.resources"
     generateResClass = auto
 }

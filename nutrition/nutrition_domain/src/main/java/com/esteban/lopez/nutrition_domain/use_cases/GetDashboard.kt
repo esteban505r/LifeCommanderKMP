@@ -7,8 +7,8 @@ class GetDashboard (
     val repository: NutritionRepository
 ){
     suspend operator fun invoke(
-        date:String
+        day:Int
     ): Result<NutritionDashboardModel> {
-        return repository.getDashboard(date)
+        return repository.getDashboard(day)
     }
 }

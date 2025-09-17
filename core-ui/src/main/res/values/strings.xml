@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">LifeCommander</string>
+    <string name="app_name">Oter</string>
 
     <!-- Error  -->
     <string name="error_request_timeout">Timeout</string>

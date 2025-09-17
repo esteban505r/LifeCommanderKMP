@@ -132,7 +132,7 @@ class HabitNotificationWrapperImpl : HabitNotificationWrapper {
                 "message",
                 customMessage
             )
-            putExtra("onClickPath", Routes.BASE.HABITS.name)
+            putExtra("onClickPath", Routes.HABITS.name)
             putExtra("channelId", context.getString(R.string.habit_channel_id))
         }
     }

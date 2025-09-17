@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.composeMultiplatform)
 //    alias(libs.plugins.kotlinAndroid)
 }
 
@@ -15,6 +16,7 @@ dependencies {
     implementation(project(":core-ui"))
     implementation(projects.shared)
     implementation(libs.kotlinx.datetime)
+    implementation(compose.components.resources)
     implementation(project(":habits:habits_domain"))
     implementation(project(":habits:habits_presentation"))
     implementation(project(":workout:workout_presentation"))

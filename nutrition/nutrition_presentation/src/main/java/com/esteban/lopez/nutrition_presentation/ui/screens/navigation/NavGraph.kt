@@ -25,6 +25,18 @@ fun NavGraphBuilder.nutritionGraph(
             },
             onRecipeClick = {
                 navController.navigate("${Routes.RECIPE_DETAIL}/$it")
+            },
+            onConsumeRecipe = {
+
+            },
+            onEditRecipe = {
+
+            },
+            onSkipRecipe = {
+
+            },
+            onDeleteRecipe = {
+
             }
         )
     }

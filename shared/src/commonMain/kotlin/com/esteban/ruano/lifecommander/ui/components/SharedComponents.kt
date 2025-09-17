@@ -18,7 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.esteban.ruano.ui.*
@@ -32,7 +35,9 @@ import com.esteban.ruano.ui.*
 
 @Composable
 fun SharedAppBar(
+    titleIcon: Painter,
     title: String,
+    titleSize: TextUnit? = null,
     onSettingsClick: () -> Unit,
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -55,13 +60,27 @@ fun SharedAppBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.h4.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = LifeCommanderDesignSystem.colors.OnSurface
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Image(
+                    painter = titleIcon,
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(32.dp)
                 )
-            )
+                Spacer(
+                    modifier.width(12.dp)
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.h4.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = LifeCommanderDesignSystem.colors.OnSurface,
+                        fontSize = titleSize?: MaterialTheme.typography.h4.fontSize
+                    )
+                )
+            }
 
             Row {
                 actions()

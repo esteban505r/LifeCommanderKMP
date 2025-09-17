@@ -12,7 +12,7 @@ object ErrorHandlingUtils {
         return try {
             action()
         } catch (e: Exception) {
-            Log.e("Error: DataError", e.message.toString())
+            Log.e("Error: DataError", e.stackTraceToString()?:"")
             when (e) {
                 is HttpException -> {
                     when (e.code()) {

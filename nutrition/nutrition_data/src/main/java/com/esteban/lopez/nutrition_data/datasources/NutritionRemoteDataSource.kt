@@ -8,8 +8,8 @@ import com.esteban.ruano.nutrition_domain.model.NutritionDashboardModel
 class NutritionRemoteDataSource(
     private val api: NutritionApi
 ): NutritionDataSource {
-    override suspend fun getDashboard(date: String): NutritionDashboardModel {
-        return api.getDashboard(date).toDomainModel()
+    override suspend fun getDashboard(day: Int): NutritionDashboardModel {
+        return api.getDashboard(day).toDomainModel()
     }
 
 }

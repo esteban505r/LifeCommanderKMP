@@ -1,5 +1,6 @@
 package com.esteban.lopez.navigation.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.WindowInsets
@@ -23,14 +24,14 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.esteban.ruano.core.routes.Routes
-import com.esteban.ruano.core_ui.utils.IconUtils
+import com.esteban.ruano.lifecommander.utils.BottomNavIconUtils
 import com.esteban.ruano.navigation.NavHostWrapper
 
 @Composable
 fun LoggedScreen(onRootNavigate: (String) -> Unit) {
     val navController = rememberNavController()
     val bottomNavColor = Color.White
-    
+
     Scaffold(
         bottomBar = {
             BottomNavigation(
@@ -40,20 +41,41 @@ fun LoggedScreen(onRootNavigate: (String) -> Unit) {
 
                 val currentRoute = navBackStackEntry?.destination?.route
 
+
                 Routes.BASE.getAllRoutes().forEach { screen ->
+                    Log.d("CURRENT ROUTE" , currentRoute.toString())
+                    Log.d("SCREEN NAME" , screen.name.toString())
+                    val selected = when {
+                        currentRoute?.startsWith(Routes.BASE.TO_DO.name) ?: false &&
+                                screen.name.startsWith(Routes.BASE.TO_DO.name) -> true
+
+                        currentRoute == screen.name -> true
+                        else -> false
+                    }
                     BottomNavigationItem(
                         unselectedContentColor = Gray,
                         selectedContentColor = Color.Black,
                         modifier = Modifier.height(75.dp),
                         icon = {
                             Image(
-                                painter = painterResource(IconUtils.getResourceIconByString(screen.name)),
-                                modifier = Modifier.padding(bottom = 6.dp).size(24.dp),
+                                painter = org.jetbrains.compose.resources.painterResource(
+                                    BottomNavIconUtils.getResourceIconByString(
+                                        screen.name,
+                                        selected
+                                    )
+                                ),
+                                modifier = Modifier
+                                    .padding(bottom = 6.dp)
+                                    .size(if (selected) 56.dp else 24.dp),
                                 contentDescription = screen.name
                             )
                         },
-                        label = { Text(text = screen.label ?: "") },
-                        selected = currentRoute == screen.name,
+                        label = if (selected) {
+                            null
+                        } else {
+                            { Text(text = screen.label ?: "") }
+                        },
+                        selected = selected,
                         onClick = {
                             navController.navigate(screen.name) {
                                 popUpTo(navController.graph.startDestinationId) {
@@ -73,9 +95,9 @@ fun LoggedScreen(onRootNavigate: (String) -> Unit) {
             navController = navController,
             shouldShowOnboarding = false,
         )
-        
+
         // Alternative approaches you can try:
-        
+
         // 1. Manual approach with WindowInsets:
         // NavHostWrapper(
         //     modifier = Modifier
@@ -86,7 +108,7 @@ fun LoggedScreen(onRootNavigate: (String) -> Unit) {
         //     navController = navController,
         //     shouldShowOnboarding = false,
         // )
-        
+
         // 2. Separate status and navigation bar handling:
         // NavHostWrapper(
         //     modifier = Modifier
@@ -98,7 +120,7 @@ fun LoggedScreen(onRootNavigate: (String) -> Unit) {
         //     navController = navController,
         //     shouldShowOnboarding = false,
         // )
-        
+
         // 3. Using utility functions:
         // NavHostWrapper(
         //     modifier = SystemBarUtils.withSystemBarBackground(

@@ -4,6 +4,6 @@ import com.esteban.ruano.nutrition_domain.model.NutritionDashboardModel
 
 interface NutritionRepository {
     suspend fun getDashboard(
-        date: String
+        day: Int
     ): Result<NutritionDashboardModel>
 }

@@ -26,7 +26,10 @@ fun RecipeResponse.toDomainModel(): Recipe {
         days = days,
         mealTag = mealTag,
         ingredients = ingredients.map { it.toDomainModel() },
-        instructions = instructions.map { it.toDomainModel() }
+        instructions = instructions.map { it.toDomainModel() },
+        consumed = consumed,
+        consumedTrackId = consumedTrackId,
+        consumedDateTime = consumedDateTime
     )
 }
 
@@ -45,6 +48,9 @@ fun Recipe.toDataModel(): RecipeResponse {
         image = image,
         days = days ?: emptyList(),
         mealTag = mealTag,
+        consumed = consumed,
+        consumedTrackId = consumedTrackId,
+        consumedDateTime = consumedDateTime,
         ingredients = ingredients.map { it.toDataModel() },
         instructions = instructions.map { it.toDataModel() }
     )

@@ -75,8 +75,7 @@ fun MealTrackingScreen(
                 items(state.todayRecipes) { recipe ->
                     RecipeComposable(
                         recipe = recipe,
-                        showDay = false,
-                        onClick = { onRecipeClick(recipe.id) }
+                        onOpen = { onRecipeClick(recipe.id) }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     

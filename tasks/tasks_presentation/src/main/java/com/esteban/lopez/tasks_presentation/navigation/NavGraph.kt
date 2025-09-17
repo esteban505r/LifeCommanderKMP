@@ -10,7 +10,7 @@ import com.esteban.ruano.tasks_presentation.ui.TaskDetailScreen
 fun NavGraphBuilder.tasksGraph(
     navController: NavController
 ) {
-    composable(Routes.BASE.TASKS.name) {
+    composable(Routes.TASKS.name) {
         TasksDestination(navController = navController)
     }
     //Tasks

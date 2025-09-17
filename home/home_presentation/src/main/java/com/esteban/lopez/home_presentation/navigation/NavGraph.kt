@@ -12,13 +12,13 @@ fun NavGraphBuilder.homeGraph(
     composable(Routes.BASE.HOME.name) {
         HomeScreen(
             onGoToTasks = {
-                navController.navigate(Routes.BASE.TASKS.name)
+                navController.navigate(Routes.TASKS.name)
             },
             onGoToWorkout = {
                 navController.navigate(Routes.BASE.WORKOUT.name)
             },
             onCurrentHabitClick = {
-                navController.navigate(Routes.BASE.HABITS.name)
+                navController.navigate(Routes.HABITS.name)
             },
             onLogout = {
                 // The logout will be handled by MainViewModel which will trigger navigation

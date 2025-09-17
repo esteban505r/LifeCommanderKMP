@@ -36,9 +36,11 @@ import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.lifecommander.ui.components.ListTile
 import com.esteban.ruano.core_ui.utils.DateUIUtils.DAYS_OF_THE_WEEK
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
+import com.esteban.ruano.resources.Res
 import com.esteban.ruano.ui.DarkGray
 import com.esteban.ruano.ui.LightGray
 import com.esteban.ruano.ui.LightGray4
+import com.esteban.ruano.resources.otter_working_out
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
 import com.esteban.ruano.workout_presentation.ui.composable.WorkoutProgressSummary
 import com.esteban.ruano.workout_presentation.ui.viewmodel.state.WorkoutState
@@ -142,7 +144,7 @@ fun WorkoutScreen(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Image(
-                                    painter = painterResource(id = R.drawable.workout_man),
+                                    painter = org.jetbrains.compose.resources.painterResource(Res.drawable.otter_working_out),
                                     contentDescription = "Pushups",
                                     modifier = Modifier
                                         .height(200.dp)

@@ -16,7 +16,6 @@ import com.esteban.ruano.models.nutrition.*
 import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime as toLocalDateTimeUI
 import com.esteban.ruano.utils.fromDateToLong
-import com.esteban.ruano.utils.parseDate
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
@@ -40,17 +39,13 @@ import kotlin.time.ExperimentalTime
 
 class NutritionService() : BaseService() {
 
-    fun getDashboard(userId: Int, date: String): NutritionDashboardDTO {
+    fun getDashboard(userId: Int, day: Int): NutritionDashboardDTO {
         return transaction {
-            val recipes = Recipe.find {
-                (Recipes.user eq userId)
-                    .and(Recipes.status eq Status.ACTIVE)
-            }.with(Recipe::recipeDays, Recipe::ingredients, Recipe::instructions).map { it.toDTO() }
-            val totalRecipes = recipes.size
-            val currentDay = parseDate(date).dayOfWeek.ordinal
-            NutritionDashboardDTO(totalRecipes, recipes.filter {
-                it.days?.contains(currentDay) == true
-            })
+            val result = getRecipesByDay(
+                userId,
+                day
+            )
+            NutritionDashboardDTO(result.size,result)
         }
     }
 
@@ -179,6 +174,7 @@ class NutritionService() : BaseService() {
 
                 recipe.copy(
                     consumed = recentTrack != null,
+                    consumedTrackId = recentTrack?.id?.toString(),
                     consumedDateTime = recentTrack?.consumedDateTime?.toString()
                 )
             }

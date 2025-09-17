@@ -98,5 +98,7 @@ multiplatformResources {
 compose {
     resources{
         publicResClass = true
+        packageOfResClass = "com.esteban.ruano.resources"
+        generateResClass = always
     }
 }

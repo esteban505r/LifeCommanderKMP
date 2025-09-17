@@ -18,6 +18,7 @@ data class Recipe(
     val mealTag: String? = null,
     val consumed: Boolean = false,
     val consumedDateTime: String? = null,
+    val consumedTrackId: String? = null,
     val ingredients: List<Ingredient> = emptyList(),
     val instructions: List<Instruction> = emptyList()
 )

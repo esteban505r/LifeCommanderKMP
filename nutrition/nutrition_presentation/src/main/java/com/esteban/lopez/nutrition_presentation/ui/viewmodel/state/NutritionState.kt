@@ -7,9 +7,11 @@ import com.esteban.ruano.lifecommander.models.Recipe
 data class NutritionState (
     val totalRecipes: Int = 0,
     val isLoading: Boolean = false,
+    val isSearchingLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isError: Boolean = false,
     val todayRecipes: List<Recipe> = emptyList(),
+    val recipesSearched: List<Recipe> = emptyList(),
     val errorMessage: String = EMPTY_STRING,
     val emptyImageRes: Int? = null
 ) : ViewState

@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.composeMultiplatform)
 //    alias(libs.plugins.kotlinAndroid)
 }
 
@@ -16,5 +17,6 @@ dependencies {
     implementation(project(":workout:workout_domain"))
     implementation(libs.kotlinx.datetime)
     implementation(projects.shared)
+    implementation(compose.components.resources)
     debugImplementation(libs.compose.ui.tooling)
 }

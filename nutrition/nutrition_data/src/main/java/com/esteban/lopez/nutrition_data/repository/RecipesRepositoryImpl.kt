@@ -6,40 +6,41 @@ import com.esteban.ruano.core.helpers.NetworkHelper
 import com.esteban.ruano.core_data.repository.BaseRepository
 import com.esteban.ruano.core_data.constants.DataConstants.DEFAULT_LIMIT
 import com.esteban.ruano.core_data.constants.DataConstants.DEFAULT_PAGE
+import com.esteban.ruano.lifecommander.models.AlternativeNutrients
 import com.esteban.ruano.nutrition_data.datasources.RecipesDataSource
 import com.esteban.ruano.lifecommander.models.Recipe
 import com.esteban.ruano.lifecommander.models.nutrition.RecipesResponse
 import com.esteban.ruano.nutrition_domain.repository.RecipesRepository
 import kotlinx.coroutines.flow.first
 
-class RecipesRepositoryImpl (
+class RecipesRepositoryImpl(
     private val remoteDataSource: RecipesDataSource,
     private val localDataSource: RecipesDataSource,
     private val networkHelper: NetworkHelper,
     private val preferences: Preferences
-): BaseRepository(), RecipesRepository {
+) : BaseRepository(), RecipesRepository {
 
     override suspend fun getRecipes(
         filter: String?,
         page: Int?,
         limit: Int?
-    ):Result<RecipesResponse> = doRequest(
+    ): Result<RecipesResponse> = doRequest(
         offlineModeEnabled = preferences.loadOfflineMode().first(),
         remoteFetch = {
             val result = remoteDataSource.getRecipes(
                 filter = filter ?: "",
-                page = page?: DEFAULT_PAGE,
-                limit = limit?: DEFAULT_LIMIT,
+                page = page ?: DEFAULT_PAGE,
+                limit = limit ?: DEFAULT_LIMIT,
             )
             result
         },
         localFetch = {
             val result = localDataSource.getRecipes(
                 filter = filter ?: "",
-                page = page?: DEFAULT_PAGE,
-                limit = limit?: DEFAULT_LIMIT,
+                page = page ?: DEFAULT_PAGE,
+                limit = limit ?: DEFAULT_LIMIT,
             )
-           result
+            result
         },
         lastFetchTime = preferences.loadLastFetchTime().first(),
         isNetworkAvailable = networkHelper.isNetworkAvailable(),
@@ -58,8 +59,8 @@ class RecipesRepositoryImpl (
                 val result = remoteDataSource.getRecipesByDay(
                     day = day,
                     filter = filter ?: "",
-                    page = page?: DEFAULT_PAGE,
-                    limit = limit?: DEFAULT_LIMIT,
+                    page = page ?: DEFAULT_PAGE,
+                    limit = limit ?: DEFAULT_LIMIT,
                 )
                 result
             },
@@ -67,8 +68,8 @@ class RecipesRepositoryImpl (
                 val result = localDataSource.getRecipesByDay(
                     day = day,
                     filter = filter ?: "",
-                    page = page?: DEFAULT_PAGE,
-                    limit = limit?: DEFAULT_LIMIT,
+                    page = page ?: DEFAULT_PAGE,
+                    limit = limit ?: DEFAULT_LIMIT,
                 )
                 result
             },
@@ -88,16 +89,16 @@ class RecipesRepositoryImpl (
             remoteFetch = {
                 val result = remoteDataSource.getAllRecipes(
                     filter = filter ?: "",
-                    page = page?: DEFAULT_PAGE,
-                    limit = limit?: DEFAULT_LIMIT,
+                    page = page ?: DEFAULT_PAGE,
+                    limit = limit ?: DEFAULT_LIMIT,
                 )
                 result
             },
             localFetch = {
                 val result = localDataSource.getAllRecipes(
                     filter = filter ?: "",
-                    page = page?: DEFAULT_PAGE,
-                    limit = limit?: DEFAULT_LIMIT,
+                    page = page ?: DEFAULT_PAGE,
+                    limit = limit ?: DEFAULT_LIMIT,
                 )
                 result
             },
@@ -156,19 +157,54 @@ class RecipesRepositoryImpl (
         )
 
 
-    override suspend fun updateRecipe(id:String, recipe: Recipe): Result<Unit> =
+    override suspend fun updateRecipe(id: String, recipe: Recipe): Result<Unit> =
         doRequest(
             offlineModeEnabled = preferences.loadOfflineMode().first(),
             remoteFetch = {
-                remoteDataSource.updateRecipe(id,recipe)
+                remoteDataSource.updateRecipe(id, recipe)
                 Result.success(Unit)
             },
             localFetch = {
-                localDataSource.updateRecipe(id,recipe)
+                localDataSource.updateRecipe(id, recipe)
                 Result.success(Unit)
             },
             lastFetchTime = preferences.loadLastFetchTime().first(),
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
             forceRefresh = false
         )
+
+
+    override suspend fun consumeRecipe(id: String, dateTime: String): Result<Unit> {
+        return doRemoteRequest(
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            remoteFetch = {
+                remoteDataSource.consumeRecipe(id, dateTime)
+            }
+        )
+    }
+
+    override suspend fun skipRecipe(
+        id: String, dateTime: String,
+        alternativeRecipeId: String?,
+        alternativeMealName: String?,
+        alternativeNutrients: AlternativeNutrients?
+    ): Result<Unit> {
+        return doRemoteRequest(
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            remoteFetch = {
+                remoteDataSource.skipRecipe(id, dateTime)
+            }
+        )
+    }
+
+    override suspend fun undoConsumedRecipe(id: String)
+        :Result<Unit> {
+        return doRemoteRequest(
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+            remoteFetch = {
+                remoteDataSource.undoConsumedRecipe(id)
+            }
+        )
+    }
+
 }

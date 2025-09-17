@@ -16,6 +16,9 @@ data class RecipeResponse(
     val sugar: Double? = 0.0,
     val image: String? = null,
     val days: List<Int> = emptyList(),
+    val consumed: Boolean = false,
+    val consumedDateTime: String? = null,
+    val consumedTrackId: String? = null,
     val mealTag:String? = null,
     val ingredients: List<IngredientResponse> = emptyList(),
     val instructions: List<InstructionResponse> = emptyList()

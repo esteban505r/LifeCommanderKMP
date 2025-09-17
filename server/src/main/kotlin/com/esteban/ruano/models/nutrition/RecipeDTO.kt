@@ -19,6 +19,7 @@ data class RecipeDTO(
     val mealTag: String? = null,
     val consumed: Boolean = false,
     val consumedDateTime: String? = null,
+    val consumedTrackId: String? = null,
     val ingredients: List<IngredientDTO> = emptyList(),
     val instructions: List<InstructionDTO> = emptyList()
 )

@@ -17,11 +17,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.CenterFocusWeak
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -35,8 +33,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.painterResource as androidPainterResource // only for your other icons
+import androidx.compose.ui.res.painterResource as androidPainterResource
+import org.jetbrains.compose.resources.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,6 +51,12 @@ import com.esteban.ruano.lifecommander.ui.components.SharedAppBar
 import com.esteban.ruano.lifecommander.ui.components.SharedGradientButton
 import com.esteban.ruano.lifecommander.ui.components.SharedSectionCard
 import com.esteban.ruano.lifecommander.ui.components.SharedTaskCard
+import com.esteban.ruano.resources.Res
+import com.esteban.ruano.resources.otter_focused
+import com.esteban.ruano.resources.otter_sleepy
+import com.esteban.ruano.resources.otter_happy
+import com.esteban.ruano.resources.otter_proud
+import com.esteban.ruano.resources.otter_idle
 import com.esteban.ruano.tasks_presentation.intent.TaskIntent
 import com.esteban.ruano.tasks_presentation.ui.viewmodel.TaskViewModel
 import com.esteban.ruano.test_core.base.TestTags
@@ -66,17 +70,8 @@ import com.esteban.ruano.workout_presentation.ui.viewmodel.WorkoutDetailViewMode
 import com.lifecommander.models.Habit
 import com.lifecommander.models.Task
 import kotlinx.coroutines.launch
-import lifecommander.shared.generated.resources.Res
 import java.time.LocalDate
 
-// --- Compose Multiplatform Resources (Option A) ---
-// ⬇️ Replace `your.package` with your module's generated package
-/*import your.package.generated.resources.Res
-import your.package.generated.resources.images_otter_focus
-import your.package.generated.resources.images_otter_happy
-import your.package.generated.resources.images_otter_idle
-import your.package.generated.resources.images_otter_proud
-import your.package.generated.resources.images_otter_sleepy*/
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -169,13 +164,26 @@ fun HomeScreen(
 
             // App bar with overflow + focus toggle
             SharedAppBar(
-                title = "Life Commander",
+                titleIcon = androidPainterResource(R.drawable.logo),
+                title = stringResource(R.string.app_name),
+                titleSize = MaterialTheme.typography.h3.fontSize,
                 onSettingsClick = { DeviceUtilities.prepareAutoStartInXiaomi(context) },
                 onLogoutClick = {
                     sendMainIntent(MainIntent.Logout)
                     onLogout()
                 },
                 actions = {
+                    IconButton(onClick = {
+                        isFocusMode = !isFocusMode
+                        showOverflow = false
+                    }) {
+                        Icon(
+                            if (isFocusMode) Icons.Filled.CenterFocusStrong else Icons.Outlined.CenterFocusWeak,
+                            contentDescription = null
+                        )
+                       /* Spacer(Modifier.width(12.dp))
+                        Text(if (isFocusMode) "Disable Focus mode" else "Enable Focus mode")*/
+                    }
                     IconButton(
                         onClick = { showOverflow = true },
                         modifier = Modifier
@@ -199,18 +207,8 @@ fun HomeScreen(
                         expanded = showOverflow,
                         onDismissRequest = { showOverflow = false }
                     ) {
-                        DropdownMenuItem(onClick = {
-                            isFocusMode = !isFocusMode
-                            showOverflow = false
-                        }) {
-                            Icon(
-                                if (isFocusMode) Icons.Filled.CenterFocusStrong else Icons.Outlined.CenterFocusWeak,
-                                contentDescription = null
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text(if (isFocusMode) "Disable Focus mode" else "Enable Focus mode")
-                        }
-                        DropdownMenuItem(
+
+                        /*DropdownMenuItem(
                             onClick = {
                                 focusOnlyCurrent = !focusOnlyCurrent
                                 showOverflow = false
@@ -222,7 +220,7 @@ fun HomeScreen(
                             )
                             Spacer(Modifier.width(12.dp))
                             Text(if (focusOnlyCurrent) "Show lists (all)" else "Show only current")
-                        }
+                        }*/
                         DropdownMenuItem(
                             onClick = {
                                 showOverflow = false
@@ -550,12 +548,11 @@ private enum class OtterMood { Idle, Happy, Proud, Focused, Sleepy }
 
 @Composable
 private fun rememberOtterPainter(mood: OtterMood) = when (mood) {
-//    OtterMood.Focused -> painterResource(Res.drawable.images_otter_focused)
-//    OtterMood.Proud   -> painterResource(Res.drawable.images_otter_focused)
-//    OtterMood.Happy   -> painterResource(Res.drawable.images_otter_focused)
-//    OtterMood.Sleepy  -> painterResource(Res.drawable.images_otter_focused)
-//    OtterMood.Idle    -> painterResource(Res.drawable.images_otter_focused)
-    else -> painterResource(R.drawable.ic_tasks)
+    OtterMood.Focused -> painterResource(Res.drawable.otter_focused)
+    OtterMood.Proud   -> painterResource(Res.drawable.otter_proud)
+    OtterMood.Happy   -> painterResource(Res.drawable.otter_happy)
+    OtterMood.Sleepy  -> painterResource(Res.drawable.otter_sleepy)
+    OtterMood.Idle    -> painterResource(Res.drawable.otter_idle)
 }
 
 private fun computeOtterMood(
@@ -626,7 +623,7 @@ fun OtterWelcomeCard(
 
             Box(
                 modifier = Modifier
-                    .size(68.dp)
+                    .size(88.dp)
                     .graphicsLayer(scaleX = scale, scaleY = scale)
                     .clip(CircleShape)
                     .background(MaterialTheme.colors.onSurface.copy(.04f)),
@@ -635,7 +632,7 @@ fun OtterWelcomeCard(
                 Image(
                     painter = painter,
                     contentDescription = "Otter",
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(76.dp)
                 )
             }
 
@@ -660,13 +657,13 @@ fun OtterWelcomeCard(
                 Spacer(Modifier.height(12.dp))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onHabitClick, shape = RoundedCornerShape(12.dp)) {
-                        Icon(androidPainterResource(id = R.drawable.ic_habits), null)
+                    OutlinedButton(onClick = onHabitClick, shape = RoundedCornerShape(12.dp),modifier = Modifier.weight(1f)) {
+                        Icon(androidPainterResource(id = R.drawable.ic_habits), null, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(8.dp))
                         Text("Habits ($pendingHabits)")
                     }
-                    Button(onClick = onTasksClick, shape = RoundedCornerShape(12.dp)) {
-                        Icon(androidPainterResource(id = R.drawable.ic_tasks), null)
+                    Button(onClick = onTasksClick, shape = RoundedCornerShape(12.dp),modifier = Modifier.weight(1f)) {
+                        Icon(androidPainterResource(id = R.drawable.ic_tasks), null, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(8.dp))
                         Text("Tasks ($pendingTasks)")
                     }

@@ -8,15 +8,17 @@ object Routes {
     object BASE {
         val ROUTE = "base"
         val HOME = BottomNavRoute("home", "home", "Home")
-        val HABITS = BottomNavRoute("habits", "habits", "Habits")
-        val TASKS = BottomNavRoute("tasks", "tasks", "Tasks")
+        val TO_DO = BottomNavRoute("to_do", "to-do", "To-do")
         val WORKOUT = BottomNavRoute("workout", "workout", "Workout")
         val NUTRITION = BottomNavRoute("nutrition", "nutrition", "Nutrition")
         val FINANCE = BottomNavRoute("finance", "finance", "Finance")
-        fun getAllRoutes() = listOf(HOME, HABITS, TASKS, WORKOUT, NUTRITION, FINANCE)
+        fun getAllRoutes() = listOf(HOME, TO_DO, WORKOUT, NUTRITION, FINANCE)
     }
 
     const val WELCOME = "welcome"
+
+    val HABITS = BottomNavRoute("to_do/habits", "habits", "Habits")
+    val TASKS = BottomNavRoute("to_do/tasks", "tasks", "Tasks")
 
     //Habits
     const val HABIT_DETAIL = "habit_detail"

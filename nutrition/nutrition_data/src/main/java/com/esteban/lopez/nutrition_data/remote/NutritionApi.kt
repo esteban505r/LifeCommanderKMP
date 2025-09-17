@@ -1,8 +1,10 @@
 package com.esteban.ruano.nutrition_data.remote
 
+import com.esteban.ruano.lifecommander.models.CreateRecipeTrack
 import com.esteban.ruano.lifecommander.models.nutrition.RecipesResponse
 import com.esteban.ruano.nutrition_data.remote.model.NutritionDashboardResponse
 import com.esteban.ruano.nutrition_data.remote.model.RecipeResponse
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -15,7 +17,7 @@ interface NutritionApi {
 
     @GET("nutrition/dashboard")
     suspend fun getDashboard(
-        @Query("date") date: String
+        @Query("day") day: Int
     ): NutritionDashboardResponse
 
     @GET("nutrition/recipes")
@@ -53,5 +55,13 @@ interface NutritionApi {
         @Query("page") page: Int?,
         @Query("limit") limit: Int?
     ): RecipesResponse
+
+    @POST("nutrition/tracking/consume")
+    suspend fun consumeRecipe(
+        @Body recipeTrack: CreateRecipeTrack
+    ): Response<Unit>
+
+    @DELETE("nutrition/tracking/track/{id}")
+    suspend fun undoConsumedRecipe(@Path("id") id: String): Response<Unit>
 
 }

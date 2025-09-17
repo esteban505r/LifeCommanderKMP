@@ -15,14 +15,14 @@ class NutritionRepositoryImpl (
     private val networkHelper: NetworkHelper,
     private val preferences: Preferences
 ): BaseRepository(), NutritionRepository {
-    override suspend fun getDashboard(date: String): Result<NutritionDashboardModel> {
+    override suspend fun getDashboard(day: Int): Result<NutritionDashboardModel> {
         return doRequest(
             offlineModeEnabled = preferences.loadOfflineMode().first(),
             remoteFetch = {
-                remoteDataSource.getDashboard(date)
+                remoteDataSource.getDashboard(day)
             },
             localFetch = {
-                localDataSource.getDashboard(date)
+                localDataSource.getDashboard(day)
             },
             lastFetchTime = preferences.loadLastFetchTime().first(),
             isNetworkAvailable = networkHelper.isNetworkAvailable(),

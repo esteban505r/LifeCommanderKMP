@@ -1,5 +1,8 @@
 package com.esteban.ruano.nutrition_data.datasources
 
+import com.esteban.lopez.core_data.helpers.asResult
+import com.esteban.ruano.lifecommander.models.AlternativeNutrients
+import com.esteban.ruano.lifecommander.models.CreateRecipeTrack
 import com.esteban.ruano.nutrition_data.mappers.toDataModel
 import com.esteban.ruano.nutrition_data.mappers.toDomainModel
 import com.esteban.ruano.nutrition_data.remote.NutritionApi
@@ -9,7 +12,7 @@ import com.esteban.ruano.lifecommander.models.nutrition.RecipesResponse
 
 class RecipesRemoteDataSource(
     private val api: NutritionApi
-): RecipesDataSource {
+) : RecipesDataSource {
     override suspend fun getRecipes(filter: String, page: Int, limit: Int): RecipesResponse =
         api.getRecipes(filter, page, limit)
 
@@ -44,5 +47,31 @@ class RecipesRemoteDataSource(
 
     override suspend fun updateRecipe(recipeId: String, recipe: Recipe) {
         return api.updateRecipe(recipeId, recipe.toDataModel())
+    }
+
+    override suspend fun consumeRecipe(id: String, dateTime: String): Result<Unit> {
+        return api.consumeRecipe(CreateRecipeTrack(id, dateTime)).asResult()
+    }
+
+    override suspend fun skipRecipe(
+        id: String,
+        dateTime: String,
+        alternativeRecipeId: String?,
+        alternativeMealName: String? ,
+        alternativeNutrients: AlternativeNutrients?     ): Result<Unit> {
+        return api.consumeRecipe(
+            CreateRecipeTrack(
+                id,
+                dateTime,
+                skipped = true
+            )
+        ).asResult()
+    }
+
+    override suspend fun undoConsumedRecipe(id: String): Result<Unit> {
+        val result = api.undoConsumedRecipe(
+            id
+        )
+        return result.asResult()
     }
 }

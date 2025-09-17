@@ -10,7 +10,7 @@ fun NavGraphBuilder.habitsGraph(
 ) {
     //Habits
 
-    composable(Routes.BASE.HABITS.name) {
+    composable(Routes.HABITS.name) {
         HabitsDestination(
             navController = navController
         )

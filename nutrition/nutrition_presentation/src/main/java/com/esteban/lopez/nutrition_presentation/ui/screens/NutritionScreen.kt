@@ -1,5 +1,6 @@
 package com.esteban.ruano.nutrition_presentation.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -16,17 +17,26 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.esteban.lopez.nutrition_presentation.ui.composables.SkipMealDialog
 import com.esteban.ruano.core_ui.R
+import com.esteban.ruano.lifecommander.models.AlternativeNutrients
 import com.esteban.ruano.lifecommander.ui.components.text.TitleH3
 import com.esteban.ruano.nutrition_presentation.intent.NutritionIntent
 import com.esteban.ruano.nutrition_presentation.ui.composables.RecipeComposable
 import com.esteban.ruano.nutrition_presentation.ui.viewmodel.state.NutritionState
+import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import kotlinx.datetime.TimeZone
 
 @Composable
 fun NutritionScreen(
@@ -34,12 +44,52 @@ fun NutritionScreen(
     userIntent: (NutritionIntent) -> Unit,
     onRecipesClick: () -> Unit,
     onRecipeClick: (String) -> Unit,
+    onEditRecipe: (String) -> Unit,
     state: NutritionState
 ){
 
+    var recipeTitle by remember { mutableStateOf<String?>(null) }
+    var recipeToSkipId by remember { mutableStateOf<String?>(null) }
+
+    recipeToSkipId?.let{
+        SkipMealDialog(
+            recipeTitle = recipeTitle ?: "",
+            onDismiss = {
+                recipeToSkipId = null
+            },
+            searchRecipes = state.recipesSearched,
+            onSearch = {
+                userIntent
+            },
+            isSearchLoading = state.isSearchingLoading,
+            onSkip = { data ->
+                userIntent(
+                    NutritionIntent.SkipRecipe(
+                        it,
+                        getCurrentDateTime(TimeZone.currentSystemDefault()).formatDefault(),
+                        alternativeRecipeId = data.selectedRecipeId,
+                        alternativeMealName = data.selectedRecipeName,
+                        alternativeNutrients = AlternativeNutrients(
+                            calories = data.calories,
+                            protein  = data.protein,
+                            carbs    = data.carbs,
+                            fat      = data.fat,
+                            fiber    = data.fiber,
+                            sodium = data.sodium,
+                            sugar    = data.sugar
+                        )
+                    )
+                )
+            }
+        )
+    }
+
     Scaffold {
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(it).padding(24.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it)
+                .padding(24.dp)
         ) {
             item {
                 Text(
@@ -59,7 +109,9 @@ fun NutritionScreen(
                           modifier = Modifier.fillMaxWidth()
                    ){
                        Text(text = "You have ${state.totalRecipes} recipes",
-                           modifier = Modifier.align(Alignment.Center).padding(16.dp))
+                           modifier = Modifier
+                               .align(Alignment.Center)
+                               .padding(16.dp))
                    }
                 }
             }
@@ -74,7 +126,9 @@ fun NutritionScreen(
                           modifier = Modifier.fillMaxWidth()
                    ){
                        Text(text = "Track Today's Meals",
-                           modifier = Modifier.align(Alignment.Center).padding(16.dp))
+                           modifier = Modifier
+                               .align(Alignment.Center)
+                               .padding(16.dp))
                    }
                 }
             }
@@ -90,12 +144,16 @@ fun NutritionScreen(
                 item{
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth().padding(top = 64.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 64.dp),
                     ) {
                         Image(
                             painter = painterResource(state.emptyImageRes ?: R.drawable.empty_recipes),
                             contentDescription = "Recipe image",
-                            modifier = Modifier.fillMaxWidth().height(150.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(150.dp)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
@@ -108,10 +166,28 @@ fun NutritionScreen(
                 }
             }
             items(state.todayRecipes.size) { index ->
+                Log.d("RECIPES","${state.todayRecipes[index]}")
                RecipeComposable(
                    recipe = state.todayRecipes[index],
-                   onClick = {
-                       onRecipeClick(state.todayRecipes[index].id)
+                   onUndo = {
+                       userIntent(NutritionIntent.UndoConsumedRecipe(
+                           it,
+                       ))
+                   },
+                   onOpen = {
+                       onRecipeClick(it.id)
+                   },
+                   onConsume = {
+                       userIntent(NutritionIntent.ConsumeRecipe(
+                           it.id,
+                           getCurrentDateTime(TimeZone.currentSystemDefault()).formatDefault()
+                       ))
+                   },
+                   onEdit = {
+                       onEditRecipe(it.id)
+                   },
+                   onSkip = {
+                       recipeToSkipId = it.id
                    }
                )
             }

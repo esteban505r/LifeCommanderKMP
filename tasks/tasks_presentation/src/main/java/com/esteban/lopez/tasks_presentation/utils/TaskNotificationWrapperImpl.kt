@@ -120,7 +120,7 @@ class TaskNotificationWrapperImpl : TasksNotificationWrapper {
                 "message",
                 customMessage
             )
-            putExtra("onClickPath", Routes.BASE.TASKS.name)
+            putExtra("onClickPath", Routes.TASKS.name)
             putExtra("channelId", context.getString(R.string.task_channel_id))
         }
     }

@@ -26,6 +26,9 @@ object RecipesDomainModule {
             updateRecipe = UpdateRecipe(repository),
             deleteRecipe = DeleteRecipe(repository),
             getByDay = GetRecipesByDay(repository),
+            consumeRecipe = ConsumeRecipe(repository),
+            skipRecipe = SkipRecipe(repository),
+            undoConsumedRecipe = UndoConsumedRecipe(repository)
         )
     }
 
