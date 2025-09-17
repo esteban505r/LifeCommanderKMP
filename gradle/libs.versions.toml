@@ -62,6 +62,8 @@ kotlinx-coroutines = "1.10.2"
 # Hilt
 hilt = "2.56.2"
 
+
+
 #Paging
 
 paging = "3.4.0-alpha03"
@@ -104,7 +106,7 @@ navigation-compose = "2.9.0-beta01"
 lifecycle-viewmodel-compose = "2.8.2"
 coil3 = "3.0.4"
 coroutines = "1.9.0"
-datastore = "1.1.1"
+datastore = "1.1.7"
 koin = "4.0.4"
 composenativetray = "0.5.5"
 compose-native-notification = "0.2.0"
@@ -113,7 +115,7 @@ material-icons = "1.6.7"
 flyway = "10.11.1"
 bcrypt = "0.9.0"
 postgres = "42.7.2"
-aws-sdk = "2.31.15"
+aws-sdk = "2.33.11"
 moko-resources = "0.24.5"
 dotenv = "6.4.1"
 media3CommonKtx = "1.7.1"
@@ -248,6 +250,7 @@ junit = { module = "junit:junit", version.ref = "junit" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-encoding = { module = "io.ktor:ktor-client-encoding", version.ref = "ktor" }
+ktor-rate-limit = { module = "io.ktor:ktor-server-rate-limit", version.ref = "ktor" }
 ktor-client-json = { module = "io.ktor:ktor-client-json", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
@@ -307,6 +310,9 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 # AWS
 aws-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws-sdk" }
 aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }
+aws-sesv2 = { module = "software.amazon.awssdk:sesv2", version.ref = "aws-sdk" }
+aws-auth = { module = "software.amazon.awssdk:auth", version.ref = "aws-sdk" }
+aws-regions = { module = "software.amazon.awssdk:regions", version.ref = "aws-sdk" }
 
 # Dotenv
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenv" }

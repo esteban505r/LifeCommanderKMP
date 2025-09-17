@@ -55,6 +55,7 @@ fun Application.configureRouting() {
     
     // Inject services
     val authService: AuthService by inject()
+    val passwordResetService: PasswordResetService by inject()
     val timerService: TimerService by inject()
     val postCategoryService: PostCategoryService by inject()
     val dashboardService: DashboardService by inject()
@@ -91,7 +92,7 @@ fun Application.configureRouting() {
 
             blogRouting(blogRepository, postCategoryService)
             portfolioRouting(portfolioRepository)
-            authRouting(authService,timerService)
+            authRouting(authService, passwordResetService,timerService)
             dashboardRouting(dashboardService)
         }
     }

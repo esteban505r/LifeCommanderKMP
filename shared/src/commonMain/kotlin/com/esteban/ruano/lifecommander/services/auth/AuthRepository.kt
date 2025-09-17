@@ -9,4 +9,9 @@ interface AuthRepository {
     suspend fun signUp(name:String,email: String, password: String): Unit
     suspend fun logout()
     suspend fun isAuthenticated(): Boolean
-} 
+
+    suspend fun forgotPassword(email: String)
+
+    suspend fun resetPassword(token: String, newPassword: String)
+    suspend fun verifyResetToken(token: String)
+}

@@ -9,10 +9,9 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import java.time.LocalTime
-import org.koin.core.component.KoinComponent
+import kotlinx.datetime.LocalTime
 
-class AppPreferencesService(private val dataStore: DataStore<Preferences>) : KoinComponent {
+class AppPreferencesService(private val dataStore: DataStore<Preferences>)  {
     // Night Block Preferences
     private val nightBlockTimeKey = stringPreferencesKey("night_block_time")
     private val nightBlockActiveKey = stringPreferencesKey("night_block_active")
@@ -30,8 +29,8 @@ class AppPreferencesService(private val dataStore: DataStore<Preferences>) : Koi
         .map { preferences ->
             preferences[nightBlockTimeKey]?.let { timeStr ->
                 val (hour, minute) = timeStr.split(":").map { it.toInt() }
-                LocalTime.of(hour, minute)
-            } ?: LocalTime.of(20, 30) // Default time: 8:30 PM
+                LocalTime(hour, minute)
+            } ?: LocalTime(20, 30) // Default time: 8:30 PM
         }
 
     // Night Block Active State

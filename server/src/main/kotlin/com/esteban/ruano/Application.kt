@@ -17,6 +17,9 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.origin
+import io.ktor.server.plugins.ratelimit.RateLimit
+import io.ktor.server.plugins.ratelimit.RateLimitName
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -29,6 +32,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.ktor.ext.inject
 import org.slf4j.event.Level
 import java.util.*
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 private const val MDC_KEY = "requestId"
@@ -46,6 +50,7 @@ fun Application.module() {
     configureSecurity()
     configureSerialization()
     configureKoin()
+    configureRateLimit()
     configureRouting()
     connectToPostgres()
 
@@ -106,6 +111,26 @@ fun Application.configureCORS() {
     }
 }
 
+fun Application.configureRateLimit(){
+    install(RateLimit) {
+        // Limit password-reset email requests
+        register(RateLimitName("forgot")) {
+            rateLimiter(limit = 5, refillPeriod = 10.minutes)
+            requestKey { call -> call.request.origin.remoteHost } // per-IP
+        }
+        // Limit actual reset submissions
+        register(RateLimitName("reset")) {
+            rateLimiter(limit = 10, refillPeriod = 10.minutes)
+            requestKey { call -> call.request.origin.remoteHost } // per-IP
+        }
+
+        register(RateLimitName("verify")) {
+            rateLimiter(limit = 20, refillPeriod = 10.minutes)
+            requestKey { call -> call.request.origin.remoteHost }
+        }
+    }
+}
+
 fun Application.configureWebSockets() {
     install(WebSockets) {
         pingPeriod = 15.seconds
@@ -161,7 +186,7 @@ fun Application.connectToPostgres() {
             DailyJournals, Pomodoros, Questions, QuestionAnswers,
             Transactions, ScheduledTransactions, Accounts, Budgets, SavingsGoals, TimerLists,
             Timers, UserSettings, DeviceTokens, CategoryKeywords, Portfolios, RecipeTracks, ExerciseTracks, RecipeDays,
-            Ingredients, Instructions
+            Ingredients, Instructions, PasswordResetTokens, RefreshSessions
         )
     }
 }

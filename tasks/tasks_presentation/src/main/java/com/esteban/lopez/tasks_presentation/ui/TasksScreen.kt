@@ -1,18 +1,29 @@
 package com.esteban.ruano.tasks_presentation.ui
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,6 +41,9 @@ import com.esteban.ruano.core_ui.utils.LocalMainIntent
 import com.esteban.ruano.core_ui.utils.LocalMainState
 import com.esteban.ruano.lifecommander.models.TaskFilters
 import com.esteban.ruano.lifecommander.ui.components.ToggleChipsButtons
+import com.esteban.ruano.resources.Res
+import com.esteban.ruano.resources.otter_studying_horizontal
+import com.esteban.ruano.resources.otter_studying_horizontal2
 import com.esteban.ruano.tasks_presentation.intent.TaskIntent
 import com.esteban.ruano.tasks_presentation.ui.composables.TasksCalendarView
 import com.esteban.ruano.tasks_presentation.ui.viewmodel.state.TaskState
@@ -61,6 +75,8 @@ fun TasksScreen(
     val mainState = LocalMainState.current
     val sendMainIntent = LocalMainIntent.current
 
+    var showSearch by remember { mutableStateOf(false) }
+
     Scaffold(
         scaffoldState = scaffoldState,
         floatingActionButtonPosition = FabPosition.Center,
@@ -87,9 +103,22 @@ fun TasksScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(
+                    bottom = 16.dp
+                )
         ) {
             Column {
-                AppBar(stringResource(id = R.string.tasks_title), actions = {
+                AppBar(stringResource(id = R.string.tasks_title),
+                    leadingIcon = {
+                        Image(
+                            org.jetbrains.compose.resources.painterResource(
+                                Res.drawable.otter_studying_horizontal2,
+                            ),
+                            modifier = Modifier.size(56.dp),
+                           contentDescription =  "Otter studying"
+                        )
+                    },
+                    actions = {
 
                     /*Switch(
                         checked = state.offlineModeEnabled,
@@ -138,6 +167,17 @@ fun TasksScreen(
                         }
                     }*/
 
+                    if(!showSearch){
+                        IconButton(onClick = {
+                            showSearch = true
+                        }) {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = "Show Search"
+                            )
+                        }
+                    }
+
                     IconButton(onClick = {
                         coroutineScope.launch {
                             userIntent(
@@ -150,6 +190,7 @@ fun TasksScreen(
                             contentDescription = "Calendar View"
                         )
                     }
+
                 })
                 Column(
                     horizontalAlignment = Alignment.Start,
@@ -160,13 +201,29 @@ fun TasksScreen(
                     if (state.calendarViewEnabled) {
                         TasksCalendarView()
                     } else {
-                        GeneralOutlinedTextField(
-                            value = state.filter,
-                            placeHolder = stringResource(R.string.search_tasks)
+                        AnimatedVisibility(
+                            visible = showSearch,
+                            enter = fadeIn() + expandVertically(),
+                            exit = fadeOut() + shrinkVertically()
                         ) {
-                            userIntent(
-                                TaskIntent.SetFilter(it)
-                            )
+                            GeneralOutlinedTextField(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                value = state.filter,
+                                trailingIcon = {
+                                    IconButton(
+                                        onClick = {
+                                            showSearch = false
+                                        }
+                                    ) {
+                                        Icon(Icons.Default.Close,"Close")
+                                    }
+                                },
+                                placeHolder = stringResource(R.string.search_tasks)
+                            ) {
+                                userIntent(
+                                    TaskIntent.SetFilter(it)
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         ToggleChipsButtons(
@@ -212,7 +269,9 @@ fun TasksScreen(
                             })
                         Spacer(modifier = Modifier.height(16.dp))
                         Box(
-                            modifier = Modifier.fillMaxWidth().fillMaxHeight()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight()
                         ){
                             when{
                                 state.isLoading -> {

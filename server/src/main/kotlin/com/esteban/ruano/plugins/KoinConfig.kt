@@ -1,7 +1,10 @@
 package com.esteban.ruano.plugins
 
+import com.esteban.ruano.lifecommander.utils.BASE_URL_PROD
 import com.esteban.ruano.repository.*
 import com.esteban.ruano.service.*
+import com.esteban.ruano.utils.EmailSender
+import com.esteban.ruano.utils.SesEmailSender
 import io.ktor.server.application.*
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
@@ -19,6 +22,8 @@ val appModule = module {
     // Services
     single { ReminderService() }
     single { AuthService() }
+    single<EmailSender> { SesEmailSender() }
+    single { PasswordResetService(get(),BASE_URL_PROD,) }
     single { TaskService(get()) }
     single { HabitService(get()) }
     single { NotificationService() }

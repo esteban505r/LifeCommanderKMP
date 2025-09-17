@@ -56,6 +56,9 @@ val TASKS_ENDPOINT = "$BASE_URL/tasks"
 val TIMER_ENDPOINT = "$BASE_URL/timers"
 val LOGIN_ENDPOINT = "$BASE_URL/auth/login"
 val SIGNUP_ENDPOINT = "$BASE_URL/auth/register"
+val FORGOT_PASSWORD_ENDPOINT = "$BASE_URL/auth/forgot-password"
+val RESET_PASSWORD_ENDPOINT = "$BASE_URL/auth/reset-password"
+val VERIFY_RESET_TOKEN_ENDPOINT = "$BASE_URL/auth/reset-password/verify"
 
 fun HttpMessageBuilder.appHeaders(token: String?): HeadersBuilder {
     return this.headers {

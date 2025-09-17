@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.*
 import androidx.compose.material.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +23,7 @@ import com.lifecommander.finance.ui.components.*
 import kotlinx.coroutines.launch
 import com.esteban.ruano.lifecommander.finance.ui.components.FinanceTabRow
 import com.esteban.ruano.lifecommander.finance.ui.components.FinanceTabItem
+import com.esteban.ruano.lifecommander.ui.components.AppBar
 
 @Composable
 fun FinanceScreen(
@@ -55,9 +57,9 @@ fun FinanceScreen(
                         Icons.Default.AccountBalance,
                         contentDescription = null,
                         tint = if (selectedTab == 0) 
-                            MaterialTheme.colors.onPrimary 
+                            MaterialTheme.colors.primary
                         else 
-                            MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                            MaterialTheme.colors.primary.copy(alpha = 0.6f)
                     )
                 },
                 action = { actions.getAccounts() }
@@ -69,9 +71,9 @@ fun FinanceScreen(
                         Icons.Default.Receipt,
                         contentDescription = null,
                         tint = if (selectedTab == 1) 
-                            MaterialTheme.colors.onPrimary 
+                            MaterialTheme.colors.primary
                         else 
-                            MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                            MaterialTheme.colors.primary.copy(alpha = 0.6f)
                     )
                 },
                 action = { actions.getTransactions(true) }
@@ -83,9 +85,9 @@ fun FinanceScreen(
                         Icons.Default.Schedule,
                         contentDescription = null,
                         tint = if (selectedTab == 2) 
-                            MaterialTheme.colors.onPrimary 
+                            MaterialTheme.colors.primary
                         else 
-                            MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                            MaterialTheme.colors.primary.copy(alpha = 0.6f)
                     )
                 },
                 action = { actions.getScheduledTransactions(true) }
@@ -97,9 +99,9 @@ fun FinanceScreen(
                         Icons.Default.PieChart,
                         contentDescription = null,
                         tint = if (selectedTab == 3) 
-                            MaterialTheme.colors.onPrimary 
+                            MaterialTheme.colors.primary
                         else 
-                            MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                            MaterialTheme.colors.primary.copy(alpha = 0.6f)
                     )
                 },
                 action = { actions.getBudgets() }
@@ -110,7 +112,7 @@ fun FinanceScreen(
     Scaffold(
         backgroundColor = MaterialTheme.colors.background,
         modifier = modifier,
-        topBar = {
+        /*topBar = {
             TopAppBar(
                 title = {
                     Text(
@@ -138,7 +140,7 @@ fun FinanceScreen(
                     }
                 }
             )
-        }
+        }*/
     ) { padding ->
         Column(
             modifier = Modifier
@@ -146,106 +148,140 @@ fun FinanceScreen(
                 .padding(padding)
                 .background(MaterialTheme.colors.background)
         ) {
-            FinanceTabRow(
-                selectedTab = selectedTab,
-                onTabSelected = { tabIndex -> 
-                    actions.setSelectedTab(tabIndex)
-                },
-                actions = tabItems,
-                isDesktop = isDesktop
-            )
-
-            when (selectedTab) {
-                0 -> AccountList(
-                    accounts = state.accounts,
-                    selectedAccount = state.selectedAccount,
-                    onAccountSelected = { scope.launch { actions.selectAccount(it) } },
-                    onAddAccount = { showAccountForm = true },
-                    onEditAccount = { editingAccount = it },
-                    onDeleteAccount = { scope.launch { it.id?.let { id -> actions.deleteAccount(id) } } }
-                )
-
-                1 -> TransactionListWrapper(
-                    transactions = state.transactions,
-                    onTransactionClick = { /* Handle transaction click */ },
-                    onEdit = { editingTransaction = it },
-                    onAddTransaction = { showTransactionForm = true },
-                    onDelete = { scope.launch { it.id?.let { id -> actions.deleteTransaction(id) } } },
-                    totalCount = state.totalTransactions,
-                    onLoadMore = {
-                        scope.launch {
-                            actions.getTransactions(refresh = false)
-                        }
-                    },
-                    onFiltersChange = {
-                        scope.launch {
-                            actions.changeTransactionFilters(it, onSuccess = {
-                                actions.getTransactions(refresh = true)
-                            })
-                        }
-                    },
-                    isLoading = state.isLoadingTransactions,
-                    currentFilters = state.transactionFilters,
-                )
-
-                2 -> ScheduledTransactionListWrapper(
-                    transactions = state.scheduledTransactions,
-                    onTransactionClick = { /* Handle scheduled transaction click */ },
-                    onEdit = { editingScheduledTransaction = it },
-                    onAddTransaction = { showScheduledTransactionForm = true },
-                    onDelete = { scope.launch { it.id?.let { id -> actions.deleteScheduledTransaction(id) } } },
-                    totalCount = state.totalScheduledTransactions,
-                    onLoadMore = {
-                        scope.launch {
-                            actions.getScheduledTransactions(refresh = false)
-                        }
-                    },
-                    onFiltersChange = {
-                        scope.launch {
-                            actions.changeTransactionFilters(it, onSuccess = {
-                                actions.getScheduledTransactions(refresh = true)
-                            })
-                        }
-                    },
-                    currentFilters = state.transactionFilters,
-                )
-
-                3 -> {
-                    BudgetScreenWrapper(
-                        budgets = state.budgets,
-                        onLoadBudgets = {
-                            actions.getBudgets()
-                        },
-                        onAddBudget = {
-                            actions.addBudget(it)
-                        },
-                        onEditBudget = {
-                            actions.updateBudget(it)
-                        },
-                        onDeleteBudget = { scope.launch { it.id?.let { id -> actions.deleteBudget(id) } } },
-                        onBudgetClick = { budget ->
-                            onOpenBudgetTransactions(budget.id ?: "",budget.name)
-                        },
-                        onFiltersChange = {
-                            actions.changeBudgetFilters(it)
-                        },
-                        onChangeBaseDate = {
-                            actions.changeBudgetBaseDate(it)
-                        },
-                        baseDate = state.budgetBaseDate.toLocalDate(),
-                        onOpenCategoryKeywordMapper = {
-                            onOpenCategoryKeywordMapper()
-                        },
-                        onCategorizeUnbudgeted = {
-                            actions.categorizeUnbudgeted()
-                        },
-                        onCategorizeAll = {
-                            actions.categorizeAll()
-                        }
+            AppBar("Finance", actions = {
+                IconButton(onClick = {
+                   onOpenImporter()
+                }) {
+                    Icon(
+                        Icons.Default.ImportExport,
+                        contentDescription = "Importer"
                     )
                 }
+            })
+                FinanceTabRow(
+                    selectedTab = selectedTab,
+                    onTabSelected = { tabIndex ->
+                        actions.setSelectedTab(tabIndex)
+                    },
+                    actions = tabItems,
+                    isDesktop = isDesktop
+                )
+
+                when (selectedTab) {
+                    0 -> AccountList(
+                        accounts = state.accounts,
+                        selectedAccount = state.selectedAccount,
+                        onAccountSelected = { scope.launch { actions.selectAccount(it) } },
+                        onAddAccount = { showAccountForm = true },
+                        onEditAccount = { editingAccount = it },
+                        onDeleteAccount = {
+                            scope.launch {
+                                it.id?.let { id ->
+                                    actions.deleteAccount(
+                                        id
+                                    )
+                                }
+                            }
+                        }
+                    )
+
+                    1 -> TransactionListWrapper(
+                        transactions = state.transactions,
+                        onTransactionClick = { /* Handle transaction click */ },
+                        onEdit = { editingTransaction = it },
+                        onAddTransaction = { showTransactionForm = true },
+                        onDelete = { scope.launch { it.id?.let { id -> actions.deleteTransaction(id) } } },
+                        totalCount = state.totalTransactions,
+                        onLoadMore = {
+                            scope.launch {
+                                actions.getTransactions(refresh = false)
+                            }
+                        },
+                        onFiltersChange = {
+                            scope.launch {
+                                actions.changeTransactionFilters(it, onSuccess = {
+                                    actions.getTransactions(refresh = true)
+                                })
+                            }
+                        },
+                        isLoading = state.isLoadingTransactions,
+                        currentFilters = state.transactionFilters,
+                    )
+
+                    2 -> ScheduledTransactionListWrapper(
+                        transactions = state.scheduledTransactions,
+                        onTransactionClick = { /* Handle scheduled transaction click */ },
+                        onEdit = { editingScheduledTransaction = it },
+                        onAddTransaction = { showScheduledTransactionForm = true },
+                        onDelete = {
+                            scope.launch {
+                                it.id?.let { id ->
+                                    actions.deleteScheduledTransaction(
+                                        id
+                                    )
+                                }
+                            }
+                        },
+                        totalCount = state.totalScheduledTransactions,
+                        onLoadMore = {
+                            scope.launch {
+                                actions.getScheduledTransactions(refresh = false)
+                            }
+                        },
+                        onFiltersChange = {
+                            scope.launch {
+                                actions.changeTransactionFilters(it, onSuccess = {
+                                    actions.getScheduledTransactions(refresh = true)
+                                })
+                            }
+                        },
+                        currentFilters = state.transactionFilters,
+                    )
+
+                    3 -> {
+                        BudgetScreenWrapper(
+                            budgets = state.budgets,
+                            onLoadBudgets = {
+                                actions.getBudgets()
+                            },
+                            onAddBudget = {
+                                actions.addBudget(it)
+                            },
+                            onEditBudget = {
+                                actions.updateBudget(it)
+                            },
+                            onDeleteBudget = {
+                                scope.launch {
+                                    it.id?.let { id ->
+                                        actions.deleteBudget(
+                                            id
+                                        )
+                                    }
+                                }
+                            },
+                            onBudgetClick = { budget ->
+                                onOpenBudgetTransactions(budget.id ?: "", budget.name)
+                            },
+                            onFiltersChange = {
+                                actions.changeBudgetFilters(it)
+                            },
+                            onChangeBaseDate = {
+                                actions.changeBudgetBaseDate(it)
+                            },
+                            baseDate = state.budgetBaseDate.toLocalDate(),
+                            onOpenCategoryKeywordMapper = {
+                                onOpenCategoryKeywordMapper()
+                            },
+                            onCategorizeUnbudgeted = {
+                                actions.categorizeUnbudgeted()
+                            },
+                            onCategorizeAll = {
+                                actions.categorizeAll()
+                            }
+                        )
+                    }
+                }
             }
-        }
     }
 
     if (showTransactionForm || editingTransaction != null) {

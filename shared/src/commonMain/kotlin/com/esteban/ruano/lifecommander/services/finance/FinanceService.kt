@@ -1,7 +1,6 @@
 package com.esteban.ruano.lifecommander.services.finance
 
 // ---------- Paging imports ----------
-import androidx.paging.PagingData
 import com.esteban.ruano.lifecommander.models.finance.*
 import com.esteban.ruano.lifecommander.utils.appHeaders
 import com.esteban.ruano.lifecommander.utils.buildParametersString
@@ -14,7 +13,6 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.TimeZone
-import offsetPager
 import services.auth.TokenStorageImpl
 
 class FinanceService(
@@ -503,55 +501,4 @@ class FinanceService(
         }.body()
     }
 
-    // ===================== Concrete Pager facades using the generic source =====================
-
-    fun pagedBudgets(pageSize: Int = 20): Flow<PagingData<Budget>> =
-        offsetPager(pageSize) { limit, offset ->
-            getBudgetsPaged(limit, offset)
-        }
-
-    fun pagedBudgetsWithProgress(
-        referenceDate: String,
-        filters: BudgetFilters = BudgetFilters(),
-        pageSize: Int = 20
-    ): Flow<PagingData<BudgetProgress>> =
-        offsetPager(pageSize) { limit, offset ->
-            getBudgetsWithProgressPaged(referenceDate, filters, limit, offset)
-        }
-
-    fun pagedTransactions(
-        withFutureTransactions: Boolean = false,
-        filters: TransactionFilters = TransactionFilters(),
-        pageSize: Int = 20
-    ): Flow<PagingData<Transaction>> =
-        offsetPager(pageSize) { limit, offset ->
-            getTransactionsPaged(limit, offset, withFutureTransactions, filters).transactions
-        }
-
-    fun pagedBudgetTransactions(
-        budgetId: String,
-        referenceDate: String,
-        filters: TransactionFilters = TransactionFilters(),
-        pageSize: Int = 20
-    ): Flow<PagingData<Transaction>> =
-        offsetPager(pageSize) { limit, offset ->
-            getBudgetTransactionsPaged(budgetId, referenceDate, filters, limit, offset)
-        }
-
-    fun pagedUnbudgetedTransactions(
-        referenceDate: String,
-        filters: TransactionFilters = TransactionFilters(),
-        pageSize: Int = 20
-    ): Flow<PagingData<Transaction>> =
-        offsetPager(pageSize) { limit, offset ->
-            getUnbudgetedTransactionsPaged(referenceDate, filters, limit, offset)
-        }
-
-    fun pagedScheduledTransactions(
-        filters: TransactionFilters = TransactionFilters(),
-        pageSize: Int = 20
-    ): Flow<PagingData<ScheduledTransaction>> =
-        offsetPager(pageSize) { limit, offset ->
-            getScheduledTransactions(limit, offset, filters).transactions
-        }
 }

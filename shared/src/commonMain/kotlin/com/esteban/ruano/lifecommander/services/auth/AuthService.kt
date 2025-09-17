@@ -1,5 +1,9 @@
 package services.auth
 
+import com.esteban.ruano.lifecommander.models.ForgotPasswordRequest
+import com.esteban.ruano.lifecommander.models.ResetPasswordRequest
+import com.esteban.ruano.lifecommander.models.VerifyTokenRequest
+import com.esteban.ruano.lifecommander.utils.FORGOT_PASSWORD_ENDPOINT
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -8,7 +12,9 @@ import services.auth.models.AuthResponse
 import services.auth.models.LoginRequest
 import services.auth.models.SignUpRequest
 import com.esteban.ruano.lifecommander.utils.LOGIN_ENDPOINT
+import com.esteban.ruano.lifecommander.utils.RESET_PASSWORD_ENDPOINT
 import com.esteban.ruano.lifecommander.utils.SIGNUP_ENDPOINT
+import com.esteban.ruano.lifecommander.utils.VERIFY_RESET_TOKEN_ENDPOINT
 import ui.services.auth.AuthRepository
 
 class AuthService(
@@ -49,5 +55,37 @@ class AuthService(
     
     override suspend fun isAuthenticated(): Boolean {
         return tokenStorageImpl.getToken() != null
+    }
+
+    override suspend fun forgotPassword(email: String) {
+        val response = client.post(FORGOT_PASSWORD_ENDPOINT) {
+            contentType(ContentType.Application.Json)
+            setBody(ForgotPasswordRequest(email))
+        }
+
+        if (response.status != HttpStatusCode.OK) {
+            throw Exception("Failed to request password reset")
+        }
+    }
+
+    override suspend fun resetPassword(token: String, newPassword: String) {
+        val response = client.post(RESET_PASSWORD_ENDPOINT) {
+            contentType(ContentType.Application.Json)
+            setBody(ResetPasswordRequest(token, newPassword))
+        }
+
+        if (response.status != HttpStatusCode.OK) {
+            throw Exception("Failed to reset password")
+        }
+    }
+
+    override suspend fun verifyResetToken(token: String) {
+        val response = client.post(VERIFY_RESET_TOKEN_ENDPOINT) {
+            contentType(ContentType.Application.Json)
+            setBody(VerifyTokenRequest(token))
+        }
+        if (response.status != HttpStatusCode.OK) {
+            throw Exception("Invalid or expired token")
+        }
     }
 } 

@@ -12,6 +12,10 @@ import kotlinx.coroutines.launch
 import services.auth.AuthService
 import ui.state.AuthState
 
+
+enum class ForgotStep { RequestEmail, VerifyToken, SetPassword }
+
+
 class AuthViewModel(
     private val authService: AuthService,
 ) : ViewModel() {
@@ -27,6 +31,13 @@ class AuthViewModel(
     private val _isSignUp = MutableStateFlow(false)
     val isSignUp: StateFlow<Boolean> = _isSignUp.asStateFlow()
 
+    private val _isForgettingPassword = MutableStateFlow(false)
+    val isForgettingPassword: StateFlow<Boolean> = _isForgettingPassword.asStateFlow()
+
+    private val _forgotStep = MutableStateFlow(ForgotStep.RequestEmail)
+    val forgotStep: StateFlow<ForgotStep> = _forgotStep.asStateFlow()
+
+
     init {
         viewModelScope.launch {
             if (authService.isAuthenticated()) {
@@ -34,6 +45,69 @@ class AuthViewModel(
             }
         }
     }
+
+    fun setForgettingPassword(enabled: Boolean) { _isForgettingPassword.value = enabled }
+    fun setForgotStep(step: ForgotStep) { _forgotStep.value = step }
+
+
+    fun verifyResetToken(token: String) {
+        viewModelScope.launch {
+            val current = authState.value as? AuthState.Unauthenticated ?: return@launch
+            _authState.value = current.copy(isLoading = true, errorMessage = null)
+            runCatching {
+                authService.verifyResetToken(token)
+            }.onSuccess {
+                _authState.value = current.copy(isLoading = false)
+            }.onFailure {
+                _authState.value = current.copy(isLoading = false, errorMessage = it.message)
+            }
+        }
+    }
+
+    fun forgotPassword() {
+        val currentState = authState.value as? AuthState.Unauthenticated
+        currentState?.let { state ->
+            viewModelScope.launch {
+                _authState.value = state.copy(isLoading = true, errorMessage = null)
+                try {
+                    authService.forgotPassword(state.email)
+                    // success → maybe set a flag or message
+                    _authState.value = state.copy(
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                } catch (e: Exception) {
+                    _authState.value = state.copy(
+                        isLoading = false,
+                        errorMessage = e.message ?: "Failed to request reset"
+                    )
+                }
+            }
+        }
+    }
+
+    fun resetPassword(token: String, newPassword: String) {
+        val currentState = authState.value as? AuthState.Unauthenticated
+        currentState?.let { state ->
+            viewModelScope.launch {
+                _authState.value = state.copy(isLoading = true, errorMessage = null)
+                try {
+                    authService.resetPassword(token, newPassword)
+                    // success → you might want to navigate to login screen
+                    _authState.value = state.copy(
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                } catch (e: Exception) {
+                    _authState.value = state.copy(
+                        isLoading = false,
+                        errorMessage = e.message ?: "Failed to reset password"
+                    )
+                }
+            }
+        }
+    }
+
 
     fun updateEmail(newEmail: String) {
         val currentState = authState.value as? AuthState.Unauthenticated

@@ -1,10 +1,10 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.moko.resources)
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.composeMultiplatform)
 }
 
 kotlin {
@@ -45,8 +45,11 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.ktor.client.core)
+                implementation(libs.datastore)
+                implementation(libs.datastore.preferences)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
+
 //                implementation(libs.paging)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(compose.runtime)

@@ -13,19 +13,28 @@ import com.esteban.ruano.ui.Gray
 import com.esteban.ruano.ui.Gray2
 
 @Composable
-fun GeneralOutlinedTextField(value: String,placeHolder: String? = null, onValueChange: (String) -> Unit){
+fun GeneralOutlinedTextField(
+    modifier: Modifier = Modifier,
+    value: String,
+    placeHolder: String? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    onValueChange: (String) -> Unit,
+) {
     OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
+        trailingIcon = trailingIcon,
         colors = TextFieldDefaults.outlinedTextFieldColors(
             backgroundColor = Color.White,
             focusedBorderColor = Gray2,
             unfocusedBorderColor = Gray2,
             placeholderColor = Gray
         ),
-        value = value ,
+        value = value,
         onValueChange = onValueChange,
-        label = if(placeHolder!=null) { {Text(placeHolder)} } else null
+        label = if (placeHolder != null) {
+            { Text(placeHolder) }
+        } else null
     )
 }
 
@@ -47,17 +56,22 @@ fun GeneralOutlinedTextField(value: String,placeHolder: Int? = null, onValueChan
 }*/
 
 @Composable
-fun GeneralOutlinedTextField(value: String, onValueChange: (String) -> Unit){
+fun GeneralOutlinedTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    trailingIcon: @Composable (() -> Unit)? = null
+) {
     OutlinedTextField(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
+        trailingIcon = trailingIcon,
         colors = TextFieldDefaults.outlinedTextFieldColors(
             backgroundColor = Color.White,
             focusedBorderColor = Gray2,
             unfocusedBorderColor = Gray2,
             placeholderColor = Gray
         ),
-        value = value ,
+        value = value,
         onValueChange = onValueChange
     )
 }

@@ -28,6 +28,7 @@ import org.jetbrains.compose.resources.painterResource
 fun AppBar(
     title: String,
     onClose: (() -> Unit)? = null,
+    leadingIcon: @Composable (()->Unit)? = null,
     modifier: Modifier? = null,
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
@@ -46,11 +47,19 @@ fun AppBar(
                 Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Close")
             }
         }
-        Text(
-            title,
-            style = MaterialTheme.typography.h3,
-            textAlign = TextAlign.Center,
-        )
+       Row(
+           verticalAlignment = Alignment.CenterVertically
+       ){
+            leadingIcon?.let {
+                leadingIcon()
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+            Text(
+                title,
+                style = MaterialTheme.typography.h3,
+                textAlign = TextAlign.Center,
+            )
+        }
         if (actions != null) {
             Row {
                 actions()

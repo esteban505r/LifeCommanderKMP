@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.composeMultiplatform)
 //    alias(libs.plugins.kotlinAndroid)
 }
 
@@ -21,6 +22,7 @@ dependencies {
     // Calendar
     implementation(libs.calendar.view)
     implementation(libs.calendar.compose)
+    implementation(compose.components.resources)
 
     // Android Instrumentation Testing
     androidTestImplementation(project(":navigation"))

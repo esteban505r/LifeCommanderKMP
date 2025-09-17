@@ -52,6 +52,8 @@ import com.esteban.ruano.lifecommander.ui.components.SharedGradientButton
 import com.esteban.ruano.lifecommander.ui.components.SharedSectionCard
 import com.esteban.ruano.lifecommander.ui.components.SharedTaskCard
 import com.esteban.ruano.resources.Res
+import com.esteban.ruano.resources.ic_tasks_selected
+import com.esteban.ruano.resources.ic_tasks_unselected
 import com.esteban.ruano.resources.otter_focused
 import com.esteban.ruano.resources.otter_sleepy
 import com.esteban.ruano.resources.otter_happy
@@ -181,8 +183,8 @@ fun HomeScreen(
                             if (isFocusMode) Icons.Filled.CenterFocusStrong else Icons.Outlined.CenterFocusWeak,
                             contentDescription = null
                         )
-                       /* Spacer(Modifier.width(12.dp))
-                        Text(if (isFocusMode) "Disable Focus mode" else "Enable Focus mode")*/
+                        /* Spacer(Modifier.width(12.dp))
+                         Text(if (isFocusMode) "Disable Focus mode" else "Enable Focus mode")*/
                     }
                     IconButton(
                         onClick = { showOverflow = true },
@@ -326,7 +328,8 @@ fun HomeScreen(
                         if (workoutState.value.workout?.exercises?.isNotEmpty() == true) {
                             item {
                                 WorkoutSection(
-                                    exercises = workoutState.value.workout?.exercises ?: emptyList(),
+                                    exercises = workoutState.value.workout?.exercises
+                                        ?: emptyList(),
                                     onGoToWorkout = onGoToWorkout
                                 )
                             }
@@ -406,9 +409,17 @@ fun FocusModePanel(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.CenterFocusStrong, contentDescription = null, tint = LCDS.colors.Primary)
+                    Icon(
+                        Icons.Filled.CenterFocusStrong,
+                        contentDescription = null,
+                        tint = LCDS.colors.Primary
+                    )
                     Spacer(Modifier.width(8.dp))
-                    Text("Focus mode", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Focus mode",
+                        style = MaterialTheme.typography.subtitle1,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
                 TextButton(onClick = onExitFocus) { Text("Exit") }
             }
@@ -421,8 +432,14 @@ fun FocusModePanel(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                OutlinedButton(onClick = { onToggleOnlyCurrent(!onlyCurrent) }, shape = RoundedCornerShape(12.dp)) {
-                    Icon(if (onlyCurrent) Icons.Filled.CenterFocusStrong else Icons.Outlined.CenterFocusWeak, null)
+                OutlinedButton(
+                    onClick = { onToggleOnlyCurrent(!onlyCurrent) },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        if (onlyCurrent) Icons.Filled.CenterFocusStrong else Icons.Outlined.CenterFocusWeak,
+                        null
+                    )
                     Spacer(Modifier.width(8.dp))
                     Text(if (onlyCurrent) "Showing current" else "Show only current")
                 }
@@ -431,10 +448,18 @@ fun FocusModePanel(
 
             // Habits
             Spacer(Modifier.height(12.dp))
-            Text(if (onlyCurrent) "Habit (current)" else "Habits", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.onSurface.copy(.7f))
+            Text(
+                if (onlyCurrent) "Habit (current)" else "Habits",
+                style = MaterialTheme.typography.caption,
+                color = MaterialTheme.colors.onSurface.copy(.7f)
+            )
             Spacer(Modifier.height(6.dp))
             if (visibleHabits.isEmpty()) {
-                Text("No pending habits", style = MaterialTheme.typography.body2, color = MaterialTheme.colors.onSurface.copy(.6f))
+                Text(
+                    "No pending habits",
+                    style = MaterialTheme.typography.body2,
+                    color = MaterialTheme.colors.onSurface.copy(.6f)
+                )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     visibleHabits.forEach { h ->
@@ -449,10 +474,18 @@ fun FocusModePanel(
 
             // Tasks
             Spacer(Modifier.height(16.dp))
-            Text(if (onlyCurrent) "Task (current)" else "Tasks", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.onSurface.copy(.7f))
+            Text(
+                if (onlyCurrent) "Task (current)" else "Tasks",
+                style = MaterialTheme.typography.caption,
+                color = MaterialTheme.colors.onSurface.copy(.7f)
+            )
             Spacer(Modifier.height(6.dp))
             if (visibleTasks.isEmpty()) {
-                Text("No pending tasks", style = MaterialTheme.typography.body2, color = MaterialTheme.colors.onSurface.copy(.6f))
+                Text(
+                    "No pending tasks",
+                    style = MaterialTheme.typography.body2,
+                    color = MaterialTheme.colors.onSurface.copy(.6f)
+                )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     visibleTasks.forEach { t -> FocusTaskRow(task = t) }
@@ -463,7 +496,10 @@ fun FocusModePanel(
                         Spacer(Modifier.height(6.dp))
                         Text(
                             text = "✨ +$more more tasks",
-                            style = MaterialTheme.typography.body2.copy(fontWeight = FontWeight.Medium, color = LCDS.colors.Secondary)
+                            style = MaterialTheme.typography.body2.copy(
+                                fontWeight = FontWeight.Medium,
+                                color = LCDS.colors.Secondary
+                            )
                         )
                     }
                 }
@@ -489,8 +525,13 @@ private fun FocusHabitRow(
 ) {
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = if (isCurrent) MaterialTheme.colors.primary.copy(.08f) else MaterialTheme.colors.onSurface.copy(.03f),
-        border = if (isCurrent) BorderStroke(1.dp, MaterialTheme.colors.primary.copy(.35f)) else null,
+        color = if (isCurrent) MaterialTheme.colors.primary.copy(.08f) else MaterialTheme.colors.onSurface.copy(
+            .03f
+        ),
+        border = if (isCurrent) BorderStroke(
+            1.dp,
+            MaterialTheme.colors.primary.copy(.35f)
+        ) else null,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
@@ -499,20 +540,39 @@ private fun FocusHabitRow(
             Box(
                 modifier = Modifier
                     .size(32.dp)
-                    .background((if (isCurrent) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface).copy(.12f), CircleShape),
+                    .background(
+                        (if (isCurrent) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface).copy(
+                            .12f
+                        ), CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(androidPainterResource(id = R.drawable.ic_habits), contentDescription = null, tint = if (isCurrent) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface.copy(.7f))
+                Icon(
+                    androidPainterResource(id = R.drawable.ic_habits),
+                    contentDescription = null,
+                    tint = if (isCurrent) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface.copy(
+                        .7f
+                    )
+                )
             }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 Text(habit.name ?: "Habit", maxLines = 1)
                 if (!habit.note.isNullOrBlank()) {
-                    Text(habit.note!!, style = MaterialTheme.typography.caption, color = MaterialTheme.colors.onSurface.copy(.6f), maxLines = 1)
+                    Text(
+                        habit.note!!,
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.onSurface.copy(.6f),
+                        maxLines = 1
+                    )
                 }
             }
             if (isCurrent) {
-                Text("Now", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.primary)
+                Text(
+                    "Now",
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.primary
+                )
             }
         }
     }
@@ -535,7 +595,12 @@ private fun FocusTaskRow(task: Task) {
             Column(Modifier.weight(1f)) {
                 Text(task.name, maxLines = 1)
                 if (!task.note.isNullOrBlank()) {
-                    Text(task.note!!, style = MaterialTheme.typography.caption, color = MaterialTheme.colors.onSurface.copy(.6f), maxLines = 1)
+                    Text(
+                        task.note!!,
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.onSurface.copy(.6f),
+                        maxLines = 1
+                    )
                 }
             }
         }
@@ -549,10 +614,10 @@ private enum class OtterMood { Idle, Happy, Proud, Focused, Sleepy }
 @Composable
 private fun rememberOtterPainter(mood: OtterMood) = when (mood) {
     OtterMood.Focused -> painterResource(Res.drawable.otter_focused)
-    OtterMood.Proud   -> painterResource(Res.drawable.otter_proud)
-    OtterMood.Happy   -> painterResource(Res.drawable.otter_happy)
-    OtterMood.Sleepy  -> painterResource(Res.drawable.otter_sleepy)
-    OtterMood.Idle    -> painterResource(Res.drawable.otter_idle)
+    OtterMood.Proud -> painterResource(Res.drawable.otter_proud)
+    OtterMood.Happy -> painterResource(Res.drawable.otter_happy)
+    OtterMood.Sleepy -> painterResource(Res.drawable.otter_sleepy)
+    OtterMood.Idle -> painterResource(Res.drawable.otter_idle)
 }
 
 private fun computeOtterMood(
@@ -562,9 +627,9 @@ private fun computeOtterMood(
 ): OtterMood = when {
     pendingHabits == 0 && pendingTasks == 0 -> OtterMood.Proud
     pendingHabits <= 1 && pendingTasks <= 2 -> OtterMood.Happy
-    currentHabitName != null                -> OtterMood.Focused
+    currentHabitName != null -> OtterMood.Focused
     pendingTasks >= 8 || pendingHabits >= 3 -> OtterMood.Sleepy
-    else                                    -> OtterMood.Idle
+    else -> OtterMood.Idle
 }
 
 private fun moodMessage(
@@ -577,6 +642,7 @@ private fun moodMessage(
     OtterMood.Focused ->
         "Locked in" to (currentHabit?.let { "Let’s continue “$it”. I’m with you." }
             ?: "Let’s keep the streak going.")
+
     OtterMood.Sleepy -> "We’ve got this" to "Take a breath. Start with just one task."
     OtterMood.Idle -> "Welcome back" to "You have $pendingTasks task(s) waiting."
 }
@@ -656,18 +722,6 @@ fun OtterWelcomeCard(
 
                 Spacer(Modifier.height(12.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onHabitClick, shape = RoundedCornerShape(12.dp),modifier = Modifier.weight(1f)) {
-                        Icon(androidPainterResource(id = R.drawable.ic_habits), null, modifier = Modifier.size(24.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Habits ($pendingHabits)")
-                    }
-                    Button(onClick = onTasksClick, shape = RoundedCornerShape(12.dp),modifier = Modifier.weight(1f)) {
-                        Icon(androidPainterResource(id = R.drawable.ic_tasks), null, modifier = Modifier.size(24.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Tasks ($pendingTasks)")
-                    }
-                }
             }
         }
     }
@@ -686,12 +740,9 @@ private fun TasksSection(
         iconColor = LCDS.colors.Secondary,
         onHeaderClick = onGoToTasks,
         iconContent = {
-            Icon(
-                painter = androidPainterResource(id = R.drawable.ic_tasks),
-                contentDescription = null,
-                modifier = Modifier.size(LCDS.dimensions.IconMedium),
-                tint = Color.White
-            )
+            Image(
+                painter = painterResource(Res.drawable.ic_tasks_unselected),
+                contentDescription = null,)
         }
     ) {
         tasks.take(3).forEach { task ->
@@ -709,15 +760,12 @@ private fun TasksSection(
                     fontWeight = FontWeight.Medium,
                     color = LCDS.colors.Secondary
                 ),
-                modifier = Modifier.padding(top = LCDS.dimensions.SpacingMedium, start = LCDS.dimensions.SpacingExtraSmall)
+                modifier = Modifier.padding(
+                    top = LCDS.dimensions.SpacingMedium,
+                    start = LCDS.dimensions.SpacingExtraSmall
+                )
             )
         }
-        Spacer(modifier = Modifier.height(LCDS.dimensions.SpacingLarge))
-        SharedGradientButton(
-            text = stringResource(id = R.string.go_to_tasks),
-            gradientColors = LCDS.gradients.SecondaryGradient,
-            onClick = onGoToTasks
-        )
     }
 }
 
@@ -729,7 +777,7 @@ private fun WorkoutSection(
     SharedSectionCard(
         title = stringResource(id = R.string.todays_workout),
         subtitle = "${exercises.size} exercises ready",
-        iconColor = LCDS.colors.AccentOrange,
+        iconColor = LCDS.colors.Secondary,
         onHeaderClick = onGoToWorkout,
         iconContent = {
             Icon(
@@ -748,11 +796,5 @@ private fun WorkoutSection(
         ) {
             WorkoutCard(exercises = exercises)
         }
-        Spacer(modifier = Modifier.height(LCDS.dimensions.SpacingLarge))
-        SharedGradientButton(
-            text = stringResource(id = R.string.go_to_workout),
-            gradientColors = listOf(LCDS.colors.AccentOrange, Color(0xFFFF7043)),
-            onClick = onGoToWorkout
-        )
     }
 }

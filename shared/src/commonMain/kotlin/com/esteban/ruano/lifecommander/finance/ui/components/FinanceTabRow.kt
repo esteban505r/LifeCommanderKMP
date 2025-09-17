@@ -36,12 +36,12 @@ fun FinanceTabRow(
     if (isDesktop || isLandscape) {
         TabRow(
             selectedTabIndex = selectedTab,
-            backgroundColor = MaterialTheme.colors.primary,
-            contentColor = MaterialTheme.colors.onPrimary,
+            backgroundColor = MaterialTheme.colors.background,
+            contentColor = MaterialTheme.colors.primary,
             indicator = { tabPositions ->
                 TabRowDefaults.Indicator(
                     modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                    color = MaterialTheme.colors.onPrimary,
+                    color = MaterialTheme.colors.primary,
                     height = 3.dp
                 )
             }
@@ -59,16 +59,16 @@ fun FinanceTabRow(
                         Text(
                             item.title,
                             color = if (selectedTab == index) 
-                                MaterialTheme.colors.onPrimary 
+                                MaterialTheme.colors.primary
                             else 
-                                MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                                MaterialTheme.colors.primary.copy(alpha = 0.6f)
                         )
                     },
                     icon = {
                         item.icon()
                     },
-                    selectedContentColor = MaterialTheme.colors.onPrimary,
-                    unselectedContentColor = MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                    selectedContentColor = MaterialTheme.colors.primary,
+                    unselectedContentColor = MaterialTheme.colors.primary.copy(alpha = 0.6f)
                 )
             }
         }
@@ -76,12 +76,12 @@ fun FinanceTabRow(
         ScrollableTabRow(
             edgePadding = 16.dp,
             selectedTabIndex = selectedTab,
-            backgroundColor = MaterialTheme.colors.primary,
-            contentColor = MaterialTheme.colors.onPrimary,
+            backgroundColor = MaterialTheme.colors.background,
+            contentColor = MaterialTheme.colors.primary,
             indicator = { tabPositions ->
                 TabRowDefaults.Indicator(
                     modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                    color = MaterialTheme.colors.onPrimary,
+                    color = MaterialTheme.colors.primary,
                     height = 3.dp
                 )
             }
@@ -99,16 +99,16 @@ fun FinanceTabRow(
                         Text(
                             item.title,
                             color = if (selectedTab == index) 
-                                MaterialTheme.colors.onPrimary 
+                                MaterialTheme.colors.primary
                             else 
-                                MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                                MaterialTheme.colors.primary.copy(alpha = 0.6f)
                         )
                     },
                     icon = {
                         item.icon()
                     },
-                    selectedContentColor = MaterialTheme.colors.onPrimary,
-                    unselectedContentColor = MaterialTheme.colors.onPrimary.copy(alpha = 0.6f)
+                    selectedContentColor = MaterialTheme.colors.primary,
+                    unselectedContentColor = MaterialTheme.colors.primary.copy(alpha = 0.6f)
                 )
             }
         }

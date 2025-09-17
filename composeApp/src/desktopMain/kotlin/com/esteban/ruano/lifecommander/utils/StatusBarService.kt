@@ -7,7 +7,7 @@ import utils.DateUtils.parseTime
 
 class StatusBarService {
     private val configDir = File(System.getProperty("user.home"), ".config/LifeCommanderDesktop")
-    
+
     init {
         // Ensure the config directory exists
         if (!configDir.exists()) {
@@ -50,4 +50,4 @@ class StatusBarService {
     suspend fun clearStatus(filename: String) {
         writeToFile(filename, "")
     }
-} 
+}

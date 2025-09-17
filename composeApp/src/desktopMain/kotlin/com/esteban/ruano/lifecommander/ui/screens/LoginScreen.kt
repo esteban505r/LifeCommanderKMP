@@ -22,6 +22,7 @@ fun LoginScreen(
     email: String = "",
     password: String = "",
     onSignUp: () -> Unit = {},
+    onForgetPassword: () -> Unit = {},
     onEmailChange: (String) -> Unit = {},
     onPasswordChange: (String) -> Unit = {},
     isLoading: Boolean = false,
@@ -171,6 +172,18 @@ fun LoginScreen(
         ) {
             Text(
                 text = "Don't have an account? Sign up",
+                color = MaterialTheme.colors.primary
+            )
+        }
+
+        TextButton(
+            onClick = {
+                onForgetPassword()
+            },
+            modifier = Modifier.padding(top = 24.dp)
+        ) {
+            Text(
+                text = "Forgot Password?",
                 color = MaterialTheme.colors.primary
             )
         }

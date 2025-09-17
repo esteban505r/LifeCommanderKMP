@@ -74,7 +74,7 @@ fun SharedAppBar(
                 )
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.h4.copy(
+                    style = MaterialTheme.typography.h3.copy(
                         fontWeight = FontWeight.Bold,
                         color = LifeCommanderDesignSystem.colors.OnSurface,
                         fontSize = titleSize?: MaterialTheme.typography.h4.fontSize
@@ -255,7 +255,7 @@ fun SharedSectionCard(
     iconColor: Color,
     onHeaderClick: () -> Unit,
     modifier: Modifier = Modifier,
-    iconContent: (@Composable () -> Unit)? = null,
+    iconContent: @Composable () -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
@@ -295,7 +295,7 @@ fun SharedSectionHeader(
     iconColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    iconContent: (@Composable () -> Unit)? = null
+    iconContent: @Composable () -> Unit,
 ) {
     Row(
         modifier = modifier
@@ -322,16 +322,7 @@ fun SharedSectionHeader(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (iconContent != null) {
-                    iconContent()
-                } else {
-                    // Default fallback
-                    Box(
-                        modifier = Modifier
-                            .size(LifeCommanderDesignSystem.dimensions.IconMedium)
-                            .background(Color.White.copy(alpha = 0.9f), CircleShape)
-                    )
-                }
+                iconContent.invoke()
             }
             
             Column {

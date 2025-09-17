@@ -1,22 +1,21 @@
 package services
 
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import java.time.Duration
-import java.time.LocalTime
-import utils.BackgroundServiceManager
-import utils.StatusBarService
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlin.time.Duration
 
 class NightBlockService(
     private val appPreferencesService: AppPreferencesService,
-    private val statusBarService: StatusBarService
+//    private val statusBarService: StatusBarService
 ) {
     private val _isNightBlockActive = MutableStateFlow(false)
     val isNightBlockActive: StateFlow<Boolean> = _isNightBlockActive
 
-    private val _nightBlockTime = MutableStateFlow(LocalTime.of(20, 30)) // 8:30 PM
+    private val _nightBlockTime = MutableStateFlow(LocalTime(20, 30)) // 8:30 PM
     val nightBlockTime: StateFlow<LocalTime> = _nightBlockTime
 
     private val _lastOverrideReason = MutableStateFlow<String?>(null)
@@ -30,7 +29,7 @@ class NightBlockService(
         kotlinx.coroutines.MainScope().launch {
             appPreferencesService.isNightBlockActive.collect { isActive ->
                 _isNightBlockActive.value = isActive
-                statusBarService.updateNightBlockStatus(isActive)
+//                statusBarService.updateNightBlockStatus(isActive)
             }
         }
         
@@ -57,11 +56,11 @@ class NightBlockService(
         val newValue = !_isNightBlockActive.value
         _isNightBlockActive.value = newValue
         appPreferencesService.saveNightBlockActive(newValue)
-        statusBarService.updateNightBlockStatus(newValue)
+//        statusBarService.updateNightBlockStatus(newValue)
     }
 
     suspend fun setNightBlockTime(hour: Int, minute: Int) {
-        val newTime = LocalTime.of(hour, minute)
+        val newTime = LocalTime(hour, minute)
         _nightBlockTime.value = newTime
         appPreferencesService.saveNightBlockTime(newTime)
     }
@@ -71,31 +70,33 @@ class NightBlockService(
         _isNightBlockActive.value = false
         appPreferencesService.saveLastOverrideReason(reason)
         appPreferencesService.saveNightBlockActive(false)
-        statusBarService.updateNightBlockStatus(false)
+//        statusBarService.updateNightBlockStatus(false)
     }
 
     suspend fun checkAndActivateNightBlock() {
-        val currentTime = LocalTime.now()
-        if (currentTime.isAfter(_nightBlockTime.value) || currentTime == _nightBlockTime.value) {
+        val currentTime: LocalTime = getCurrentDateTime(
+            TimeZone.currentSystemDefault()
+        ).time
+        if (currentTime > _nightBlockTime.value || currentTime == _nightBlockTime.value) {
             _isNightBlockActive.value = true
             appPreferencesService.saveNightBlockActive(true)
-            statusBarService.updateNightBlockStatus(true)
+//            statusBarService.updateNightBlockStatus(true)
         } else {
-            val timeUntilActivation = Duration.between(currentTime, _nightBlockTime.value)
+//            val timeUntilActivation = Duration.between(currentTime, _nightBlockTime.value)
             _isNightBlockActive.value = false
             appPreferencesService.saveNightBlockActive(false)
-            statusBarService.updateNightBlockStatus(false, formatDuration(timeUntilActivation))
+//            statusBarService.updateNightBlockStatus(false, formatDuration(timeUntilActivation))
         }
     }
 
-    private fun formatDuration(duration: Duration): String {
+/*    private fun formatDuration(duration: Duration): String {
         val hours = duration.toHours()
         val minutes = duration.toMinutesPart()
         return when {
             hours > 0 -> "${hours}h ${minutes}m"
             else -> "${minutes}m"
         }
-    }
+    }*/
 
     suspend fun toggleWhitelistedHabit(habitId: String) {
         val currentWhitelist = _whitelistedHabits.value.toMutableSet()

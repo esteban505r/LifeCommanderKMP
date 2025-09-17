@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.server.call.logging)
+    implementation(libs.ktor.rate.limit)
     implementation("io.ktor:ktor-server-core:3.2.3")
     implementation("io.ktor:ktor-server-host-common:3.2.3")
     implementation("io.ktor:ktor-server-core:3.2.3")
@@ -63,6 +64,9 @@ dependencies {
 
     implementation(platform(libs.aws.bom))
     implementation(libs.aws.s3)
+    implementation(libs.aws.sesv2)
+    implementation(libs.aws.auth)
+    implementation(libs.aws.regions)
 
     implementation(libs.dotenv.kotlin)
     

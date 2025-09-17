@@ -4,7 +4,7 @@ import at.favre.lib.crypto.bcrypt.BCrypt
 import com.esteban.ruano.models.users.RegisterUserDTO
 
 object SecurityUtils {
-    private fun hashPassword(password: String): String {
+    fun hashPassword(password: String): String {
         return BCrypt.withDefaults().hashToString(12, password.toCharArray())
     }
 

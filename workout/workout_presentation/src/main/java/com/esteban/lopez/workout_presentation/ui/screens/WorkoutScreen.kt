@@ -31,12 +31,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.lifecommander.ui.components.ListTile
 import com.esteban.ruano.core_ui.utils.DateUIUtils.DAYS_OF_THE_WEEK
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toDayOfTheWeekString
 import com.esteban.ruano.resources.Res
+import com.esteban.ruano.resources.otter_relaxed
 import com.esteban.ruano.ui.DarkGray
 import com.esteban.ruano.ui.LightGray
 import com.esteban.ruano.ui.LightGray4
@@ -190,6 +192,38 @@ fun WorkoutScreen(
                                         )
                                     }
                                 }
+                            }
+                        }
+                    }
+                    else {
+                        // --- No workout today (empty state) ---
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            backgroundColor = MaterialTheme.colors.surface,
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Image(
+                                    painter = org.jetbrains.compose.resources.painterResource(Res.drawable.otter_relaxed),
+                                    contentDescription = "No workout today",
+                                    modifier = Modifier
+                                        .height(180.dp)
+                                        .fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    "Rest Day 🎉",
+                                    style = MaterialTheme.typography.h4.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "No scheduled workout for today. Enjoy your rest!",
+                                    style = MaterialTheme.typography.body1.copy(color = LightGray),
+                                    textAlign = TextAlign.Center
+                                )
                             }
                         }
                     }

@@ -86,6 +86,9 @@ fun HabitsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
+                .padding(
+                    bottom = 16.dp
+                )
         ) {
             if(state.habits.isEmpty()){
                 Column(
