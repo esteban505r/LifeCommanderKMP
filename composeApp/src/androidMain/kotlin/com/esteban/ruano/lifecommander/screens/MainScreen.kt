@@ -21,7 +21,9 @@ import androidx.navigation.compose.rememberNavController
 import com.esteban.ruano.core_ui.utils.CustomSnackBarVisuals
 import com.esteban.lopez.navigation.screens.LoggedScreen
 import com.esteban.lopez.onboarding_presentation.auth.navigation.LoginDestination
+import com.esteban.ruano.core.routes.Routes
 import com.esteban.ruano.core_ui.view_model.state.MainState
+import com.esteban.ruano.navigation.UnAuthNavHostWrapper
 
 @Composable
 fun MainScreen(
@@ -66,7 +68,9 @@ fun MainScreen(
                 )
             }
             else{
-                LoginDestination()
+                UnAuthNavHostWrapper(
+                    navController = navController,
+                )
             }
         }
     }

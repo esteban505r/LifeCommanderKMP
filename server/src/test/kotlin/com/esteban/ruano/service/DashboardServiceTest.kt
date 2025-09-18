@@ -17,6 +17,7 @@ import com.lifecommander.models.Frequency
 import kotlinx.datetime.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.Rule
 import org.junit.Test

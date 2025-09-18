@@ -5,6 +5,11 @@ object Routes {
 
     const val KEY_ROUTE = "androidx.navigation.compose.KEY_ROUTE"
 
+    object Unauthenticated {
+        val LOGIN = "login"
+        val SIGN_UP = "signup"
+        val FORGOT_PASSWORD = "forgot_password"
+    }
     object BASE {
         val ROUTE = "base"
         val HOME = BottomNavRoute("home", "home", "Home")

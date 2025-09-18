@@ -8,6 +8,7 @@ import com.esteban.ruano.models.questions.CreateQuestionDTO
 import com.esteban.ruano.models.questions.QuestionDTO
 import com.esteban.ruano.models.questions.UpdateQuestionDTO
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID

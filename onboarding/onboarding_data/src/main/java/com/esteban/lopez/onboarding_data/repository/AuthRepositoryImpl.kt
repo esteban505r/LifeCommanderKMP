@@ -21,10 +21,40 @@ class AuthRepositoryImpl(
         )
     }
 
-    override suspend fun register(email: String, password: String, name: String) {
-        doRemoteRequest(
+    override suspend fun register(email: String, password: String, name: String) : Result<Unit> {
+      return  doRemoteRequest(
             remoteFetch = {
                 remoteDataSource.register(email, password, name)
+            },
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+        )
+    }
+
+    override suspend fun forgotPassword(email: String): Result<Unit> {
+        return doRemoteRequest(
+            remoteFetch = {
+                remoteDataSource.forgotPassword(email) // POST /forgot-password (no body in Result)
+            },
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+        )
+    }
+
+    override suspend fun verifyResetPin(email: String, pin: String): Result<String> {
+        return doRemoteRequest(
+            remoteFetch = {
+                remoteDataSource.verifyResetPin(email, pin) // POST /reset-password/verify -> returns reset_token:String
+            },
+            isNetworkAvailable = networkHelper.isNetworkAvailable(),
+        )
+    }
+
+    override suspend fun resetPassword(
+        resetToken: String,
+        newPassword: String
+    ): Result<Unit> {
+        return doRemoteRequest(
+            remoteFetch = {
+                remoteDataSource.resetPassword(resetToken, newPassword) // POST /reset-password
             },
             isNetworkAvailable = networkHelper.isNetworkAvailable(),
         )

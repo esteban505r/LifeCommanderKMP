@@ -12,11 +12,23 @@ sealed class AuthIntent : UserIntent {
     ) : AuthIntent()
 
     data object Logout : AuthIntent()
-    data object Idle : AuthIntent()
+    data class SignUp(
+        val name: String,
+        val email: String,
+        val password: String
+    ) : AuthIntent()
+
+    data class RequestReset(val email: String) : AuthIntent()
+
+    data class VerifyResetPin(val pin: String) : AuthIntent()
+    data class SetNewPassword(val password: String) : AuthIntent()
+    data object ResetForgetEmail : AuthIntent()
+
 
 }
 
 sealed class AuthEffect : Effect {
+    data object NavigateToLogin: AuthEffect()
     data class ShowSnackBar(
         val message: String,
         val type: SnackbarType = SnackbarType.INFO

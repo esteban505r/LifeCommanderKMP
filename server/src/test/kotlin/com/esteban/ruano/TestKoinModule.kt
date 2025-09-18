@@ -2,11 +2,12 @@ package com.esteban.ruano
 
 import com.esteban.ruano.repository.*
 import com.esteban.ruano.service.*
+import com.esteban.ruano.utils.FirstRunSeeder
 import org.koin.dsl.module
 
 val testModule = module {
     single { ReminderService() }
-    single { AuthService() }
+    single { AuthService(get()) }
     single { TaskService(get()) }
     single { HabitService(get()) }
     single { TimerService() }
@@ -27,6 +28,7 @@ val testModule = module {
     single { PortfolioService() }
     single { ScheduledTransactionService() }
     single { SyncService(get(), get(), get()) }
+    single { FirstRunSeeder(get(),get(),get()) }
     
     // Dashboard Service with dependencies
     single { 

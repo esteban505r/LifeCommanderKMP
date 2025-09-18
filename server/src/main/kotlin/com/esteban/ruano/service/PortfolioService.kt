@@ -9,8 +9,8 @@ import lopez.esteban.com.models.portfolio.CreatePortfolioDTO
 import lopez.esteban.com.models.portfolio.PortfolioDTO
 import lopez.esteban.com.models.portfolio.UpdatePortfolioDTO
 import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update

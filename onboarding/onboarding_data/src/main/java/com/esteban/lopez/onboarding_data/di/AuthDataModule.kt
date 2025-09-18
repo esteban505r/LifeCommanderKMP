@@ -13,10 +13,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.ktor.client.HttpClient
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
+import services.auth.AuthService
 import javax.inject.Singleton
 
 @Module
@@ -34,12 +36,22 @@ object AuthDataModule {
             .create()
     }
 
+    @Provides
+    @Singleton
+    fun provideService(client: HttpClient): AuthService {
+        return AuthService(
+            client,
+        )
+    }
+
     @Remote
     @Provides
     @Singleton
-    fun provideHabitRemoteDataSource(api: AuthApi): AuthDataSource {
+    fun provideHabitRemoteDataSource(api: AuthApi, service: AuthService): AuthDataSource {
         return AuthRemoteDataSource(
-            authApi = api
+            authApi = api,
+            authService = service
+
         )
     }
 

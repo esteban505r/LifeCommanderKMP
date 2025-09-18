@@ -6,13 +6,14 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import com.esteban.ruano.service.AuthService
+import org.koin.ktor.ext.inject
 
 fun Application.configureSecurity() {
+    val authService: AuthService by inject()
     val jwtAudience = "jwt-audience"
     val jwtDomain = "https://jwt-provider-domain/"
     val jwtRealm = "ktor sample app"
     val jwtSecret = "secret"
-    val repository = AuthService()
     authentication {
         jwt {
             realm = jwtRealm
@@ -24,7 +25,7 @@ fun Application.configureSecurity() {
                     .build()
             )
             validate { credential ->
-                credential.payload.getClaim("id").asInt()?.let(repository::findByID)
+                credential.payload.getClaim("id").asInt()?.let(authService::findByID)
             }
         }
     }

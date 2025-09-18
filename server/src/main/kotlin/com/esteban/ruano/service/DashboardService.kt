@@ -12,9 +12,12 @@ import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import kotlinx.datetime.*
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Op
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.notInList
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class DashboardService(

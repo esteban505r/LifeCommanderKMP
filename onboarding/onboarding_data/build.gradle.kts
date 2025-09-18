@@ -15,4 +15,5 @@ dependencies {
     implementation(project(":core-data"))
     implementation(project(":onboarding:onboarding_domain"))
     implementation(libs.kotlinx.coroutines.core)
+    implementation(projects.shared)
 }

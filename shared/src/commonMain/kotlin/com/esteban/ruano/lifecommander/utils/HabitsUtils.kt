@@ -14,6 +14,7 @@ import kotlinx.datetime.*
 import kotlin.math.absoluteValue
 
 import dev.icerock.moko.resources.desc.StringDesc
+import kotlin.time.Duration.Companion.days
 
 object HabitsUtils {
 
@@ -152,6 +153,87 @@ object HabitsUtils {
             Frequency.ONE_TIME -> StringDesc.Raw( localDateTime.formatToFullDateTimeString())
         }
     }
+
+    fun Habit.isCurrent(
+        now: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    ): Boolean {
+        if (this.done == true) return false
+
+        val base = this.dateTime?.toLocalDateTime() ?: return false
+        val baseTime = base.time
+
+        return when (Frequency.valueOf(this.frequency?.uppercase() ?: "DAILY")) {
+            Frequency.DAILY -> now.date == base.date || now.time <= baseTime
+
+            Frequency.WEEKLY -> {
+                val targetDow = base.date.dayOfWeek.isoDayNumber
+                val todayDow = now.date.dayOfWeek.isoDayNumber
+                todayDow == targetDow && now.time <= baseTime
+            }
+
+            Frequency.BI_WEEKLY -> {
+                val onCycle = isSameParityWeek(base.date, now.date)
+                if (!onCycle) false
+                else {
+                    val targetDow = base.date.dayOfWeek.isoDayNumber
+                    val todayDow = now.date.dayOfWeek.isoDayNumber
+                    todayDow == targetDow && now.time <= baseTime
+                }
+            }
+
+            Frequency.MONTHLY -> {
+                val targetDay = clampDayOfMonth(now.date.year, now.date.monthNumber, base.date.dayOfMonth)
+                now.date.dayOfMonth == targetDay && now.time <= baseTime
+            }
+
+            Frequency.YEARLY -> {
+                val (m, d) = base.date.monthNumber to base.date.dayOfMonth
+                val targetDay = clampDayOfMonth(now.date.year, m, d)
+                now.date.monthNumber == m &&
+                        now.date.dayOfMonth == targetDay &&
+                        now.time <= baseTime
+            }
+
+            Frequency.ONE_TIME -> now.date == base.date && now.time <= baseTime
+        }
+    }
+
+
+    fun List<Habit>.currentHabit(
+        now: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    ): Habit? {
+        // Candidates are those that are not done and either current or upcoming today
+        val candidates = this.filter { it.done != true }
+
+        // Sort by next scheduled occurrence time
+        return candidates.minByOrNull { habit ->
+            val base = habit.dateTime?.toLocalDateTime() ?: now
+            val baseTime = base.time
+
+            when (Frequency.valueOf(habit.frequency?.uppercase() ?: "DAILY")) {
+                Frequency.DAILY -> LocalDateTime(now.date, baseTime)
+                Frequency.WEEKLY -> {
+                    val targetDow = base.date.dayOfWeek.isoDayNumber
+                    val daysUntil = (targetDow - now.date.dayOfWeek.isoDayNumber + 7) % 7
+                    LocalDateTime(now.date.plus(daysUntil, DateTimeUnit.DAY), baseTime)
+                }
+                Frequency.BI_WEEKLY -> {
+                    val onCycle = isSameParityWeek(base.date, now.date)
+                    if (!onCycle) now.toInstant(TimeZone.currentSystemDefault()).plus(14.days).toLocalDateTime(TimeZone.currentSystemDefault()) else LocalDateTime(now.date, baseTime)
+                }
+                Frequency.MONTHLY -> {
+                    val targetDay = clampDayOfMonth(now.date.year, now.date.monthNumber, base.date.dayOfMonth)
+                    LocalDateTime(LocalDate(now.date.year, now.date.monthNumber, targetDay), baseTime)
+                }
+                Frequency.YEARLY -> {
+                    val targetDay = clampDayOfMonth(now.date.year, base.date.monthNumber, base.date.dayOfMonth)
+                    LocalDateTime(LocalDate(now.date.year, base.date.monthNumber, targetDay), baseTime)
+                }
+                Frequency.ONE_TIME -> base
+            }
+        }
+    }
+
 
     fun Habit.isOverdue(
         now: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())

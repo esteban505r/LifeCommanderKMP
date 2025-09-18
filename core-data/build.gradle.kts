@@ -24,7 +24,10 @@ dependencies {
     api(libs.retrofit.gson)
     api(libs.retrofit.kotlinx.serialization)
     api(libs.kotlinx.serialization.json)
-
+    api(libs.ktor.client.okhttp)
+    api(libs.ktor.client.content.negotiation)
+    api(libs.ktor.client.encoding)
+    api(libs.ktor.serialization.gson.jvm)
     // Hilt Testing
 //    api(libs.hilt.testing)
 

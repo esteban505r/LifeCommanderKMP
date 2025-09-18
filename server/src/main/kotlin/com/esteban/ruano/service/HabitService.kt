@@ -22,12 +22,12 @@ import com.esteban.ruano.utils.parseDateTime
 import com.lifecommander.models.Frequency
 import kotlinx.datetime.plus
 import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.datetime.date
 import org.jetbrains.exposed.v1.datetime.minute
 import org.jetbrains.exposed.v1.jdbc.*

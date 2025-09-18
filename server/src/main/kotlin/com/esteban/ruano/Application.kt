@@ -32,6 +32,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.ktor.ext.inject
 import org.slf4j.event.Level
 import java.util.*
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -81,7 +82,10 @@ fun Application.configureLogging() {
 
     install(StatusPages) {
         exception<Throwable> { call, cause ->
-            this@configureLogging.log.error("Unhandled exception", cause)  // -> Sentry receives it
+
+            if (cause is CancellationException) throw cause
+
+            this@configureLogging.log.error("Unhandled exception", cause)
             call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "internal_error"))
         }
     }
@@ -186,7 +190,7 @@ fun Application.connectToPostgres() {
             DailyJournals, Pomodoros, Questions, QuestionAnswers,
             Transactions, ScheduledTransactions, Accounts, Budgets, SavingsGoals, TimerLists,
             Timers, UserSettings, DeviceTokens, CategoryKeywords, Portfolios, RecipeTracks, ExerciseTracks, RecipeDays,
-            Ingredients, Instructions, PasswordResetTokens, RefreshSessions
+            Ingredients, Instructions, PasswordResetPins, PasswordResetSessions, RefreshSessions
         )
     }
 }

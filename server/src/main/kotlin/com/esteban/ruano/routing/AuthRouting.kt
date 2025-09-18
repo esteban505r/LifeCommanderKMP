@@ -1,25 +1,25 @@
 package com.esteban.ruano.routing
 
-import io.ktor.http.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import com.esteban.ruano.database.entities.Users
+import com.esteban.ruano.lifecommander.models.ForgotPasswordRequest
+import com.esteban.ruano.lifecommander.models.ResetWithSessionRequest
+import com.esteban.ruano.lifecommander.models.VerifyPinRequest
 import com.esteban.ruano.models.users.LoginUserDTO
 import com.esteban.ruano.models.users.RegisterUserDTO
 import com.esteban.ruano.service.AuthService
+import com.esteban.ruano.service.PasswordResetService
+import com.esteban.ruano.service.TimerService
 import com.esteban.ruano.utils.JWTUtils
 import com.esteban.ruano.utils.SecurityUtils.hashPassword
-import com.esteban.ruano.service.TimerService
-import com.esteban.ruano.database.entities.Users
-import com.esteban.ruano.lifecommander.models.ForgotPasswordRequest
-import com.esteban.ruano.lifecommander.models.ResetPasswordRequest
-import com.esteban.ruano.lifecommander.models.VerifyTokenRequest
-import com.esteban.ruano.service.PasswordResetService
 import com.esteban.ruano.utils.isLikelyEmail
 import com.esteban.ruano.utils.isStrongPassword
-import io.ktor.server.plugins.origin
-import io.ktor.server.plugins.ratelimit.RateLimitName
-import io.ktor.server.plugins.ratelimit.rateLimit
+import io.ktor.http.*
+import io.ktor.server.plugins.*
+import io.ktor.server.plugins.ratelimit.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 
@@ -58,7 +58,13 @@ fun Route.authRouting(
         route("/register") {
             post {
                 val user = call.receive<RegisterUserDTO>().hashPassword()
-                val wasCreated = authService.register(user)
+                val wasCreated = if(user.email.isLikelyEmail()){
+                    authService.register(user)
+                }
+                else{
+                    throw BadRequestException("Invalid email")
+                }
+
                 if (wasCreated) {
                     call.respond(HttpStatusCode.Created)
                 } else {
@@ -78,57 +84,45 @@ fun Route.authRouting(
             }
         }
 
+        // Step 1: request PIN
         rateLimit(RateLimitName("forgot")) {
             post("/forgot-password") {
                 val payload = runCatching { call.receive<ForgotPasswordRequest>() }.getOrNull()
-                if (payload?.email.isNullOrBlank() || !isLikelyEmail(payload!!.email)) {
-                    call.respond(HttpStatusCode.OK)
-                    return@post
+                if (payload?.email.isNullOrBlank()) {
+                    call.respond(HttpStatusCode.OK); return@post
                 }
                 val ip = call.request.origin.remoteHost
-                passwordResetService.requestReset(payload.email.trim(), ip)
+                passwordResetService.requestReset(payload!!.email, ip)
                 call.respond(HttpStatusCode.OK)
             }
         }
 
+        // Step 2: verify PIN -> returns reset session token
         rateLimit(RateLimitName("verify")) {
-            post("/reset/verify") {
-                val payload = runCatching { call.receive<VerifyTokenRequest>() }.getOrNull()
-                val token = payload?.token?.trim().orEmpty()
-                if (token.isBlank()) {
-                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "invalid_request"))
-                    return@post
+            post("/reset-password/verify") {
+                val payload = runCatching { call.receive<VerifyPinRequest>() }.getOrNull()
+                if (payload == null || payload.email.isBlank() || payload.pin.isBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "invalid_request")); return@post
                 }
-
-                val valid = passwordResetService.isTokenValid(token)
-                if (valid) {
-                    call.respond(HttpStatusCode.OK)
+                val token = passwordResetService.verifyPin(payload.email, payload.pin)
+                if (token != null) {
+                    call.respond(HttpStatusCode.OK, mapOf("reset_token" to token))
                 } else {
                     call.respond(HttpStatusCode.BadRequest, mapOf("error" to "invalid_request"))
                 }
             }
         }
 
-        // POST /auth/reset { token, newPassword }
+        // Step 3: consume reset session token to set password
         rateLimit(RateLimitName("reset")) {
             post("/reset-password") {
-                val payload = runCatching { call.receive<ResetPasswordRequest>() }.getOrNull()
-                if (payload == null || !isStrongPassword(payload.newPassword) || payload.token.isBlank()) {
-                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "invalid_request"))
-                    return@post
+                val payload = runCatching { call.receive<ResetWithSessionRequest>() }.getOrNull()
+                if (payload == null || payload.resetToken.isBlank() || !isStrongPassword(payload.newPassword)) {
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "invalid_request")); return@post
                 }
-
-                val ok = passwordResetService.resetPassword(
-                    rawToken = payload.token.trim(),
-                    newPassword = payload.newPassword
-                )
-
-                if (ok) {
-                    call.respond(HttpStatusCode.OK)
-                } else {
-                    // Keep it generic: token invalid/expired/used → 400
-                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "invalid_request"))
-                }
+                val ok = passwordResetService.resetPassword(payload.resetToken, payload.newPassword)
+                if (ok) call.respond(HttpStatusCode.OK)
+                else call.respond(HttpStatusCode.BadRequest, mapOf("error" to "invalid_request"))
             }
         }
 

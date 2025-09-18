@@ -2,6 +2,9 @@ package services.auth
 
 import com.esteban.ruano.lifecommander.models.ForgotPasswordRequest
 import com.esteban.ruano.lifecommander.models.ResetPasswordRequest
+import com.esteban.ruano.lifecommander.models.ResetVerifyResponse
+import com.esteban.ruano.lifecommander.models.ResetWithSessionRequest
+import com.esteban.ruano.lifecommander.models.VerifyPinRequest
 import com.esteban.ruano.lifecommander.models.VerifyTokenRequest
 import com.esteban.ruano.lifecommander.utils.FORGOT_PASSWORD_ENDPOINT
 import io.ktor.client.*
@@ -14,12 +17,12 @@ import services.auth.models.SignUpRequest
 import com.esteban.ruano.lifecommander.utils.LOGIN_ENDPOINT
 import com.esteban.ruano.lifecommander.utils.RESET_PASSWORD_ENDPOINT
 import com.esteban.ruano.lifecommander.utils.SIGNUP_ENDPOINT
-import com.esteban.ruano.lifecommander.utils.VERIFY_RESET_TOKEN_ENDPOINT
+import com.esteban.ruano.lifecommander.utils.VERIFY_RESET_PIN_ENDPOINT
 import ui.services.auth.AuthRepository
 
 class AuthService(
     private val client: HttpClient,
-    private val tokenStorageImpl: TokenStorageImpl
+    private val tokenStorageImpl: TokenStorageImpl? = null
 ):AuthRepository {
     override suspend fun login(email: String, password: String):AuthResponse {
         val response = client.post(LOGIN_ENDPOINT) {
@@ -29,7 +32,7 @@ class AuthService(
 
         if (response.status == HttpStatusCode.OK) {
             val authResponse = response.body<AuthResponse>()
-            tokenStorageImpl.saveToken(authResponse.token)
+            tokenStorageImpl?.saveToken(authResponse.token)
             return authResponse
         } else {
             throw Exception("Invalid email or password")
@@ -50,11 +53,11 @@ class AuthService(
     }
     
     override suspend fun logout() {
-        tokenStorageImpl.clearToken()
+        tokenStorageImpl?.clearToken()
     }
     
     override suspend fun isAuthenticated(): Boolean {
-        return tokenStorageImpl.getToken() != null
+        return tokenStorageImpl?.getToken() != null
     }
 
     override suspend fun forgotPassword(email: String) {
@@ -68,24 +71,26 @@ class AuthService(
         }
     }
 
-    override suspend fun resetPassword(token: String, newPassword: String) {
+    override suspend fun resetPasswordWithSession(resetToken: String, newPassword: String) {
         val response = client.post(RESET_PASSWORD_ENDPOINT) {
             contentType(ContentType.Application.Json)
-            setBody(ResetPasswordRequest(token, newPassword))
+            setBody(ResetWithSessionRequest(resetToken = resetToken, newPassword = newPassword))
         }
-
         if (response.status != HttpStatusCode.OK) {
             throw Exception("Failed to reset password")
         }
     }
 
-    override suspend fun verifyResetToken(token: String) {
-        val response = client.post(VERIFY_RESET_TOKEN_ENDPOINT) {
+    override suspend fun verifyResetPin(email: String, pin: String): String {
+        val response = client.post(VERIFY_RESET_PIN_ENDPOINT) {
             contentType(ContentType.Application.Json)
-            setBody(VerifyTokenRequest(token))
+            setBody(VerifyPinRequest(email = email, pin = pin))
         }
         if (response.status != HttpStatusCode.OK) {
-            throw Exception("Invalid or expired token")
+            throw Exception("Invalid or expired code")
         }
+        // The server returns { "reset_token": "<opaque>" }
+        val body = response.body<ResetVerifyResponse>()
+        return body.reset_token
     }
 } 

@@ -21,179 +21,223 @@ class AuthViewModel @Inject constructor(
     private val authUseCases: AuthUseCases,
     private val preferences: Preferences,
     private val fcmTokenService: FcmTokenService
-) : BaseViewModel<AuthIntent,AuthState, AuthEffect>() {
+) : BaseViewModel<AuthIntent, AuthState, AuthEffect>() {
 
-    init {
-        // Pre-fetch FCM token in background
-        preFetchFcmToken()
+    init { preFetchFcmToken() }
+
+    override fun createInitialState(): AuthState = AuthState()
+
+    override fun handleIntent(intent: AuthIntent) {
+        when (intent) {
+            is AuthIntent.Login            -> login(intent.email, intent.password)
+            is AuthIntent.SignUp           -> signUp(intent.name, intent.email, intent.password)
+            is AuthIntent.RequestReset     -> requestReset(intent.email)
+            is AuthIntent.VerifyResetPin   -> verifyResetPin(intent.pin)
+            is AuthIntent.SetNewPassword   -> setNewPassword(intent.password)
+            is AuthIntent.ResetForgetEmail   -> {
+                emitState { copy(pendingResetEmail = null) }
+            }
+            AuthIntent.Logout              -> logout()
+            // Add Navigate intents here if you emit navigation effects
+        }
     }
 
+    /* -------------------- FCM prefetch -------------------- */
     private fun preFetchFcmToken() {
         viewModelScope.launch {
             try {
                 Log.i("AuthViewModel", "Pre-fetching FCM token...")
-                val token = fcmTokenService.getFcmToken()
-                if (token != null) {
-                    Log.i("AuthViewModel", "FCM token pre-fetched successfully: ${token.take(20)}...")
-                } else {
-                    Log.w("AuthViewModel", "FCM token pre-fetch failed")
-                }
+                fcmTokenService.getFcmToken()?.let {
+                    Log.i("AuthViewModel", "FCM token pre-fetched: ${it.take(20)}…")
+                } ?: Log.w("AuthViewModel", "FCM token pre-fetch failed (null)")
             } catch (e: Exception) {
-                Log.w("AuthViewModel", "FCM token pre-fetch failed with exception: ${e.message}")
+                Log.w("AuthViewModel", "FCM pre-fetch exception: ${e.message}")
             }
         }
     }
 
+    /* -------------------- Login -------------------- */
     private fun login(email: String, password: String) {
         viewModelScope.launch {
-            emitState { AuthState.Loading }
-            
+            emitState { copy(isLoading = true, error = null) }
+
             try {
-                Log.i("AuthViewModel", "Starting login process for email: $email")
-                
-                // Get FCM token using the shared service
-                Log.i("AuthViewModel", "Attempting to retrieve FCM token...")
-                val fcmToken = fcmTokenService.getFcmToken()
-                
-                // Log the final FCM token status
-                if (fcmToken != null) {
-                    Log.i("AuthViewModel", "FCM token will be included in login request: ${fcmToken.take(20)}...")
-                } else {
-                    Log.w("AuthViewModel", "No FCM token available, login request will be sent without FCM token")
-                }
-                
+                val fcmToken = runCatching { fcmTokenService.getFcmToken() }.getOrNull()
                 val timezone = TimeZone.getDefault().id
-                Log.i("AuthViewModel", "User timezone: $timezone")
-                
                 val result = authUseCases.login(email, password, fcmToken, timezone)
+
                 result.fold(
                     onSuccess = {
-                        Log.i("AuthViewModel", "Login successful, saving auth token")
-                        emitState { AuthState.Authenticated(it.token) }
+                        emitState { copy(authToken = it.token) }
                         preferences.saveAuthToken(it.token)
-                        
-                        // If we didn't get FCM token during login, try to register it later
-                        if (fcmToken == null) {
-                            Log.i("AuthViewModel", "Scheduling FCM token registration for later")
-                            registerFcmTokenLater()
-                        }
-                        
-                        delay(1000)
-                        emitState { AuthState.Idle }
+                        if (fcmToken == null) registerFcmTokenLater()
+                        delay(300)
+                        emitState { copy(isLoading = false) }
                         sendEffect { AuthEffect.AuthenticationSuccess }
                     },
-                    onFailure = {
-                        Log.e("AuthViewModel", "Login failed: $it")
-                        emitState { AuthState.Error(it.message ?: "Login failed") }
-                        sendEffect {
-                            AuthEffect.ShowSnackBar("Email or password is incorrect", SnackbarType.ERROR)
-                        }
+                    onFailure = { err ->
+                        emitState { copy(isLoading = false, error = err.message ?: "Login failed") }
+                        sendEffect { AuthEffect.ShowSnackBar("Email or password is incorrect", SnackbarType.ERROR) }
                     }
                 )
             } catch (e: Exception) {
-                Log.e("AuthViewModel", "Exception during login process: ${e.message}")
-                e.printStackTrace()
-                
-                // Continue with login without FCM token
-                Log.i("AuthViewModel", "Retrying login without FCM token due to exception")
+                // Retry without FCM
                 val timezone = TimeZone.getDefault().id
                 val result = authUseCases.login(email, password, null, timezone)
                 result.fold(
                     onSuccess = {
-                        Log.i("AuthViewModel", "Login successful without FCM token, saving auth token")
-                        emitState { AuthState.Authenticated(it.token) }
+                        emitState { copy(authToken = it.token) }
                         preferences.saveAuthToken(it.token)
-                        
-                        // Try to register FCM token later since it failed during login
-                        Log.i("AuthViewModel", "Scheduling FCM token registration for later")
                         registerFcmTokenLater()
-                        
-                        delay(1000)
-                        emitState { AuthState.Idle }
+                        delay(300)
+                        emitState { copy(isLoading = false) }
                         sendEffect { AuthEffect.AuthenticationSuccess }
                     },
-                    onFailure = {
-                        Log.e("AuthViewModel", "Login failed without FCM token: $it")
-                        emitState { AuthState.Error(it.message ?: "Login failed") }
-                        sendEffect {
-                            AuthEffect.ShowSnackBar("Email or password is incorrect", SnackbarType.ERROR)
-                        }
+                    onFailure = { err ->
+                        emitState { copy(isLoading = false, error = err.message ?: "Login failed") }
+                        sendEffect { AuthEffect.ShowSnackBar("Email or password is incorrect", SnackbarType.ERROR) }
                     }
                 )
             }
         }
     }
 
+    /* -------------------- Sign up -------------------- */
+    private fun signUp(name: String, email: String, password: String) {
+        viewModelScope.launch {
+            emitState { copy(isLoading = true, error = null) }
+            val result = authUseCases.signUp(name, email, password)
+            result.fold(
+                onSuccess = {
+                    emitState { copy(isLoading = false) }
+                    sendEffect { AuthEffect.ShowSnackBar("Account created. Please log in.", SnackbarType.SUCCESS) }
+                    sendEffect { AuthEffect.NavigateToLogin }
+                },
+                onFailure = { e ->
+                    emitState { copy(isLoading = false, error = e.message) }
+                    sendEffect { AuthEffect.ShowSnackBar(e.message ?: "Sign up failed", SnackbarType.ERROR) }
+                }
+            )
+        }
+    }
+
+    /* -------------------- Forgot password (PIN flow) -------------------- */
+
+    // Step 1: request PIN (email)
+    private fun requestReset(email: String) {
+        viewModelScope.launch {
+            emitState { copy(isLoading = true, error = null) }
+            val result = authUseCases.requestReset(email)
+            result.fold(
+                onSuccess = {
+                    emitState { copy(isLoading = false, pendingResetEmail = email) }
+                    sendEffect { AuthEffect.ShowSnackBar("We sent you a 6-digit code.", SnackbarType.INFO) }
+                },
+                onFailure = { e ->
+                    emitState { copy(isLoading = false, error = e.message) }
+                    sendEffect { AuthEffect.ShowSnackBar("Error, this email is not registered", SnackbarType.ERROR) }
+                }
+            )
+        }
+    }
+
+    // Step 2: verify PIN (needs email) -> returns reset session token
+    private fun verifyResetPin(pin: String) {
+        viewModelScope.launch {
+            val email = currentState.pendingResetEmail
+            if (email.isNullOrBlank()) {
+                emitState { copy(error = "No email in progress") }
+                sendEffect { AuthEffect.ShowSnackBar("Please enter your email first.", SnackbarType.ERROR) }
+                return@launch
+            }
+
+            emitState { copy(isLoading = true, error = null) }
+            val result = authUseCases.verifyPin(email, pin)
+            result.fold(
+                onSuccess = { token ->
+                    emitState { copy(isLoading = false, resetPasswordToken = token) }
+                    sendEffect { AuthEffect.ShowSnackBar("Code verified.", SnackbarType.SUCCESS) }
+                },
+                onFailure = { e ->
+                    emitState { copy(isLoading = false, error = e.message) }
+                    sendEffect { AuthEffect.ShowSnackBar("Invalid or expired code.", SnackbarType.ERROR) }
+                }
+            )
+        }
+    }
+
+    // Step 3: set new password (uses reset session token)
+    private fun setNewPassword(password: String) {
+        viewModelScope.launch {
+            val token = currentState.resetPasswordToken
+            if (token.isNullOrBlank()) {
+                emitState { copy(error = "Missing reset token") }
+                sendEffect { AuthEffect.ShowSnackBar("Please verify the code first.", SnackbarType.ERROR) }
+                return@launch
+            }
+
+            emitState { copy(isLoading = true, error = null) }
+            val result = authUseCases.setNewPassword(token, password)
+            result.fold(
+                onSuccess = {
+                    // Clear transient fields
+                    emitState { copy(isLoading = false, pendingResetEmail = null, resetPasswordToken = null) }
+                    sendEffect { AuthEffect.ShowSnackBar("Password updated. Please log in.", SnackbarType.SUCCESS) }
+                    sendEffect { AuthEffect.NavigateToLogin }
+                },
+                onFailure = { e ->
+                    emitState { copy(isLoading = false, error = e.message) }
+                    sendEffect { AuthEffect.ShowSnackBar(e.message ?: "Failed to update password", SnackbarType.ERROR) }
+                }
+            )
+        }
+    }
+
+    /* -------------------- Logout -------------------- */
+    private fun logout() {
+        viewModelScope.launch {
+            preferences.clearAuthToken()
+            emitState { copy(authToken = null) }
+            sendEffect { AuthEffect.ShowSnackBar("Logged out", SnackbarType.INFO) }
+        }
+    }
+
+    /* -------------------- FCM helpers -------------------- */
     private fun registerFcmTokenLater() {
         viewModelScope.launch {
             try {
-                // Wait a bit before trying to get FCM token again
-                Log.i("AuthViewModel", "Attempting to register FCM token after successful login...")
-                delay(5000L) // 5 seconds
-                
-                val fcmToken = fcmTokenService.getFcmToken()
-                if (fcmToken != null) {
-                    // TODO: Send FCM token to server for this user
-                    // This would require an API endpoint to update the user's FCM token
-                    Log.i("AuthViewModel", "FCM token registered successfully after login: ${fcmToken.take(20)}...")
-                    
-                    // Optionally show a success message to the user
+                Log.i("AuthViewModel", "Registering FCM token after login…")
+                delay(5000)
+                val fcm = fcmTokenService.getFcmToken()
+                if (fcm != null) {
+                    // TODO: call your backend endpoint to register this FCM token
+                    Log.i("AuthViewModel", "FCM token registered later: ${fcm.take(20)}…")
                     if (shouldShowFcmMessages()) {
-                        sendEffect {
-                            AuthEffect.ShowSnackBar("Push notifications enabled", SnackbarType.SUCCESS)
-                        }
+                        sendEffect { AuthEffect.ShowSnackBar("Push notifications enabled", SnackbarType.SUCCESS) }
                     }
                 } else {
-                    Log.w("AuthViewModel", "FCM token still not available after login")
-                    
-                    // Log alternative notification strategies
+                    Log.w("AuthViewModel", "FCM token still null after login")
                     logAlternativeNotificationStrategies()
-                    
-                    // Optionally show a message to the user about push notifications
                     if (shouldShowFcmMessages()) {
-                        sendEffect {
-                            AuthEffect.ShowSnackBar("Push notifications not available. In-app notifications will be used instead.", SnackbarType.INFO)
-                        }
+                        sendEffect { AuthEffect.ShowSnackBar("Push notifications not available. In-app notifications will be used instead.", SnackbarType.INFO) }
                     }
                 }
             } catch (e: Exception) {
-                Log.w("AuthViewModel", "Failed to register FCM token after login: ${e.message}")
+                Log.w("AuthViewModel", "FCM later registration failed: ${e.message}")
             }
         }
     }
 
     private fun logAlternativeNotificationStrategies() {
-        Log.i("AuthViewModel", "Alternative notification strategies available:")
-        Log.i("AuthViewModel", "- In-app notifications (when app is open)")
-        Log.i("AuthViewModel", "- Local notifications (scheduled reminders)")
-        Log.i("AuthViewModel", "- Email notifications (if configured)")
-        Log.i("AuthViewModel", "- SMS notifications (if configured)")
-        Log.i("AuthViewModel", "- WebSocket real-time updates (when app is connected)")
+        Log.i("AuthViewModel", "Alternative notification strategies:")
+        Log.i("AuthViewModel", "- In-app notifications")
+        Log.i("AuthViewModel", "- Local notifications")
+        Log.i("AuthViewModel", "- Email notifications")
+        Log.i("AuthViewModel", "- SMS notifications")
+        Log.i("AuthViewModel", "- WebSocket updates")
     }
 
-    private fun shouldShowFcmMessages(): Boolean {
-        // Only show FCM-related messages in debug builds or if explicitly enabled
-        return try {
-            // Check if this is a debug build
-            val isDebug = android.os.Build.TYPE != "user"
-            isDebug
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    override fun createInitialState(): AuthState {
-        return AuthState.Idle
-    }
-
-    override fun handleIntent(intent: AuthIntent) {
-        when (intent) {
-            is AuthIntent.Login -> {
-                login(intent.email, intent.password)
-            }
-            AuthIntent.Logout -> TODO()
-            else -> {
-            }
-        }
-    }
+    private fun shouldShowFcmMessages(): Boolean =
+        try { android.os.Build.TYPE != "user" } catch (_: Exception) { false }
 }
+

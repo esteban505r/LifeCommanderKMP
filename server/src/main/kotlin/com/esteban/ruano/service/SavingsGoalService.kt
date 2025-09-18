@@ -5,6 +5,7 @@ import com.esteban.ruano.database.entities.*
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.models.finance.*
 import kotlinx.datetime.LocalDate
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.*

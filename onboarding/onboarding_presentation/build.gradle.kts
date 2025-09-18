@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.composeMultiplatform)
 //    alias(libs.plugins.kotlinAndroid)
 }
 
@@ -17,5 +18,6 @@ dependencies {
     //Firebase - only the classes, not the plugin
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    implementation(compose.components.resources)
     implementation(projects.shared)
 }

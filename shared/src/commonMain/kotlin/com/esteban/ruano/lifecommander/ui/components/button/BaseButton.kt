@@ -11,8 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun BaseButton(onClick: () -> Unit, text: String,modifier: Modifier = Modifier,buttonType: ButtonType = ButtonType.PRIMARY) {
+fun BaseButton(onClick: () -> Unit, text: String,modifier: Modifier = Modifier,buttonType: ButtonType = ButtonType.PRIMARY,enabled: Boolean = true,) {
     Button(
+        enabled = enabled,
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(

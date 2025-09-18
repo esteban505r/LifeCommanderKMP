@@ -19,6 +19,8 @@ import com.esteban.ruano.models.sync.SyncItemDTO
 import com.esteban.ruano.models.tasks.TaskDTO
 import com.esteban.ruano.utils.SyncUtils.sortedByAction
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 

@@ -19,6 +19,10 @@ import dagger.assisted.Assisted
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.compression.ContentEncoding
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.gson.gson
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import javax.inject.Singleton
@@ -39,6 +43,25 @@ object CoreModule {
             .addInterceptor(authInterceptor)
             .build()
     }
+
+    @Provides
+    @Singleton
+    fun provideKtorHttpClient(): HttpClient {
+        return HttpClient {
+            install(ContentNegotiation) {
+                gson {
+                    setPrettyPrinting()
+                }
+            }
+            install(ContentEncoding) {
+                gzip()
+                deflate()
+                identity()
+            }
+        }
+    }
+
+
 
     @Provides
     @Singleton

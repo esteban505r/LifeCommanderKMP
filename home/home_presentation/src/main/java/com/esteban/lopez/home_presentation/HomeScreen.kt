@@ -48,11 +48,9 @@ import com.esteban.ruano.habits_presentation.ui.screens.viewmodel.HabitViewModel
 import com.esteban.ruano.home_presentation.viewmodel.HomeViewModel
 import com.esteban.ruano.lifecommander.models.Exercise
 import com.esteban.ruano.lifecommander.ui.components.SharedAppBar
-import com.esteban.ruano.lifecommander.ui.components.SharedGradientButton
 import com.esteban.ruano.lifecommander.ui.components.SharedSectionCard
 import com.esteban.ruano.lifecommander.ui.components.SharedTaskCard
 import com.esteban.ruano.resources.Res
-import com.esteban.ruano.resources.ic_tasks_selected
 import com.esteban.ruano.resources.ic_tasks_unselected
 import com.esteban.ruano.resources.otter_focused
 import com.esteban.ruano.resources.otter_sleepy
@@ -71,6 +69,7 @@ import com.esteban.ruano.workout_presentation.ui.composable.WorkoutCard
 import com.esteban.ruano.workout_presentation.ui.viewmodel.WorkoutDetailViewModel
 import com.lifecommander.models.Habit
 import com.lifecommander.models.Task
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -89,39 +88,33 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val sendMainIntent = LocalMainIntent.current
+
     val habitState = habitViewModel.viewState.collectAsState()
     val taskState = taskViewModel.viewState.collectAsState()
     val workoutState = workoutViewModel.viewState.collectAsState()
+
     val coroutineScope = rememberCoroutineScope()
 
     var isFocusMode by rememberSaveable { mutableStateOf(false) }
     var focusOnlyCurrent by rememberSaveable { mutableStateOf(false) }
     var showOverflow by remember { mutableStateOf(false) }
 
-    // Random animal (kept from your version for other UI parts if needed)
-    val animalImage by remember {
-        mutableIntStateOf(
-            listOf(
-                R.drawable.animal_sat_1,
-                R.drawable.animal_sat_2,
-                R.drawable.animal_sat_3,
-                R.drawable.animal_sat_4,
-                R.drawable.animal_sat_5,
-                R.drawable.animal_sat_6,
-                R.drawable.animal_sat_7,
-                R.drawable.animal_sat_8
-            ).random()
-        )
-    }
-
     var isRefreshing by remember { mutableStateOf(false) }
 
-    val version = try {
-        val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-        pInfo.versionName
-    } catch (_: PackageManager.NameNotFoundException) {
-        "0.0.0"
+    val version = remember {
+        try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            pInfo.versionName ?: "0.0.0"
+        } catch (_: PackageManager.NameNotFoundException) {
+            "0.0.0"
+        }
     }
+
+    // --- Brand-new detection ---
+    val allHabits = habitState.value.habits
+    val tasks = taskState.value.tasks
+    val hasWorkout = workoutState.value.workout?.exercises?.isNotEmpty() == true
+    val isBrandNew = allHabits.isEmpty() && tasks.isEmpty() && !hasWorkout
 
     val pullRefreshState = rememberPullRefreshState(
         refreshing = isRefreshing,
@@ -149,6 +142,15 @@ fun HomeScreen(
                 id = LocalDate.now().dayOfWeek.value.toString()
             )
         )
+    }
+
+    // One-time gentle pull-to-refresh hint for brand-new users (visual education)
+    LaunchedEffect(isBrandNew) {
+        if (isBrandNew) {
+            isRefreshing = true
+            delay(700)
+            isRefreshing = false
+        }
     }
 
     Box(
@@ -183,8 +185,6 @@ fun HomeScreen(
                             if (isFocusMode) Icons.Filled.CenterFocusStrong else Icons.Outlined.CenterFocusWeak,
                             contentDescription = null
                         )
-                        /* Spacer(Modifier.width(12.dp))
-                         Text(if (isFocusMode) "Disable Focus mode" else "Enable Focus mode")*/
                     }
                     IconButton(
                         onClick = { showOverflow = true },
@@ -209,20 +209,6 @@ fun HomeScreen(
                         expanded = showOverflow,
                         onDismissRequest = { showOverflow = false }
                     ) {
-
-                        /*DropdownMenuItem(
-                            onClick = {
-                                focusOnlyCurrent = !focusOnlyCurrent
-                                showOverflow = false
-                            }
-                        ) {
-                            Icon(
-                                imageVector = if (focusOnlyCurrent) Icons.Filled.CenterFocusStrong else Icons.Outlined.CenterFocusWeak,
-                                contentDescription = null
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text(if (focusOnlyCurrent) "Show lists (all)" else "Show only current")
-                        }*/
                         DropdownMenuItem(
                             onClick = {
                                 showOverflow = false
@@ -287,29 +273,36 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(LifeCommanderDesignSystem.Layout.sectionSpacing)
                 ) {
 
-                    // --- Otter welcome (replaces gradient greeting) ---
                     item {
-                        val allHabits = habitState.value.habits
-                        val pendingHabits = allHabits.count { it.done != true }
-                        val pendingTasks = taskState.value.tasks.count { it.done != true }
-                        val currentHabit = allHabits.findCurrentHabit()
+                        if (isBrandNew) {
+                            FirstRunHero(
+                                onCreateHabit = { onCurrentHabitClick(null) },
+                                onCreateTask = onGoToTasks,
+                                onGoToWorkout = onGoToWorkout
+                            )
+                        } else {
+                            // EXISTING: Your current welcome card
+                            val pendingHabits = allHabits.count { it.done != true }
+                            val pendingTasks = tasks.count { it.done != true }
+                            val currentHabit = allHabits.findCurrentHabit()
 
-                        OtterWelcomeCard(
-                            pendingHabits = pendingHabits,
-                            pendingTasks = pendingTasks,
-                            currentHabitName = currentHabit?.name,
-                            onHabitClick = { onCurrentHabitClick(currentHabit) },
-                            onTasksClick = onGoToTasks
-                        )
+                            OtterWelcomeCard(
+                                pendingHabits = pendingHabits,
+                                pendingTasks = pendingTasks,
+                                currentHabitName = currentHabit?.name,
+                                onHabitClick = { onCurrentHabitClick(currentHabit) },
+                                onTasksClick = onGoToTasks
+                            )
+                        }
                     }
 
-                    if (isFocusMode) {
+                    if (isFocusMode && !isBrandNew) {
                         // ---------- Focus Mode ----------
                         item {
                             FocusModePanel(
-                                habits = habitState.value.habits,
-                                currentHabit = habitState.value.habits.findCurrentHabit(),
-                                tasks = taskState.value.tasks,
+                                habits = allHabits,
+                                currentHabit = allHabits.findCurrentHabit(),
+                                tasks = tasks,
                                 onlyCurrent = focusOnlyCurrent,
                                 onToggleOnlyCurrent = { focusOnlyCurrent = it },
                                 onOpenHabit = { onCurrentHabitClick(it) },
@@ -318,21 +311,28 @@ fun HomeScreen(
                             )
                         }
                         item { Spacer(Modifier.height(100.dp)) }
-                    } else {
-                        // ---------- Normal Home (your original sections) ----------
-                        val tasks = taskState.value.tasks
-                        if (tasks.isNotEmpty()) {
-                            item { TasksSection(tasks = tasks, onGoToTasks = onGoToTasks) }
+                    } else if (!isBrandNew) {
+                        // ---------- Normal Home ----------
+                        item {
+                            HabitsSectionOrEmpty(
+                                habits = allHabits,
+                                onCreateHabit = { onCurrentHabitClick(null) }
+                            )
                         }
 
-                        if (workoutState.value.workout?.exercises?.isNotEmpty() == true) {
-                            item {
-                                WorkoutSection(
-                                    exercises = workoutState.value.workout?.exercises
-                                        ?: emptyList(),
-                                    onGoToWorkout = onGoToWorkout
-                                )
-                            }
+                        item {
+                            TasksSectionOrEmpty(
+                                tasks = tasks,
+                                onGoToTasks = onGoToTasks,
+                                onCreateTask = onGoToTasks // reuse tasks screen to add
+                            )
+                        }
+
+                        item {
+                            WorkoutSectionOrEmpty(
+                                hasWorkout = hasWorkout,
+                                onGoToWorkout = onGoToWorkout
+                            )
                         }
 
                         item { Spacer(Modifier.height(100.dp)) }
@@ -367,10 +367,215 @@ fun HomeScreen(
     }
 }
 
+
+@Composable
+fun HabitsSection(
+    habits: List<Habit>,
+    onHabitClick: (Habit) -> Unit = {},
+    onToggleDone: (Habit) -> Unit = {},
+    onSeeAll: () -> Unit = {}
+) {
+    if (habits.isEmpty()) return
+
+    val completed = habits.count { it.done == true }
+    val progress = if (habits.isNotEmpty()) completed.toFloat() / habits.size else 0f
+    val preview = habits.take(3)
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        backgroundColor = LifeCommanderDesignSystem.colors.Surface,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Habits",
+                    style = MaterialTheme.typography.h5,
+                    fontWeight = FontWeight.Bold,
+                    color = LifeCommanderDesignSystem.colors.OnSurface
+                )
+                TextButton(onClick = onSeeAll) {
+                    Text("See all")
+                }
+            }
+
+            // Progress
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                LinearProgressIndicator(
+                    progress = progress,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    backgroundColor = LifeCommanderDesignSystem.colors.Border,
+                )
+                Text(
+                    text = "$completed of ${habits.size} done today",
+                    style = MaterialTheme.typography.caption,
+                    color = LifeCommanderDesignSystem.colors.OnSurfaceVariant
+                )
+            }
+
+            // Preview list
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                preview.forEach { habit ->
+                    HabitRowItem(
+                        habit = habit,
+                        isCurrent = preview.findCurrentHabit() == habit,
+                        onClick = { onHabitClick(habit) },
+                        onToggleDone = { onToggleDone(habit) }
+                    )
+                }
+            }
+
+            // “+N more” footer if truncated
+            val remaining = habits.size - preview.size
+            if (remaining > 0) {
+                TextButton(
+                    onClick = onSeeAll,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("+$remaining more")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HabitRowItem(
+    habit: Habit,
+    onClick: () -> Unit,
+    onToggleDone: () -> Unit,
+    isCurrent: Boolean
+) {
+    val isDone = habit.done == true
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .background(
+                if (isCurrent) LifeCommanderDesignSystem.colors.Surface.copy(alpha = 0.6f)
+                else Color.Transparent
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(
+            checked = isDone,
+            onCheckedChange = { onToggleDone() }
+        )
+        Spacer(Modifier.width(8.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = habit.name,
+                style = MaterialTheme.typography.body1.copy(
+                    fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal
+                ),
+                color = LifeCommanderDesignSystem.colors.OnSurface
+            )
+            if (isCurrent) {
+                Text(
+                    text = "Current",
+                    style = MaterialTheme.typography.caption,
+                    color = LifeCommanderDesignSystem.colors.OnSurfaceVariant
+                )
+            }
+        }
+        // Optional right icon/chevron if you use one
+        // Icon(Icons.AutoMirrored.Filled.ChevronRight, contentDescription = null, tint = LifeCommanderDesignSystem.colors.OnSurfaceVariant)
+    }
+}
+
+
 /* -------------------------- Focus Mode -------------------------- */
 
 private fun List<Task>.currentPending(): Task? =
     this.filter { it.done != true }.minByOrNull { it.priority }
+
+@Composable
+private fun HabitsSectionOrEmpty(
+    habits: List<Habit>,
+    onCreateHabit: () -> Unit
+) {
+    if (habits.isNotEmpty()) {
+        HabitsSection(habits)
+    } else {
+        InlineEmptyRow(
+            title = "Habits",
+            description = "Build your first streak with a simple habit.",
+            action = "Create a Habit",
+            onClick = onCreateHabit
+        )
+    }
+}
+
+@Composable
+private fun TasksSectionOrEmpty(
+    tasks: List<Task>,
+    onGoToTasks: () -> Unit,
+    onCreateTask: () -> Unit
+) {
+    if (tasks.isNotEmpty()) {
+        TasksSection(tasks = tasks, onGoToTasks = onGoToTasks)
+    } else {
+        InlineEmptyRow(
+            title = "Tasks",
+            description = "Keep a lightweight list for today.",
+            action = "Add a Task",
+            onClick = onCreateTask
+        )
+    }
+}
+
+@Composable
+private fun WorkoutSectionOrEmpty(
+    hasWorkout: Boolean,
+    onGoToWorkout: () -> Unit
+) {
+    if (hasWorkout) {
+        WorkoutSection(
+            exercises = emptyList(), // you use your real list in your existing section
+            onGoToWorkout = onGoToWorkout
+        )
+    } else {
+        InlineEmptyRow(
+            title = "Workout",
+            description = "Pick a light routine for today.",
+            action = "Choose Workout",
+            onClick = onGoToWorkout
+        )
+    }
+}
+
+@Composable
+fun InlineEmptyRow(title: String, description: String, action: String, onClick: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        backgroundColor = LifeCommanderDesignSystem.colors.Surface,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.h5, fontWeight = FontWeight.SemiBold)
+                Text(description, style = MaterialTheme.typography.body2, color = LifeCommanderDesignSystem.colors.OnSurfaceVariant)
+            }
+            Spacer(Modifier.width(12.dp))
+            OutlinedButton(onClick = onClick, shape = RoundedCornerShape(10.dp)) { Text(action) }
+        }
+    }
+}
+
 
 @Composable
 fun FocusModePanel(
@@ -646,6 +851,58 @@ private fun moodMessage(
     OtterMood.Sleepy -> "We’ve got this" to "Take a breath. Start with just one task."
     OtterMood.Idle -> "Welcome back" to "You have $pendingTasks task(s) waiting."
 }
+
+
+
+@Composable
+private fun FirstRunHero(
+    onCreateHabit: () -> Unit,
+    onCreateTask: () -> Unit,
+    onGoToWorkout: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        backgroundColor = LifeCommanderDesignSystem.colors.Surface,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // (Optional) Add your otter/illustration here
+            Text(
+                "Welcome to Life Commander 👋",
+                style = MaterialTheme.typography.h4,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Let’s set up the basics so your Home isn’t empty.",
+                style = MaterialTheme.typography.body1,
+                color = LifeCommanderDesignSystem.colors.OnSurfaceVariant
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = onCreateHabit,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Create a Habit") }
+
+                OutlinedButton(
+                    onClick = onCreateTask,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Add a Task") }
+            }
+
+            TextButton(
+                onClick = onGoToWorkout,
+                modifier = Modifier.align(Alignment.End)
+            ) { Text("Pick a workout for today") }
+        }
+    }
+}
+
 
 @Composable
 fun OtterWelcomeCard(

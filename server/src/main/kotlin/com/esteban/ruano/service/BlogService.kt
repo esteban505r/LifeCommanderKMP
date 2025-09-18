@@ -16,8 +16,9 @@ import kotlinx.datetime.LocalDate
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.datetime.date
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction

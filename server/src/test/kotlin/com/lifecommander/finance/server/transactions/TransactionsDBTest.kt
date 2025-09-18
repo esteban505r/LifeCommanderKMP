@@ -13,6 +13,7 @@ import com.lifecommander.finance.model.AccountType
 import com.lifecommander.finance.model.TransactionType
 import com.lifecommander.models.Frequency
 import kotlinx.datetime.*
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteAll

@@ -1,8 +1,5 @@
 package ui.ui.viewmodels
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +10,7 @@ import services.auth.AuthService
 import ui.state.AuthState
 
 
-enum class ForgotStep { RequestEmail, VerifyToken, SetPassword }
+enum class ForgotStep { RequestEmail, VerifyPin, SetPassword }
 
 
 class AuthViewModel(
@@ -37,6 +34,9 @@ class AuthViewModel(
     private val _forgotStep = MutableStateFlow(ForgotStep.RequestEmail)
     val forgotStep: StateFlow<ForgotStep> = _forgotStep.asStateFlow()
 
+    private val _resetToken = MutableStateFlow<String?>(null)
+    val resetToken: StateFlow<String?> = _resetToken.asStateFlow()
+
 
     init {
         viewModelScope.launch {
@@ -50,60 +50,71 @@ class AuthViewModel(
     fun setForgotStep(step: ForgotStep) { _forgotStep.value = step }
 
 
-    fun verifyResetToken(token: String) {
+    // 1) Request PIN (unchanged behavior)
+    fun forgotPassword() {
+        val current = authState.value as? AuthState.Unauthenticated ?: return
         viewModelScope.launch {
-            val current = authState.value as? AuthState.Unauthenticated ?: return@launch
             _authState.value = current.copy(isLoading = true, errorMessage = null)
             runCatching {
-                authService.verifyResetToken(token)
+                authService.forgotPassword(current.email)
             }.onSuccess {
-                _authState.value = current.copy(isLoading = false)
+                _authState.value = current.copy(isLoading = false, errorMessage = null)
             }.onFailure {
-                _authState.value = current.copy(isLoading = false, errorMessage = it.message)
+                _authState.value = current.copy(
+                    isLoading = false,
+                    errorMessage = it.message ?: "Failed to request reset"
+                )
             }
         }
     }
 
-    fun forgotPassword() {
-        val currentState = authState.value as? AuthState.Unauthenticated
-        currentState?.let { state ->
-            viewModelScope.launch {
-                _authState.value = state.copy(isLoading = true, errorMessage = null)
-                try {
-                    authService.forgotPassword(state.email)
-                    // success → maybe set a flag or message
-                    _authState.value = state.copy(
-                        isLoading = false,
-                        errorMessage = null
-                    )
-                } catch (e: Exception) {
-                    _authState.value = state.copy(
-                        isLoading = false,
-                        errorMessage = e.message ?: "Failed to request reset"
-                    )
-                }
+
+    // 2) Verify PIN (uses email + pin) → stores reset session token
+    fun verifyResetPin(pin: String) {
+        val current = authState.value as? AuthState.Unauthenticated ?: return
+        viewModelScope.launch {
+            _authState.value = current.copy(isLoading = true, errorMessage = null)
+            runCatching {
+                authService.verifyResetPin(email = current.email, pin = pin)
+            }.onSuccess { token ->
+                _resetToken.value = token
+                _authState.value = current.copy(isLoading = false, errorMessage = null)
+            }.onFailure {
+                _authState.value = current.copy(
+                    isLoading = false,
+                    errorMessage = it.message ?: "Invalid or expired code"
+                )
             }
         }
     }
 
-    fun resetPassword(token: String, newPassword: String) {
-        val currentState = authState.value as? AuthState.Unauthenticated
-        currentState?.let { state ->
-            viewModelScope.launch {
-                _authState.value = state.copy(isLoading = true, errorMessage = null)
-                try {
-                    authService.resetPassword(token, newPassword)
-                    // success → you might want to navigate to login screen
-                    _authState.value = state.copy(
-                        isLoading = false,
-                        errorMessage = null
-                    )
-                } catch (e: Exception) {
-                    _authState.value = state.copy(
-                        isLoading = false,
-                        errorMessage = e.message ?: "Failed to reset password"
-                    )
-                }
+
+    // 3) Reset password using the stored reset session token
+    fun resetPassword(newPassword: String) {
+        val current = authState.value as? AuthState.Unauthenticated ?: return
+        val token = _resetToken.value
+        if (token.isNullOrBlank()) {
+            // No verified token yet
+            _authState.value = current.copy(
+                isLoading = false,
+                errorMessage = "Please verify the code first."
+            )
+            return
+        }
+
+        viewModelScope.launch {
+            _authState.value = current.copy(isLoading = true, errorMessage = null)
+            runCatching {
+                authService.resetPasswordWithSession(resetToken = token, newPassword = newPassword)
+            }.onSuccess {
+                // Clear the token after successful reset
+                _resetToken.value = null
+                _authState.value = current.copy(isLoading = false, errorMessage = null)
+            }.onFailure {
+                _authState.value = current.copy(
+                    isLoading = false,
+                    errorMessage = it.message ?: "Failed to reset password"
+                )
             }
         }
     }
