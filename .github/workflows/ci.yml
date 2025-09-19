@@ -62,6 +62,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Prepare deploy bundle
         run: |
           set -e
@@ -71,27 +77,13 @@ jobs:
           echo "Bundle:"
           ls -la deploy
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download deploy bundle
-        uses: actions/download-artifact@v4
-        with:
-          name: deploy-bundle
-          path: deploy
-
-      - name: List bundle (sanity check)
-        run: ls -la deploy
-
       - name: Copy bundle to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT || 22 }}
-          source: "deploy/*"             # now it exists in this job
+          username: ${{ secrets.EC2_USER }}      # ubuntu / ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}        # your .pem contents
+          source: "deploy/*"
           target: "~/oter"
           overwrite: true
           rm: true
@@ -102,12 +94,22 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT || 22 }}
           script: |
             set -euo pipefail
             cd ~/oter
             docker network create edge || true
+
+            # optional: load host-managed env vars if you keep them on the box
+            if [ -f /etc/oter.env ]; then
+              set -a
+              . /etc/oter.env
+              set +a
+              echo "Loaded /etc/oter.env"
+            fi
+
             echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_READ_USER }}" --password-stdin
+
             IMAGE_TAG="${{ needs.build.outputs.version_tag }}" docker compose pull
             IMAGE_TAG="${{ needs.build.outputs.version_tag }}" docker compose up -d
+
             docker image prune -f
