@@ -59,7 +59,7 @@ jobs:
           context: .
           # IMPORTANT: If your Dockerfile is at repo root, keep "Dockerfile".
           # If it's at server/Dockerfile, update this to server/Dockerfile and also update COPY paths inside.
-          file: Dockerfile
+          file: server/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
