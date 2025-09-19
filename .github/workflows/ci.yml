@@ -1,0 +1,46 @@
+name: build-and-push
+on:
+  push:
+    branches: [ main ]
+    tags: [ "v*" ]
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # needed for GHCR
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set tags
+        id: meta
+        run: |
+          IMAGE=ghcr.io/${{ github.repository_owner }}/oter-server
+          SHA=${GITHUB_SHA::7}
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            TAG="sha-${SHA}"
+          fi
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: server/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.tag }}
+            ${{ steps.meta.outputs.image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
