@@ -97,8 +97,7 @@ jobs:
           script: |
             set -euo pipefail
             cd ~/oter
-            docker network create edge || true
-
+            
             # optional: load host-managed env vars if you keep them on the box
             if [ -f /etc/oter.env ]; then
               set -a
