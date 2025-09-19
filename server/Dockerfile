@@ -7,7 +7,7 @@ RUN --mount=type=cache,target=/root/.gradle gradle clean shadowJar -x test
 # ---- runtime stage ----
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-COPY --from=build server/src/build/libs/*-all.jar /app/app.jar
+COPY --from=build server/build/libs/*-all.jar /app/app.jar
 RUN ls -R /src
 COPY server/src/main/resources/logback.xml /app/logback.xml
 ENV JAVA_TOOL_OPTIONS="-Dlogback.configurationFile=/app/logback.xml"
