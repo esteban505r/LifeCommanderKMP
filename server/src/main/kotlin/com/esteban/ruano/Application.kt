@@ -9,6 +9,7 @@ import com.esteban.ruano.service.TimerCheckerService
 import com.esteban.ruano.service.TimerService
 import com.esteban.ruano.utils.X_CATEGORY_PASSWORD_HEADER
 import com.esteban.ruano.utils.X_POST_PASSWORD_HEADER
+import com.esteban.ruano.utils.loadConfig
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.config.yaml.*
@@ -145,22 +146,16 @@ fun Application.configureWebSockets() {
 }
 
 fun Application.connectToPostgres() {
-    val configs = YamlConfig("postgres.yaml")
-    val db = configs?.property("services.postgres.environment.POSTGRES_DB")?.getString()
-    val user = configs?.property("services.postgres.environment.POSTGRES_USER")?.getString()
-    val password = configs?.property("services.postgres.environment.POSTGRES_PASSWORD")?.getString()
-    val env = configs?.property("services.postgres.environment.POSTGRES_ENV")?.getString()
-    val host = configs?.property("services.postgres.environment.POSTGRES_HOST")?.getString()
-    val sentryDsn = configs?.property("services.postgres.environment.SENTRY_DSN")?.getString()
+    val cfg = loadConfig()
 
 
     Sentry.init { opts ->
-        opts.dsn = sentryDsn
-        opts.environment = env
+        opts.dsn = cfg.sentryDsn
+        opts.environment = cfg.environment
         opts.release = "unknown"
     }
 
-    if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
+    if (cfg.db.user.isEmpty() || cfg.db.password.isEmpty()) {
         throw Exception("No user or password detected")
     }
 
@@ -168,14 +163,10 @@ fun Application.connectToPostgres() {
         .configure()
         .baselineOnMigrate(true)
         .validateMigrationNaming(true)
-        .dataSource(
-            "jdbc:postgresql://$host:5432/$db",
-            user,
-            password
-        ).load().migrate()
+        .dataSource(cfg.db.url, cfg.db.user, cfg.db.password).load().migrate()
 
     Database.connect(
-        "jdbc:postgresql://$host:5432/$db",
+        cfg.jdbcUrl,
         driver = "org.postgresql.Driver",
         user = user,
         password = password

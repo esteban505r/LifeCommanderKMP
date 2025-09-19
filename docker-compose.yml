@@ -17,9 +17,8 @@ services:
     networks: [edge]
 
   oter:
-    image: ghcr.io/you/oter:${IMAGE_TAG:-latest}
-    # or use your ECR/GHCR path
-    env_file: .env       # DB_URL, DB_USER, DB_PASSWORD, etc.
+    image: ghcr.io/you/oter:${IMAGE_TAG}
+    env_file: .env.runtime
     environment:
       PORT: "8080"
       LOG_LEVEL: INFO
