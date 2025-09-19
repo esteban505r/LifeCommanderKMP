@@ -1,6 +1,7 @@
+import com.android.build.api.dsl.LibraryExtension
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.moko.resources)
     alias(libs.plugins.kotlinx.serialization)
@@ -8,8 +9,6 @@ plugins {
 }
 
 kotlin {
-    androidTarget()
-    
     listOf(
         iosX64(),
         iosArm64(),
@@ -21,6 +20,17 @@ kotlin {
     }
     
     jvm()
+
+    val includeFrontend = (
+            System.getenv("INCLUDE_ANDROID")
+                ?: System.getProperty("includeAndroid")
+                ?: "true"
+            ).toBoolean()
+
+    if (includeFrontend) {
+        apply(plugin =  libs.plugins.androidLibrary.get().pluginId)
+        androidTarget()
+    }
     
     /*@OptIn(ExperimentalWasmDsl::class)
     wasmJs {
@@ -65,11 +75,6 @@ kotlin {
 
             }
         }
-        val androidMain by getting {
-            dependencies {
-
-            }
-        }
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting
@@ -82,20 +87,26 @@ kotlin {
     }
 }
 
-android {
-    namespace = "com.esteban.ruano.shared"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_18
-        targetCompatibility = JavaVersion.VERSION_18
-    }
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
-    }
-}
+val includeFrontend = (
+        System.getenv("INCLUDE_ANDROID")
+            ?: System.getProperty("includeAndroid")
+            ?: "true"
+        ).toBoolean()
 
-multiplatformResources {
-    resourcesPackage.set("com.esteban.ruano")
+if(includeFrontend){
+    extensions.configure<LibraryExtension>("android") {
+        namespace = "com.esteban.ruano.shared"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_18
+            targetCompatibility = JavaVersion.VERSION_18
+        }
+        defaultConfig {
+            minSdk = libs.versions.android.minSdk.get().toInt()
+        }
+    }
+
 }
 
 compose {
@@ -105,3 +116,9 @@ compose {
         generateResClass = always
     }
 }
+
+multiplatformResources {
+    resourcesPackage.set("com.esteban.ruano")
+}
+
+

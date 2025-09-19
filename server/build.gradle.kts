@@ -19,6 +19,16 @@ repositories {
     google() // Required for Firebase Admin SDK
 }
 
+val enableSentry = (
+        System.getenv("ENABLE_SENTRY")
+            ?: (findProperty("enableSentry") as? String)
+            ?: "false"
+        ).toBoolean()
+
+if(enableSentry) {
+apply(plugin = libs.plugins.sentry.get().pluginId)
+    }
+
 dependencies {
     implementation(projects.shared)
     implementation(libs.logback)
@@ -72,15 +82,18 @@ dependencies {
     
     // Firebase Admin SDK for FCM notifications
     implementation(libs.firebase.admin)
-    implementation(libs.sentry)
     implementation(libs.call.id)
     implementation(libs.status.pages)
+    if(enableSentry) {
+        implementation(libs.sentry)
+    }
 }
 
 // Configure shadow plugin for ZIP64 support
 tasks.shadowJar {
     isZip64 = true
 }
+
 
 sentry {
     includeSourceContext = true
@@ -89,4 +102,8 @@ sentry {
     projectName = "kotlin"
     authToken = providers.gradleProperty("sentry.auth.token").orNull
     authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
+}
+
+tasks.matching { it.name.startsWith("sentry") }.configureEach {
+    onlyIf { enableSentry }
 }

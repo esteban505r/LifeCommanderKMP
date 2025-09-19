@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: oter-postgres-dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-oter_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-oter}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oter}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks: [edge]
+
+  oter-dev:
+    image: gradle:8.11.1-jdk21
+    working_dir: /src
+    volumes:
+      - ./:/src:rw                            # your source (Windows bind mount)
+      - gradle-user-home:/root/.gradle        # Gradle user home (cache)
+      - gradle-project-cache:/src/.gradle     # <-- project .gradle moved off bind mount
+      - gradle-build:/src/build               # <-- build/ moved off bind mount
+    environment:
+      INCLUDE_ANDROID: "false"
+      ENABLED_SENTRY: "false"
+      JAVA_TOOL_OPTIONS: "-Dio.ktor.development=true"
+      LOG_LEVEL: DEBUG
+      ENVIRONMENT: development
+      AWS_ACCESS_KEY_ID: "X"
+      AWS_SECRET_ACCESS_KEY: "X"
+      PORT: "8080"
+
+      # App -> local postgres container
+      DB_URL: "${DB_URL:-jdbc:postgresql://postgres:5432/${POSTGRES_DB:-oter_dev}}"
+      DB_USER: "${DB_USER:-${POSTGRES_USER:-oter}}"
+      DB_PASSWORD: "${DB_PASSWORD:-${POSTGRES_PASSWORD:-oter}}"
+
+      AWS_REGION: "${AWS_REGION:-us-east-1}"
+    command: >
+      bash -lc "gradle :server:run"
+    # If your server module is root, use: gradle --no-daemon run
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks: [edge]
+
+networks:
+  edge:
+    external: true
+
+volumes:
+  gradle-user-home:
+  gradle-project-cache:
+  gradle-build:
+  pgdata:

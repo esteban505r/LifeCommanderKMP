@@ -166,10 +166,10 @@ fun Application.connectToPostgres() {
         .dataSource(cfg.db.url, cfg.db.user, cfg.db.password).load().migrate()
 
     Database.connect(
-        cfg.jdbcUrl,
+        cfg.db.url,
         driver = "org.postgresql.Driver",
-        user = user,
-        password = password
+        user = cfg.db.user,
+        password = cfg.db.password
     )
 
     transaction {

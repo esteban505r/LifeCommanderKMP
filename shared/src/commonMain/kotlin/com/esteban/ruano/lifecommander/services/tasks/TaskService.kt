@@ -9,6 +9,7 @@ import com.esteban.ruano.lifecommander.utils.TASKS_ENDPOINT
 import com.esteban.ruano.lifecommander.utils.appHeaders
 import com.lifecommander.models.Task
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
 class TaskService(

@@ -6,7 +6,7 @@ data class DbConfig(val url: String, val user: String, val password: String)
 data class AwsCfg(val region: Region, val sesFrom: String?)
 data class AppConfig(
     val db: DbConfig,
-    val sentryDsn: String?,
+    val sentryDsn: String =  "",
     val aws: AwsCfg,
     val logLevel: String = System.getenv("LOG_LEVEL") ?: "INFO",
     val environment: String = System.getenv("ENVIRONMENT") ?: "production"
@@ -34,7 +34,7 @@ fun loadConfig(): AppConfig {
 
     val region = env("AWS_REGION")?.let(Region::of) ?: Region.US_EAST_1
     val sesFrom = env("SES_FROM")
-    val sentry = env("SENTRY_DSN") 
+    val sentry = env("SENTRY_DSN") ?: ""
 
     return AppConfig(
         db = DbConfig(jdbcUrl, dbUser, dbPass),
