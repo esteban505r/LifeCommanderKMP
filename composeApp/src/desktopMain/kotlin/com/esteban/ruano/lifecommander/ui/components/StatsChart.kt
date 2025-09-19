@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.patrykandpatrick.vico.multiplatform.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.multiplatform.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.multiplatform.cartesian.axis.VerticalAxis
@@ -36,7 +37,7 @@ import kotlinx.datetime.daysUntil
 import kotlinx.datetime.plus
 import kotlinx.datetime.minus
 import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
@@ -63,8 +64,8 @@ fun StatsChart(
 
     // Calculate the start of the current week
     val weekStart = remember {
-        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-            .minus(DatePeriod(days = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.value - 1))
+        getCurrentDateTime(TimeZone.currentSystemDefault()).date
+            .minus(DatePeriod(days = getCurrentDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.ordinal))
     }
 
     // For date-based: build x/y lists and xToDates map

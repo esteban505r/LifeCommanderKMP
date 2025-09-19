@@ -14,7 +14,7 @@ import com.esteban.ruano.utils.DateUtils.formatDateTime
 import com.lifecommander.finance.model.AccountType
 import com.lifecommander.finance.model.TransactionType
 import com.lifecommander.models.Frequency
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -36,6 +36,7 @@ import kotlin.collections.get
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.days
+import kotlin.time.ExperimentalTime
 
 class BudgetDBTest{
     private lateinit var service: BudgetService
@@ -112,6 +113,7 @@ class BudgetDBTest{
 
 
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun `should return budget progress with spent amount`() {
         val userId = 1
@@ -153,6 +155,7 @@ class BudgetDBTest{
         assertEquals(100.0, progress.spent, 0.001)
     }
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun `should only include transactions in current period for monthly budget`() {
         val userId = 1
@@ -205,6 +208,7 @@ class BudgetDBTest{
         assertEquals(100.0, progress.spent, 0.001)
     }
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun `should include unbudgeted transactions in response`() {
         val userId = 1

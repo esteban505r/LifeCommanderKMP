@@ -272,7 +272,7 @@ fun WorkoutDayDetailScreen(
                             isAddingSet = state.isLoadingSet,
                             inProgress = getCurrentDateTime(
                                 TimeZone.currentSystemDefault()
-                            ).date.dayOfWeek.value == state.workout?.day
+                            ).date.dayOfWeek.ordinal+1 == state.workout?.day
                         )
                     }
 

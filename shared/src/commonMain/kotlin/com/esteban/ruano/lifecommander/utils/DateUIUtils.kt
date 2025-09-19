@@ -11,7 +11,9 @@ import com.esteban.ruano.ui.SoftGreen
 import com.esteban.ruano.ui.SoftRed
 import com.esteban.ruano.ui.SoftYellow
 import kotlinx.datetime.*
+import kotlin.time.Clock
 import kotlin.math.pow
+import kotlin.time.ExperimentalTime
 
 object DateUIUtils {
 
@@ -99,24 +101,28 @@ object DateUIUtils {
         return this.time
     }
 
+    @OptIn(ExperimentalTime::class)
     fun Long.toLocalDate(): LocalDate {
         return Clock.System.now()
             .plus(this - Clock.System.now().toEpochMilliseconds(), DateTimeUnit.MILLISECOND)
             .toLocalDateTime(TimeZone.UTC).date
     }
 
+    @OptIn(ExperimentalTime::class)
     fun Long.toLocalDateTime(): LocalDateTime {
         return Clock.System.now()
             .plus(this - Clock.System.now().toEpochMilliseconds(), DateTimeUnit.MILLISECOND)
             .toLocalDateTime(TimeZone.UTC)
     }
 
+    @OptIn(ExperimentalTime::class)
     fun getCurrentTimeFormatted(
         timeZone: TimeZone = TimeZone.currentSystemDefault()
     ): String {
         return Clock.System.now().toLocalDateTime(timeZone).formatToTimeString()
     }
 
+    @OptIn(ExperimentalTime::class)
     fun getCurrentDateTime(
         timeZone: TimeZone
     ): LocalDateTime {
@@ -125,6 +131,7 @@ object DateUIUtils {
         )
     }
 
+    @OptIn(ExperimentalTime::class)
     fun LocalDate.toMillis(
         timeZone: TimeZone = TimeZone.UTC
     ): Long {
@@ -133,6 +140,7 @@ object DateUIUtils {
         ).toEpochMilliseconds()
     }
 
+    @OptIn(ExperimentalTime::class)
     fun LocalDateTime.toMillis(): Long {
         return this.toInstant(TimeZone.UTC).toEpochMilliseconds()
     }
@@ -175,6 +183,7 @@ object DateUIUtils {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun calculateDuration(startDateTime: String, endDateTime: String): String {
         val start = startDateTime.toLocalDateTimeWithSeconds()
         val end = endDateTime.toLocalDateTimeWithSeconds()

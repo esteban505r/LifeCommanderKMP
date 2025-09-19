@@ -57,7 +57,7 @@ fun NutritionDestination(
             NutritionIntent.GetDashboard(
                 day = getCurrentDateTime(
                     TimeZone.currentSystemDefault()
-                ).date.dayOfWeek.value
+                ).date.dayOfWeek.ordinal+1
             )
         )
     }

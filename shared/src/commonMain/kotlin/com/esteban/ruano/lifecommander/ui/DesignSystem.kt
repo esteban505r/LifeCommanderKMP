@@ -4,9 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.ExperimentalTime
 
 /**
  * Life Commander Cross-Platform Design System
@@ -23,6 +24,7 @@ object LifeCommanderDesignSystem {
     val gradients = LifeCommanderGradients
     
     // Utility Functions
+    @OptIn(ExperimentalTime::class)
     @Composable
     fun getGreeting(): String {
         val hour = remember {

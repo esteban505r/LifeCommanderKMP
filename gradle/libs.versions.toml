@@ -17,7 +17,7 @@ firebase-admin = "9.5.0"
 
 # Kotlin
 kotlin = "2.2.10"
-kotlinx-datetime = "0.6.2"
+kotlinx-datetime = "0.7.1"
 kotlin-test = "2.1.21"
 kotlinx-coroutines-test = "1.10.1"
 kotlin-serialization = "2.2.10"

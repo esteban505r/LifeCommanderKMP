@@ -14,6 +14,8 @@ import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.datetime.*
 import kotlin.math.ceil
 import kotlin.time.Duration
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 object DateUtils {
 
@@ -69,6 +71,7 @@ object DateUtils {
         return parseTime(this)
     }
 
+    @OptIn(ExperimentalTime::class)
     fun String.fromDateToLong(): Long {
         return parseDateTime(this).toInstant(TimeZone.UTC).toEpochMilliseconds()
     }
@@ -77,6 +80,7 @@ object DateUtils {
         return this.date
     }
 
+    @OptIn(ExperimentalTime::class)
     fun Long.toLocalDateTime(): LocalDateTime {
         return Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.currentSystemDefault())
     }
@@ -119,6 +123,7 @@ object DateUtils {
     }
 
 
+    @OptIn(ExperimentalTime::class)
     fun LocalDateTime.toResourceStringBasedOnNow(): Pair<StringDesc, Color> {
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())

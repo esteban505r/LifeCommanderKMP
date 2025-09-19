@@ -29,6 +29,8 @@ import com.esteban.ruano.utils.DateUIUtils.toLocalDate
 import com.lifecommander.finance.model.Transaction
 import com.lifecommander.models.Task
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.YearMonth
+import kotlinx.datetime.toKotlinDayOfWeek
 import org.koin.compose.viewmodel.koinViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -36,7 +38,9 @@ import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 import java.util.*
 import kotlinx.datetime.toKotlinLocalDate
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun CalendarComposable(
     tasks: List<Task>,
@@ -65,14 +69,14 @@ fun CalendarComposable(
         startMonth = startMonth,
         endMonth = endMonth,
         firstVisibleMonth = currentMonth,
-        firstDayOfWeek = firstDayOfWeek
+        firstDayOfWeek = firstDayOfWeek.toKotlinDayOfWeek()
     )
 
     LaunchedEffect(state.firstVisibleMonth.yearMonth) {
         onRefresh(
-            LocalDate.of(state.firstVisibleMonth.yearMonth.year, state.firstVisibleMonth.yearMonth.monthNumber, 1),
+            LocalDate.of(state.firstVisibleMonth.yearMonth.year, state.firstVisibleMonth.yearMonth.month.ordinal + 1, 1),
             LocalDate.of(state.firstVisibleMonth.yearMonth.year,
-                state.firstVisibleMonth.yearMonth.monthNumber, state.firstVisibleMonth.yearMonth.lengthOfMonth())
+                state.firstVisibleMonth.yearMonth.month.ordinal + 1, state.firstVisibleMonth.yearMonth.numberOfDays)
         )
     }
 
@@ -181,7 +185,7 @@ fun CalendarComposable(
                     Row(modifier = Modifier.fillMaxWidth()) {
                         for (dayOfWeek in daysOfWeek) {
                             Text(
-                                text = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
+                                text = dayOfWeek.name,
                                 modifier = Modifier.weight(1f),
                                 textAlign = TextAlign.Center,
                                 style = MaterialTheme.typography.caption,

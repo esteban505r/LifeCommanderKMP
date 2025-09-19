@@ -18,14 +18,15 @@ import com.esteban.ruano.lifecommander.ui.components.ExpandableFilterSection
 import com.esteban.ruano.lifecommander.ui.components.FilterSidePanel
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.lifecommander.ui.components.CustomDatePicker
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDate
 import kotlinx.datetime.toLocalDateTime
 import kotlin.text.ifEmpty
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalTime::class)
 @Composable
 fun BudgetScreenWrapper(
     budgets: List<BudgetProgress>,
@@ -61,7 +62,7 @@ fun BudgetScreenWrapper(
             onOpenCategoryKeywordMapper = { showToolsPanel = true },
             onCategorizeUnbudgeted = onCategorizeUnbudgeted,
             onCategorizeAll = onCategorizeAll,
-            baseDate = baseDate ?: kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date,
+            baseDate = baseDate ?: Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date,
             filters = filters,
             onFiltersChange = onFiltersChange,
             onToggleDatePicker = { showDatePicker = it },
@@ -147,11 +148,11 @@ fun BudgetScreenWrapper(
             Dialog(onDismissRequest = { showDatePicker = false }) {
                 Surface {
                     CustomDatePicker(
-                        selectedDate = baseDate ?: kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date,
                         onDateSelected = {
                             onChangeBaseDate(it)
                             showDatePicker = false
                         },
+                        selectedDate = baseDate ?: Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date,
                         modifier = Modifier.fillMaxWidth(),
                         onDismiss = { showDatePicker = false }
                     )

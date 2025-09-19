@@ -11,12 +11,13 @@ import com.esteban.ruano.lifecommander.models.nutrition.RecipeSortField
 import com.esteban.ruano.lifecommander.models.nutrition.RecipeSortOrder
 import com.esteban.ruano.lifecommander.models.AlternativeNutrients
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.minus
@@ -246,7 +247,7 @@ class RecipesViewModel(
     fun consumeRecipe(recipeId: String) {
         viewModelScope.launch {
             try {
-                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val now = getCurrentDateTime(TimeZone.currentSystemDefault())
                 val success = service.trackRecipeConsumption(recipeId, now.formatDefault())
                 if (success) {
                     // Refresh the current day's recipes to show updated consumption status
@@ -264,7 +265,7 @@ class RecipesViewModel(
     fun skipRecipe(recipeId: String) {
         viewModelScope.launch {
             try {
-                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val now = getCurrentDateTime(TimeZone.currentSystemDefault()).date
                 val consumedDateTime = now.formatDefault()
                 
                 val success = service.trackRecipeSkipped(recipeId, consumedDateTime)
@@ -289,7 +290,7 @@ class RecipesViewModel(
     fun skipRecipeWithAlternative(recipeId: String, alternativeRecipeId: String?, alternativeMealName: String?, nutrients: AlternativeNutrients?) {
         viewModelScope.launch {
             try {
-                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val now = getCurrentDateTime(TimeZone.currentSystemDefault())
                 val success = service.trackRecipeSkippedWithAlternative(
                     recipeId,
                     now.formatDefault(),
@@ -371,9 +372,9 @@ class RecipesViewModel(
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, daySelected = day)
             try {
-                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val now = getCurrentDateTime(TimeZone.currentSystemDefault())
                 val today = now.date
-                val weekStart = today.minus(kotlinx.datetime.DatePeriod(days = today.dayOfWeek.value - 1))
+                val weekStart = today.minus(kotlinx.datetime.DatePeriod(days = today.dayOfWeek.ordinal ))
                 val selectedDate = weekStart.plus(kotlinx.datetime.DatePeriod(days = day - 1))
                 val startDate = selectedDate.atTime(0, 0).date.formatDefault()
                 val endDate = selectedDate.atTime(23, 59).date.formatDefault()

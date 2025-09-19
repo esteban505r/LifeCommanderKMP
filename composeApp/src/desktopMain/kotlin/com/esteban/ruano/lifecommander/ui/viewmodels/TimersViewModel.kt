@@ -16,13 +16,15 @@ import com.esteban.ruano.lifecommander.timer.TimerWebSocketClientMessage
 import com.esteban.ruano.lifecommander.timer.TimerWebSocketServerMessage
 import com.esteban.ruano.lifecommander.websocket.TimerWebSocketClient
 import com.esteban.ruano.utils.DateUIUtils.formatWithSeconds
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import services.auth.TokenStorageImpl
 import kotlinx.serialization.json.Json
@@ -33,6 +35,7 @@ import utils.StatusBarService
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
 class TimersViewModel(
     private val tokenStorageImpl: TokenStorageImpl,
@@ -475,6 +478,7 @@ class TimersViewModel(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun handleTimerCompletion(timerList: TimerList, completedTimer: Timer) {
         viewModelScope.launch {
             try {
@@ -493,10 +497,10 @@ class TimersViewModel(
                 }
 
                 if (shouldCreatePomodoro) {
-                    val now = Clock.System.now()
-                    val past = now - 5.seconds
-                    val endDate = now.toLocalDateTime(TimeZone.currentSystemDefault())
-                    val startDate = past.toLocalDateTime(TimeZone.currentSystemDefault())
+                    val now = getCurrentDateTime(TimeZone.currentSystemDefault())
+                    val past = now.toInstant(TimeZone.currentSystemDefault()).minus(5.seconds).toLocalDateTime(TimeZone.currentSystemDefault())
+                    val endDate = now
+                    val startDate = past
 
                     pomodoroService.createPomodoro(
                         CreatePomodoroRequest(
@@ -565,8 +569,8 @@ class TimersViewModel(
         viewModelScope.launch {
             try {
                 val pomodoro = CreatePomodoroRequest(
-                    startDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).formatWithSeconds(),
-                    endDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).formatWithSeconds()
+                    startDateTime =getCurrentDateTime(TimeZone.currentSystemDefault()).formatWithSeconds(),
+                    endDateTime = getCurrentDateTime(TimeZone.currentSystemDefault()).formatWithSeconds()
                 )
                 pomodoroService.createPomodoro(pomodoro)
                 loadPomodoros()

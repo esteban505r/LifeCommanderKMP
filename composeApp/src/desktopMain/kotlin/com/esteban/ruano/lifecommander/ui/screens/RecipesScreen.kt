@@ -31,6 +31,7 @@ import com.esteban.ruano.lifecommander.ui.composables.RecipeFiltersDialog
 import com.esteban.ruano.lifecommander.models.AlternativeNutrients
 import com.esteban.ruano.lifecommander.ui.state.RecipesState
 import com.esteban.ruano.lifecommander.ui.state.ViewMode
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import kotlinx.datetime.*
 import java.time.DayOfWeek
 
@@ -124,7 +125,7 @@ fun RecipesScreen(
                 selected = state.viewMode == ViewMode.PLAN,
                 onClick = {
                     val todayIndex =
-                        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.value
+                        getCurrentDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.ordinal + 1
                     onGetRecipesByDay(todayIndex)
                 },
                 colors = ChipDefaults.filterChipColors(
@@ -374,7 +375,7 @@ fun RecipesScreen(
                     state.recipes?.recipes?.forEach { recipe ->
                         item {
                             val todayIndex =
-                                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.value
+                                getCurrentDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.ordinal + 1
                             val actionsEnabled = state.viewMode == ViewMode.PLAN && state.daySelected == todayIndex
                             val showDayAssignment = state.viewMode == ViewMode.DATABASE
 
@@ -694,7 +695,7 @@ fun DatePickerDialog(
 ) {
     var selectedDate by remember {
         mutableStateOf(
-            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+            getCurrentDateTime(TimeZone.currentSystemDefault()).date
         )
     }
 
@@ -743,7 +744,7 @@ fun DatePickerDialog(
                 // Calendar grid
                 val firstDayOfMonth = LocalDate(selectedDate.year, selectedDate.month, 1)
                 val firstDayOfWeek = firstDayOfMonth.dayOfWeek.isoDayNumber % 7 // Sunday is 0
-                val daysInMonth = selectedDate.month.length(isLeapYear(selectedDate.year))
+                val daysInMonth = selectedDate.yearMonth.numberOfDays
 
                 Column {
                     val rows = (daysInMonth + firstDayOfWeek + 6) / 7

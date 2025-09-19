@@ -40,6 +40,7 @@ import ui.viewmodels.*
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import com.esteban.ruano.lifecommander.utils.TaskUtils.dueAtMillis
 import com.esteban.ruano.lifecommander.utils.TaskUtils.isOverdue
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.HabitsUtils.isOverdue
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
@@ -99,8 +100,8 @@ fun DashboardScreen(
     // Helper: Meals per day this week as dateMap
     val mealsPerDayDateMap = remember(dashboardViewModel.mealsLoggedPerDayThisWeek.collectAsState().value) {
         val now =
-            kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
-        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
+            getCurrentDateTime(TimeZone.currentSystemDefault()).date
+        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.ordinal))
         (0..6).associate { offset ->
             val date = startOfWeek.plus(DatePeriod(days = offset))
             date to (dashboardViewModel.mealsLoggedPerDayThisWeek.value.getOrNull(offset) ?: 0)
@@ -111,8 +112,8 @@ fun DashboardScreen(
         Unit
     ) {
         val now =
-            kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
-        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
+            getCurrentDateTime(TimeZone.currentSystemDefault()).date
+        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.ordinal))
         timersViewModel.loadPomodorosByDateRange(
             startOfWeek.toJavaLocalDate(),
             startOfWeek.plus(DatePeriod(days = 6)).toJavaLocalDate()
@@ -121,8 +122,8 @@ fun DashboardScreen(
 
     val pomodorosPerDayThisWeek = remember(pomodoros) {
         val now =
-            kotlinx.datetime.Clock.System.now().toLocalDateTimeKt(kotlinx.datetime.TimeZone.currentSystemDefault()).date
-        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
+            getCurrentDateTime(TimeZone.currentSystemDefault()).date
+        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.ordinal))
         val counts = MutableList(7) {
             startOfWeek.plus(DatePeriod(days = it))
         }

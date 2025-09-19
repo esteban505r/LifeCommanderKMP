@@ -11,7 +11,7 @@ import com.esteban.ruano.service.HabitService
 import com.esteban.ruano.testModule
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime as toLocalDateTimeUI
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
@@ -29,6 +29,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.ExperimentalTime
 
 class HabitTrackServiceTest : BaseTest() {
     private val habitService: HabitService by inject()
@@ -45,6 +46,7 @@ class HabitTrackServiceTest : BaseTest() {
     }
 
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun `test create habit track`() {
         val habitId = createTestHabit()
@@ -62,6 +64,7 @@ class HabitTrackServiceTest : BaseTest() {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun `test get habits completed per day this week`() {
         // Create habits and complete them on different days
@@ -90,6 +93,7 @@ class HabitTrackServiceTest : BaseTest() {
         assertEquals(0, completedPerDay[6]) // Sunday
     }
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun `test uncomplete habit removes latest track`() {
         val habitId = createTestHabit()
@@ -110,6 +114,7 @@ class HabitTrackServiceTest : BaseTest() {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun createTestHabit(): String {
         return transaction {
             val habit = Habit.Companion.new {

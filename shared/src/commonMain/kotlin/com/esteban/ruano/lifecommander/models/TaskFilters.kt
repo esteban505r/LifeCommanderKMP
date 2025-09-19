@@ -1,7 +1,7 @@
 package com.esteban.ruano.lifecommander.models
 
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -9,6 +9,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
 import kotlinx.datetime.*
+import kotlin.time.ExperimentalTime
 
 
 enum class TaskFilters(val value: String, val displayName: String = value) {
@@ -23,6 +24,7 @@ enum class TaskFilters(val value: String, val displayName: String = value) {
         return displayName
     }
 
+    @OptIn(ExperimentalTime::class)
     fun getDateRangeByFilter(): Pair<String?, String?> {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         val dateRange = when (this) {

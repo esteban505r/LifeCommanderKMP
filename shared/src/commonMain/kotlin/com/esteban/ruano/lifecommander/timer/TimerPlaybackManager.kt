@@ -8,7 +8,8 @@ import com.esteban.ruano.lifecommander.models.timers.TimerState
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 class TimerPlaybackManager(
 ) {
@@ -71,6 +72,7 @@ class TimerPlaybackManager(
         _uiState.value = TimerPlaybackState()
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun startTicking(onEachTimerFinished: (Timer) -> Unit = {}) {
         playbackJob?.cancel()
         playbackJob = scope.launch {

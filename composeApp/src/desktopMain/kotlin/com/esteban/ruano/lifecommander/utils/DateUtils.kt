@@ -8,6 +8,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.time.ExperimentalTime
 
 object DateUtils {
     fun String.toLocalDate(): LocalDate {
@@ -95,6 +96,7 @@ object DateUtils {
     }
 
 
+    @OptIn(ExperimentalTime::class)
     fun kotlinx.datetime.LocalDateTime.calculateTimeRemaining(currentTimeMillis: Long): String {
         val userTimeZone = TimeZone.currentSystemDefault()
         val targetTime = this.toInstant(userTimeZone)

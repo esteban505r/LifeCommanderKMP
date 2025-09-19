@@ -1,7 +1,7 @@
 package com.esteban.ruano.service
 
 import com.esteban.ruano.utils.formatDateTime
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import com.esteban.ruano.database.converters.toCreateHabitDTO
@@ -23,6 +23,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
+import kotlin.time.ExperimentalTime
 
 class SyncService(
     private val taskService: TaskService,
@@ -30,6 +31,7 @@ class SyncService(
     private val workoutDayService: WorkoutService
 ) : BaseService() {
 
+    @OptIn(ExperimentalTime::class)
     fun sync(userId: Int, localSyncDTO: SyncDTO) : SyncDTO{
         println("Syncing user $userId")
         val currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())

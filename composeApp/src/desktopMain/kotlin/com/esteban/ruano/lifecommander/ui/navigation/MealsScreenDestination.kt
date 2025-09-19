@@ -11,6 +11,8 @@ import com.esteban.ruano.lifecommander.ui.components.ErrorScreen
 import com.esteban.ruano.lifecommander.ui.components.LoadingScreen
 import com.esteban.ruano.lifecommander.ui.screens.RecipesScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.RecipesViewModel
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -25,7 +27,7 @@ fun MealsScreenDestination(
     val state by recipesViewModel.state.collectAsState()
 
     LaunchedEffect(Unit) {
-        val todayIndex = kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.dayOfWeek.value
+        val todayIndex = getCurrentDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.ordinal + 1
         recipesViewModel.getRecipesByDay(todayIndex)
     }
 
@@ -34,7 +36,7 @@ fun MealsScreenDestination(
             ErrorScreen(
                 message = state.errorMessage,
                 onRetry = {
-                    val todayIndex = kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.dayOfWeek.value
+                    val todayIndex = getCurrentDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.ordinal + 1
                     recipesViewModel.getRecipesByDay(todayIndex)
                 }
             )

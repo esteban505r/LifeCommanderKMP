@@ -17,10 +17,12 @@ import com.esteban.ruano.lifecommander.ui.components.ToggleButtons
 import com.esteban.ruano.lifecommander.ui.components.ToggleChipsButtons
 import com.esteban.ruano.ui.components.TaskList
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.lifecommander.models.Reminder
 import com.lifecommander.models.Task
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime as toLocalDateTimeKt
 import org.koin.compose.viewmodel.koinViewModel
 import ui.composables.NewEditTaskDialog
@@ -51,9 +53,7 @@ fun TasksScreen(
     var showNewTaskDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var taskToDelete by remember { mutableStateOf<Task?>(null) }
-    val currentDate = Clock.System.now().toLocalDateTimeKt(
-        timeZone = kotlinx.datetime.TimeZone.currentSystemDefault()
-    ).date
+    val currentDate = getCurrentDateTime(TimeZone.currentSystemDefault()).date
 
     Column(
         modifier = Modifier

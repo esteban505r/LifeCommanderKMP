@@ -1,29 +1,27 @@
-<configuration>
-    <!-- pick up env vars if present -->
-    <variable name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}" />
-    <variable name="ENVIRONMENT" value="${ENVIRONMENT:-production}" />
-    <variable name="RELEASE" value="${GIT_COMMIT:-unknown}" />
+<configuration debug="true">
+    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>
 
-    <!-- Console for local visibility (can be JSON if you prefer) -->
+    <!-- Read OS envs explicitly; fallback values on the right -->
+    <variable name="LOG_LEVEL"   value="${env:LOG_LEVEL:-INFO}"/>
+    <variable name="ENVIRONMENT" value="${env:ENVIRONMENT:-production}"/>
+    <variable name="RELEASE"     value="${env:GIT_COMMIT:-unknown}"/>
+
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d %-5level %logger - %msg %X{requestId} %n</pattern>
+            <pattern>%d %-5level %logger - %msg %X{requestId}%n</pattern>
         </encoder>
     </appender>
 
-    <!-- Send ERROR+ to Sentry -->
+    <!-- Sentry with *new* config shape -->
     <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
-        <!-- Use env var so it also captures startup errors -->
-        <dsn>${SENTRY_DSN}</dsn>
-        <environment>${ENVIRONMENT}</environment>
-        <release>${RELEASE}</release>
-        <!-- Send only ERROR by default; you can raise/lower as needed -->
+        <options>
+            <!-- empty default disables Sentry cleanly when env not set -->
+            <dsn>${env:SENTRY_DSN:-}</dsn>
+            <environment>${ENVIRONMENT}</environment>
+            <release>${RELEASE}</release>
+        </options>
         <minimumEventLevel>ERROR</minimumEventLevel>
-        <!-- Optional: also send breadcrumbs from WARN+ logs -->
         <minimumBreadcrumbLevel>INFO</minimumBreadcrumbLevel>
-
-        <!-- If you rely on MDC, you can mark some keys as tags -->
-        <!-- <mdcTags>requestId,tenantId,userId</mdcTags> -->
     </appender>
 
     <root level="${LOG_LEVEL}">
@@ -31,7 +29,6 @@
         <appender-ref ref="SENTRY"/>
     </root>
 
-    <!-- Quiet down chatty libs if needed -->
     <logger name="io.netty" level="WARN"/>
     <logger name="org.apache" level="WARN"/>
 </configuration>

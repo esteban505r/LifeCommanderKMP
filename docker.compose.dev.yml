@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  oter-dev:
+    image: gradle:8.10.1-jdk21
+    working_dir: /src
+    volumes:
+      - ./:/src           # bind mount your code
+      - gradle-cache:/root/.gradle
+    environment:
+      JAVA_TOOL_OPTIONS: "-Dio.ktor.development=true"
+      LOG_LEVEL: DEBUG
+      PORT: "8080"
+      # local-only envs:
+      DB_URL: "${DB_URL:-jdbc:postgresql://host.docker.internal:5432/devdb}"
+      DB_USER: "${DB_USER:-dev}"
+      DB_PASSWORD: "${DB_PASSWORD:-dev}"
+    command: bash -lc "./gradlew :server:run"   # or just "run" if your app module is root
+    ports:
+      - "8080:8080"
+    networks: [edge]
+
+networks:
+  edge:
+    external: true
+
+volumes:
+  gradle-cache:

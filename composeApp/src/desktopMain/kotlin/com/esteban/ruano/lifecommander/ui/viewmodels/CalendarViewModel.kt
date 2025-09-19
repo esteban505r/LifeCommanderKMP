@@ -8,8 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.esteban.ruano.lifecommander.models.finance.TransactionFilters
 import com.esteban.ruano.lifecommander.services.finance.FinanceService
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
-import com.kizitonwose.calendar.core.atStartOfMonth
-import com.kizitonwose.calendar.core.yearMonth
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.lifecommander.finance.model.Transaction
 import com.lifecommander.models.Habit
 import com.lifecommander.models.Task
@@ -53,10 +52,10 @@ class CalendarViewModel(
                 _error.value = null
                 
                 val token = tokenStorageImpl.getToken() ?: throw Exception("No token available")
-                val currentMonth = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.yearMonth
+                val currentMonth = getCurrentDateTime(TimeZone.currentSystemDefault()).date.yearMonth
 
                 // Get start and end dates for the month
-                val startDateTemp =  startDate?:currentMonth.atStartOfMonth()
+                val startDateTemp =  startDate?:currentMonth.firstDay
                 val endDateTemp = endDate?:startDateTemp.plus(DatePeriod(months = 1)).minus(1, DateTimeUnit.DAY)
 
                 println("Loading data for month: ${startDateTemp.year}-${startDateTemp.monthNumber.toString().padStart(2, '0')}")

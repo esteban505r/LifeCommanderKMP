@@ -5,8 +5,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.esteban.ruano.utils.DateUIUtils.toMillis
 import kotlinx.datetime.*
+import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
 @Composable
 fun CustomDatePicker(
     selectedDate: LocalDate,

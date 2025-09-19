@@ -11,15 +11,18 @@ import dev.icerock.moko.resources.desc.ResourceFormatted
 import kotlinx.datetime.LocalTime
 
 import kotlinx.datetime.*
+import kotlin.time.Clock
 import kotlin.math.absoluteValue
 
 import dev.icerock.moko.resources.desc.StringDesc
 import kotlin.time.Duration.Companion.days
+import kotlin.time.ExperimentalTime
 
 object HabitsUtils {
 
     fun Habit.time() = this.dateTime?.toLocalDateTime()?.formatToTimeString()
 
+    @OptIn(ExperimentalTime::class)
     fun Habit.timeDoingIt(): Long? {
         val habitTime = this.dateTime?.toLocalDateTime()?.time ?: return null
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).time
@@ -28,6 +31,7 @@ object HabitsUtils {
 
     fun Habit.date() = this.dateTime?.toLocalDateTime()?.date?.formatToDateString()
 
+    @OptIn(ExperimentalTime::class)
     fun getStringResourceByCurrentHabit(
         habit: Habit?,
         timeDoing: String
@@ -78,6 +82,7 @@ object HabitsUtils {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun List<Habit>.findCurrentHabit(): Habit? {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
@@ -99,6 +104,7 @@ object HabitsUtils {
         } ?: findLastOverdueHabit()
     }
 
+    @OptIn(ExperimentalTime::class)
     fun List<Habit>.findLastOverdueHabit(): Habit? {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
@@ -113,6 +119,7 @@ object HabitsUtils {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun Habit.getTimeText(): StringDesc {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         val localDateTime = this.dateTime?.toLocalDateTime() ?: return StringDesc.Raw("")
@@ -154,6 +161,7 @@ object HabitsUtils {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun Habit.isCurrent(
         now: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     ): Boolean {
@@ -199,6 +207,7 @@ object HabitsUtils {
     }
 
 
+    @OptIn(ExperimentalTime::class)
     fun List<Habit>.currentHabit(
         now: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     ): Habit? {
@@ -235,6 +244,7 @@ object HabitsUtils {
     }
 
 
+    @OptIn(ExperimentalTime::class)
     fun Habit.isOverdue(
         now: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     ): Boolean {
@@ -334,6 +344,7 @@ object HabitsUtils {
         return lastOfMonth.dayOfMonth
     }
 
+    @OptIn(ExperimentalTime::class)
     fun Habit.getDelay(): Int {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         val habitTime = dateTime?.toLocalDateTime()?.time ?: LocalTime(0, 0)

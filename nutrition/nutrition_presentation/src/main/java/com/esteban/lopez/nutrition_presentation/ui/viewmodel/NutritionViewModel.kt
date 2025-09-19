@@ -215,7 +215,7 @@ class NutritionViewModel @Inject constructor(
                     getDashboard(
                         getCurrentDateTime(
                             TimeZone.currentSystemDefault()
-                        ).date.dayOfWeek.value
+                        ).date.dayOfWeek.ordinal+1
                     )
                 },
                 onFailure = {

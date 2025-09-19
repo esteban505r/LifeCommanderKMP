@@ -16,7 +16,7 @@ import com.esteban.ruano.service.HabitService
 import com.esteban.ruano.service.ReminderService
 import com.esteban.ruano.utils.DateUtils
 import com.lifecommander.models.Frequency
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.exposed.v1.core.eq
@@ -31,6 +31,7 @@ import org.junit.Test
 import java.sql.Connection
 import java.util.UUID
 import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
 
 class HabitsServiceTest {
@@ -39,8 +40,10 @@ class HabitsServiceTest {
     private lateinit var reminderService : ReminderService
 
 
+    @OptIn(ExperimentalTime::class)
     private val currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.Companion.currentSystemDefault())
 
+    @OptIn(ExperimentalTime::class)
     @Before
     fun setup() {
         //Ensure you have a postgres database running on localhost:5431 with the name testdb

@@ -14,11 +14,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.ui.components.HabitList
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.lifecommander.models.Frequency
 import com.lifecommander.models.Habit
 import com.lifecommander.models.Reminder
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime as toLocalDateTimeKt
 import ui.composables.NewEditHabitDialog
@@ -46,9 +47,7 @@ fun HabitsScreen(
     var showNewHabitDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var habitToDelete by remember { mutableStateOf<Habit?>(null) }
-    val currentDate = Clock.System.now().toLocalDateTimeKt(
-        timeZone = TimeZone.currentSystemDefault()
-    ).date
+    val currentDate =getCurrentDateTime(TimeZone.currentSystemDefault()).date
 
     // Split habits into daily and other habits
     val dailyHabits = habits.filter { it.frequency == Frequency.DAILY.value }

@@ -9,6 +9,7 @@ import com.esteban.ruano.lifecommander.ui.components.ErrorScreen
 import com.esteban.ruano.lifecommander.ui.components.LoadingScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import org.koin.compose.viewmodel.koinViewModel
 import kotlinx.datetime.*
 import kotlinx.datetime.toJavaLocalDate
@@ -32,8 +33,8 @@ fun StatisticsScreenDestination(
         financeViewModel.getBudgets()
         
         // Load pomodoros for the current week
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
+        val now = getCurrentDateTime(TimeZone.currentSystemDefault()).date
+        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.ordinal))
         timersViewModel.loadPomodorosByDateRange(
             startOfWeek.toJavaLocalDate(),
             startOfWeek.plus(DatePeriod(days = 6)).toJavaLocalDate()
@@ -67,4 +68,4 @@ fun StatisticsScreenDestination(
             )
         }
     }
-} 
+}

@@ -20,6 +20,7 @@ import com.esteban.ruano.lifecommander.ui.components.ChartSeries
 import com.esteban.ruano.lifecommander.ui.components.BudgetColumnChart
 import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import kotlinx.coroutines.launch
 import kotlinx.datetime.*
@@ -41,8 +42,8 @@ fun StatisticsScreen(
 
     // Calculate pomodoros per day this week
     val pomodorosPerDayThisWeek = remember(pomodoros) {
-        val now = Clock.System.now().toLocalDateTimeKt(TimeZone.currentSystemDefault()).date
-        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
+        val now = getCurrentDateTime(TimeZone.currentSystemDefault()).date
+        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.ordinal))
         val counts = MutableList(7) {
             startOfWeek.plus(DatePeriod(days = it))
         }
@@ -55,8 +56,8 @@ fun StatisticsScreen(
 
     // Helper: Meals per day this week as dateMap
     val mealsPerDayDateMap = remember(dashboardViewModel.mealsLoggedPerDayThisWeek.collectAsState().value) {
-        val now = Clock.System.now().toLocalDateTimeKt(TimeZone.currentSystemDefault()).date
-        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.value - 1))
+        val now = getCurrentDateTime(TimeZone.currentSystemDefault()).date
+        val startOfWeek = now.minus(DatePeriod(days = now.dayOfWeek.ordinal))
         (0..6).associate { offset ->
             val date = startOfWeek.plus(DatePeriod(days = offset))
             date to (dashboardViewModel.mealsLoggedPerDayThisWeek.value.getOrNull(offset) ?: 0)

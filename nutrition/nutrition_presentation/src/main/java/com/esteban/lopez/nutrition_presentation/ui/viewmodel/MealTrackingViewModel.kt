@@ -10,10 +10,11 @@ import com.esteban.ruano.nutrition_presentation.intent.MealTrackingIntent
 import com.esteban.ruano.nutrition_presentation.ui.viewmodel.state.MealTrackingState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
+import kotlin.time.ExperimentalTime
 
 @HiltViewModel
 class MealTrackingViewModel @Inject constructor(
@@ -44,6 +45,7 @@ class MealTrackingViewModel @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun refreshTodayMeals() {
         viewModelScope.launch {
             emitState {
@@ -53,7 +55,7 @@ class MealTrackingViewModel @Inject constructor(
             }
             
             val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-            val dayOfWeek = today.dayOfWeek.value
+            val dayOfWeek = today.dayOfWeek.ordinal+1
             
             val result = recipeUseCases.getByDay(dayOfWeek)
             result.fold(

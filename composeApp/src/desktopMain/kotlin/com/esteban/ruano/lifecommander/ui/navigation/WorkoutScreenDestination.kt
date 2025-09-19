@@ -9,7 +9,9 @@ import com.esteban.ruano.lifecommander.ui.components.LoadingScreen
 import com.esteban.ruano.lifecommander.ui.screens.WorkoutScreen
 import com.esteban.ruano.lifecommander.ui.viewmodels.WorkoutViewModel
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
-import kotlinx.datetime.Clock
+import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
+import kotlin.time.Clock
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
@@ -21,13 +23,13 @@ fun WorkoutScreenDestination() {
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(Unit){
-        val now = Clock.System.now()
-        val currentDay = now.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.dayOfWeek.value
+        val now = getCurrentDateTime(TimeZone.currentSystemDefault())
+        val currentDay = now.date.dayOfWeek.ordinal + 1
         viewModel.getExercisesByDay(currentDay)
         viewModel.getWorkoutsCompletedPerDayThisWeek()
         
         // Load workout tracks for the current week
-        val startOfWeek = now.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.minus(
+        val startOfWeek = now.date.minus(
             kotlinx.datetime.DatePeriod(days = currentDay - 1)
         )
         val endOfWeek = startOfWeek.plus(kotlinx.datetime.DatePeriod(days = 6))
@@ -48,8 +50,8 @@ fun WorkoutScreenDestination() {
             ErrorScreen(
                 message = state.errorMessage ?: "Failed to load workout data",
                 onRetry = {
-                    val now = Clock.System.now()
-                    val currentDay = now.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.dayOfWeek.value
+                    val now  =  getCurrentDateTime(TimeZone.currentSystemDefault())
+                    val currentDay = now.date.dayOfWeek.ordinal + 1
                     viewModel.getExercisesByDay(currentDay)
                     viewModel.getWorkoutsCompletedPerDayThisWeek()
                 },

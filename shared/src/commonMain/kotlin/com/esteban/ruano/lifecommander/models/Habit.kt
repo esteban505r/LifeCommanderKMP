@@ -2,7 +2,7 @@ package com.lifecommander.models
 
 import com.esteban.ruano.lifecommander.models.HabitReminder
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime as toLocalDateTimeUtils
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DateTimePeriod
 import kotlinx.datetime.LocalDate
@@ -15,6 +15,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlin.math.sign
+import kotlin.time.ExperimentalTime
 
 @Serializable
 data class Habit(
@@ -42,6 +43,7 @@ data class Habit(
      * you apply in HabitsUtils (day-of-week/month anchors, bi-weekly parity, clamping, etc.).
      * Returns null if no future occurrence exists (e.g., ONE_TIME already in the past or no base).
      */
+    @OptIn(ExperimentalTime::class)
     fun nextOccurrence(
         now: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     ): LocalDateTime? {

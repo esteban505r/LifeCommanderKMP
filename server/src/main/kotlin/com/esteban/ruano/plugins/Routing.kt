@@ -67,6 +67,9 @@ fun Application.configureRouting() {
             call.respondText("Hello, world!")
         }
 
+        routing { get("/health") { call.respondText("OK") } }
+
+
         route("/api/$VERSION") {
             authenticate {
                 habitsRouting(habitRepository)

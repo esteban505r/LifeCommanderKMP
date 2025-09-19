@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx-proxy
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      oter:
+        condition: service_healthy
+      # nextjs is in another stack; health is checked by nginx via proxy
+    restart: always
+    networks: [edge]
+
+  oter:
+    image: ghcr.io/you/oter:${IMAGE_TAG:-latest}
+    # or use your ECR/GHCR path
+    env_file: .env       # DB_URL, DB_USER, DB_PASSWORD, etc.
+    environment:
+      PORT: "8080"
+      LOG_LEVEL: INFO
+      JAVA_TOOL_OPTIONS: "-Dlogback.configurationFile=/app/logback.xml"
+      # TEMP while debugging:
+      # JAVA_TOOL_OPTIONS: "-Dlogback.configurationFile=/app/logback.xml -Dio.ktor.development=true"
+    expose: ["8080"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    networks: [edge]
+
+networks:
+  edge:
+    external: true
