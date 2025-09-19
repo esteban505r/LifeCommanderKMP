@@ -9,32 +9,41 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write   # needed for GHCR
+      packages: write
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      # 1) Set up Buildx (uses docker-container driver)
+      - uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+          driver: docker-container
+          driver-opts: image=moby/buildkit:latest
+
+      # 2) (optional) QEMU only if you build multi-arch
+      # - uses: docker/setup-qemu-action@v3
+
+      # 3) Login to GHCR
+      - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set tags
+      # 4) Build & push with GHA cache
+      - name: Docker meta
         id: meta
         run: |
           IMAGE=ghcr.io/${{ github.repository_owner }}/oter-server
           SHA=${GITHUB_SHA::7}
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            TAG="${GITHUB_REF_NAME}"
-          else
-            TAG="sha-${SHA}"
-          fi
+          TAG=${{ github.ref_type == 'tag' && github.ref_name || format('sha-{0}', env.SHA) }}
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
+        env:
+          SHA: ${{ github.sha }}
 
-      - name: Build & push
-        uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v6
         with:
           context: .
           file: server/Dockerfile
