@@ -20,7 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Build metadata (reliable tags for both branches and tags)
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -31,7 +30,6 @@ jobs:
             type=sha,format=short,prefix=sha-
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      # Pick a single version_tag we will deploy with (prefer tag, else sha-xxxx)
       - name: Pick deploy tag
         id: pick
         run: |
@@ -57,8 +55,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          # IMPORTANT: If your Dockerfile is at repo root, keep "Dockerfile".
-          # If it's at server/Dockerfile, update this to server/Dockerfile and also update COPY paths inside.
           file: server/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -66,21 +62,40 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # 👇 Bundle files for deploy; create .env.runtime from a secret
+      - name: Prepare deploy bundle
+        run: |
+          set -e
+          mkdir -p deploy
+          cp docker-compose.yml deploy/
+          cp nginx.conf deploy/
+          # If .env.runtime is not in git, create it from a secret
+          if [ -n "${{ secrets.ENV_RUNTIME }}" ]; then
+            printf "%s" "${{ secrets.ENV_RUNTIME }}" > deploy/.env.runtime
+          elif [ -f .env.runtime ]; then
+            cp .env.runtime deploy/
+          else
+            echo "Missing .env.runtime. Provide ENV_RUNTIME secret or commit the file." >&2
+            exit 1
+          fi
+          echo "Deploy bundle content:"
+          ls -la deploy
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Copy compose and config to server
+      - name: Copy bundle to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: |
-            docker-compose.yml
-            nginx.conf
-            .env.runtime
-          target: ~/oter
+          username: ${{ secrets.EC2_USER }}       # ubuntu / ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}         # your .pem content
+          port: ${{ secrets.EC2_PORT || 22 }}
+          source: "deploy/*"
+          target: "~/oter"
+          overwrite: true
+          rm: true
 
       - name: SSH deploy
         uses: appleboy/ssh-action@v1.2.0
@@ -88,22 +103,17 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
           script: |
             set -euo pipefail
             cd ~/oter
-
-            # Login to GHCR (server needs read:packages token)
-            echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_READ_USER }}" --password-stdin
-
-            # Ensure external network exists
             docker network create edge || true
 
-            # Pull + recreate with the tag from build job
-            IMAGE_TAG="${{ needs.build.outputs.version_tag }}" \
-            docker compose pull
+            # Login to GHCR with a token that has read:packages
+            echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_READ_USER }}" --password-stdin
 
-            IMAGE_TAG="${{ needs.build.outputs.version_tag }}" \
-            docker compose up -d
+            # Pull and run the image built in the previous job
+            IMAGE_TAG="${{ needs.build.outputs.version_tag }}" docker compose pull
+            IMAGE_TAG="${{ needs.build.outputs.version_tag }}" docker compose up -d
 
-            # Optional house-keeping
             docker image prune -f
