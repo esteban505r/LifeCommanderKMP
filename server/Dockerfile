@@ -2,6 +2,7 @@
 FROM gradle:8.11.1-jdk21 AS build
 WORKDIR /src
 COPY .. .
+RUN echo "Contents of /src after COPY:" && ls -R .
 RUN --mount=type=cache,target=/root/.gradle gradle clean shadowJar -x test
 
 # ---- runtime stage ----
