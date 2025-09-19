@@ -51,7 +51,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & push
+      - name: Build & push image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -62,23 +62,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 👇 Bundle files for deploy; create .env.runtime from a secret
       - name: Prepare deploy bundle
         run: |
           set -e
           mkdir -p deploy
           cp docker-compose.yml deploy/
           cp nginx.conf deploy/
-          # If .env.runtime is not in git, create it from a secret
-          if [ -n "${{ secrets.ENV_RUNTIME }}" ]; then
-            printf "%s" "${{ secrets.ENV_RUNTIME }}" > deploy/.env.runtime
-          elif [ -f .env.runtime ]; then
-            cp .env.runtime deploy/
-          else
-            echo "Missing .env.runtime. Provide ENV_RUNTIME secret or commit the file." >&2
-            exit 1
-          fi
-          echo "Deploy bundle content:"
+          echo "Bundle:"
           ls -la deploy
 
   deploy:
@@ -89,8 +79,8 @@ jobs:
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}       # ubuntu / ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}         # your .pem content
+          username: ${{ secrets.EC2_USER }}      # ubuntu / ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}        # your .pem contents
           port: ${{ secrets.EC2_PORT || 22 }}
           source: "deploy/*"
           target: "~/oter"
@@ -109,10 +99,22 @@ jobs:
             cd ~/oter
             docker network create edge || true
 
-            # Login to GHCR with a token that has read:packages
+            # Optional: load env managed on the host (kept in AWS/SSM and rendered to /etc/oter.env)
+            set +e
+            if [ -f /etc/oter.env ]; then
+              set -a
+              . /etc/oter.env
+              set +a
+              echo "Loaded /etc/oter.env"
+            else
+              echo "No /etc/oter.env present; continuing"
+            fi
+            set -e
+
+            # Login to GHCR with read:packages token
             echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_READ_USER }}" --password-stdin
 
-            # Pull and run the image built in the previous job
+            # Deploy the image built in the previous job
             IMAGE_TAG="${{ needs.build.outputs.version_tag }}" docker compose pull
             IMAGE_TAG="${{ needs.build.outputs.version_tag }}" docker compose up -d
 
