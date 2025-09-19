@@ -1,5 +1,5 @@
 # ---- build stage ----
-FROM gradle:8.10.1-jdk21 AS build
+FROM gradle:8.11.1-jdk21 AS build
 WORKDIR /src
 COPY .. .
 RUN --mount=type=cache,target=/root/.gradle gradle clean shadowJar -x test
