@@ -69,6 +69,7 @@ fun Application.configureLogging() {
         retrieveFromHeader(HttpHeaders.XRequestId)
         generate { UUID.randomUUID().toString() }
         replyToHeader(HttpHeaders.XRequestId)
+        verify { it.isNotBlank() }
     }
 
     install(CallLogging) {

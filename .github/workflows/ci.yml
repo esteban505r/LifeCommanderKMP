@@ -74,16 +74,17 @@ jobs:
           mkdir -p deploy
           cp docker-compose.yml deploy/
           cp nginx.conf deploy/
-          echo "Bundle:"
           ls -la deploy
 
-      - name: Copy bundle to server
+      - name: Copy bundle to server (flat into ~/oter)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}      # ubuntu / ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}        # your .pem contents
-          source: "deploy/*"
+          source: |
+            deploy/docker-compose.yml
+            deploy/nginx.conf
           target: "~/oter"
           overwrite: true
           rm: true
@@ -97,18 +98,34 @@ jobs:
           script: |
             set -euo pipefail
             cd ~/oter
-            
-            # optional: load host-managed env vars if you keep them on the box
-            if [ -f /etc/oter.env ]; then
-              set -a
-              . /etc/oter.env
-              set +a
-              echo "Loaded /etc/oter.env"
+            echo "Contents of ~/oter:"; ls -la
+
+            # Ensure Docker Compose exists (install if missing)
+            if docker compose version >/dev/null 2>&1; then COMPOSE="docker compose";
+            elif docker-compose version >/dev/null 2>&1; then COMPOSE="docker-compose";
+            else
+              if command -v apt-get >/dev/null 2>&1; then
+                sudo apt-get update -y && sudo apt-get install -y docker-compose-plugin
+                COMPOSE="docker compose"
+              elif command -v dnf >/dev/null 2>&1; then
+                sudo dnf install -y docker-compose-plugin
+                COMPOSE="docker compose"
+              else
+                echo "Docker Compose not found and auto-install failed"; exit 1
+              fi
             fi
 
-            echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_READ_USER }}" --password-stdin
+            docker network create edge || true
 
-            IMAGE_TAG="${{ needs.build.outputs.version_tag }}" docker-compose pull
-            IMAGE_TAG="${{ needs.build.outputs.version_tag }}" docker-compose up -d
+            # Login to GHCR only if secrets are set (needed for private images)
+            if [ -n "${{ secrets.GHCR_READ_USER }}" ] && [ -n "${{ secrets.GHCR_READ_TOKEN }}" ]; then
+              echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_READ_USER }}" --password-stdin
+            fi
+
+            export IMAGE_TAG="${{ needs.build.outputs.version_tag }}"
+            echo "Deploying tag: $IMAGE_TAG using: $COMPOSE"
+
+            $COMPOSE -f docker-compose.yml pull
+            $COMPOSE -f docker-compose.yml up -d
 
             docker image prune -f

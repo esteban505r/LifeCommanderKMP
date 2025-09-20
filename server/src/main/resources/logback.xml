@@ -1,24 +1,34 @@
-<configuration debug="true">
-    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>
-
-    <!-- Read OS envs explicitly; fallback values on the right -->
+<configuration>
+    <!-- Turn off internal debug in prod to reduce noise -->
     <variable name="LOG_LEVEL"   value="${env:LOG_LEVEL:-INFO}"/>
     <variable name="ENVIRONMENT" value="${env:ENVIRONMENT:-production}"/>
     <variable name="RELEASE"     value="${env:GIT_COMMIT:-unknown}"/>
+    <variable name="SENTRY_DSN"  value="${env:SENTRY_DSN:-}"/>
+
+    <timestamp key="tz" datePattern="Z"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d %-5level %logger - %msg %X{requestId}%n</pattern>
+            <!-- ISO8601 in UTC, level, logger, message, MDC(requestId, userId, traceId) -->
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z',UTC} %-5level %logger - %msg | req=%X{requestId} user=%X{userId} trace=%X{traceId}%n</pattern>
         </encoder>
     </appender>
 
-    <!-- Sentry with *new* config shape -->
+    <!-- Sentry only if DSN present -->
     <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator class="ch.qos.logback.classic.boolex.JaninoEventEvaluator">
+                <expression>return "${SENTRY_DSN}".length() > 0;</expression>
+            </evaluator>
+            <OnMismatch>DENY</OnMismatch>
+            <OnMatch>NEUTRAL</OnMatch>
+        </filter>
         <options>
-            <!-- empty default disables Sentry cleanly when env not set -->
-            <dsn>${env:SENTRY_DSN:-}</dsn>
+            <dsn>${SENTRY_DSN}</dsn>
             <environment>${ENVIRONMENT}</environment>
             <release>${RELEASE}</release>
+            <!-- Optional: sample breadcrumbs/errors in high traffic -->
+            <!-- <traces-sample-rate>0.1</traces-sample-rate> -->
         </options>
         <minimumEventLevel>ERROR</minimumEventLevel>
         <minimumBreadcrumbLevel>INFO</minimumBreadcrumbLevel>
@@ -29,6 +39,9 @@
         <appender-ref ref="SENTRY"/>
     </root>
 
+    <!-- Quiet common chatter -->
     <logger name="io.netty" level="WARN"/>
     <logger name="org.apache" level="WARN"/>
+    <logger name="org.eclipse.jetty" level="WARN"/>
+    <logger name="ktor.application" level="INFO"/>
 </configuration>
