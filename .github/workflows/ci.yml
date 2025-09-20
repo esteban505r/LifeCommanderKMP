@@ -68,34 +68,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Find docker-compose.*yml and nginx.conf anywhere in the repo
+      # Locate compose file and nginx.conf anywhere in the repo
       - name: Locate deploy files
         id: locate
         shell: bash
         run: |
           set -euo pipefail
-          # find compose file (supports .yml or .yaml)
-          COMPOSE_FILE="$(git ls-files | grep -E '(^|/)(docker-compose\.ya?ml)$' | head -n1 || true)"
+          COMPOSE_FILE="$(git ls-files | grep -E '(^|/)(docker-compose|compose)\.ya?ml$' | head -n1 || true)"
           if [ -z "${COMPOSE_FILE}" ]; then
-            echo "::error::No docker-compose.yml(yaml) found in repo. Put it in the repo or update the SCP paths."
-            echo "Here is the repo tree (top-level):"
-            ls -la
+            echo "::error::No compose file found (looked for docker-compose.yml/.yaml or compose.yml/.yaml)."
+            echo "Repo root listing:"; ls -la
             exit 1
           fi
-          # find nginx.conf (optional)
           NGINX_FILE="$(git ls-files | grep -E '(^|/)nginx\.conf$' | head -n1 || true)"
 
-          echo "compose=${COMPOSE_FILE}"      >> "$GITHUB_OUTPUT"
-          echo "nginx=${NGINX_FILE}"          >> "$GITHUB_OUTPUT"
-
+          echo "compose=${COMPOSE_FILE}" >> "$GITHUB_OUTPUT"
+          echo "nginx=${NGINX_FILE}"     >> "$GITHUB_OUTPUT"
           echo "Found compose: ${COMPOSE_FILE}"
-          if [ -n "${NGINX_FILE}" ]; then
-            echo "Found nginx:   ${NGINX_FILE}"
-          else
-            echo "No nginx.conf found; will skip copying it."
-          fi
+          [ -n "${NGINX_FILE}" ] && echo "Found nginx:   ${NGINX_FILE}" || echo "No nginx.conf found; will skip."
 
-      - name: Copy compose to server (required)
+      - name: Copy compose to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -154,8 +146,14 @@ jobs:
             export IMAGE_TAG="${{ needs.build.outputs.version_tag }}"
             echo "Deploying tag: $IMAGE_TAG using: $COMPOSE"
 
-            # Always pass the compose file we copied (works no matter where it lives originally)
-            $COMPOSE -f docker-compose.yml pull
-            $COMPOSE -f docker-compose.yml up -d
+            # Pick whichever compose filename is present after SCP
+            COMPOSE_PATH="$(ls -1 docker-compose.y*ml compose.y*ml 2>/dev/null | head -n1 || true)"
+            if [ -z "${COMPOSE_PATH}" ]; then
+              echo "Compose file not found in ~/oter after copy."; ls -la; exit 1
+            fi
+            echo "Using compose file: ${COMPOSE_PATH}"
+
+            $COMPOSE -f "${COMPOSE_PATH}" pull
+            $COMPOSE -f "${COMPOSE_PATH}" up -d
 
             docker image prune -f
