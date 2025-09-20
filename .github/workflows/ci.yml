@@ -68,23 +68,52 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepare deploy bundle
+      # Find docker-compose.*yml and nginx.conf anywhere in the repo
+      - name: Locate deploy files
+        id: locate
+        shell: bash
         run: |
-          set -e
-          mkdir -p deploy
-          cp docker-compose.yml deploy/
-          cp nginx.conf deploy/
-          ls -la deploy
+          set -euo pipefail
+          # find compose file (supports .yml or .yaml)
+          COMPOSE_FILE="$(git ls-files | grep -E '(^|/)(docker-compose\.ya?ml)$' | head -n1 || true)"
+          if [ -z "${COMPOSE_FILE}" ]; then
+            echo "::error::No docker-compose.yml(yaml) found in repo. Put it in the repo or update the SCP paths."
+            echo "Here is the repo tree (top-level):"
+            ls -la
+            exit 1
+          fi
+          # find nginx.conf (optional)
+          NGINX_FILE="$(git ls-files | grep -E '(^|/)nginx\.conf$' | head -n1 || true)"
 
-      - name: Copy bundle to server (flat into ~/oter)
+          echo "compose=${COMPOSE_FILE}"      >> "$GITHUB_OUTPUT"
+          echo "nginx=${NGINX_FILE}"          >> "$GITHUB_OUTPUT"
+
+          echo "Found compose: ${COMPOSE_FILE}"
+          if [ -n "${NGINX_FILE}" ]; then
+            echo "Found nginx:   ${NGINX_FILE}"
+          else
+            echo "No nginx.conf found; will skip copying it."
+          fi
+
+      - name: Copy compose to server (required)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}      # ubuntu / ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}        # your .pem contents
-          source: |
-            deploy/docker-compose.yml
-            deploy/nginx.conf
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: ${{ steps.locate.outputs.compose }}
+          target: "~/oter"
+          overwrite: true
+          rm: true
+
+      - name: Copy nginx.conf to server (optional)
+        if: ${{ steps.locate.outputs.nginx != '' }}
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: ${{ steps.locate.outputs.nginx }}
           target: "~/oter"
           overwrite: true
           rm: true
@@ -111,7 +140,7 @@ jobs:
                 sudo dnf install -y docker-compose-plugin
                 COMPOSE="docker compose"
               else
-                echo "Docker Compose not found and auto-install failed"; exit 1
+                echo "Docker Compose not found and cannot auto-install"; exit 1
               fi
             fi
 
@@ -125,6 +154,7 @@ jobs:
             export IMAGE_TAG="${{ needs.build.outputs.version_tag }}"
             echo "Deploying tag: $IMAGE_TAG using: $COMPOSE"
 
+            # Always pass the compose file we copied (works no matter where it lives originally)
             $COMPOSE -f docker-compose.yml pull
             $COMPOSE -f docker-compose.yml up -d
 
