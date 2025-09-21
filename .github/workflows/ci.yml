@@ -3,15 +3,14 @@ name: build-and-deploy
 on:
   push:
     branches: [ main ]
-    tags: [ "v*" ]
+    tags: [ "v*" ]   # <-- fixed
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
-
+      packages: write   # needed to push to GHCR with GITHUB_TOKEN
     outputs:
       image: ${{ steps.meta.outputs.image }}
       tags:  ${{ steps.meta.outputs.tags }}
@@ -68,7 +67,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Locate compose file and nginx.conf anywhere in the repo
       - name: Locate deploy files
         id: locate
         shell: bash
@@ -76,8 +74,8 @@ jobs:
           set -euo pipefail
           COMPOSE_FILE="$(git ls-files | grep -E '(^|/)(docker-compose|compose)\.ya?ml$' | head -n1 || true)"
           if [ -z "${COMPOSE_FILE}" ]; then
-            echo "::error::No compose file found (looked for docker-compose.yml/.yaml or compose.yml/.yaml)."
-            echo "Repo root listing:"; ls -la
+            echo "::error::No compose file found (docker-compose.yml/.yaml or compose.yml/.yaml)."
+            echo "Repo listing:"; ls -la
             exit 1
           fi
           NGINX_FILE="$(git ls-files | grep -E '(^|/)nginx\.conf$' | head -n1 || true)"
@@ -85,7 +83,7 @@ jobs:
           echo "compose=${COMPOSE_FILE}" >> "$GITHUB_OUTPUT"
           echo "nginx=${NGINX_FILE}"     >> "$GITHUB_OUTPUT"
           echo "Found compose: ${COMPOSE_FILE}"
-          [ -n "${NGINX_FILE}" ] && echo "Found nginx:   ${NGINX_FILE}" || echo "No nginx.conf found; will skip."
+          [ -n "${NGINX_FILE}" ] && echo "Found nginx: ${NGINX_FILE}" || echo "No nginx.conf found; will skip."
 
       - name: Copy compose to server
         uses: appleboy/scp-action@v0.1.7
@@ -121,24 +119,22 @@ jobs:
             cd ~/oter
             echo "Contents of ~/oter:"; ls -la
 
-            # Ensure Docker Compose exists (install if missing)
+            # Ensure Docker Compose exists (v2 plugin preferred)
             if docker compose version >/dev/null 2>&1; then COMPOSE="docker compose";
             elif docker-compose version >/dev/null 2>&1; then COMPOSE="docker-compose";
             else
               if command -v apt-get >/dev/null 2>&1; then
                 sudo apt-get update -y && sudo apt-get install -y docker-compose-plugin
                 COMPOSE="docker compose"
-              elif command -v dnf >/dev/null 2>&1; then
-                sudo dnf install -y docker-compose-plugin
+              elif command -v dnf >/dev/null 2>&1 || command -v yum >/dev/null 2>&1; then
+                (command -v dnf >/dev/null 2>&1 && sudo dnf install -y docker-compose-plugin) || sudo yum install -y docker-compose-plugin
                 COMPOSE="docker compose"
               else
                 echo "Docker Compose not found and cannot auto-install"; exit 1
               fi
             fi
 
-            docker network create edge || true
-
-            # Login to GHCR only if secrets are set (needed for private images)
+            # Login to GHCR only if needed (private images)
             if [ -n "${{ secrets.GHCR_READ_USER }}" ] && [ -n "${{ secrets.GHCR_READ_TOKEN }}" ]; then
               echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_READ_USER }}" --password-stdin
             fi
@@ -146,8 +142,8 @@ jobs:
             export IMAGE_TAG="${{ needs.build.outputs.version_tag }}"
             echo "Deploying tag: $IMAGE_TAG using: $COMPOSE"
 
-            # Pick whichever compose filename is present after SCP
-            COMPOSE_PATH="$(ls -1 docker-compose.y*ml compose.y*ml 2>/dev/null | head -n1 || true)"
+            # Use whichever compose filename we copied
+            COMPOSE_PATH="$(ls -1 compose.y*ml docker-compose.y*ml 2>/dev/null | head -n1 || true)"
             if [ -z "${COMPOSE_PATH}" ]; then
               echo "Compose file not found in ~/oter after copy."; ls -la; exit 1
             fi
