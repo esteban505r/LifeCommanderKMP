@@ -95,6 +95,7 @@ dependencies {
 // Configure shadow plugin for ZIP64 support
 tasks.shadowJar {
     isZip64 = true
+    mergeServiceFiles()
 }
 
 
