@@ -1,3 +1,4 @@
+# .github/workflows/build-and-deploy.yml
 name: build-and-deploy
 
 on:
@@ -75,7 +76,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Upload compose + nginx + deploy script
+      - name: Verify deployment assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -la infra
+          test -f infra/docker-compose.yml
+          test -f infra/nginx.conf
+          test -f infra/deploy.sh
+
       - name: Upload deployment assets
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -90,16 +99,17 @@ jobs:
 
       - name: SSH deploy
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          IMAGE_TAG: ${{ needs.build.outputs.version_tag }}
+          IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/oter-server
+          GHCR_READ_USER: ${{ secrets.GHCR_READ_USER }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
-          envs: |
-            IMAGE_TAG=${{ needs.build.outputs.version_tag }}
-            IMAGE_REPO=ghcr.io/${{ github.repository_owner }}/oter-server
-            GHCR_READ_USER=${{ secrets.GHCR_READ_USER }}
-            GHCR_READ_TOKEN=${{ secrets.GHCR_READ_TOKEN }}
+          envs: IMAGE_TAG,IMAGE_REPO,GHCR_READ_USER,GHCR_READ_TOKEN
           script: |
             set -euxo pipefail
             cd ~/oter
