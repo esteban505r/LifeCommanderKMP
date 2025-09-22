@@ -37,24 +37,24 @@ mkdir -p certbot/conf certbot/www
 echo "Deploying ${IMAGE_REPO}:${IMAGE_TAG} using ${COMPOSE}"
 
 # Validate that we have the files we uploaded
-test -f infra/docker-compose.yml
-test -f infra/nginx.conf
+test -f docker-compose.yml
+test -f nginx.conf
 
 # Put nginx.conf where docker-compose expects it (same dir as compose)
-cp -f infra/nginx.conf ./nginx.conf
+cp -f nginx.conf ./nginx.conf
 
 # Interpolate IMAGE_REPO & IMAGE_TAG into compose at runtime via env file
 export IMAGE_REPO IMAGE_TAG
 
 # Validate compose (expands envs)
-${COMPOSE} -f infra/docker-compose.yml config >/dev/null
+${COMPOSE} -f docker-compose.yml config >/dev/null
 
 # Ensure network exists
 docker network create edge || true
 
 # Pull & start
-${COMPOSE} -f infra/docker-compose.yml pull
-${COMPOSE} -f infra/docker-compose.yml up -d
+${COMPOSE} -f docker-compose.yml pull
+${COMPOSE} -f docker-compose.yml up -d
 
 # Cleanup dangling images
 docker image prune -f
