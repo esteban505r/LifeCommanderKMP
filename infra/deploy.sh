@@ -11,8 +11,10 @@ echo "Working dir: $(pwd)"
 ls -la || true
 
 # Ensure Docker Compose is available
-if docker compose version >/dev/null 2>&1; then COMPOSE="docker compose";
-elif docker-compose version >/dev/null 2>&1; then COMPOSE="docker-compose";
+if docker compose version >/dev/null 2>&1; then
+  COMPOSE="docker compose"
+elif docker-compose version >/dev/null 2>&1; then
+  COMPOSE="docker-compose"
 else
   if command -v apt-get >/dev/null 2>&1; then
     sudo apt-get update -y && sudo apt-get install -y docker-compose-plugin
@@ -36,21 +38,21 @@ mkdir -p certbot/conf certbot/www
 
 echo "Deploying ${IMAGE_REPO}:${IMAGE_TAG} using ${COMPOSE}"
 
-# Move nginx.conf next to the compose file name we use on the server
-cp -f infra/nginx.conf ./nginx.conf
+# Files were uploaded directly into ~/oter, so DON'T copy from infra/
+# docker-compose.yml and nginx.conf are already in this directory.
 
-# Inject env vars at runtime
+# Inject env vars at runtime for compose
 export IMAGE_REPO IMAGE_TAG
 
 # Validate compose (expands envs)
-${COMPOSE} -f infra/docker-compose.yml config >/dev/null
+${COMPOSE} -f docker-compose.yml config >/dev/null
 
 # Ensure network exists
 docker network create edge || true
 
 # Pull & start
-${COMPOSE} -f infra/docker-compose.yml pull
-${COMPOSE} -f infra/docker-compose.yml up -d
+${COMPOSE} -f docker-compose.yml pull
+${COMPOSE} -f docker-compose.yml up -d
 
 # Cleanup dangling images
 docker image prune -f
