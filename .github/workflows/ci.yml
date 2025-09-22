@@ -76,13 +76,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify deployment assets
+      - name: Debug workspace tree
+        shell: bash
+        run: |
+          set -euxo pipefail
+          pwd
+          echo "::group::Top-level"
+          ls -la
+          echo "::endgroup::"
+          echo "::group::infra/"
+          ls -la infra || true
+          echo "::endgroup::"
+
+      - name: Verify deployment assets exist
         shell: bash
         run: |
           set -euo pipefail
-          pwd
-          ls -la
-          ls -la infra
+          test -d infra
           test -f infra/docker-compose.yml
           test -f infra/nginx.conf
           test -f infra/deploy.sh
@@ -93,11 +103,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: |
-            infra/docker-compose.yml
-            infra/nginx.conf
-            infra/deploy.sh
+          source: infra/**           # <-- recursive glob (matches files inside infra)
           target: ~/oter
+          strip_components: 1        # <-- copies files into ~/oter/, not the infra/ folder
 
       - name: SSH deploy
         uses: appleboy/ssh-action@v1.2.0
@@ -115,5 +123,8 @@ jobs:
           script: |
             set -euxo pipefail
             cd ~/oter
-            chmod +x infra/deploy.sh
-            ./infra/deploy.sh
+            # After strip_components:1 your files are in ~/oter now
+            ls -la
+            chmod +x deploy.sh
+            ./deploy.sh
+  
