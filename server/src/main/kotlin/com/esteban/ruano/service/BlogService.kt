@@ -23,9 +23,11 @@ import org.jetbrains.exposed.v1.datetime.date
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
@@ -36,32 +38,63 @@ import java.util.*
 
 class BlogService : BaseService() {
 
-    val dotenv: Dotenv = dotenv {
+    // Load .env if present (dev). In prod this file typically won't exist.
+    private val dotenv = dotenv {
         ignoreIfMissing = true
     }
 
-    val awsAccessKey = dotenv["AWS_ACCESS_KEY_ID"]
-    val awsSecretKey = dotenv["AWS_SECRET_ACCESS_KEY"]
-    val awsRegion = dotenv["AWS_REGION"] ?: "us-east-1"
+    // ---- Credentials strategy ------------------------------------------------
+    // If .env provides explicit keys, use them (dev). Otherwise, use
+    // DefaultCredentialsProvider (EC2 instance role, ECS task role, env, profile, etc.)
+    private val credentialsProvider = run {
+        val envKey = dotenv["AWS_ACCESS_KEY_ID"]
+        val envSecret = dotenv["AWS_SECRET_ACCESS_KEY"]
 
-    val credentials = StaticCredentialsProvider.create(
-        AwsBasicCredentials.create(awsAccessKey, awsSecretKey)
-    )
-
-    val bucketName = dotenv["S3_BUCKET_NAME"] ?: "estebanruanoposts"
-
-    val s3Client = S3Client.builder()
-        .credentialsProvider(credentials)
-        .region(Region.US_EAST_1)
-        .build()
-
-    private fun hashPassword(password: String): String {
-        return at.favre.lib.crypto.bcrypt.BCrypt.withDefaults().hashToString(12, password.toCharArray())
+        if (!envKey.isNullOrBlank() && !envSecret.isNullOrBlank()) {
+            StaticCredentialsProvider.create(
+                AwsBasicCredentials.create(envKey, envSecret)
+            )
+        } else {
+            DefaultCredentialsProvider.builder().build()
+        }
     }
+
+    // ---- Region resolution ---------------------------------------------------
+    // Order: .env -> AWS default region chain (env, sys props, config files, IMDS) -> fallback
+    private val resolvedRegion: Region = run {
+        val fromDotenv = dotenv["AWS_REGION"]
+        if (!fromDotenv.isNullOrBlank()) {
+            Region.of(fromDotenv)
+        } else {
+            DefaultAwsRegionProviderChain.builder().build().region ?: Region.US_EAST_1
+        }
+    }
+
+    // ---- Bucket --------------------------------------------------------------
+    private val bucketName: String = run {
+        // Prefer .env, then environment, else your default
+        dotenv["S3_BUCKET_NAME"]
+            ?: System.getenv("S3_BUCKET_NAME")
+            ?: "estebanruanoposts"
+    }
+
+    // ---- S3 client (single instance) ----------------------------------------
+    private val s3: S3Client by lazy {
+        S3Client.builder()
+            .credentialsProvider(credentialsProvider)
+            .region(resolvedRegion)
+            .build()
+    }
+
+    // -------------------------------------------------------------------------
+
+    private fun hashPassword(password: String): String =
+        at.favre.lib.crypto.bcrypt.BCrypt.withDefaults()
+            .hashToString(12, password.toCharArray())
 
     fun getPostFromS3(slug: String, password: String? = null): String {
         try {
-            // First verify the post exists and check password
+            // Verify post exists & password
             val post = transaction {
                 Post.find { Posts.slug eq slug }.firstOrNull()
             } ?: throw NotFoundException("Post not found")
@@ -73,16 +106,14 @@ class BlogService : BaseService() {
             }
 
             val key = "$slug.md"
-            val s3Object = s3Client.getObject(
+            val s3Object = s3.getObject(
                 GetObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
                     .build()
             )
 
-            val content = s3Object.readAllBytes().toString(Charsets.UTF_8)
-            return content
-
+            return s3Object.readAllBytes().toString(Charsets.UTF_8)
         } catch (e: NoSuchKeyException) {
             throw NotFoundException("Post content not found")
         }
@@ -93,7 +124,9 @@ class BlogService : BaseService() {
             PostCategory.find { PostCategories.name eq categoryName }.firstOrNull()
                 ?: PostCategory.new {
                     name = categoryName
-                    slug = categoryName.lowercase().replace(" ", "-").replace(Regex("[^a-z0-9-]"), "")
+                    slug = categoryName.lowercase()
+                        .replace(" ", "-")
+                        .replace(Regex("[^a-z0-9-]"), "")
                     description = null
                     color = null
                     icon = null
@@ -119,12 +152,12 @@ class BlogService : BaseService() {
             .bucket(bucketName)
             .key(s3Key)
             .build()
-        s3Client.putObject(putObjectRequest, RequestBody.fromFile(content))
+        s3.putObject(putObjectRequest, RequestBody.fromFile(content))
 
         return transaction {
             val category = findOrCreateCategory(categoryName)
-            
-            val item = Posts.insert {
+
+            val idValue = Posts.insert {
                 it[this.title] = title
                 it[this.slug] = slug
                 it[this.imageUrl] = imageUrl
@@ -135,15 +168,17 @@ class BlogService : BaseService() {
                 it[this.s3Key] = s3Key
                 it[this.publishedDate] = parseDateTime(publishedDate)
             }.resultedValues?.firstOrNull()?.getOrNull(Posts.id)
-            UUID.fromString(item.toString())
-        } ?: throw BadRequestException("Failed to create post")
+                ?: throw BadRequestException("Failed to create post")
+
+            UUID.fromString(idValue.toString())
+        }
     }
 
     fun getPosts(
-        pattern: String, 
-        limit: Int, 
+        pattern: String,
+        limit: Int,
         offset: Long,
-        category:String? = null,
+        category: String? = null,
         date: LocalDate? = null,
         password: String? = null,
         includeProtected: Boolean = false
@@ -153,71 +188,48 @@ class BlogService : BaseService() {
             val dateCondition = date?.let { Posts.publishedDate.date() eq it }
             val categoryCondition = category?.let { Posts.categoryId eq UUID.fromString(category) }
 
-            category?.let{
-                val result = PostCategory.find {
-                    PostCategories.id eq UUID.fromString(it)
-                }.firstOrNull()
+            category?.let {
+                val result = PostCategory.find { PostCategories.id eq UUID.fromString(it) }.firstOrNull()
 
-                if(result?.password?.isEmpty() == false && password.isNullOrEmpty()) {
+                if (result?.password?.isEmpty() == false && password.isNullOrEmpty()) {
                     throw BadRequestException("Category requires a password")
                 }
-
-                if(result?.password?.isNotEmpty() == true && password?.isNotEmpty() == true){
+                if (result?.password?.isNotEmpty() == true && password?.isNotEmpty() == true) {
                     if (!SecurityUtils.checkPassword(password, result.password!!)) {
                         throw BadRequestException("Invalid password for category")
                     }
                 }
-
-
             }
 
-            var finalCondition:Op<Boolean> = slugCondition
+            var finalCondition: Op<Boolean> = slugCondition
+            dateCondition?.let { finalCondition = finalCondition.and(it) }
+            categoryCondition?.let { finalCondition = finalCondition.and(it) }
 
-            dateCondition?.let {
-                finalCondition = finalCondition.and(dateCondition)
-            }
-
-            categoryCondition?.let {
-                finalCondition = finalCondition.and(categoryCondition)
-            }
-
-
-            Post.find {
-                finalCondition
-            }.orderBy(Posts.publishedDate to SortOrder.DESC)
-                .limit(limit).offset(offset*limit)
+            Post.find { finalCondition }
+                .orderBy(Posts.publishedDate to SortOrder.DESC)
+                .limit(limit)
+                .offset(offset * limit)
                 .toList()
                 .map { post -> post.toDTO(password) }
                 .filter { postDTO ->
-                    if (!includeProtected && password==null) {
-                        !postDTO.requiresPassword
-                    } else {
-                        true
-                    }
+                    if (!includeProtected && password == null) !postDTO.requiresPassword else true
                 }
         }
     }
 
-    fun getPostBySlug(slug: String, password: String? = null): PostDTO? {
-        return transaction {
-            val post = Post.find { Posts.slug eq slug }.firstOrNull() ?: return@transaction null
-            post.toDTO(password)
+    fun getPostBySlug(slug: String, password: String? = null): PostDTO? =
+        transaction {
+            Post.find { Posts.slug eq slug }.firstOrNull()?.toDTO(password)
         }
-    }
 
-    fun verifyPostPassword(slug: String, password: String): Boolean {
-        return transaction {
-            val post = Post.find { Posts.slug eq slug }.firstOrNull() ?: return@transaction false
-            post.verifyPassword(password)
+    fun verifyPostPassword(slug: String, password: String): Boolean =
+        transaction {
+            Post.find { Posts.slug eq slug }.firstOrNull()?.verifyPassword(password) ?: false
         }
-    }
 
-    fun verifyCategoryPassword(categoryId: UUID, password: String): Boolean {
-        return transaction {
+    fun verifyCategoryPassword(categoryId: UUID, password: String): Boolean =
+        transaction {
             val category = PostCategory.findById(categoryId) ?: return@transaction false
-            category.password?.let { hashedPassword ->
-                SecurityUtils.checkPassword(password, hashedPassword)
-            } ?: false
+            category.password?.let { hashed -> SecurityUtils.checkPassword(password, hashed) } ?: false
         }
-    }
 }

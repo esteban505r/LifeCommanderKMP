@@ -116,6 +116,7 @@ flyway = "11.13.0"
 bcrypt = "0.10.2"
 postgres = "42.7.7"
 aws-sdk = "2.33.12"
+aws-jdbc = "2.6.4"
 moko-resources = "0.25.0"
 dotenv = "6.5.1"
 media3CommonKtx = "1.8.0"
@@ -312,8 +313,10 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 aws-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws-sdk" }
 aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }
 aws-sesv2 = { module = "software.amazon.awssdk:sesv2", version.ref = "aws-sdk" }
+aws-secretsmanager = { module = "software.amazon.awssdk:secretsmanager", version.ref = "aws-sdk" }
 aws-auth = { module = "software.amazon.awssdk:auth", version.ref = "aws-sdk" }
 aws-regions = { module = "software.amazon.awssdk:regions", version.ref = "aws-sdk" }
+aws-jdbc-wrapper = { module = "software.amazon.jdbc:aws-advanced-jdbc-wrapper", version.ref = "aws-jdbc" }
 
 # Dotenv
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenv" }

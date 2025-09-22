@@ -75,8 +75,10 @@ dependencies {
     implementation(platform(libs.aws.bom))
     implementation(libs.aws.s3)
     implementation(libs.aws.sesv2)
+    implementation(libs.aws.secretsmanager)
     implementation(libs.aws.auth)
     implementation(libs.aws.regions)
+    implementation(libs.aws.jdbc.wrapper)
 
     implementation(libs.dotenv.kotlin)
     

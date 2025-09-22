@@ -148,30 +148,34 @@ fun Application.configureWebSockets() {
 
 fun Application.connectToPostgres() {
     val cfg = loadConfig()
+    val iamMode = cfg.db.url.startsWith("jdbc:aws-wrapper:postgresql:")
 
-
-    Sentry.init { opts ->
-        opts.dsn = cfg.sentryDsn
-        opts.environment = cfg.environment
-        opts.release = "unknown"
+    Sentry.init { o ->
+        o.dsn = cfg.sentryDsn
+        o.environment = cfg.environment
+        o.release = "unknown"
     }
 
-    if (cfg.db.user.isEmpty() || cfg.db.password.isEmpty()) {
+    if (!iamMode && (cfg.db.user.isEmpty() || cfg.db.password.isEmpty())) {
         throw Exception("No user or password detected")
     }
 
-    Flyway
-        .configure()
+// Flyway
+    Flyway.configure()
         .baselineOnMigrate(true)
         .validateMigrationNaming(true)
-        .dataSource(cfg.db.url, cfg.db.user, cfg.db.password).load().migrate()
+        .dataSource(cfg.db.url, cfg.db.user, if (iamMode) "" else cfg.db.password)
+        .load()
+        .migrate()
 
+// Exposed
     Database.connect(
-        cfg.db.url,
-        driver = "org.postgresql.Driver",
+        url = cfg.db.url,
+        driver = if (iamMode) "software.amazon.jdbc.Driver" else "org.postgresql.Driver",
         user = cfg.db.user,
-        password = cfg.db.password
+        password = if (iamMode) "" else cfg.db.password
     )
+
 
     transaction {
         SchemaUtils.createMissingTablesAndColumns(
