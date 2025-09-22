@@ -9,7 +9,6 @@ import com.esteban.ruano.service.TimerCheckerService
 import com.esteban.ruano.service.TimerService
 import com.esteban.ruano.utils.X_CATEGORY_PASSWORD_HEADER
 import com.esteban.ruano.utils.X_POST_PASSWORD_HEADER
-import com.esteban.ruano.utils.loadConfig
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.config.yaml.*
@@ -27,6 +26,7 @@ import io.ktor.server.response.*
 import io.ktor.server.websocket.*
 import kotlinx.coroutines.CancellationException
 import io.sentry.Sentry
+import loadConfig
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils

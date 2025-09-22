@@ -74,6 +74,7 @@ dependencies {
 
     implementation(platform(libs.aws.bom))
     implementation(libs.aws.s3)
+    implementation(libs.aws.rds)
     implementation(libs.aws.sesv2)
     implementation(libs.aws.secretsmanager)
     implementation(libs.aws.auth)
