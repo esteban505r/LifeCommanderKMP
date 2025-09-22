@@ -19,6 +19,8 @@ services:
       PORT: "8080"
       LOG_LEVEL: INFO
       AWS_REGION: us-east-1
+      RDS_INSTANCE_ID: database-1
+      POSTGRES_DB: lifecommanderdb
       # TEMP: comment this if the file doesn't exist in your image
       # JAVA_TOOL_OPTIONS: "-Dlogback.configurationFile=/app/logback.xml"
       # If needed for your framework, add:
