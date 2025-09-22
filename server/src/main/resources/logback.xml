@@ -15,7 +15,7 @@
     </appender>
 
     <!-- Sentry only if DSN present -->
-    <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
+    <!--<appender name="SENTRY" class="io.sentry.logback.SentryAppender">
         <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
             <evaluator class="ch.qos.logback.classic.boolex.JaninoEventEvaluator">
                 <expression>return "${SENTRY_DSN}".length() > 0;</expression>
@@ -27,12 +27,12 @@
             <dsn>${SENTRY_DSN}</dsn>
             <environment>${ENVIRONMENT}</environment>
             <release>${RELEASE}</release>
-            <!-- Optional: sample breadcrumbs/errors in high traffic -->
-            <!-- <traces-sample-rate>0.1</traces-sample-rate> -->
+            &lt;!&ndash; Optional: sample breadcrumbs/errors in high traffic &ndash;&gt;
+            &lt;!&ndash; <traces-sample-rate>0.1</traces-sample-rate> &ndash;&gt;
         </options>
         <minimumEventLevel>ERROR</minimumEventLevel>
         <minimumBreadcrumbLevel>INFO</minimumBreadcrumbLevel>
-    </appender>
+    </appender>-->
 
     <root level="${LOG_LEVEL}">
         <appender-ref ref="CONSOLE"/>

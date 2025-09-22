@@ -70,7 +70,6 @@ dependencies {
 
     implementation(libs.bcrypt)
     implementation(libs.postgresql)
-    implementation(libs.logback.classic)
 
     implementation(platform(libs.aws.bom))
     implementation(libs.aws.s3)
