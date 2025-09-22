@@ -80,10 +80,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ls -la ./infra
-          test -f ./infra/docker-compose.yml
-          test -f ./infra/nginx.conf
-          test -f ./infra/deploy.sh
+          ls -la /infra
+          test -f /infra/docker-compose.yml
+          test -f /infra/nginx.conf
+          test -f /infra/deploy.sh
 
       - name: Upload deployment assets
         uses: appleboy/scp-action@v0.1.7
@@ -92,9 +92,9 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: |
-            ./infra/docker-compose.yml
-            ./infra/nginx.conf
-            ./infra/deploy.sh
+            /infra/docker-compose.yml
+            /infra/nginx.conf
+            /infra/deploy.sh
           target: ~/oter
 
       - name: SSH deploy
@@ -113,5 +113,5 @@ jobs:
           script: |
             set -euxo pipefail
             cd ~/oter
-            chmod +x ./infra/deploy.sh
-            ./infra/deploy.sh
+            chmod +x /infra/deploy.sh
+            /infra/deploy.sh

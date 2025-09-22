@@ -26,7 +26,7 @@ else
   fi
 fi
 
-# Login to GHCR if creds present (needed for private images)
+# GHCR login if creds provided (needed for private images)
 if [[ -n "${GHCR_READ_USER:-}" && -n "${GHCR_READ_TOKEN:-}" ]]; then
   echo "${GHCR_READ_TOKEN}" | docker login ghcr.io -u "${GHCR_READ_USER}" --password-stdin
 fi
@@ -36,25 +36,21 @@ mkdir -p certbot/conf certbot/www
 
 echo "Deploying ${IMAGE_REPO}:${IMAGE_TAG} using ${COMPOSE}"
 
-# Validate that we have the files we uploaded
-test -f docker-compose.yml
-test -f nginx.conf
+# Move nginx.conf next to the compose file name we use on the server
+cp -f infra/nginx.conf ./nginx.conf
 
-# Put nginx.conf where docker-compose expects it (same dir as compose)
-cp -f nginx.conf ./nginx.conf
-
-# Interpolate IMAGE_REPO & IMAGE_TAG into compose at runtime via env file
+# Inject env vars at runtime
 export IMAGE_REPO IMAGE_TAG
 
 # Validate compose (expands envs)
-${COMPOSE} -f docker-compose.yml config >/dev/null
+${COMPOSE} -f infra/docker-compose.yml config >/dev/null
 
 # Ensure network exists
 docker network create edge || true
 
 # Pull & start
-${COMPOSE} -f docker-compose.yml pull
-${COMPOSE} -f docker-compose.yml up -d
+${COMPOSE} -f infra/docker-compose.yml pull
+${COMPOSE} -f infra/docker-compose.yml up -d
 
 # Cleanup dangling images
 docker image prune -f

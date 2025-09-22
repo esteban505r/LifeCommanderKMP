@@ -20,11 +20,11 @@ services:
     environment:
       PORT: "8080"
       LOG_LEVEL: INFO
-      # Ensure your image has this file or remove the JAVA_TOOL_OPTIONS line
+      # Remove if your image doesn't provide this file
       JAVA_TOOL_OPTIONS: "-Dlogback.configurationFile=/app/logback.xml"
     expose: ["8080"]
     healthcheck:
-      # Ensure curl exists in the image, or switch to wget
+      # Make sure your app image has curl (or switch to wget)
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
       interval: 20s
       timeout: 5s
