@@ -28,31 +28,45 @@ else
   fi
 fi
 
-# GHCR login if creds provided (needed for private images)
+# Optional: if you had an old standalone container called nginx-proxy, remove it to avoid name conflicts
+docker rm -f nginx-proxy || true
+
+# GHCR login if creds provided
 if [[ -n "${GHCR_READ_USER:-}" && -n "${GHCR_READ_TOKEN:-}" ]]; then
   echo "${GHCR_READ_TOKEN}" | docker login ghcr.io -u "${GHCR_READ_USER}" --password-stdin
 fi
 
-# Ensure folders for nginx/certbot exist
 mkdir -p certbot/conf certbot/www
+echo "Deploying ${IMAGE_REPO}:${IMAGE_TAG}"
 
-echo "Deploying ${IMAGE_REPO}:${IMAGE_TAG} using ${COMPOSE}"
-
-# Files were uploaded directly into ~/oter, so DON'T copy from infra/
-# docker-compose.yml and nginx.conf are already in this directory.
-
-# Inject env vars at runtime for compose
 export IMAGE_REPO IMAGE_TAG
 
 # Validate compose (expands envs)
-${COMPOSE} -f docker-compose.yml config >/dev/null
+${COMPOSE} -p oter -f docker-compose.yml config >/dev/null
 
 # Ensure network exists
 docker network create edge || true
 
 # Pull & start
-${COMPOSE} -f docker-compose.yml pull
-${COMPOSE} -f docker-compose.yml up -d
+${COMPOSE} -p oter -f docker-compose.yml pull
+${COMPOSE} -p oter -f docker-compose.yml up -d --remove-orphans
 
-# Cleanup dangling images
-docker image prune -f
+# ==== Auto diagnostics ====
+echo "=== Service status ==="
+${COMPOSE} -p oter ps || true
+
+# If oter exists, check health/state and recent logs
+OTER_CID="$(docker ps -aq -f name=oter_oter)"
+if [[ -n "${OTER_CID}" ]]; then
+  echo "=== oter inspect (State) ==="
+  docker inspect --format='{{json .State}}' "${OTER_CID}" || true
+  echo "=== oter logs (last 200 lines) ==="
+  docker logs --tail=200 "${OTER_CID}" || true
+fi
+
+# Also show nginx logs if present
+NGINX_CID="$(docker ps -aq -f name=oter_nginx)"
+if [[ -n "${NGINX_CID}" ]]; then
+  echo "=== nginx logs (last 100 lines) ==="
+  docker logs --tail=100 "${NGINX_CID}" || true
+fi
