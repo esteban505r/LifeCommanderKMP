@@ -11,8 +11,11 @@ cd ~/oter
 echo "Working dir: $(pwd)"
 ls -la || true
 
-# Generate .env file with secrets
-cat <<EOF > .env
+# Check if .env file exists, and create it only if it doesn't exist
+if [[ ! -f .env ]]; then
+  echo ".env file not found, creating it..."
+
+  cat <<EOF > .env
 AWS_REGION=${AWS_REGION:-us-east-1}
 POSTGRES_DB=${POSTGRES_DB:-lifecommanderdb}
 POSTGRES_USER=${POSTGRES_USER:-postgres}
@@ -20,6 +23,9 @@ POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-default_password}
 SES_FROM=${SES_FROM:-no-reply@example.com}
 SENTRY_DSN=${SENTRY_DSN:-}
 EOF
+else
+  echo ".env file already exists, skipping creation."
+fi
 
 # Ensure Docker Compose is available
 if docker compose version >/dev/null 2>&1; then
