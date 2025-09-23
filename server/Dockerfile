@@ -1,5 +1,5 @@
 # ---- build stage ----
-FROM gradle:8.11.1-jdk21 AS build
+FROM gradle:8.11.1-jdk18 AS build
 WORKDIR /src
 
 # Copy the entire repo so Gradle can see settings + version catalog + wrapper, etc.
