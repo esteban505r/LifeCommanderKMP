@@ -32,6 +32,8 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.ktor.ext.inject
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
@@ -39,9 +41,18 @@ import kotlin.time.Duration.Companion.seconds
 
 private const val MDC_KEY = "requestId"
 
+val logger: Logger = LoggerFactory.getLogger("com.esteban.ruano")
+
+
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
-        .start(wait = true)
+    logger.info("Starting server...")
+    try{
+        embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
+            .start(wait = true)
+    } catch (e: Exception) {
+        logger.error("An error occurred while starting the application", e)
+        System.exit(1)
+    }
 }
 
 @Suppress("unused")

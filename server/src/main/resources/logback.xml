@@ -1,9 +1,8 @@
 <configuration>
-    <!-- Turn off internal debug in prod to reduce noise -->
-    <variable name="LOG_LEVEL"   value="${env:LOG_LEVEL:-INFO}"/>
+    <variable name="LOG_LEVEL" value="${env:LOG_LEVEL:-DEBUG}"/>
     <variable name="ENVIRONMENT" value="${env:ENVIRONMENT:-production}"/>
-    <variable name="RELEASE"     value="${env:GIT_COMMIT:-unknown}"/>
-    <variable name="SENTRY_DSN"  value="${env:SENTRY_DSN:-}"/>
+    <variable name="RELEASE" value="${env:GIT_COMMIT:-unknown}"/>
+    <variable name="SENTRY_DSN" value="${env:SENTRY_DSN:-}"/>
 
     <timestamp key="tz" datePattern="Z"/>
 
@@ -14,34 +13,18 @@
         </encoder>
     </appender>
 
-    <!-- Sentry only if DSN present -->
-    <!--<appender name="SENTRY" class="io.sentry.logback.SentryAppender">
-        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-            <evaluator class="ch.qos.logback.classic.boolex.JaninoEventEvaluator">
-                <expression>return "${SENTRY_DSN}".length() > 0;</expression>
-            </evaluator>
-            <OnMismatch>DENY</OnMismatch>
-            <OnMatch>NEUTRAL</OnMatch>
-        </filter>
-        <options>
-            <dsn>${SENTRY_DSN}</dsn>
-            <environment>${ENVIRONMENT}</environment>
-            <release>${RELEASE}</release>
-            &lt;!&ndash; Optional: sample breadcrumbs/errors in high traffic &ndash;&gt;
-            &lt;!&ndash; <traces-sample-rate>0.1</traces-sample-rate> &ndash;&gt;
-        </options>
-        <minimumEventLevel>ERROR</minimumEventLevel>
-        <minimumBreadcrumbLevel>INFO</minimumBreadcrumbLevel>
-    </appender>-->
-
     <root level="${LOG_LEVEL}">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="SENTRY"/>
     </root>
+
+    <!-- Add specific loggers for Flyway and PostgreSQL -->
+    <logger name="org.flywaydb" level="DEBUG"/>
+    <logger name="org.postgresql" level="DEBUG"/>
+    <logger name="com.esteban.ruano" level="DEBUG"/>  <!-- Your app's package -->
 
     <!-- Quiet common chatter -->
     <logger name="io.netty" level="WARN"/>
     <logger name="org.apache" level="WARN"/>
     <logger name="org.eclipse.jetty" level="WARN"/>
-    <logger name="ktor.application" level="INFO"/>
+    <logger name="ktor.application" level="DEBUG"/>
 </configuration>
