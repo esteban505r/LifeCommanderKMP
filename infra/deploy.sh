@@ -41,6 +41,21 @@ echo "Deploying ${IMAGE_REPO}:${IMAGE_TAG}"
 
 export IMAGE_REPO IMAGE_TAG
 
+# Generate the .env file using GitHub secrets (environment variables)
+cat <<EOF > .env
+# Generated .env file for deployment
+
+AWS_REGION=${AWS_REGION:-us-east-1}
+POSTGRES_DB=${POSTGRES_DB:-lifecommanderdb}
+POSTGRES_USER=${POSTGRES_USER:-postgres}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+RDS_INSTANCE_ID=${RDS_INSTANCE_ID}
+SES_FROM=${SES_FROM:-no-reply@example.com}
+SENTRY_DSN=${SENTRY_DSN:-}
+
+# Other possible environment variables can be added here
+EOF
+
 # Validate compose (expands envs)
 ${COMPOSE} -p oter -f docker-compose.yml config >/dev/null
 

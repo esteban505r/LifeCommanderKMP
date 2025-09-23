@@ -3,37 +3,35 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain
 import software.amazon.awssdk.services.rds.RdsClient
-import software.amazon.awssdk.services.rds.model.DBInstance
 import software.amazon.awssdk.services.rds.model.DescribeDbInstancesRequest
 
+// Check if running in AWS (production)
+private fun isProduction() = false
 
-private fun isProduction() = System.getenv("AWS_REGION") != null
-
-
+// Generate IAM-based JDBC URL
 private fun buildIamJdbcUrlFromRds(instanceId: String, dbName: String): String {
     val region = DefaultAwsRegionProviderChain.builder().build().region ?: Region.US_EAST_1
-    val rds = RdsClient.builder()
+    val rdsClient = RdsClient.builder()
         .region(region)
-        .credentialsProvider(DefaultCredentialsProvider.builder().build())
+        .credentialsProvider(DefaultCredentialsProvider.create())
         .build()
 
-    // Fetch the DB instance details
-    val resp = rds.describeDBInstances(
-        DescribeDbInstancesRequest.builder()
-            .dbInstanceIdentifier(instanceId)
-            .build()
-    )
+    // Fetch DB instance details
+    val describeRequest = DescribeDbInstancesRequest.builder()
+        .dbInstanceIdentifier(instanceId)
+        .build()
 
-    // Get the endpoint details
-    val dbInstance: DBInstance = resp.dbInstances().first()
+    val dbInstance = rdsClient.describeDBInstances(describeRequest).dbInstances().first()
+
+    // Extract host and port
     val host = dbInstance.endpoint().address()
     val port = dbInstance.endpoint().port()
 
-    // Build the JDBC URL using the IAM wrapper for PostgreSQL
-    return "jdbc:aws-wrapper:postgresql://$host:$port/$dbName" +
-            "?wrapperPlugins=iam&enableIamAuth=true&sslMode=require"
+    // Return IAM-based JDBC URL
+    return "jdbc:aws-wrapper:postgresql://$host:$port/$dbName?wrapperPlugins=iam&enableIamAuth=true&sslMode=require"
 }
 
+// Data classes for configuration
 data class DbConfig(val url: String, val user: String, val password: String)
 data class AwsCfg(val region: Region, val sesFrom: String?)
 data class AppConfig(
@@ -44,31 +42,32 @@ data class AppConfig(
     val environment: String = System.getenv("ENVIRONMENT") ?: "production"
 )
 
+// Check if the JDBC URL is IAM-based (passwordless authentication)
 private fun isIamJdbc(url: String): Boolean {
     val u = url.lowercase()
-    return u.startsWith("jdbc:aws-wrapper:postgresql:")
-            || "enableiamauth=true" in u
-            || "wrapperplugins=iam" in u
+    return u.startsWith("jdbc:aws-wrapper:postgresql:") || "enableiamauth=true" in u || "wrapperplugins=iam" in u
 }
 
-private fun env(name: String, default: String? = null): String? =
-    System.getenv(name) ?: default
+// Function to fetch environment variables or dotenv values
+private fun envOr(map: Map<String, String>, dot: io.github.cdimascio.dotenv.Dotenv, name: String, default: String? = null): String? =
+    map[name] ?: System.getenv(name) ?: dot[name] ?: default
 
 fun loadConfig(): AppConfig {
     val dotenv = dotenv { ignoreIfMissing = true }
 
+    // Fetch values from environment or dotenv
     fun get(name: String, default: String? = null): String? =
-        System.getenv(name) ?: dotenv[name] ?: default
+        envOr(emptyMap(), dotenv, name, default)
 
-    // Check if running in a production environment (AWS)
+    // Check if in production (AWS), otherwise fallback to local settings
     val isProd = isProduction()
 
-    // If in production, use RDS IAM auth; if local, fallback to .env DB config
+    // Build the JDBC URL dynamically depending on the environment
     val jdbcUrl = if (isProd) {
-        // Build the IAM JDBC URL from RDS metadata
+        // Fetch RDS instance ID and build IAM JDBC URL
         val instanceId = get("RDS_INSTANCE_ID") ?: error("RDS_INSTANCE_ID not set")
         val dbName = get("POSTGRES_DB") ?: "postgres"
-        buildIamJdbcUrlFromRds(instanceId, dbName)  // This is the function we defined earlier
+        buildIamJdbcUrlFromRds(instanceId, dbName)  // Build IAM-based URL from RDS metadata
     } else {
         // Local dev fallback: Use .env for DB_URL and other variables
         get("DB_URL") ?: run {
@@ -83,16 +82,19 @@ fun loadConfig(): AppConfig {
     val dbUser = get("DB_USER") ?: get("POSTGRES_USER")
     ?: error("DB_USER/POSTGRES_USER not set")
 
+    // Check if IAM is used
     val iamMode = isIamJdbc(jdbcUrl)
     val dbPass = if (iamMode) "" else {
         get("DB_PASSWORD") ?: get("POSTGRES_PASSWORD")
         ?: error("DB_PASSWORD/POSTGRES_PASSWORD not set (non-IAM mode)")
     }
 
+    // Set AWS region
     val region = get("AWS_REGION")?.let(Region::of)
         ?: DefaultAwsRegionProviderChain.builder().build().region
         ?: Region.US_EAST_1
 
+    // Fetch additional AWS configurations
     val sesFrom = get("SES_FROM")
     val sentry = get("SENTRY_DSN") ?: ""
 

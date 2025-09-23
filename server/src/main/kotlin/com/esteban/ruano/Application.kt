@@ -173,7 +173,7 @@ fun Application.connectToPostgres() {
         url = cfg.db.url,
         driver = if (iamMode) "software.amazon.jdbc.Driver" else "org.postgresql.Driver",
         user = cfg.db.user,
-        password = if (iamMode) "" else cfg.db.password
+        password = cfg.db.password
     )
 
 

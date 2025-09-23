@@ -1,17 +1,20 @@
+version: '3'
 services:
   nginx:
     image: nginx:1.27-alpine
-    # no static container_name (avoid collisions)
-    ports: ["80:80", "443:443"]
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     depends_on:
       oter:
-        condition: service_started   # don't block on health for now
+        condition: service_started
     restart: always
-    networks: [edge]
+    networks:
+      - edge
 
   oter:
     image: ${IMAGE_REPO}:${IMAGE_TAG}
@@ -19,16 +22,16 @@ services:
       PORT: "8080"
       LOG_LEVEL: INFO
       AWS_REGION: us-east-1
-      RDS_INSTANCE_ID: database-1
-      POSTGRES_DB: lifecommanderdb
-      POSTGRES_USER: postgres
-      # TEMP: comment this if the file doesn't exist in your image
-      # JAVA_TOOL_OPTIONS: "-Dlogback.configurationFile=/app/logback.xml"
-      # If needed for your framework, add:
-      # HOST: "0.0.0.0"
-    expose: ["8080"]
+      RDS_INSTANCE_ID: ${RDS_INSTANCE_ID}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+    volumes:
+      - ./.env:/app/.env  # Explicitly copy the .env file into the container
+    expose:
+      - "8080"
     restart: unless-stopped
-    networks: [edge]
+    networks:
+      - edge
 
 networks:
   edge:
