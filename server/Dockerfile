@@ -7,8 +7,8 @@ COPY . .
 
 # Build just the :server module (try fatJar -> shadowJar -> build)
 RUN --mount=type=cache,target=/root/.gradle \
-    gradle --no-daemon :server:fatJar   -x test || \
-    gradle --no-daemon :server:shadowJar -x test || \
+#    gradle --no-daemon :server:fatJar   -x test || \
+#    gradle --no-daemon :server:shadowJar -x test || \
     gradle --no-daemon :server:build     -x test && \
     echo "---- server/build/libs content ----" && ls -la server/build/libs && \
     JAR="$(ls server/build/libs/*-all.jar 2>/dev/null || true)"; \
