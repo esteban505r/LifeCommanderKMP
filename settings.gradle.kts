@@ -34,7 +34,7 @@ dependencyResolutionManagement {
 // Include Android modules only when requested
 val includeAndroid = (System.getenv("INCLUDE_ANDROID")
     ?: System.getProperty("includeAndroid")
-    ?: "false").toBoolean()
+    ?: "true").toBoolean()
 
 if (includeAndroid) {
     include(":composeApp")
