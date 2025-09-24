@@ -26,11 +26,11 @@ object Routes {
     val TASKS = BottomNavRoute("to_do/tasks", "tasks", "Tasks")
 
     //Habits
-    const val HABIT_DETAIL = "habit_detail"
-    const val NEW_EDIT_HABIT = "new_habit"
+    const val HABIT_DETAIL = "to_do/habits/habit_detail"
+    const val NEW_EDIT_HABIT = "to_do/habits/new_habit"
     //Tasks
-    const val TASK_DETAIL = "task_detail"
-    const val NEW_EDIT_TASK = "new_task"
+    const val TASK_DETAIL = "to_do/tasks/task_detail"
+    const val NEW_EDIT_TASK = "to_do/tasks/new_task"
     //Workout
     const val WORKOUT_DAY_DETAIL = "workout_detail"
     const val WORKOUT_PROGRESS = "workout_progress"

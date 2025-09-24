@@ -47,6 +47,10 @@ fun NavGraphBuilder.toDoGraph(
                 initialTab = if (initial.equals("habits", true)) ToDoTab.Habits else ToDoTab.Tasks
             )
         }
+
+        tasksGraph(navController)
+
+        habitsGraph(navController)
     }
 }
 
