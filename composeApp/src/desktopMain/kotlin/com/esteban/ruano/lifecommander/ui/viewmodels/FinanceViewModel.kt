@@ -425,10 +425,15 @@ class FinanceViewModel(
         }    }
 
 
-    override fun getBudgets() {
+    override fun getBudgets(
+        reset:Boolean
+    ) {
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(isLoadingBudgets = true, error = null)
+                if(reset){
+                    budgetsFetcher.reset()
+                }
                 budgetsFetcher.loadNextPage()  // Trigger the fetcher for the next page of budgets
             } catch (e: Exception) {
                 _state.value = _state.value.copy(

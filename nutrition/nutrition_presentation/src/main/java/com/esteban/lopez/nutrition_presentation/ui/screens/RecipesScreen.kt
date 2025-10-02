@@ -333,7 +333,8 @@ fun RecipesScreen(
                     item {
                         RecipeComposable(
                             recipe = recipe,
-                            onOpen = { onDetailRecipe(recipe.id) }
+                            onOpen = { onDetailRecipe(recipe.id) },
+
                         )
                     }
                 }

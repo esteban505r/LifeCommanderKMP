@@ -104,7 +104,7 @@ fun FinanceScreen(
                             MaterialTheme.colors.primary.copy(alpha = 0.6f)
                     )
                 },
-                action = { actions.getBudgets() }
+                action = { actions.getBudgets(true) }
             )
         )
     }

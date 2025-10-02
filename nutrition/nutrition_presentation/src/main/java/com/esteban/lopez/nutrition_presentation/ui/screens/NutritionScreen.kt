@@ -169,6 +169,7 @@ fun NutritionScreen(
                 Log.d("RECIPES","${state.todayRecipes[index]}")
                RecipeComposable(
                    recipe = state.todayRecipes[index],
+                   showConsumeOptions = true,
                    onUndo = {
                        userIntent(NutritionIntent.UndoConsumedRecipe(
                            it,

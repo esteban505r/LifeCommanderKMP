@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.esteban.ruano.lifecommander.ui.components.AppLayout
 import com.esteban.ruano.lifecommander.ui.navigation.CalendarScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.CategoryKeywordMapperDestination
 import com.esteban.ruano.lifecommander.ui.navigation.HabitsScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.MealsScreenDestination
 import com.esteban.ruano.lifecommander.ui.navigation.PomodorosScreenDestination
@@ -270,7 +271,7 @@ fun AppNavHost(
                 }
 
                 composable(Screen.CategoryKeywordMapper.route) {
-                    CategoryKeywordMapperPlaceholderScreen(
+                    CategoryKeywordMapperDestination(
                         onNavigateBack = {
                             navController.navigateUp()
                         },

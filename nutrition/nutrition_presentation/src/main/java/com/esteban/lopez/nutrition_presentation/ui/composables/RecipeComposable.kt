@@ -59,6 +59,7 @@ fun RecipeComposable(
     onConsume: (Recipe) -> Unit = {},
     onEdit: (Recipe) -> Unit = {},
     onDelete: ((Recipe) -> Unit)? = null,
+    showConsumeOptions: Boolean = false
 ) {
     val (accent, accentBg) = mealColors(recipe.mealTag)
 
@@ -141,27 +142,28 @@ fun RecipeComposable(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if(!recipe.consumed){
-                    ActionIconButton(
-                        icon = Icons.Default.CheckCircle,
-                        tint = Color(0xFF2E7D32),
-                        contentDesc = "Mark done",
-                        onClick = { onConsume(recipe) }
-                    )
-                    ActionIconButton(
-                        icon = Icons.Default.SkipNext,
-                        tint = Color(0xFFF5A623),
-                        contentDesc = "Skip",
-                        onClick = { onSkip.invoke(recipe) },
-                    )
-                }
-                else if(recipe.consumedTrackId!=null){
-                    ActionIconButton(
-                        icon = Icons.Default.Undo,
-                        tint = Color(0xFFF5A623),
-                        contentDesc = "Undo",
-                        onClick = { onUndo.invoke(recipe.consumedTrackId!!) },
-                    )
+                if(showConsumeOptions){
+                    if (!recipe.consumed) {
+                        ActionIconButton(
+                            icon = Icons.Default.CheckCircle,
+                            tint = Color(0xFF2E7D32),
+                            contentDesc = "Mark done",
+                            onClick = { onConsume(recipe) }
+                        )
+                        ActionIconButton(
+                            icon = Icons.Default.SkipNext,
+                            tint = Color(0xFFF5A623),
+                            contentDesc = "Skip",
+                            onClick = { onSkip.invoke(recipe) },
+                        )
+                    } else if (recipe.consumedTrackId != null) {
+                        ActionIconButton(
+                            icon = Icons.Default.Undo,
+                            tint = Color(0xFFF5A623),
+                            contentDesc = "Undo",
+                            onClick = { onUndo.invoke(recipe.consumedTrackId!!) },
+                        )
+                    }
                 }
                 ActionIconButton(
                     icon = Icons.Default.Edit,

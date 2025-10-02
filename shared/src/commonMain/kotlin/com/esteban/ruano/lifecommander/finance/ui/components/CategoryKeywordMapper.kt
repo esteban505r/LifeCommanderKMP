@@ -207,9 +207,11 @@ private fun CategoryKeywordCard(
             // Keywords List
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
+
             ) {
                 mapping.keywords.forEach { keyword ->
                     Chip(
+                        modifier = Modifier.padding(8.dp),
                         onClick = { },
                         leadingIcon = {
                             IconButton(

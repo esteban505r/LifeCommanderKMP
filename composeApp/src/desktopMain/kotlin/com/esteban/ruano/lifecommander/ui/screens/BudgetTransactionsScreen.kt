@@ -132,7 +132,7 @@ fun BudgetTransactionsScreen(
             totalCount = state.totalTransactions,
             onLoadMore = {
                 scope.launch {
-                    financeActions.getTransactions(refresh = false)
+                    financeActions.getBudgetTransactions(budgetId,refresh = false)
                 }
             },
             onFiltersChange = {

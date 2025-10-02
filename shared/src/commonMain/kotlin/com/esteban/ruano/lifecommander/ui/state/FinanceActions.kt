@@ -44,7 +44,7 @@ interface FinanceActions {
     fun addBudget(budget: Budget)
     fun updateBudget(budget: Budget)
     fun deleteBudget(id: String)
-    fun getBudgets()
+    fun getBudgets(reset:Boolean = false)
     fun getBudgetProgress(budgetId: String)
     
     // Savings goal actions
