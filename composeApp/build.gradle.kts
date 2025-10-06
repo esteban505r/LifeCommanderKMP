@@ -77,6 +77,7 @@ kotlin {
                     implementation(libs.compose.material)
 //                implementation(libs.compose.runtime)
                     implementation(libs.compose.navigation)
+                     implementation(libs.ktor.client.okhttp)
                     implementation(libs.androidx.lifecycle.viewmodel.compose)
                     implementation(libs.androidx.activity.compose)
                     implementation(libs.compose.google.fonts)
@@ -158,7 +159,6 @@ kotlin {
 //            implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.json)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.paging)
@@ -274,8 +274,3 @@ compose.desktop {
     }
 }
 
-compose.resources {
-    publicResClass = true
-    packageOfResClass = "com.esteban.ruano.resources"
-    generateResClass = auto
-}
