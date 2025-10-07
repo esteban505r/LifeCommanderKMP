@@ -5,25 +5,31 @@ WORKDIR /src
 # Copy the entire repo so Gradle can see settings + version catalog + wrapper, etc.
 COPY . .
 
-# Build just the :server module (try fatJar -> shadowJar -> build)
+# Build the :server module using shadowJar
 RUN --mount=type=cache,target=/root/.gradle \
-    gradle --no-daemon :server:fatJar   -x test || \
-    gradle --no-daemon :server:shadowJar -x test || \
-    gradle --no-daemon :server:build     -x test && \
+    gradle --no-daemon :server:shadowJar -x test && \
     echo "---- server/build/libs content ----" && ls -la server/build/libs && \
-    JAR="$(ls server/build/libs/*-all.jar 2>/dev/null || true)"; \
-    if [ -z "$JAR" ]; then JAR="$(ls server/build/libs/*-fat.jar 2>/dev/null || true)"; fi; \
-    if [ -z "$JAR" ]; then JAR="$(ls server/build/libs/*-shadow.jar 2>/dev/null || true)"; fi; \
-    if [ -z "$JAR" ]; then JAR="$(ls server/build/libs/*.jar 2>/dev/null | head -n1 || true)"; fi; \
+    # Find the shadowJar output file
+    JAR="$(ls server/build/libs/*-all.jar 2>/dev/null || ls server/build/libs/*-shadow.jar 2>/dev/null | head -n1 || true)"; \
     if [ -z "$JAR" ]; then echo "No JAR produced under server/build/libs"; exit 1; fi; \
     cp "$JAR" /tmp/app.jar
 
 # ---- runtime stage ----
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
+
+# Copy the JAR from the build stage and the logback configuration
 COPY --from=build /tmp/app.jar /app/app.jar
 COPY server/src/main/resources/logback.xml /app/logback.xml
+
+# Set environment variable for Logback configuration
 ENV JAVA_TOOL_OPTIONS="-Dlogback.configurationFile=/app/logback.xml"
+
+# Use a non-root user for security
 USER 10001
+
+# Expose the app port
 EXPOSE 8080
-CMD ["java","-jar","/app/app.jar"]
+
+# Command to run the application
+CMD ["java", "-jar", "/app/app.jar"]
