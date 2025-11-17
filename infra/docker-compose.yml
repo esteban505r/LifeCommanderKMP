@@ -15,6 +15,11 @@ services:
     restart: always
     networks:
       - edge
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   oter:
     image: ${IMAGE_REPO}:${IMAGE_TAG}
@@ -35,6 +40,11 @@ services:
     restart: unless-stopped
     networks:
       - edge
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   edge:

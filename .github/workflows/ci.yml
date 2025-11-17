@@ -99,32 +99,6 @@ jobs:
           test -f infra/nginx.conf
           test -f infra/deploy.sh
 
-      # (Puedes dejar estos dos pasos de debug si quieres, o quitarlos ya)
-      - name: SSH debug – whoami, HOME and oter dir
-        shell: bash
-        run: |
-          set -euxo pipefail
-          echo "${{ secrets.EC2_SSH_KEY }}" > id_rsa
-          chmod 600 id_rsa
-
-          ssh -vvv -i id_rsa -p 22 -o StrictHostKeyChecking=no \
-            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
-            'whoami; pwd; echo "HOME=$HOME"; ls -ld ~ ~/oter || echo "oter dir missing or no perms"'
-
-      - name: SCP debug – copy single file to ~/oter
-        shell: bash
-        run: |
-          set -euxo pipefail
-          echo "${{ secrets.EC2_SSH_KEY }}" > id_rsa
-          chmod 600 id_rsa
-
-          ls -la infra
-
-          scp -vvv -i id_rsa -P 22 -o StrictHostKeyChecking=no \
-            infra/deploy.sh \
-            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/oter/"
-
-      # === NUEVO: subida "real" de deployment assets usando scp normal ===
       - name: Upload deployment assets (scp)
         shell: bash
         run: |
@@ -132,7 +106,7 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > id_rsa
           chmod 600 id_rsa
 
-          # Sube todo el contenido de infra/ a ~/oter/ (igual que scp-action con strip_components: 1)
+          # Upload everything inside infra/ into ~/oter/ on the server
           scp -i id_rsa -P 22 -o StrictHostKeyChecking=no \
             infra/* \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/oter/"
@@ -154,7 +128,16 @@ jobs:
           envs: IMAGE_TAG,IMAGE_REPO,GHCR_READ_USER,GHCR_READ_TOKEN,SENTRY_DSN,ENVIRONMENT
           script: |
             set -euxo pipefail
+
             cd ~/oter
             ls -la
             chmod +x deploy.sh
             ./deploy.sh
+
+            echo "Running post-deploy Docker cleanup..."
+            # Soft cleanup: remove unused stuff + build cache, but keep running containers/images
+            docker system prune -f
+            docker builder prune -f
+
+            echo "Disk usage after cleanup:"
+            df -h
