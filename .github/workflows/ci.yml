@@ -106,6 +106,7 @@ jobs:
           source: infra/**           # <-- recursive glob (matches files inside infra)
           target: ~/oter
           strip_components: 1        # <-- copies files into ~/oter/, not the infra/ folder
+          debug: true
 
       - name: SSH deploy
         uses: appleboy/ssh-action@v1.2.0
