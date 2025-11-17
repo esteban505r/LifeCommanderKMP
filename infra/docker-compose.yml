@@ -25,6 +25,9 @@ services:
       RDS_INSTANCE_ID: ${RDS_INSTANCE_ID}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
+      # Sentry configuration
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
     volumes:
       - ./.env:/app/.env
     expose:

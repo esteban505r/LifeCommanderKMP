@@ -22,6 +22,7 @@ POSTGRES_USER=${POSTGRES_USER:-postgres}
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-default_password}
 SES_FROM=${SES_FROM:-no-reply@example.com}
 SENTRY_DSN=${SENTRY_DSN:-}
+ENVIRONMENT=${ENVIRONMENT:-production}
 EOF
 else
   echo ".env file already exists, skipping creation."
