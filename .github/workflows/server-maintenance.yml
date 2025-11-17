@@ -1,0 +1,39 @@
+name: server-maintenance
+
+on:
+  schedule:
+    # Every Sunday at 05:00 UTC (adjust as you want)
+    - cron: "0 5 * * 0"
+  workflow_dispatch: {} # so you can run it manually too
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run maintenance on EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -euxo pipefail
+
+            echo ">>> Docker general cleanup (containers/images/networks not in use)"
+            docker system prune -af
+
+            echo ">>> Docker build cache cleanup"
+            docker builder prune -af
+
+            echo ">>> Show Docker disk usage after cleanup"
+            docker system df
+
+            echo ">>> Truncate huge Docker logs (if any)"
+            sudo find /var/lib/docker/containers/ -name "*-json.log" -size +10M -exec truncate -s 0 {} \;
+
+            echo ">>> Limit systemd journal size"
+            sudo journalctl --vacuum-size=100M
+
+            echo ">>> Final disk usage"
+            df -h
