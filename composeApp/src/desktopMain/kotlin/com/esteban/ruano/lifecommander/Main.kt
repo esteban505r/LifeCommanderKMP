@@ -64,7 +64,6 @@ fun App(
 
 
 fun main() = application {
-
     NotificationInitializer.configure(
         AppConfig(
             appName = "LifeCommander",

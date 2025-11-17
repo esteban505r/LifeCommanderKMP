@@ -70,7 +70,7 @@ fun trustManagerFromPem(pemPath: String): X509TrustManager {
     return tmf.trustManagers.single() as X509TrustManager
 }
 
-val tm = trustManagerFromPem("/home/bansyne/.config/httptoolkit/ca.pem")
+val tm = trustManagerFromPem("${System.getProperty("user.home")}/Downloads/httptoolkit.pem")
 
 val networkModule = module {
     single {

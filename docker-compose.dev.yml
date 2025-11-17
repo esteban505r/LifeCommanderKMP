@@ -30,7 +30,7 @@ services:
       - gradle-build:/src/build               # <-- build/ moved off bind mount
     environment:
       INCLUDE_ANDROID: "false"
-      ENABLED_SENTRY: "false"
+      ENABLED_SENTRY: "true"
       JAVA_TOOL_OPTIONS: "-Dio.ktor.development=true"
       LOG_LEVEL: DEBUG
       ENVIRONMENT: development
