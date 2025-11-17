@@ -99,7 +99,7 @@ jobs:
           test -f infra/nginx.conf
           test -f infra/deploy.sh
 
-      # === DEBUG STEP 1: Ver qué usuario, HOME y ~/oter ve el runner ===
+      # (Puedes dejar estos dos pasos de debug si quieres, o quitarlos ya)
       - name: SSH debug – whoami, HOME and oter dir
         shell: bash
         run: |
@@ -111,7 +111,6 @@ jobs:
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
             'whoami; pwd; echo "HOME=$HOME"; ls -ld ~ ~/oter || echo "oter dir missing or no perms"'
 
-      # === DEBUG STEP 2: Probar un SCP "a mano" para ver el error real ===
       - name: SCP debug – copy single file to ~/oter
         shell: bash
         run: |
@@ -125,16 +124,18 @@ jobs:
             infra/deploy.sh \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/oter/"
 
-      - name: Upload deployment assets
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: infra/**           # <-- como lo tenías
-          target: ~/oter             # <-- como lo tenías
-          strip_components: 1        # <-- copias solo el contenido de infra/
-          debug: true
+      # === NUEVO: subida "real" de deployment assets usando scp normal ===
+      - name: Upload deployment assets (scp)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo "${{ secrets.EC2_SSH_KEY }}" > id_rsa
+          chmod 600 id_rsa
+
+          # Sube todo el contenido de infra/ a ~/oter/ (igual que scp-action con strip_components: 1)
+          scp -i id_rsa -P 22 -o StrictHostKeyChecking=no \
+            infra/* \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/oter/"
 
       - name: SSH deploy
         uses: appleboy/ssh-action@v1.2.0
