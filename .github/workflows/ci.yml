@@ -105,9 +105,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: infra/**           # <-- recursive glob (matches files inside infra)
-          target: ~/oter
-          strip_components: 1        # <-- copies files into ~/oter/, not the infra/ folder
+          source: infra/**           # recursive glob (matches files inside infra)
+          target: /home/${{ secrets.EC2_USER }}/oter   # <- CHANGED: absolute path
+          strip_components: 1        # copies files into /home/<user>/oter/, not the infra/ folder
           debug: true
 
       - name: SSH deploy
@@ -127,9 +127,8 @@ jobs:
           envs: IMAGE_TAG,IMAGE_REPO,GHCR_READ_USER,GHCR_READ_TOKEN,SENTRY_DSN,ENVIRONMENT
           script: |
             set -euxo pipefail
-            cd ~/oter
-            # After strip_components:1 your files are in ~/oter now
+            cd /home/${{ secrets.EC2_USER }}/oter   # <- CHANGED: match target above
+            # After strip_components:1 your files are here now
             ls -la
             chmod +x deploy.sh
             ./deploy.sh
-  
