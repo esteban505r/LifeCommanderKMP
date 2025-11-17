@@ -2,12 +2,15 @@
 FROM gradle:8.11.1-jdk17 AS build
 WORKDIR /src
 
+# Build argument for enabling Sentry
+ARG ENABLE_SENTRY=true
+
 # Copy the entire repo so Gradle can see settings + version catalog + wrapper, etc.
 COPY . .
 
 # Build the :server module using shadowJar
 RUN --mount=type=cache,target=/root/.gradle \
-    gradle --no-daemon :server:shadowJar -x test && \
+    ENABLE_SENTRY=${ENABLE_SENTRY} gradle --no-daemon :server:shadowJar -x test && \
     echo "---- server/build/libs content ----" && ls -la server/build/libs && \
     # Find the shadowJar output file
     JAR="$(ls server/build/libs/*-all.jar 2>/dev/null || ls server/build/libs/*-shadow.jar 2>/dev/null | head -n1 || true)"; \
