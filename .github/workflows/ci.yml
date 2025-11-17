@@ -99,15 +99,41 @@ jobs:
           test -f infra/nginx.conf
           test -f infra/deploy.sh
 
+      # === DEBUG STEP 1: Ver qué usuario, HOME y ~/oter ve el runner ===
+      - name: SSH debug – whoami, HOME and oter dir
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo "${{ secrets.EC2_SSH_KEY }}" > id_rsa
+          chmod 600 id_rsa
+
+          ssh -vvv -i id_rsa -p 22 -o StrictHostKeyChecking=no \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
+            'whoami; pwd; echo "HOME=$HOME"; ls -ld ~ ~/oter || echo "oter dir missing or no perms"'
+
+      # === DEBUG STEP 2: Probar un SCP "a mano" para ver el error real ===
+      - name: SCP debug – copy single file to ~/oter
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo "${{ secrets.EC2_SSH_KEY }}" > id_rsa
+          chmod 600 id_rsa
+
+          ls -la infra
+
+          scp -vvv -i id_rsa -P 22 -o StrictHostKeyChecking=no \
+            infra/deploy.sh \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/oter/"
+
       - name: Upload deployment assets
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: infra/**           # recursive glob (matches files inside infra)
-          target: /home/${{ secrets.EC2_USER }}/oter   # <- CHANGED: absolute path
-          strip_components: 1        # copies files into /home/<user>/oter/, not the infra/ folder
+          source: infra/**           # <-- como lo tenías
+          target: ~/oter             # <-- como lo tenías
+          strip_components: 1        # <-- copias solo el contenido de infra/
           debug: true
 
       - name: SSH deploy
@@ -127,8 +153,7 @@ jobs:
           envs: IMAGE_TAG,IMAGE_REPO,GHCR_READ_USER,GHCR_READ_TOKEN,SENTRY_DSN,ENVIRONMENT
           script: |
             set -euxo pipefail
-            cd /home/${{ secrets.EC2_USER }}/oter   # <- CHANGED: match target above
-            # After strip_components:1 your files are here now
+            cd ~/oter
             ls -la
             chmod +x deploy.sh
             ./deploy.sh
