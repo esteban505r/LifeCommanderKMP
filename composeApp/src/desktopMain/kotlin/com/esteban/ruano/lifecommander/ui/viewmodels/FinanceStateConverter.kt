@@ -1,22 +1,17 @@
-package com.esteban.ruano.finance_presentation.converter
+package com.esteban.ruano.lifecommander.ui.viewmodels
 
-import com.esteban.ruano.finance_presentation.ui.viewmodel.state.AccountState
-import com.esteban.ruano.finance_presentation.ui.viewmodel.state.BudgetState
-import com.esteban.ruano.finance_presentation.ui.viewmodel.state.FinanceCoordinatorState
-import com.esteban.ruano.finance_presentation.ui.viewmodel.state.ScheduledTransactionState
-import com.esteban.ruano.finance_presentation.ui.viewmodel.state.TransactionState
+import com.esteban.ruano.lifecommander.ui.state.FinanceState
 import com.esteban.ruano.lifecommander.ui.state.FinanceTab
-import com.esteban.ruano.lifecommander.ui.state.FinanceState as DesktopFinanceState
 
 object FinanceStateConverter {
-    fun toDesktopState(
+    fun toFinanceState(
         coordinatorState: FinanceCoordinatorState,
         accountState: AccountState,
         transactionState: TransactionState,
         budgetState: BudgetState,
         scheduledTransactionState: ScheduledTransactionState
-    ): DesktopFinanceState {
-        return DesktopFinanceState(
+    ): FinanceState {
+        return FinanceState(
             selectedTab = when (coordinatorState.selectedTab) {
                 FinanceTab.ACCOUNTS -> 0
                 FinanceTab.TRANSACTIONS -> 1
@@ -46,7 +41,9 @@ object FinanceStateConverter {
             currentPage = transactionState.currentPage,
             pageSize = transactionState.pageSize,
             totalTransactions = transactionState.totalTransactions,
-            totalScheduledTransactions = scheduledTransactionState.totalScheduledTransactions
+            totalScheduledTransactions = scheduledTransactionState.totalScheduledTransactions,
+            currentBudgetId = transactionState.currentBudgetId
         )
     }
-} 
+}
+

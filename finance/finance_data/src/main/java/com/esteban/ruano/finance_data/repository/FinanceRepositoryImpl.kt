@@ -26,9 +26,11 @@ class FinanceRepositoryImpl(
         forceRefresh = false,
         localFetch = { throw NotImplementedError("No local data source implemented") },
         remoteFetch = {
+            val pageSize = limit ?: 50
+            val pageNumber = page ?: 0
             dataSource.getTransactions(
-                limit = limit ?: 50,
-                page = (page ?: 0) * (limit ?: 50),
+                limit = pageSize,
+                page = pageNumber * pageSize, // Convert page number to offset
                 filters = filters
             )
         }
@@ -244,9 +246,11 @@ class FinanceRepositoryImpl(
         forceRefresh = false,
         localFetch = { throw NotImplementedError("No local data source implemented") },
         remoteFetch = {
+            val pageSize = limit ?: 50
+            val pageNumber = page ?: 0
             dataSource.getScheduledTransactions(
-                limit = limit ?: 50,
-                page = (page ?: 0) * (limit ?: 50),
+                limit = pageSize,
+                page = pageNumber * pageSize, // Convert page number to offset
                 filters = filters
             )
         }

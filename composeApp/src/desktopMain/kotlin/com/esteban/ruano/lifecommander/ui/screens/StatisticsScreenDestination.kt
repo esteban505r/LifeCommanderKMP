@@ -7,7 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.esteban.ruano.lifecommander.ui.components.ErrorScreen
 import com.esteban.ruano.lifecommander.ui.components.LoadingScreen
-import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.*
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import org.koin.compose.viewmodel.koinViewModel
@@ -19,18 +19,18 @@ import ui.viewmodels.DashboardViewModel
 fun StatisticsScreenDestination(
     modifier: Modifier = Modifier,
     dashboardViewModel: DashboardViewModel = koinViewModel(),
-    financeViewModel: FinanceViewModel = koinViewModel(),
+    budgetViewModel: BudgetViewModel = koinViewModel(),
     timersViewModel: TimersViewModel = koinViewModel(),
     onNavigateBack: () -> Unit = {}
 ) {
-    val financeState by financeViewModel.state.collectAsState()
+    val budgetState by budgetViewModel.state.collectAsState()
     val dashboardLoading by dashboardViewModel.loading.collectAsState()
-    val financeLoading = financeState.isLoadingBudgets
+    val financeLoading = budgetState.isLoading
 
     LaunchedEffect(Unit) {
         // Load all necessary data for statistics
         dashboardViewModel.refreshDashboard()
-        financeViewModel.getBudgets()
+        budgetViewModel.getBudgets()
         
         // Load pomodoros for the current week
         val now = getCurrentDateTime(TimeZone.currentSystemDefault()).date
@@ -48,12 +48,12 @@ fun StatisticsScreenDestination(
                 modifier = modifier
             )
         }
-        financeState.error != null -> {
+        budgetState.error != null -> {
             ErrorScreen(
-                message = financeState.error ?: "Failed to load statistics",
+                message = budgetState.error ?: "Failed to load statistics",
                 onRetry = { 
                     dashboardViewModel.refreshDashboard()
-                    financeViewModel.getBudgets()
+                    budgetViewModel.getBudgets()
                 },
                 modifier = modifier
             )
@@ -61,7 +61,7 @@ fun StatisticsScreenDestination(
         else -> {
             StatisticsScreen(
                 dashboardViewModel = dashboardViewModel,
-                financeViewModel = financeViewModel,
+                budgetViewModel = budgetViewModel,
                 timersViewModel = timersViewModel,
                 onNavigateBack = onNavigateBack,
                 modifier = modifier

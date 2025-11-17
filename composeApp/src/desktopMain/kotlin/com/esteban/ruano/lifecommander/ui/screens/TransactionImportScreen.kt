@@ -9,7 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.AccountViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.TransactionViewModel
 import com.esteban.ruano.utils.DateUIUtils.formatCurrency
 import com.lifecommander.finance.model.*
 import org.koin.compose.viewmodel.koinViewModel
@@ -17,21 +18,28 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun TransactionImportScreen(
-    financeViewModel: FinanceViewModel = koinViewModel(),
+    accountViewModel: AccountViewModel = koinViewModel(),
+    transactionViewModel: TransactionViewModel = koinViewModel(),
     onImportComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val accounts = financeViewModel.state.collectAsState().value.accounts
+    val accountState by accountViewModel.state.collectAsState()
+    val transactionState by transactionViewModel.state.collectAsState()
+    val accounts = accountState.accounts
     var inputText by remember { mutableStateOf("") }
-    var previewData = financeViewModel.state.collectAsState().value.importPreview
+    var previewData by remember { mutableStateOf(transactionState.importPreview) }
     var parseError by remember { mutableStateOf<String?>(null) }
     var isImporting by remember { mutableStateOf(false) }
     var selectedAccountId by remember { mutableStateOf(accounts.firstOrNull()?.id ?: "") }
     var accountExpanded by remember { mutableStateOf(false) }
     var skipDuplicates by remember { mutableStateOf(true) }
 
+    LaunchedEffect(transactionState.importPreview) {
+        previewData = transactionState.importPreview
+    }
+
     LaunchedEffect(Unit) {
-        financeViewModel.getAccounts()
+        accountViewModel.getAccounts()
     }
 
     Column(
@@ -97,7 +105,7 @@ fun TransactionImportScreen(
                     val account = accounts.find { it.id == selectedAccountId }
                         ?: throw IllegalArgumentException("No account selected")
                     
-                    financeViewModel.previewTransactionImport(inputText, account.id!!)
+                    transactionViewModel.previewTransactionImport(inputText, account.id!!)
                     parseError = null
                 } catch (e: Exception) {
                     parseError = e.message
@@ -152,7 +160,7 @@ fun TransactionImportScreen(
             Button(
                 onClick = {
                     isImporting = true
-                    financeViewModel.importTransactions(inputText, selectedAccountId, skipDuplicates)
+                    transactionViewModel.importTransactions(inputText, selectedAccountId, skipDuplicates)
                     inputText = ""
                     previewData = null
                     onImportComplete()

@@ -14,8 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.esteban.ruano.finance_presentation.ui.viewmodel.FinanceViewModel
+import com.esteban.ruano.finance_presentation.ui.viewmodel.AccountViewModel
+import com.esteban.ruano.finance_presentation.ui.viewmodel.TransactionViewModel
 import com.esteban.ruano.ui.Orange
 import com.esteban.ruano.utils.DateUIUtils.formatCurrency
 import com.lifecommander.finance.model.*
@@ -24,25 +27,25 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun TransactionImportScreen(
-    viewModel: FinanceViewModel = hiltViewModel(),
+    accountViewModel: AccountViewModel = hiltViewModel(),
+    transactionViewModel: TransactionViewModel = hiltViewModel(),
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val state = viewModel.viewState.collectAsState().value
+    val accountState by accountViewModel.viewState.collectAsState()
+    val transactionState by transactionViewModel.viewState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     
     var inputText by remember { mutableStateOf("") }
     var parseError by remember { mutableStateOf<String?>(null) }
     var isImporting by remember { mutableStateOf(false) }
-    var selectedAccountId by remember { mutableStateOf(state.accounts.firstOrNull()?.id ?: "") }
+    var selectedAccountId by remember { mutableStateOf(accountState.accounts.firstOrNull()?.id ?: "") }
     var accountExpanded by remember { mutableStateOf(false) }
     var skipDuplicates by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            viewModel.handleIntent(com.esteban.ruano.finance_presentation.ui.intent.FinanceIntent.GetAccounts)
-        }
+        accountViewModel.getAccounts()
     }
 
     Scaffold(
@@ -73,7 +76,7 @@ fun TransactionImportScreen(
                 onExpandedChange = { accountExpanded = it }
             ) {
                 OutlinedTextField(
-                    value = state.accounts.find { it.id == selectedAccountId }?.name ?: "",
+                    value = accountState.accounts.find { it.id == selectedAccountId }?.name ?: "",
                     onValueChange = { },
                     readOnly = true,
                     label = { Text("Account") },
@@ -85,7 +88,7 @@ fun TransactionImportScreen(
                     expanded = accountExpanded,
                     onDismissRequest = { accountExpanded = false }
                 ) {
-                    state.accounts.forEach { account ->
+                    accountState.accounts.forEach { account ->
                         DropdownMenuItem(
                             onClick = {
                                 selectedAccountId = account.id!!
@@ -124,15 +127,11 @@ fun TransactionImportScreen(
             Button(
                 onClick = {
                     try {
-                        val account = state.accounts.find { it.id == selectedAccountId }
+                        val account = accountState.accounts.find { it.id == selectedAccountId }
                             ?: throw IllegalArgumentException("No account selected")
                         
                         coroutineScope.launch {
-                            viewModel.handleIntent(
-                                com.esteban.ruano.finance_presentation.ui.intent.FinanceIntent.PreviewTransactionImport(
-                                    inputText, account.id!!
-                                )
-                            )
+                            transactionViewModel.previewTransactionImport(inputText, account.id!!)
                         }
                         parseError = null
                     } catch (e: Exception) {
@@ -146,7 +145,7 @@ fun TransactionImportScreen(
             }
 
             // Preview Data
-            state.importPreview?.let { preview ->
+            transactionState.importPreview?.let { preview ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = 4.dp
@@ -208,10 +207,8 @@ fun TransactionImportScreen(
                             onClick = {
                                 isImporting = true
                                 coroutineScope.launch {
-                                    viewModel.handleIntent(
-                                        com.esteban.ruano.finance_presentation.ui.intent.FinanceIntent.ImportTransactions(
+                                    transactionViewModel.importTransactions(
                                             inputText, selectedAccountId, skipDuplicates
-                                        )
                                     )
                                     inputText = ""
                                     isImporting = false

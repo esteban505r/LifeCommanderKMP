@@ -33,6 +33,7 @@ fun FinanceScreen(
     modifier: Modifier = Modifier,
     onOpenBudgetTransactions: (String,String) -> Unit = {_,_ ->},
     onOpenCategoryKeywordMapper: () -> Unit = {},
+    onOpenStatistics: () -> Unit = {},
     isDesktop: Boolean = false
 ) {
     val selectedTab = state.selectedTab
@@ -45,8 +46,6 @@ fun FinanceScreen(
     var editingTransaction by remember { mutableStateOf<Transaction?>(null) }
     var editingScheduledTransaction by remember { mutableStateOf<ScheduledTransaction?>(null) }
     val coroutineScope = rememberCoroutineScope()
-
-    val scope = rememberCoroutineScope()
 
     val tabItems = remember {
         listOf(
@@ -157,6 +156,14 @@ fun FinanceScreen(
                         contentDescription = "Importer"
                     )
                 }
+                if (isDesktop) {
+                    IconButton(onClick = onOpenStatistics) {
+                        Icon(
+                            Icons.Default.BarChart,
+                            contentDescription = "Statistics"
+                        )
+                    }
+                }
             })
                 FinanceTabRow(
                     selectedTab = selectedTab,
@@ -168,14 +175,14 @@ fun FinanceScreen(
                 )
 
                 when (selectedTab) {
-                    0 -> AccountList(
+                    0 ->                     AccountList(
                         accounts = state.accounts,
                         selectedAccount = state.selectedAccount,
-                        onAccountSelected = { scope.launch { actions.selectAccount(it) } },
+                        onAccountSelected = { coroutineScope.launch { actions.selectAccount(it) } },
                         onAddAccount = { showAccountForm = true },
                         onEditAccount = { editingAccount = it },
                         onDeleteAccount = {
-                            scope.launch {
+                            coroutineScope.launch {
                                 it.id?.let { id ->
                                     actions.deleteAccount(
                                         id
@@ -190,15 +197,15 @@ fun FinanceScreen(
                         onTransactionClick = { /* Handle transaction click */ },
                         onEdit = { editingTransaction = it },
                         onAddTransaction = { showTransactionForm = true },
-                        onDelete = { scope.launch { it.id?.let { id -> actions.deleteTransaction(id) } } },
+                        onDelete = { coroutineScope.launch { it.id?.let { id -> actions.deleteTransaction(id) } } },
                         totalCount = state.totalTransactions,
                         onLoadMore = {
-                            scope.launch {
+                            coroutineScope.launch {
                                 actions.getTransactions(refresh = false)
                             }
                         },
                         onFiltersChange = {
-                            scope.launch {
+                            coroutineScope.launch {
                                 actions.changeTransactionFilters(it, onSuccess = {
                                     actions.getTransactions(refresh = true)
                                 })
@@ -214,7 +221,7 @@ fun FinanceScreen(
                         onEdit = { editingScheduledTransaction = it },
                         onAddTransaction = { showScheduledTransactionForm = true },
                         onDelete = {
-                            scope.launch {
+                            coroutineScope.launch {
                                 it.id?.let { id ->
                                     actions.deleteScheduledTransaction(
                                         id
@@ -224,12 +231,12 @@ fun FinanceScreen(
                         },
                         totalCount = state.totalScheduledTransactions,
                         onLoadMore = {
-                            scope.launch {
+                            coroutineScope.launch {
                                 actions.getScheduledTransactions(refresh = false)
                             }
                         },
                         onFiltersChange = {
-                            scope.launch {
+                            coroutineScope.launch {
                                 actions.changeTransactionFilters(it, onSuccess = {
                                     actions.getScheduledTransactions(refresh = true)
                                 })
@@ -251,7 +258,7 @@ fun FinanceScreen(
                                 actions.updateBudget(it)
                             },
                             onDeleteBudget = {
-                                scope.launch {
+                                coroutineScope.launch {
                                     it.id?.let { id ->
                                         actions.deleteBudget(
                                             id
@@ -301,7 +308,7 @@ fun FinanceScreen(
                     accounts = state.accounts,
                     initialTransaction = editingTransaction,
                     onSave = { transaction ->
-                        scope.launch {
+                        coroutineScope.launch {
                             if (editingTransaction != null) {
                                 actions.updateTransaction(transaction)
                             } else {
@@ -340,7 +347,7 @@ fun FinanceScreen(
                     accounts = state.accounts,
                     initialTransaction = editingScheduledTransaction,
                     onSave = { transaction ->
-                        scope.launch {
+                        coroutineScope.launch {
                             val scheduledTransaction = transaction
                             if (editingScheduledTransaction != null) {
                                 actions.updateScheduledTransaction(scheduledTransaction)
@@ -380,7 +387,7 @@ fun FinanceScreen(
                     accounts = state.accounts,
                     initialGoal = editingSavingsGoal,
                     onSave = { goal ->
-                        scope.launch {
+                        coroutineScope.launch {
                             if (editingSavingsGoal != null) {
                                 actions.updateSavingsGoal(goal)
                             } else {
@@ -419,7 +426,7 @@ fun FinanceScreen(
                 AccountForm(
                     initialAccount = editingAccount,
                     onSave = { account ->
-                        scope.launch {
+                        coroutineScope.launch {
                             if (editingAccount != null) {
                                 actions.updateAccount(account)
                             } else {

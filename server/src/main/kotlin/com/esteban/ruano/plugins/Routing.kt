@@ -52,6 +52,7 @@ fun Application.configureRouting() {
     val scheduledTransactionRepository: ScheduledTransactionRepository by inject()
     val portfolioRepository: PortfolioRepository by inject()
     val settingsRepository: SettingsRepository by inject()
+    val financeStatisticsRepository: FinanceStatisticsRepository by inject()
     
     // Inject services
     val authService: AuthService by inject()
@@ -90,6 +91,7 @@ fun Application.configureRouting() {
                     savingsGoalRepository = savingsGoalRepository,
                     categoryKeywordRepository = categoryKeywordRepository,
                     scheduledTransactionRepository = scheduledTransactionRepository,
+                    financeStatisticsRepository = financeStatisticsRepository,
                 )
             }
 

@@ -16,7 +16,11 @@ import services.auth.TokenStorageImpl
 import services.dailyjournal.DailyJournalService
 import com.esteban.ruano.lifecommander.utils.BASE_URL
 import com.esteban.ruano.lifecommander.ui.viewmodels.CalendarViewModel
-import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceCoordinatorViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.AccountViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.TransactionViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.BudgetViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.ScheduledTransactionViewModel
 import com.esteban.ruano.lifecommander.services.finance.FinanceService
 import com.esteban.ruano.lifecommander.services.meals.RecipesService
 import com.esteban.ruano.lifecommander.services.settings.SettingsService
@@ -26,6 +30,7 @@ import com.esteban.ruano.lifecommander.utils.SOCKETS_PATH
 import com.esteban.ruano.lifecommander.utils.SOCKETS_PORT
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackManager
 import com.esteban.ruano.lifecommander.ui.viewmodels.CategoryKeywordMapperViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceStatisticsViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.RecipesViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.SettingsViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
@@ -149,8 +154,13 @@ val viewModelsModule = module {
     viewModel { AuthViewModel(get()) }
     viewModel { DailyJournalViewModel(get(), get()) }
     viewModel { CalendarViewModel(get(), get(), get(), get()) }
-    viewModel { FinanceViewModel(get()) }
-    viewModel { TimersViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { FinanceCoordinatorViewModel() }
+    viewModel { AccountViewModel(get()) }
+    viewModel { TransactionViewModel(get()) }
+    viewModel { BudgetViewModel(get()) }
+        viewModel { ScheduledTransactionViewModel(get()) }
+        viewModel { FinanceStatisticsViewModel(get()) }
+        viewModel { TimersViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { CategoryKeywordMapperViewModel(get()) }
     viewModel {
         DashboardViewModel(

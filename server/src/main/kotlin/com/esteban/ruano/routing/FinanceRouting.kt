@@ -8,6 +8,7 @@ import io.ktor.server.routing.*
 import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.models.finance.*
 import com.esteban.ruano.repository.*
+import com.esteban.ruano.repository.FinanceStatisticsRepository
 import com.esteban.ruano.lifecommander.models.ErrorResponse
 import com.esteban.ruano.lifecommander.models.finance.BudgetFilters
 import com.esteban.ruano.lifecommander.models.finance.Category
@@ -31,6 +32,7 @@ fun Route.financeRouting(
     savingsGoalRepository: SavingsGoalRepository,
     categoryKeywordRepository: CategoryKeywordRepository,
     scheduledTransactionRepository: ScheduledTransactionRepository,
+    financeStatisticsRepository: FinanceStatisticsRepository,
 ) {
     route("/finance") {
         route("/accounts") {
@@ -570,6 +572,15 @@ fun Route.financeRouting(
                 } else {
                     call.respond(HttpStatusCode.InternalServerError)
                 }
+            }
+        }
+
+        // Finance Statistics route
+        route("/statistics") {
+            get {
+                val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                val statistics = financeStatisticsRepository.getStatistics(userId)
+                call.respond(statistics)
             }
         }
     }

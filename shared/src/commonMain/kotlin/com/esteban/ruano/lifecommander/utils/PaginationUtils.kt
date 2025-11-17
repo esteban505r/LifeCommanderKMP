@@ -29,9 +29,15 @@ class PaginatedDataFetcher<T>(
     fun reset() {
         currentPage = 0
         _data.value = emptyList()
+        hasMore = true
     }
 
-    suspend fun loadNextPage() {
+    suspend fun loadNextPage(reset: Boolean = false) {
+        if(reset){
+            currentPage = 0
+            _data.value = emptyList()
+            hasMore = true
+        }
         if (loadMutex.isLocked) return
         if (!hasMore) return
 
@@ -41,7 +47,7 @@ class PaginatedDataFetcher<T>(
             try {
                 val result = fetchData(currentPage, pageSize)
                 if (result.isNotEmpty()) {
-                    _data.value = _data.value + result
+                    _data.value += result
                     currentPage++
                 } else {
                     hasMore = false

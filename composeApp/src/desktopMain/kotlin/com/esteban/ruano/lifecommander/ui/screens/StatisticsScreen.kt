@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.ui.components.StatsChart
 import com.esteban.ruano.lifecommander.ui.components.ChartSeries
 import com.esteban.ruano.lifecommander.ui.components.BudgetColumnChart
-import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.BudgetViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
@@ -32,13 +32,14 @@ import kotlinx.datetime.toLocalDateTime as toLocalDateTimeKt
 @Composable
 fun StatisticsScreen(
     dashboardViewModel: DashboardViewModel,
-    financeViewModel: FinanceViewModel,
+    budgetViewModel: BudgetViewModel,
     timersViewModel: TimersViewModel,
     onNavigateBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val pomodoros by timersViewModel.pomodoros.collectAsState()
-    val budgets by financeViewModel.state.collectAsState()
+    val budgetState by budgetViewModel.state.collectAsState()
+    val budgets = budgetState.budgets
 
     // Calculate pomodoros per day this week
     val pomodorosPerDayThisWeek = remember(pomodoros) {
@@ -251,7 +252,7 @@ fun StatisticsScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         BudgetColumnChart(
-                            budgets = budgets.budgets,
+                            budgets = budgets,
                             modifier = Modifier.height(350.dp).fillMaxWidth(),
                             onBudgetClick = { budgetProgress ->
                                 // Handle budget click - you can navigate to budget details or show more info

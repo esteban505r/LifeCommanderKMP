@@ -43,13 +43,19 @@ class FinanceRemoteDataSource(
 
     override suspend fun getTransaction(transactionId: String): Transaction = api.getTransaction(transactionId)
     override suspend fun addTransaction(transaction: Transaction): Transaction = api.addTransaction(transaction)
-    override suspend fun updateTransaction(transaction: Transaction): Transaction = api.updateTransaction(transaction.id ?: "", transaction)
+    override suspend fun updateTransaction(transaction: Transaction): Transaction {
+        val transactionId = transaction.id ?: throw IllegalArgumentException("Transaction ID is required for update")
+        return api.updateTransaction(transactionId, transaction)
+    }
     override suspend fun deleteTransaction(id: String) = api.deleteTransaction(id)
 
     // Account operations
     override suspend fun getAccounts(): List<Account> = api.getAccounts()
     override suspend fun addAccount(account: Account): Account = api.addAccount(account)
-    override suspend fun updateAccount(account: Account): Account = api.updateAccount(account.id ?: "", account)
+    override suspend fun updateAccount(account: Account): Account {
+        val accountId = account.id ?: throw IllegalArgumentException("Account ID is required for update")
+        return api.updateAccount(accountId, account)
+    }
     override suspend fun deleteAccount(id: String) = api.deleteAccount(id)
 
     // Budget operations
@@ -58,7 +64,10 @@ class FinanceRemoteDataSource(
         referenceDate: String
     ): List<BudgetProgress> = api.getBudgetsWithProgress(filters.toQueryMap(), referenceDate)
     override suspend fun addBudget(budget: Budget): Budget = api.addBudget(budget)
-    override suspend fun updateBudget(budget: Budget): Budget = api.updateBudget(budget.id ?: "", budget)
+    override suspend fun updateBudget(budget: Budget): Budget {
+        val budgetId = budget.id ?: throw IllegalArgumentException("Budget ID is required for update")
+        return api.updateBudget(budgetId, budget)
+    }
     override suspend fun deleteBudget(id: String) = api.deleteBudget(id)
     override suspend fun getBudgetProgress(budgetId: String): BudgetProgress = api.getBudgetProgress(budgetId)
     override suspend fun getBudgetTransactions(
@@ -70,7 +79,10 @@ class FinanceRemoteDataSource(
     // Savings Goal operations
     override suspend fun getSavingsGoals(): List<SavingsGoal> = api.getSavingsGoals()
     override suspend fun addSavingsGoal(goal: SavingsGoal): SavingsGoal = api.addSavingsGoal(goal)
-    override suspend fun updateSavingsGoal(goal: SavingsGoal): SavingsGoal = api.updateSavingsGoal(goal.id ?: "", goal)
+    override suspend fun updateSavingsGoal(goal: SavingsGoal): SavingsGoal {
+        val goalId = goal.id ?: throw IllegalArgumentException("Savings goal ID is required for update")
+        return api.updateSavingsGoal(goalId, goal)
+    }
     override suspend fun deleteSavingsGoal(id: String) = api.deleteSavingsGoal(id)
     override suspend fun getSavingsGoalProgress(goalId: String): SavingsGoalProgress = api.getSavingsGoalProgress(goalId)
 
@@ -81,7 +93,10 @@ class FinanceRemoteDataSource(
         filters: TransactionFilters
     ): ScheduledTransactionsResponse = api.getScheduledTransactions(limit, page, filters.toQueryMap())
     override suspend fun addScheduledTransaction(transaction: ScheduledTransaction): ScheduledTransaction = api.addScheduledTransaction(transaction)
-    override suspend fun updateScheduledTransaction(transaction: ScheduledTransaction): ScheduledTransaction = api.updateScheduledTransaction(transaction.id ?: "", transaction)
+    override suspend fun updateScheduledTransaction(transaction: ScheduledTransaction): ScheduledTransaction {
+        val transactionId = transaction.id ?: throw IllegalArgumentException("Scheduled transaction ID is required for update")
+        return api.updateScheduledTransaction(transactionId, transaction)
+    }
     override suspend fun deleteScheduledTransaction(id: String) = api.deleteScheduledTransaction(id)
 
     // Utility operations

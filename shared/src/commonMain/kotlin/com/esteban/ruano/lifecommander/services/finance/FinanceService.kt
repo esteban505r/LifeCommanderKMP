@@ -1,6 +1,7 @@
 package com.esteban.ruano.lifecommander.services.finance
 
 // ---------- Paging imports ----------
+import com.esteban.ruano.lifecommander.models.FinanceStatisticsDTO
 import com.esteban.ruano.lifecommander.models.finance.*
 import com.esteban.ruano.lifecommander.utils.appHeaders
 import com.esteban.ruano.lifecommander.utils.buildParametersString
@@ -321,7 +322,6 @@ class FinanceService(
 
     suspend fun getBudgetTransactions(
         budgetId: String,
-        referenceDate: String,
         filters: TransactionFilters = TransactionFilters(),
         limit: Int,
         offset: Int,
@@ -330,7 +330,6 @@ class FinanceService(
             append("$baseUrl/finance/budgets/$budgetId/transactions")
             val params = mutableListOf<String>()
 
-            params.add("referenceDate=$referenceDate")
             params.add("limit=$limit")
             params.add("offset=$offset")
 
@@ -357,14 +356,13 @@ class FinanceService(
     // Paged HTTP helper for budget transactions
     suspend fun getBudgetTransactionsPaged(
         budgetId: String,
-        referenceDate: String,
         filters: TransactionFilters = TransactionFilters(),
         limit: Int,
         offset: Int
     ): List<Transaction> {
         val url = buildString {
             append("$baseUrl/finance/budgets/$budgetId/transactions")
-            val params = mutableListOf("referenceDate=$referenceDate", "limit=$limit", "offset=$offset")
+            val params = mutableListOf("limit=$limit", "offset=$offset")
             filters.buildParametersString()?.let { params += it }
             append("?${params.joinToString("&")}")
         }
@@ -497,6 +495,14 @@ class FinanceService(
 
     suspend fun getScheduledTransactionsByAccount(accountId: String): List<ScheduledTransaction> {
         return httpClient.get("$baseUrl/finance/scheduled-transactions/byAccount/$accountId") {
+            appHeaders(tokenStorageImpl.getToken())
+        }.body()
+    }
+
+    // ===================== Finance Statistics =====================
+
+    suspend fun getFinanceStatistics(): FinanceStatisticsDTO {
+        return httpClient.get("$baseUrl/finance/statistics") {
             appHeaders(tokenStorageImpl.getToken())
         }.body()
     }

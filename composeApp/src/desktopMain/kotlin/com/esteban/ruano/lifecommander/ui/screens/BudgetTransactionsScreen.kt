@@ -39,7 +39,7 @@ fun BudgetTransactionsScreen(
 
     // Trigger for loading transactions
     LaunchedEffect(budgetId) {
-        financeActions.getBudgetTransactions(budgetId)
+        financeActions.getBudgetTransactions(budgetId, refresh = true)
     }
 
     val listState = rememberLazyListState()
@@ -138,7 +138,7 @@ fun BudgetTransactionsScreen(
             onFiltersChange = {
                 scope.launch {
                     financeActions.changeTransactionFilters(it, onSuccess = {
-                        financeActions.getBudgetTransactions(budgetId)
+                        financeActions.getBudgetTransactions(budgetId, refresh = true)
                     })
                 }
             },

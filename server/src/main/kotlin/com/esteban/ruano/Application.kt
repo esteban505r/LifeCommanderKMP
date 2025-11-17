@@ -180,11 +180,22 @@ fun Application.connectToPostgres() {
         .migrate()
 
 // Exposed
+    // Configure HikariCP connection pool properties
+    val poolProperties = java.util.Properties().apply {
+        // HikariCP properties
+        setProperty("dataSource.maximumPoolSize", "20")
+        setProperty("dataSource.minimumIdle", "5")
+        setProperty("dataSource.connectionTimeout", "30000")
+        setProperty("dataSource.idleTimeout", "600000")
+        setProperty("dataSource.maxLifetime", "1800000")
+    }
+    
     Database.connect(
         url = cfg.db.url,
         driver = if (iamMode) "software.amazon.jdbc.Driver" else "org.postgresql.Driver",
         user = cfg.db.user,
-        password = cfg.db.password
+        password = cfg.db.password,
+        properties = poolProperties
     )
 
 

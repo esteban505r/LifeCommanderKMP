@@ -48,6 +48,7 @@ val appModule = module {
     single { ScheduledTransactionService() }
     single { SyncService(get(), get(), get()) }
     single { SettingsService() }
+    single { FinanceStatisticsService(get(), get()) }
     single { FirstRunSeeder(get(),get(),get()) }
     single { AuthService(
         get()
@@ -85,4 +86,5 @@ val appModule = module {
     single { PortfolioRepository(get()) }
     single { ScheduledTransactionRepository(get()) }
     single { SettingsRepository(get()) }
+    single { FinanceStatisticsRepository(get()) }
 } 

@@ -25,6 +25,7 @@ import com.esteban.ruano.lifecommander.ui.navigation.routes.TaskDetailRoute
 import com.esteban.ruano.lifecommander.ui.navigation.routes.TimerListDetailRoute
 import com.esteban.ruano.lifecommander.ui.screens.BudgetTransactionsScreen
 import com.esteban.ruano.lifecommander.ui.screens.FinancialScreenDestination
+import com.esteban.ruano.lifecommander.ui.screens.FinanceStatisticsScreenDestination
 import com.esteban.ruano.lifecommander.ui.screens.CategoryKeywordMapperPlaceholderScreen
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -33,7 +34,7 @@ import ui.ui.viewmodels.AuthViewModel
 import ui.screens.AuthScreen
 import com.esteban.ruano.lifecommander.ui.screens.DashboardScreen
 import com.esteban.ruano.lifecommander.ui.screens.TransactionImportScreen
-import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.*
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import ui.state.AuthState
 import ui.viewmodels.AppViewModel
@@ -50,6 +51,7 @@ sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Finance : Screen("finance")
     object FinanceImporter : Screen("finance_importer")
+    object FinanceStatistics : Screen("finance_statistics")
     object Calendar : Screen("calendar")
     object Timers : Screen("timers")
     object Settings : Screen("settings")
@@ -71,7 +73,11 @@ fun AppNavHost(
     taskViewModel: TasksViewModel = koinViewModel(),
     habitViewModel: HabitsViewModel = koinViewModel(),
     authService: AuthService = koinInject(),
-    financeViewModel: FinanceViewModel = koinViewModel(),
+    coordinatorViewModel: FinanceCoordinatorViewModel = koinViewModel(),
+    accountViewModel: AccountViewModel = koinViewModel(),
+    transactionViewModel: TransactionViewModel = koinViewModel(),
+    budgetViewModel: BudgetViewModel = koinViewModel(),
+    scheduledTransactionViewModel: ScheduledTransactionViewModel = koinViewModel(),
     authViewModel: AuthViewModel = koinViewModel(),
     appViewModel: AppViewModel = koinViewModel(),
     dailyJournalViewModel: DailyJournalViewModel = koinViewModel(),
@@ -179,12 +185,11 @@ fun AppNavHost(
                 composable(Screen.Finance.route) {
                     FinancialScreenDestination(
                         modifier = modifier,
-                        financialViewModel = koinViewModel(),
                         onOpenImporter = {
                             navController.navigate(Screen.FinanceImporter.route)
                         },
-                        onOpenBudgetTransactions = { budgetId,budgetName ->
-                            financeViewModel.setCurrentBudgetId(budgetId)
+                        onOpenBudgetTransactions = { budgetId, budgetName ->
+                            transactionViewModel.setCurrentBudgetId(budgetId)
                             navController.navigate(BudgetTransactionsRoute(
                                 budgetId = budgetId,
                                 budgetName = budgetName
@@ -192,6 +197,9 @@ fun AppNavHost(
                         },
                         onOpenCategoryKeywordMapper = {
                             navController.navigate(Screen.CategoryKeywordMapper.route)
+                        },
+                        onOpenStatistics = {
+                            navController.navigate(Screen.FinanceStatistics.route)
                         }
                     )
                 }
@@ -205,10 +213,40 @@ fun AppNavHost(
                     )
                 }
 
+                composable(Screen.FinanceStatistics.route) {
+                    FinanceStatisticsScreenDestination(
+                        modifier = modifier,
+                        onNavigateBack = {
+                            navController.navigateUp()
+                        }
+                    )
+                }
+
                 composable<BudgetTransactionsRoute>(
                 ) { backStackEntry ->
-                    val financeViewModel: FinanceViewModel = koinViewModel()
                     val args = backStackEntry.toRoute<BudgetTransactionsRoute>()
+                    val transactionState by transactionViewModel.state.collectAsState()
+                    val budgetState by budgetViewModel.state.collectAsState()
+                    val accountState by accountViewModel.state.collectAsState()
+                    val coordinatorState by coordinatorViewModel.state.collectAsState()
+                    val scheduledTransactionState by scheduledTransactionViewModel.state.collectAsState()
+                    
+                    val combinedState = FinanceStateConverter.toFinanceState(
+                        coordinatorState = coordinatorState,
+                        accountState = accountState,
+                        transactionState = transactionState,
+                        budgetState = budgetState,
+                        scheduledTransactionState = scheduledTransactionState
+                    )
+                    
+                    val actions = FinanceActionsWrapper(
+                        coordinatorViewModel = coordinatorViewModel,
+                        accountViewModel = accountViewModel,
+                        transactionViewModel = transactionViewModel,
+                        budgetViewModel = budgetViewModel,
+                        scheduledTransactionViewModel = scheduledTransactionViewModel
+                    )
+                    
                     BudgetTransactionsScreen(
                         budgetId = args.budgetId,
                         budgetName = args.budgetName,
@@ -216,11 +254,12 @@ fun AppNavHost(
                             navController.navigateUp()
                         },
                         modifier = modifier,
-                        financeActions = financeViewModel,
-                        state = financeViewModel.state.collectAsState().value,
+                        financeActions = actions,
+                        state = combinedState,
                         onLoadMore = {
-                            financeViewModel.getBudgetTransactions(
+                            transactionViewModel.getBudgetTransactions(
                                 budgetId = args.budgetId,
+                                refresh = false
                             )
                         }
                     )

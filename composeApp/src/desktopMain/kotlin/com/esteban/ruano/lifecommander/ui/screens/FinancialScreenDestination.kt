@@ -7,45 +7,71 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.esteban.ruano.lifecommander.ui.components.ErrorScreen
 import com.esteban.ruano.lifecommander.ui.components.LoadingScreen
-import com.esteban.ruano.lifecommander.ui.viewmodels.FinanceViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.*
 import com.lifecommander.finance.ui.FinanceScreen
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun FinancialScreenDestination(
     modifier: Modifier = Modifier,
-    financialViewModel: FinanceViewModel = koinViewModel(),
+    coordinatorViewModel: FinanceCoordinatorViewModel = koinViewModel(),
+    accountViewModel: AccountViewModel = koinViewModel(),
+    transactionViewModel: TransactionViewModel = koinViewModel(),
+    budgetViewModel: BudgetViewModel = koinViewModel(),
+    scheduledTransactionViewModel: ScheduledTransactionViewModel = koinViewModel(),
     onOpenImporter: () -> Unit = {},
     onOpenBudgetTransactions: (String,String) -> Unit = {_,_ ->},
     onOpenCategoryKeywordMapper: () -> Unit = {},
+    onOpenStatistics: () -> Unit = {},
 ) {
-    val state by financialViewModel.state.collectAsState()
+    val coordinatorState by coordinatorViewModel.state.collectAsState()
+    val accountState by accountViewModel.state.collectAsState()
+    val transactionState by transactionViewModel.state.collectAsState()
+    val budgetState by budgetViewModel.state.collectAsState()
+    val scheduledTransactionState by scheduledTransactionViewModel.state.collectAsState()
 
     LaunchedEffect(Unit) {
-        financialViewModel.getAccounts()
+        accountViewModel.getAccounts()
     }
 
+    val combinedState = FinanceStateConverter.toFinanceState(
+        coordinatorState = coordinatorState,
+        accountState = accountState,
+        transactionState = transactionState,
+        budgetState = budgetState,
+        scheduledTransactionState = scheduledTransactionState
+    )
+
+    val actions = FinanceActionsWrapper(
+        coordinatorViewModel = coordinatorViewModel,
+        accountViewModel = accountViewModel,
+        transactionViewModel = transactionViewModel,
+        budgetViewModel = budgetViewModel,
+        scheduledTransactionViewModel = scheduledTransactionViewModel
+    )
+
     when {
-        state.isLoading -> {
+        combinedState.isLoading -> {
             LoadingScreen(
                 message = "Loading financial data...",
                 modifier = modifier
             )
         }
-        state.error != null -> {
+        combinedState.error != null -> {
             ErrorScreen(
-                message = state.error ?: "Failed to load financial data",
-                onRetry = { financialViewModel.getAccounts() },
+                message = combinedState.error ?: "Failed to load financial data",
+                onRetry = { accountViewModel.getAccounts() },
                 modifier = modifier
             )
         }
         else -> {
             FinanceScreen(
-                state = state,
-                actions = financialViewModel,
+                state = combinedState,
+                actions = actions,
                 onOpenImporter = onOpenImporter,
                 onOpenBudgetTransactions = onOpenBudgetTransactions,
                 onOpenCategoryKeywordMapper = onOpenCategoryKeywordMapper,
+                onOpenStatistics = onOpenStatistics,
                 isDesktop = true,
                 modifier = modifier
             )
