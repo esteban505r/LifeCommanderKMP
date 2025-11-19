@@ -1,9 +1,16 @@
 # .github/workflows/build-and-deploy.yml
 name: build-and-deploy
 
+# Triggers on:
+# - main branch (for continuous deployment)
+# - release/server/* branches (for server-specific releases)
+#   Examples: release/server/1.0.0, release/server/v2.1.3
+# - Tags matching v* (for versioned releases)
 on:
   push:
-    branches: [ main ]
+    branches: 
+      - main
+      - release/server/**
     tags:     [ "v*" ]
 
 concurrency:
@@ -24,6 +31,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Extract and parse version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            # Extract version from tag (e.g., v1.0.0 -> 1.0.0)
+            VERSION_RAW=${GITHUB_REF_NAME}
+            VERSION=${VERSION_RAW#v}
+            VERSION_TAG=${GITHUB_REF_NAME}
+          elif [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            # Use commit SHA for main branch
+            VERSION="sha-${GITHUB_SHA::7}"
+            VERSION_TAG="sha-${GITHUB_SHA::7}"
+          else
+            # Extract version from branch (e.g., release/server/1.0.0 -> 1.0.0)
+            BRANCH_NAME=${GITHUB_REF#refs/heads/}
+            VERSION_RAW=${BRANCH_NAME#release/server/}
+            VERSION=${VERSION_RAW#v}
+            VERSION_TAG="sha-${GITHUB_SHA::7}"
+          fi
+          
+          echo "Server version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version_tag=$VERSION_TAG" >> "$GITHUB_OUTPUT"
+          echo "SERVER_VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -33,17 +67,14 @@ jobs:
             type=ref,event=tag
             type=sha,format=short,prefix=sha-
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.version.outputs.version }},enable=${{ github.ref_type != 'tag' && github.ref != 'refs/heads/main' }}
 
       - name: Pick deploy tag
         id: pick
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            echo "version_tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-          else
-            echo "version_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-          fi
+          echo "version_tag=${{ steps.version.outputs.version_tag }}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
         with:
@@ -60,6 +91,8 @@ jobs:
 
       - name: Build & push image
         uses: docker/build-push-action@v6
+        env:
+          SERVER_VERSION: ${{ env.SERVER_VERSION }}
         with:
           context: .
           file: server/Dockerfile
@@ -70,6 +103,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             ENABLE_SENTRY=true
+            SERVER_VERSION=${{ env.SERVER_VERSION }}
 
   deploy:
     runs-on: ubuntu-latest

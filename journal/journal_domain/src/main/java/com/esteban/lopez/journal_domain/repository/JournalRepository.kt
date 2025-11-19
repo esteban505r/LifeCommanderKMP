@@ -21,5 +21,11 @@ interface JournalRepository {
         limit: Int = 10,
         offset: Long = 0
     ): Result<List<DailyJournalResponse>>
+    suspend fun getJournalByDate(date: String): Result<DailyJournalResponse?>
+    suspend fun updateDailyJournal(
+        id: String,
+        summary: String,
+        questionAnswers: List<QuestionAnswerDTO>
+    ): Result<Unit>
 }
 

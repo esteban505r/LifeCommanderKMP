@@ -50,9 +50,20 @@ class JournalViewModel @Inject constructor(
                     journalsResult.fold(
                         onSuccess = { journals ->
                             val isCompleted = journals.isNotEmpty()
-                            // Get unique question answers by questionId (in case of duplicates)
-                            val questionAnswers = journals.flatMap { it.questionAnswers }
+                            // Get unique question answers by questionId and merge with question data
+                            // Maintain order by matching with questions list order
+                            val questionAnswersMap = journals.flatMap { it.questionAnswers }
                                 .distinctBy { it.questionId }
+                                .associateBy { it.questionId }
+                            
+                            val questionAnswers = questions.mapNotNull { question ->
+                                questionAnswersMap[question.id]?.let { answer ->
+                                    answer.copy(
+                                        question = question.question,
+                                        type = question.type ?: QuestionType.TEXT
+                                    )
+                                }
+                            }
                             
                             emitState {
                                 currentState.copy(
@@ -228,10 +239,26 @@ class JournalViewModel @Inject constructor(
     }
 
     private fun addAnswer(questionId: String, answer: String) {
-        val currentAnswers = currentState.questionAnswers.filterNot {
-            it.questionId == questionId
-        }.toMutableList()
-        currentAnswers.add(QuestionAnswerDTO(questionId, "", QuestionType.TEXT, answer))
+        val currentAnswers = currentState.questionAnswers.toMutableList()
+        val existingAnswerIndex = currentAnswers.indexOfFirst { it.questionId == questionId }
+        
+        if (existingAnswerIndex >= 0) {
+            // Update existing answer while preserving question data
+            val existingAnswer = currentAnswers[existingAnswerIndex]
+            currentAnswers[existingAnswerIndex] = existingAnswer.copy(answer = answer)
+        } else {
+            // Create new answer, but try to get question data from questions list
+            val question = currentState.questions.firstOrNull { it.id == questionId }
+            currentAnswers.add(
+                QuestionAnswerDTO(
+                    questionId = questionId,
+                    question = question?.question ?: "",
+                    type = question?.type ?: QuestionType.TEXT,
+                    answer = answer
+                )
+            )
+        }
+        
         emitState {
             currentState.copy(questionAnswers = currentAnswers)
         }
@@ -246,37 +273,134 @@ class JournalViewModel @Inject constructor(
             
             emitState { currentState.copy(isLoading = true, isSaving = true) }
             val today = getCurrentDateTime(TimeZone.currentSystemDefault())
+            val todayDate = today.date.formatDefault()
             
-            journalUseCases.createDailyJournal(
-                date = today.date.formatDefault(),
-                summary = "Daily Journal",
-                questionAnswers = currentState.questionAnswers
-            ).fold(
-                onSuccess = {
-                    journalUseCases.getJournalHistory(today.date.formatDefault(), today.date.formatDefault()).fold(
-                        onSuccess = { allHistory ->
-                            emitState {
-                                currentState.copy(
-                                    isCompleted = true,
-                                    showQuestions = false,
-                                    journalHistory = allHistory,
-                                    isLoading = false,
-                                    isSaving = false
+            // Check if journal already exists for today
+            journalUseCases.getJournalByDate(todayDate).fold(
+                onSuccess = { existingJournal ->
+                    if (existingJournal != null) {
+                        // Update existing journal using PATCH
+                        journalUseCases.updateDailyJournal(
+                            id = existingJournal.id,
+                            summary = "Daily Journal",
+                            questionAnswers = currentState.questionAnswers
+                        ).fold(
+                            onSuccess = {
+                                journalUseCases.getJournalHistory(todayDate, todayDate).fold(
+                                    onSuccess = { allHistory ->
+                                        // Extract question answers from the journal response and ensure they have question text and type
+                                        // Maintain order by matching with questions list order
+                                        val journalEntry = allHistory.firstOrNull()
+                                        val questionAnswersMap = journalEntry?.questionAnswers
+                                            ?.distinctBy { it.questionId }
+                                            ?.associateBy { it.questionId } ?: emptyMap()
+                                        
+                                        val updatedQuestionAnswers = currentState.questions.mapNotNull { question ->
+                                            questionAnswersMap[question.id]?.let { answer ->
+                                                answer.copy(
+                                                    question = question.question,
+                                                    type = question.type ?: QuestionType.TEXT
+                                                )
+                                            }
+                                        }
+                                        
+                                        emitState {
+                                            currentState.copy(
+                                                isCompleted = true,
+                                                showQuestions = false,
+                                                journalHistory = allHistory,
+                                                questionAnswers = updatedQuestionAnswers,
+                                                isLoading = false,
+                                                isSaving = false
+                                            )
+                                        }
+                                        sendSuccessEffect(com.esteban.ruano.core.utils.UiText.DynamicString("Journal updated successfully"))
+                                    },
+                                    onFailure = { e ->
+                                        emitState {
+                                            currentState.copy(
+                                                error = e.message,
+                                                isLoading = false,
+                                                isSaving = false
+                                            )
+                                        }
+                                        sendErrorEffect(com.esteban.ruano.core.utils.UiText.DynamicString(e.message ?: "Failed to reload history"))
+                                    }
                                 )
+                            },
+                            onFailure = { e ->
+                                emitState {
+                                    currentState.copy(
+                                        error = e.message,
+                                        isLoading = false,
+                                        isSaving = false
+                                    )
+                                }
+                                sendErrorEffect(com.esteban.ruano.core.utils.UiText.DynamicString(e.message ?: "Failed to update journal"))
                             }
-                            sendSuccessEffect(com.esteban.ruano.core.utils.UiText.DynamicString("Journal completed successfully"))
-                        },
-                        onFailure = { e ->
-                            emitState {
-                                currentState.copy(
-                                    error = e.message,
-                                    isLoading = false,
-                                    isSaving = false
+                        )
+                    } else {
+                        // Create new journal using POST
+                        journalUseCases.createDailyJournal(
+                            date = todayDate,
+                            summary = "Daily Journal",
+                            questionAnswers = currentState.questionAnswers
+                        ).fold(
+                            onSuccess = {
+                                journalUseCases.getJournalHistory(todayDate, todayDate).fold(
+                                    onSuccess = { allHistory ->
+                                        // Extract question answers from the journal response and ensure they have question text and type
+                                        // Maintain order by matching with questions list order
+                                        val journalEntry = allHistory.firstOrNull()
+                                        val questionAnswersMap = journalEntry?.questionAnswers
+                                            ?.distinctBy { it.questionId }
+                                            ?.associateBy { it.questionId } ?: emptyMap()
+                                        
+                                        val updatedQuestionAnswers = currentState.questions.mapNotNull { question ->
+                                            questionAnswersMap[question.id]?.let { answer ->
+                                                answer.copy(
+                                                    question = question.question,
+                                                    type = question.type ?: QuestionType.TEXT
+                                                )
+                                            }
+                                        }
+                                        
+                                        emitState {
+                                            currentState.copy(
+                                                isCompleted = true,
+                                                showQuestions = false,
+                                                journalHistory = allHistory,
+                                                questionAnswers = updatedQuestionAnswers,
+                                                isLoading = false,
+                                                isSaving = false
+                                            )
+                                        }
+                                        sendSuccessEffect(com.esteban.ruano.core.utils.UiText.DynamicString("Journal completed successfully"))
+                                    },
+                                    onFailure = { e ->
+                                        emitState {
+                                            currentState.copy(
+                                                error = e.message,
+                                                isLoading = false,
+                                                isSaving = false
+                                            )
+                                        }
+                                        sendErrorEffect(com.esteban.ruano.core.utils.UiText.DynamicString(e.message ?: "Failed to reload history"))
+                                    }
                                 )
+                            },
+                            onFailure = { e ->
+                                emitState {
+                                    currentState.copy(
+                                        error = e.message,
+                                        isLoading = false,
+                                        isSaving = false
+                                    )
+                                }
+                                sendErrorEffect(com.esteban.ruano.core.utils.UiText.DynamicString(e.message ?: "Failed to complete journal"))
                             }
-                            sendErrorEffect(com.esteban.ruano.core.utils.UiText.DynamicString(e.message ?: "Failed to reload history"))
-                        }
-                    )
+                        )
+                    }
                 },
                 onFailure = { e ->
                     emitState {
@@ -286,7 +410,7 @@ class JournalViewModel @Inject constructor(
                             isSaving = false
                         )
                     }
-                    sendErrorEffect(com.esteban.ruano.core.utils.UiText.DynamicString(e.message ?: "Failed to complete journal"))
+                    sendErrorEffect(com.esteban.ruano.core.utils.UiText.DynamicString(e.message ?: "Failed to check existing journal"))
                 }
             )
         }

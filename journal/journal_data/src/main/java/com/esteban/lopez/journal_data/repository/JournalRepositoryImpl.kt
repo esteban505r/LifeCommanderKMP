@@ -73,5 +73,27 @@ class JournalRepositoryImpl(
             Result.failure(e)
         }
     }
+
+    override suspend fun getJournalByDate(date: String): Result<DailyJournalResponse?> {
+        return try {
+            val journal = dailyJournalService.getJournalByDate(date)
+            Result.success(journal)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateDailyJournal(
+        id: String,
+        summary: String,
+        questionAnswers: List<QuestionAnswerDTO>
+    ): Result<Unit> {
+        return try {
+            dailyJournalService.updateDailyJournal(id, summary, questionAnswers)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
 

@@ -22,7 +22,9 @@ object JournalDomainModule {
             updateQuestion = UpdateQuestion(repository),
             deleteQuestion = DeleteQuestion(repository),
             createDailyJournal = CreateDailyJournal(repository),
-            getJournalHistory = GetJournalHistory(repository)
+            getJournalHistory = GetJournalHistory(repository),
+            getJournalByDate = GetJournalByDate(repository),
+            updateDailyJournal = UpdateDailyJournal(repository)
         )
     }
 }

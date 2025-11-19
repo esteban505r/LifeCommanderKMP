@@ -115,6 +115,23 @@ class DailyJournalService(
                 }
                 if (updatedRows > 0) id else null
             }
+            
+            // Update question answers if provided
+            updatedRow?.let { journalId ->
+                journal.questionAnswers?.let { answers ->
+                    // Delete existing question answers for this journal
+                    val existingAnswers = questionAnswerService.getByDailyJournalId(journalId)
+                    existingAnswers.forEach { answer ->
+                        questionAnswerService.delete(userId, UUID.fromString(answer.id))
+                    }
+                    
+                    // Create new question answers
+                    answers.forEach { answer ->
+                        questionAnswerService.create(userId, journalId, answer)
+                    }
+                }
+            }
+            
             updatedRow != null
         }
     }

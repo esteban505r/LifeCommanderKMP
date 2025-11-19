@@ -78,4 +78,32 @@ class DailyJournalService(
         }
         return response.body()
     }
+
+    suspend fun getJournalByDate(date: String): DailyJournalResponse? {
+        val response = httpClient.get("$baseUrl/daily-journals/entry/$date") {
+            header("Authorization", "Bearer ${tokenStorageImpl.getToken()}")
+        }
+        return if (response.status == HttpStatusCode.OK) {
+            response.body()
+        } else if (response.status == HttpStatusCode.NotFound) {
+            null
+        } else {
+            throw Exception("Failed to fetch journal entry: ${response.status}")
+        }
+    }
+
+    suspend fun updateDailyJournal(
+        id: String,
+        summary: String,
+        questionAnswers: List<QuestionAnswerDTO>
+    ) {
+        val response = httpClient.patch("$baseUrl/daily-journals/$id") {
+            header("Authorization", "Bearer ${tokenStorageImpl.getToken()}")
+            contentType(ContentType.Application.Json)
+            setBody(UpdateDailyJournalDTO(summary, questionAnswers))
+        }
+        if (response.status != HttpStatusCode.OK) {
+            throw Exception("Failed to update daily journal: ${response.status}")
+        }
+    }
 }

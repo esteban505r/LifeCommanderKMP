@@ -6,8 +6,13 @@ plugins {
     application
 }
 
+// Version configuration - can be set via environment variable or gradle property
+val serverVersion = System.getenv("SERVER_VERSION")
+    ?: (findProperty("server.version") as? String)
+    ?: "1.0.0"
+
 group = "com.esteban.ruano"
-version = "1.0.0"
+version = serverVersion
 
 application {
     mainClass.set("com.esteban.ruano.ApplicationKt")

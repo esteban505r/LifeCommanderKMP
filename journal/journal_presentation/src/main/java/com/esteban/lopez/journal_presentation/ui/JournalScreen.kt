@@ -10,6 +10,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -122,23 +123,22 @@ fun JournalScreen(
                             Text("History")
                         }
                         
-                        if (!state.isCompleted) {
-                            Button(
-                                onClick = { showAddQuestionDialog = true },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    backgroundColor = MaterialTheme.colors.primary
-                                ),
-                                modifier = Modifier.height(40.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = "Add Question",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Add Question")
-                            }
+                        // Add Question button (always visible)
+                        Button(
+                            onClick = { showAddQuestionDialog = true },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = MaterialTheme.colors.primary
+                            ),
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Add Question",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Add Question")
                         }
                     }
                 }
@@ -199,7 +199,10 @@ fun JournalScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
-                    items(state.questionAnswers.distinctBy { it.questionId }) { question ->
+                    items(
+                        items = state.questionAnswers,
+                        key = { it.questionId }
+                    ) { question ->
                         EditableCompletedJournalCard(
                             question = question,
                             answer = question.answer,
@@ -442,7 +445,13 @@ fun EditableCompletedJournalCard(
     answer: String,
     onAnswerChanged: (String) -> Unit
 ) {
-    var isEditing by remember { mutableStateOf(false) }
+    var isEditing by remember(question.questionId) { mutableStateOf(false) }
+    var localAnswer by remember(question.questionId, answer) { mutableStateOf(answer) }
+    
+    // Update local answer when prop changes
+    LaunchedEffect(question.questionId, answer) {
+        localAnswer = answer
+    }
     
     Card(
         modifier = Modifier
@@ -483,7 +492,7 @@ fun EditableCompletedJournalCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     
                     Text(
-                        text = question.question,
+                        text = question.question.ifBlank { "Question" },
                         style = MaterialTheme.typography.subtitle1,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colors.onSurface
@@ -508,8 +517,11 @@ fun EditableCompletedJournalCard(
                 when (question.type) {
                     QuestionType.TEXT -> {
                         OutlinedTextField(
-                            value = answer,
-                            onValueChange = onAnswerChanged,
+                            value = localAnswer,
+                            onValueChange = { newValue ->
+                                localAnswer = newValue
+                                onAnswerChanged(newValue)
+                            },
                             label = { Text("Your answer") },
                             placeholder = { Text("Type your thoughts here...") },
                             modifier = Modifier.fillMaxWidth(),
@@ -527,7 +539,7 @@ fun EditableCompletedJournalCard(
                         )
                     }
                     QuestionType.MOOD -> {
-                        val selectedMood = answer.takeIf { it.isNotBlank() }?.let { moodString ->
+                        val selectedMood = localAnswer.takeIf { it.isNotBlank() }?.let { moodString ->
                             try {
                                 MoodType.valueOf(moodString)
                             } catch (e: IllegalArgumentException) {
@@ -547,6 +559,7 @@ fun EditableCompletedJournalCard(
                             MoodSelector(
                                 selectedMood = selectedMood,
                                 onMoodSelected = { mood ->
+                                    localAnswer = mood.name
                                     onAnswerChanged(mood.name)
                                 },
                                 modifier = Modifier.fillMaxWidth()
@@ -574,7 +587,7 @@ fun EditableCompletedJournalCard(
                             )
                         ) {
                             Text(
-                                text = answer,
+                                text = localAnswer,
                                 style = MaterialTheme.typography.body1,
                                 modifier = Modifier.padding(12.dp),
                                 color = MaterialTheme.colors.onSurface
@@ -582,9 +595,9 @@ fun EditableCompletedJournalCard(
                         }
                     }
                     QuestionType.MOOD -> {
-                        if (answer.isNotBlank()) {
+                        if (localAnswer.isNotBlank()) {
                             val mood = try {
-                                MoodType.valueOf(answer)
+                                MoodType.valueOf(localAnswer)
                             } catch (e: IllegalArgumentException) {
                                 MoodType.NEUTRAL
                             }
@@ -680,7 +693,7 @@ fun CompletedJournalCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 
                 Text(
-                    text = question.question,
+                    text = question.question.ifBlank { "Question" },
                     style = MaterialTheme.typography.subtitle1,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colors.onSurface

@@ -6,6 +6,8 @@ data class JournalUseCases(
     val updateQuestion: UpdateQuestion,
     val deleteQuestion: DeleteQuestion,
     val createDailyJournal: CreateDailyJournal,
-    val getJournalHistory: GetJournalHistory
+    val getJournalHistory: GetJournalHistory,
+    val getJournalByDate: GetJournalByDate,
+    val updateDailyJournal: UpdateDailyJournal
 )
 

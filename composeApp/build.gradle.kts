@@ -212,16 +212,24 @@ kotlin {
     }
 }
 
+// Version configuration - can be set via environment variable or gradle property
+val appVersionName = System.getenv("APP_VERSION_NAME") 
+    ?: (findProperty("app.version.name") as? String) 
+    ?: "1.0.0"
+val appVersionCode = System.getenv("APP_VERSION_CODE")?.toIntOrNull()
+    ?: (findProperty("app.version.code") as? String)?.toIntOrNull()
+    ?: 1
+
 android {
-    namespace = "com.esteban.ruano.lifecommander"
+    namespace = "com.esteban.ruano.oter"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.esteban.ruano.lifecommander"
+        applicationId = "com.esteban.ruano.oter"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
     }
     packaging {
         resources {
@@ -266,7 +274,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
             packageName = "LifeCommander"
-            packageVersion = "1.0.0"
+            packageVersion = appVersionName
             modules("jdk.unsupported")
         }
 

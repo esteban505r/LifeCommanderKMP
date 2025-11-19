@@ -26,6 +26,12 @@ data class QuestionDTO(
 )
 
 @Serializable
+data class UpdateDailyJournalDTO(
+    val summary: String? = null,
+    val questionAnswers: List<QuestionAnswerDTO>? = null
+)
+
+@Serializable
 data class DailyJournalResponse(
     val id: String,
     val date: String,
