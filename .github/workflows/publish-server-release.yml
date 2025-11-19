@@ -9,7 +9,6 @@ name: Publish Server Release
 on:
   push:
     branches: 
-      - main
       - release/server/**
     tags:     [ "v*" ]
 

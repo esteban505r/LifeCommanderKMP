@@ -15,12 +15,15 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
             format: tar
             task: packageReleaseDistributionForLinuxX64
             output-path: composeApp/build/compose/binaries/main/app/release/linux-x64/LifeCommander-*.tar
+          - os: ubuntu-latest
+            format: AppImage
+            task: packageReleaseDistributionForLinuxX64
+            output-path: composeApp/build/compose/binaries/main/app/release/linux-x64/LifeCommander-*.AppImage
           - os: macos-latest
             format: dmg
             task: packageReleaseDistributionForMacosX64
@@ -78,7 +81,7 @@ jobs:
           DIST_PATH="${{ matrix.output-path }}"
           
           echo "Checking for distribution files..."
-          find composeApp/build/compose/binaries -name "*.dmg" -o -name "*.msi" -o -name "*.tar" 2>/dev/null || true
+          find composeApp/build/compose/binaries -name "*.dmg" -o -name "*.msi" -o -name "*.tar" -o -name "*.AppImage" 2>/dev/null || true
           
           # Find and rename distribution file to include version
           for dist in $DIST_PATH; do
@@ -88,7 +91,15 @@ jobs:
               FILENAME=$(basename "$dist" .$EXT)
               # Remove existing version if present and add new one
               FILENAME_CLEAN=$(echo "$FILENAME" | sed 's/-v[0-9.]*$//')
-              NEW_NAME="LifeCommander-v${VERSION}-${{ matrix.os }}.${EXT}"
+              # Use format in filename for better clarity
+              FORMAT_LOWER=$(echo "${{ matrix.format }}" | tr '[:upper:]' '[:lower:]')
+              NEW_NAME="LifeCommander-v${VERSION}-linux-${FORMAT_LOWER}.${EXT}"
+              # For non-Linux, use OS name
+              if [ "${{ matrix.os }}" != "ubuntu-latest" ]; then
+                OS_NAME="${{ matrix.os }}"
+                OS_NAME=${OS_NAME//-latest/}
+                NEW_NAME="LifeCommander-v${VERSION}-${OS_NAME}.${EXT}"
+              fi
               NEW_PATH="${DIR}/${NEW_NAME}"
               cp "$dist" "$NEW_PATH"
               echo "Renamed: $(basename "$dist") -> $NEW_NAME"
@@ -126,7 +137,7 @@ jobs:
           else
             echo "Error: Distribution file not found at $DIST_PATH"
             echo "Attempting to find any distribution files..."
-            find composeApp/build/compose/binaries -type f \( -name "*.dmg" -o -name "*.msi" -o -name "*.tar" \) -exec ls -lh {} \;
+            find composeApp/build/compose/binaries -type f \( -name "*.dmg" -o -name "*.msi" -o -name "*.tar" -o -name "*.AppImage" \) -exec ls -lh {} \;
             exit 1
           fi
 
