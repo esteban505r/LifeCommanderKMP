@@ -1,25 +1,32 @@
 package com.esteban.ruano.tasks_presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import com.esteban.ruano.core.routes.Routes
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.lifecommander.ui.components.Error
 import com.esteban.ruano.core_ui.utils.LocalMainIntent
+import com.esteban.ruano.tasks_presentation.intent.TagEffect
 import com.esteban.ruano.tasks_presentation.intent.TaskEffect
 import com.esteban.ruano.tasks_presentation.intent.TaskIntent
 import com.esteban.ruano.tasks_presentation.ui.TasksScreen
+import com.esteban.ruano.tasks_presentation.ui.viewmodel.TagsViewModel
 import com.esteban.ruano.tasks_presentation.ui.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun TasksDestination(
     viewModel: TaskViewModel = hiltViewModel(),
+    tagsViewModel: TagsViewModel = hiltViewModel(),
     navController: NavController,
 ) {
 
@@ -27,6 +34,19 @@ fun TasksDestination(
     val sendMainIntent = LocalMainIntent.current
     val coroutineScope = rememberCoroutineScope()
 
+    // Refresh tasks when screen resumes (e.g., after returning from edit screen)
+    val lifecycleOwner = navController.currentBackStackEntry?.lifecycle
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                coroutineScope.launch {
+                    viewModel.performAction(TaskIntent.Refresh)
+                }
+            }
+        }
+        lifecycleOwner?.addObserver(observer)
+        onDispose { lifecycleOwner?.removeObserver(observer) }
+    }
 
     /**
      * Handles navigation based on [TaskEffect].
@@ -42,6 +62,19 @@ fun TasksDestination(
     LaunchedEffect(Unit) {
         // Collect and handle navigation effects.
         coroutineScope.launch { viewModel.effect.collect { handleNavigation(it) } }
+        
+        // Listen for tag updates and refresh task list
+        coroutineScope.launch {
+            tagsViewModel.effect.collect { effect ->
+                when (effect) {
+                    is TagEffect.TagsUpdated -> {
+                        // Refresh task list when tags are updated
+                        viewModel.performAction(TaskIntent.Refresh)
+                    }
+                    else -> {}
+                }
+            }
+        }
 
         coroutineScope.launch {
             viewModel.performAction(
@@ -84,6 +117,9 @@ fun TasksDestination(
                 },
                 onNewTaskClick = {
                     navController.navigate(Routes.NEW_EDIT_TASK)
+                },
+                onManageTagsClick = {
+                    navController.navigate(Routes.TAGS_MANAGEMENT)
                 },
                 userIntent = {
                     viewModel.performAction(it)

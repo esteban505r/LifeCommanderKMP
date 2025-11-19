@@ -19,10 +19,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.ktor.client.HttpClient
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
+import services.tags.TagService
 import javax.inject.Singleton
 
 @Module
@@ -85,5 +87,11 @@ object TasksDataModule {
         return CheckTasksWorkerFactoryImpl(
             repository = repository
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTagService(client: HttpClient): TagService {
+        return TagService(client)
     }
 }

@@ -23,7 +23,9 @@ import com.esteban.ruano.lifecommander.ui.components.TaskItem
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.lifecommander.models.Task
+import com.lifecommander.models.Tag
 import dev.icerock.moko.resources.compose.localized
+import dev.icerock.moko.resources.desc.Raw
 import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.LocalDateTime
@@ -42,6 +44,64 @@ data class CategorizedTasks(
     val pending: List<Task>,
     val done: List<Task>
 )
+
+data class TasksGroupedByTag(
+    val tagName: String,
+    val tagId: String?,
+    val tagColor: String?,
+    val tasks: List<Task>
+)
+
+fun groupTasksByTags(tasks: List<Task>): List<TasksGroupedByTag> {
+    val grouped = mutableMapOf<String, MutableList<Task>>()
+    val tagInfo = mutableMapOf<String, Pair<String, String?>>() // tagId -> (tagName, tagColor)
+    val untaggedTasks = mutableListOf<Task>()
+    
+    tasks.forEach { task ->
+        val taskTags = task.tags ?: emptyList()
+        if (taskTags.isEmpty()) {
+            untaggedTasks.add(task)
+        } else {
+            taskTags.forEach { tag ->
+                val tagId = tag.id
+                tagInfo[tagId] = tag.name to tag.color
+                
+                if (!grouped.containsKey(tagId)) {
+                    grouped[tagId] = mutableListOf()
+                }
+                grouped[tagId]?.add(task)
+            }
+        }
+    }
+    
+    // Convert to list of TasksGroupedByTag, sorted by tag name
+    val result = mutableListOf<TasksGroupedByTag>()
+    
+    grouped.map { (tagId, taskList) ->
+        val (tagName, tagColor) = tagInfo[tagId] ?: ("Unknown" to null)
+        TasksGroupedByTag(
+            tagName = tagName,
+            tagId = tagId,
+            tagColor = tagColor,
+            tasks = taskList.distinctBy { it.id } // Remove duplicates if task has multiple tags
+        )
+    }.sortedBy { it.tagName.lowercase() }
+        .forEach { result.add(it) }
+    
+    // Add untagged tasks at the end
+    if (untaggedTasks.isNotEmpty()) {
+        result.add(
+            TasksGroupedByTag(
+                tagName = "Untagged",
+                tagId = null,
+                tagColor = null,
+                tasks = untaggedTasks
+            )
+        )
+    }
+    
+    return result
+}
 
 fun categorizeTasks(tasks: List<Task>): CategorizedTasks {
     val currentDateTime = getCurrentDateTime(TimeZone.currentSystemDefault())
@@ -145,12 +205,22 @@ fun TaskList(
     onReschedule: (Task) -> Unit,
     modifier: Modifier = Modifier,
     itemWrapper: @Composable (content: @Composable () -> Unit, Task) -> Unit,
+    groupByTags: Boolean = false,
 ) {
     val pullRefreshState =
         rememberPullRefreshState(refreshing = isRefreshing, onRefresh = onPullRefresh)
     
     // Categorize tasks to prevent duplicates
     val categorizedTasks = remember(taskList) { categorizeTasks(taskList) }
+    
+    // Group tasks by tags if enabled
+    val tasksGroupedByTag = remember(taskList, groupByTags) {
+        if (groupByTags) {
+            groupTasksByTags(taskList)
+        } else {
+            emptyList()
+        }
+    }
 
     Box(
         modifier = modifier
@@ -165,44 +235,119 @@ fun TaskList(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            // Overdue tasks
-            if (categorizedTasks.overdue.isNotEmpty()) {
-                taskListSection(
-                    taskList = categorizedTasks.overdue,
-                    onTaskClick = onTaskClick,
-                    onCheckedChange = onCheckedChange,
-                    onEdit = onEdit,
-                    onDelete = onDelete,
-                    onReschedule = onReschedule,
-                    itemWrapper = itemWrapper,
-                )
-            }
-            
-            // Pending tasks
-            if (categorizedTasks.pending.isNotEmpty()) {
-                taskListSection(
-                    taskList = categorizedTasks.pending,
-                    onTaskClick = onTaskClick,
-                    onCheckedChange = onCheckedChange,
-                    onEdit = onEdit,
-                    onDelete = onDelete,
-                    onReschedule = onReschedule,
-                    itemWrapper = itemWrapper,
-                )
-            }
-            
-            // Done tasks
-            if (categorizedTasks.done.isNotEmpty()) {
-                taskListSection(
-                    taskList = categorizedTasks.done,
-                    onTaskClick = onTaskClick,
-                    onCheckedChange = onCheckedChange,
-                    textDecoration = TextDecoration.LineThrough,
-                    onEdit = onEdit,
-                    onDelete = onDelete,
-                    onReschedule = onReschedule,
-                    itemWrapper = itemWrapper,
-                )
+            if (groupByTags && tasksGroupedByTag.isNotEmpty()) {
+                // Display tasks grouped by tags
+                tasksGroupedByTag.forEach { tagGroup ->
+                    val categorizedTagTasks = categorizeTasks(tagGroup.tasks)
+                    
+                    // Only show sections that have tasks
+                    val hasOverdue = categorizedTagTasks.overdue.isNotEmpty()
+                    val hasPending = categorizedTagTasks.pending.isNotEmpty()
+                    val hasDone = categorizedTagTasks.done.isNotEmpty()
+                    
+                    // Determine section title based on what's shown
+                    val baseTitle = tagGroup.tagName
+                    
+                    // Overdue tasks for this tag
+                    if (hasOverdue) {
+                        taskListSection(
+                            taskList = categorizedTagTasks.overdue,
+                            title = if (hasPending || hasDone) {
+                                StringDesc.Raw("$baseTitle - Overdue")
+                            } else {
+                                StringDesc.Raw(baseTitle)
+                            },
+                            onTaskClick = onTaskClick,
+                            onCheckedChange = onCheckedChange,
+                            onEdit = onEdit,
+                            onDelete = onDelete,
+                            onReschedule = onReschedule,
+                            itemWrapper = itemWrapper,
+                        )
+                    }
+                    
+                    // Pending tasks for this tag
+                    if (hasPending) {
+                        taskListSection(
+                            taskList = categorizedTagTasks.pending,
+                            title = if (hasOverdue && hasDone) {
+                                StringDesc.Raw("$baseTitle - Pending")
+                            } else if (!hasOverdue && !hasDone) {
+                                StringDesc.Raw(baseTitle)
+                            } else if (hasOverdue) {
+                                StringDesc.Raw("$baseTitle - Pending")
+                            } else {
+                                StringDesc.Raw(baseTitle)
+                            },
+                            onTaskClick = onTaskClick,
+                            onCheckedChange = onCheckedChange,
+                            onEdit = onEdit,
+                            onDelete = onDelete,
+                            onReschedule = onReschedule,
+                            itemWrapper = itemWrapper,
+                        )
+                    }
+                    
+                    // Done tasks for this tag
+                    if (hasDone) {
+                        taskListSection(
+                            taskList = categorizedTagTasks.done,
+                            title = if (hasOverdue || hasPending) {
+                                StringDesc.Raw("$baseTitle - Done")
+                            } else {
+                                StringDesc.Raw(baseTitle)
+                            },
+                            textDecoration = TextDecoration.LineThrough,
+                            onTaskClick = onTaskClick,
+                            onCheckedChange = onCheckedChange,
+                            onEdit = onEdit,
+                            onDelete = onDelete,
+                            onReschedule = onReschedule,
+                            itemWrapper = itemWrapper,
+                        )
+                    }
+                }
+            } else {
+                // Default categorization (by status)
+                // Overdue tasks
+                if (categorizedTasks.overdue.isNotEmpty()) {
+                    taskListSection(
+                        taskList = categorizedTasks.overdue,
+                        onTaskClick = onTaskClick,
+                        onCheckedChange = onCheckedChange,
+                        onEdit = onEdit,
+                        onDelete = onDelete,
+                        onReschedule = onReschedule,
+                        itemWrapper = itemWrapper,
+                    )
+                }
+                
+                // Pending tasks
+                if (categorizedTasks.pending.isNotEmpty()) {
+                    taskListSection(
+                        taskList = categorizedTasks.pending,
+                        onTaskClick = onTaskClick,
+                        onCheckedChange = onCheckedChange,
+                        onEdit = onEdit,
+                        onDelete = onDelete,
+                        onReschedule = onReschedule,
+                        itemWrapper = itemWrapper,
+                    )
+                }
+                
+                // Done tasks
+                if (categorizedTasks.done.isNotEmpty()) {
+                    taskListSection(
+                        taskList = categorizedTasks.done,
+                        onTaskClick = onTaskClick,
+                        onCheckedChange = onCheckedChange,
+                        textDecoration = TextDecoration.LineThrough,
+                        onEdit = onEdit,
+                        onDelete = onDelete,
+                        onReschedule = onReschedule,
+                        itemWrapper = itemWrapper,
+                    )
+                }
             }
             
             item {

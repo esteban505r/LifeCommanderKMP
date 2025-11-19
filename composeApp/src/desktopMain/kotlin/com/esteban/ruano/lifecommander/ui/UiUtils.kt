@@ -1,6 +1,5 @@
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,18 +23,21 @@ fun getColorByDelay(delay: Int): Color {
 
 fun getColorByPriority(priority: Int): Color {
     return when (priority) {
-        4 -> SoftRed
-        3 -> SoftBlue
-        2 -> SoftYellow
-        else -> LightGray
+        4 -> Color(0xFFD32F2F) // Red - Urgent
+        3 -> Color(0xFFFF6F00) // Orange - High
+        2 -> Color(0xFFFFA000) // Amber - Medium
+        1 -> Color(0xFF388E3C) // Green - Low
+        else -> Color(0xFF757575) // Gray - None
     }
 }
 
 fun getIconByPriority(priority: Int): ImageVector {
-    return when {
-        priority == 3 -> Icons.Default.KeyboardArrowUp
-        priority > 3 -> Icons.Default.KeyboardArrowUp
-        else -> Icons.Default.KeyboardArrowDown
+    return when (priority) {
+        4 -> Icons.Default.Error // Urgent - critical error icon
+        3 -> Icons.Default.Warning // High - warning icon
+        2 -> Icons.Default.Info // Medium - info icon
+        1 -> Icons.Default.CheckCircle // Low - check circle
+        else -> Icons.Default.Remove // None - remove/minus icon
     }
 }
 

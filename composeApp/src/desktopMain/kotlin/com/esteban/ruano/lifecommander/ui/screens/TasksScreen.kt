@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.models.TaskFilters
+import com.esteban.ruano.lifecommander.ui.components.TagsSidebar
 import com.esteban.ruano.lifecommander.ui.components.ToggleButtons
 import com.esteban.ruano.lifecommander.ui.components.ToggleChipsButtons
 import com.esteban.ruano.ui.components.TaskList
@@ -33,6 +34,8 @@ fun TasksScreen(
     tasks: List<Task>,
     selectedFilter: TaskFilters,
     tasksLoading: Boolean,
+    tags: List<com.lifecommander.models.Tag>,
+    selectedTagSlug: String?,
     onTaskClick: (Task) -> Unit,
     onReload: () -> Unit,
     onDelete: (Task) -> Unit,
@@ -47,7 +50,11 @@ fun TasksScreen(
         priority: Int
     ) -> Unit,
     onUpdateTask: (String, Task) -> Unit,
-    onFilterChange: (TaskFilters) -> Unit
+    onFilterChange: (TaskFilters) -> Unit,
+    onTagClick: (String?) -> Unit,
+    onCreateTag: () -> Unit,
+    onTagLongClick: (com.lifecommander.models.Tag) -> Unit = {},
+    onUpdateTaskTags: ((String, List<String>) -> Unit)? = null
 ) {
     var taskToEdit by remember { mutableStateOf<Task?>(null) }
     var showNewTaskDialog by remember { mutableStateOf(false) }
@@ -55,11 +62,25 @@ fun TasksScreen(
     var taskToDelete by remember { mutableStateOf<Task?>(null) }
     val currentDate = getCurrentDateTime(TimeZone.currentSystemDefault()).date
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    Row(
+        modifier = Modifier.fillMaxSize()
     ) {
+        // Tags Sidebar
+        TagsSidebar(
+            tags = tags,
+            selectedTagSlug = selectedTagSlug,
+            onTagClick = onTagClick,
+            onCreateTag = onCreateTag,
+            onTagLongClick = onTagLongClick,
+            modifier = Modifier.fillMaxHeight()
+        )
+
+        // Main Content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
         // Header
         Row(
             modifier = Modifier
@@ -209,7 +230,7 @@ fun TasksScreen(
                 }
             )
         }
-
+        }
     }
 
     if (showNewTaskDialog) {
@@ -233,6 +254,8 @@ fun TasksScreen(
             onUpdateTask = { id, task ->
                 onUpdateTask(id, task)
             },
+            tags = tags,
+            onUpdateTaskTags = onUpdateTaskTags,
             onError = { /* Handle error */ }
         )
     }

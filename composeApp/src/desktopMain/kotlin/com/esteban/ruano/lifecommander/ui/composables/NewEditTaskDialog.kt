@@ -40,8 +40,11 @@ import utils.DateUtils.parseDate
 import utils.DateUtils.toLocalDateTime
 import java.awt.Dimension
 import androidx.compose.ui.graphics.Color
+import com.esteban.ruano.lifecommander.utils.UiUtils.getColorByPriority
 import ui.composables.DesktopRemindersDialog
 import ui.composables.ReminderItem
+import com.esteban.ruano.lifecommander.ui.components.TagChip
+import androidx.compose.foundation.layout.FlowRow
 
 @Composable
 fun NewEditTaskDialog(
@@ -50,7 +53,9 @@ fun NewEditTaskDialog(
     onDismiss: () -> Unit,
     onAddTask: (String, String, List<Reminder>, String?, String?, Int?) -> Unit,
     onError: (String) -> Unit,
-    onUpdateTask: (String, Task) -> Unit
+    onUpdateTask: (String, Task) -> Unit,
+    tags: List<com.lifecommander.models.Tag> = emptyList(),
+    onUpdateTaskTags: ((String, List<String>) -> Unit)? = null
 ) {
     var name by remember { mutableStateOf(taskToEdit?.name ?: "") }
     var notes by remember { mutableStateOf(taskToEdit?.note ?: "") }
@@ -58,6 +63,7 @@ fun NewEditTaskDialog(
     var scheduledDate by remember { mutableStateOf(taskToEdit?.scheduledDateTime?.toLocalDateTime()) }
     var reminders by remember { mutableStateOf(taskToEdit?.reminders ?: emptyList()) }
     var prioritySelected by remember { mutableStateOf(taskToEdit?.priority?.toPriority() ?: Priority.MEDIUM) }
+    var selectedTags by remember { mutableStateOf<Set<String>>(taskToEdit?.tags?.map { it.id }?.toSet() ?: emptySet()) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var showScheduledDatePicker by remember { mutableStateOf(false) }
@@ -74,6 +80,7 @@ fun NewEditTaskDialog(
         scheduledDate = taskToEdit?.scheduledDateTime?.toLocalDateTime()
         reminders = taskToEdit?.reminders ?: emptyList()
         prioritySelected = taskToEdit?.priority?.toPriority() ?: Priority.MEDIUM
+        selectedTags = taskToEdit?.tags?.map { it.id }?.toSet() ?: emptySet()
         clearedFields = emptySet() // Reset cleared fields when editing a new task
     }
 
@@ -333,6 +340,49 @@ fun NewEditTaskDialog(
                                     Text("Add Reminder")
                                 }
                             }
+                            
+                            // Tags
+                            Column {
+                                Text(
+                                    text = "Tags",
+                                    style = MaterialTheme.typography.subtitle1,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                                    color = MaterialTheme.colors.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                if (tags.isEmpty()) {
+                                    Text(
+                                        text = "No tags available. Create tags to organize your tasks.",
+                                        style = MaterialTheme.typography.body2,
+                                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                    )
+                                } else {
+                                    FlowRow(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        tags.forEach { tag ->
+                                            val isSelected = selectedTags.contains(tag.id)
+                                            TagChip(
+                                                tag = tag,
+                                                selected = isSelected,
+                                                onClick = {
+                                                    selectedTags = if (isSelected) {
+                                                        selectedTags - tag.id
+                                                    } else {
+                                                        selectedTags + tag.id
+                                                    }
+                                                },
+                                                modifier = Modifier
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
                             // Priority
                             Column {
                                 Text(
@@ -348,27 +398,31 @@ fun NewEditTaskDialog(
                                 ) {
                                     Priority.entries.forEach { priority ->
                                         val isSelected = prioritySelected == priority
+                                        val priorityColor = getColorByPriority(priority.value)
                                         val (bgColor, iconColor, textColor, borderColor) = when (priority) {
+                                            Priority.URGENT ->
+                                                if (isSelected) listOf(priorityColor, Color.White, Color.White, priorityColor)
+                                                else listOf(priorityColor.copy(alpha = 0.1f), priorityColor, priorityColor, Color.Transparent)
                                             Priority.HIGH ->
-                                                if (isSelected) listOf(Color(0xFFD32F2F), Color.White, Color.White, Color(0xFFD32F2F))
-                                                else listOf(Color(0x1AD32F2F), Color(0xFFD32F2F), Color(0xFFD32F2F), Color.Transparent)
+                                                if (isSelected) listOf(priorityColor, Color.White, Color.White, priorityColor)
+                                                else listOf(priorityColor.copy(alpha = 0.1f), priorityColor, priorityColor, Color.Transparent)
                                             Priority.MEDIUM ->
-                                                if (isSelected) listOf(Color(0xFFFFA000), Color.White, Color.White, Color(0xFFFFA000))
-                                                else listOf(Color(0x1AFFA000), Color(0xFFFFA000), Color(0xFFFFA000), Color.Transparent)
+                                                if (isSelected) listOf(priorityColor, Color.White, Color.White, priorityColor)
+                                                else listOf(priorityColor.copy(alpha = 0.1f), priorityColor, priorityColor, Color.Transparent)
                                             Priority.LOW ->
-                                                if (isSelected) listOf(Color(0xFF388E3C), Color.White, Color.White, Color(0xFF388E3C))
-                                                else listOf(Color(0x1A388E3C), Color(0xFF388E3C), Color(0xFF388E3C), Color.Transparent)
-                                            else ->
-                                                if (isSelected) listOf(MaterialTheme.colors.primary, Color.White, Color.White, MaterialTheme.colors.primary)
-                                                else listOf(MaterialTheme.colors.surface, MaterialTheme.colors.primary, MaterialTheme.colors.primary, Color.Transparent)
+                                                if (isSelected) listOf(priorityColor, Color.White, Color.White, priorityColor)
+                                                else listOf(priorityColor.copy(alpha = 0.1f), priorityColor, priorityColor, Color.Transparent)
+                                            Priority.NONE ->
+                                                if (isSelected) listOf(priorityColor, Color.White, Color.White, priorityColor)
+                                                else listOf(priorityColor.copy(alpha = 0.1f), priorityColor, priorityColor, Color.Transparent)
                                         }
                                         Card(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .clickable { prioritySelected = priority },
                                             backgroundColor = bgColor,
-                                            elevation = if (isSelected) 2.dp else 0.dp,
-                                            border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, borderColor) else null
+                                            elevation = 0.dp,
+                                            border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, borderColor) else null
                                         ) {
                                             Column(
                                                 modifier = Modifier
@@ -450,6 +504,8 @@ fun NewEditTaskDialog(
                                                 clearFields = if (clearedFields.isNotEmpty()) clearedFields.toList() else null
                                             )
                                         )
+                                        // Update task tags if callback is provided
+                                        onUpdateTaskTags?.invoke(taskToEdit.id, selectedTags.toList())
                                     } else {
                                         onAddTask(
                                             name,
@@ -459,6 +515,8 @@ fun NewEditTaskDialog(
                                             scheduledDate?.formatDefault(),
                                             prioritySelected.value
                                         )
+                                        // Note: For new tasks, tags will need to be set after task creation
+                                        // This is a limitation - we'd need the task ID first
                                     }
                                     onDismiss()
                                 },

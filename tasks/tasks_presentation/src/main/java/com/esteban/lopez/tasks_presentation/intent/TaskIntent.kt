@@ -18,7 +18,7 @@ sealed class TaskIntent : UserIntent {
 
     data class CompleteTask(val id: String, val onComplete : (Boolean) -> Unit) : TaskIntent()
     data class UnCompleteTask(val id: String, val onComplete : (Boolean) -> Unit) : TaskIntent()
-    data class AddTask(val name:String, val note:String?, val dueDate:String?, val scheduledDate:String?, val reminders:List<Reminder>, val onComplete: (Boolean) -> Unit) : TaskIntent()
+    data class AddTask(val name:String, val note:String?, val dueDate:String?, val scheduledDate:String?, val reminders:List<Reminder>, val priority: Int? = null, val onComplete: (Boolean, String?) -> Unit) : TaskIntent()
     data class UpdateTask(val id: String, val task: Task) : TaskIntent()
     data class RescheduleTask(
         val id: String,
@@ -38,6 +38,7 @@ sealed class TaskIntent : UserIntent {
     data class SetDateRangeSelectedIndex(val index: Int) : TaskIntent()
     data class SetDateRange(val startDate: String?, val endDate: String?) : TaskIntent()
     data object ClearDateRange : TaskIntent()
+    data object ToggleGroupByTags : TaskIntent()
 }
 
 sealed class TaskEffect : Effect {

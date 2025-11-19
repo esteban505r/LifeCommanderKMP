@@ -18,6 +18,12 @@ fun Task.toDTO(): TaskDTO {
         reminders = emptyList(),
         priority = this.priority.value,
         scheduledDateTime = scheduledDate?.let { formatDateTime(it) },
+        tags = try {
+            this.tags.map { it.toDTO() }
+        } catch (e: Exception) {
+            // Handle case where tags relationship is not loaded or null
+            emptyList()
+        }
     )
 }
 

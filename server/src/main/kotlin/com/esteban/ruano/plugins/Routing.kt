@@ -36,6 +36,7 @@ inline fun <reified T : Any> Application.validateParameters(parameters: Paramete
 fun Application.configureRouting() {
     val habitRepository: HabitRepository by inject()
     val taskRepository: TaskRepository by inject()
+    val tagRepository: TagRepository by inject()
     val workoutRepository: WorkoutRepository by inject()
     val syncRepository: SyncRepository by inject()
     val nutritionRepository: NutritionRepository by inject()
@@ -74,7 +75,8 @@ fun Application.configureRouting() {
         route("/api/$VERSION") {
             authenticate {
                 habitsRouting(habitRepository)
-                tasksRouting(taskRepository)
+                tagsRouting(tagRepository)
+                tasksRouting(taskRepository, tagRepository)
                 workoutRouting(workoutRepository)
                 syncRouting(syncRepository)
                 nutritionRouting(nutritionRepository)

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +23,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Schedule
@@ -47,7 +50,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.esteban.ruano.lifecommander.ui.components.AppBar
+import com.esteban.ruano.lifecommander.ui.components.TagChip
 import com.esteban.ruano.lifecommander.ui.components.button.BaseButton
+import com.esteban.ruano.lifecommander.utils.UiUtils.getColorByPriority
+import com.esteban.ruano.lifecommander.utils.UiUtils.getIconByPriority
 import com.esteban.ruano.core_ui.R
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.core_ui.utils.DateUIUtils.toResourceStringBasedOnNow
@@ -128,24 +134,62 @@ fun TaskDetailScreen(
                     ) {
                         Spacer(modifier = Modifier.height(24.dp))
                         
-                        // Priority and Status Row
-                        Row(
+                        // Priority Card
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 20.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .padding(bottom = 16.dp),
+                            backgroundColor = Color.White,
+                            elevation = 0.dp,
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(
-                                "Priority: ${getPriorityText(task?.priority ?: 0)}",
-                                style = MaterialTheme.typography.subtitle1
-                            )
-                            Text(
-                                task?.dueDateTime?.toLocalDateTime()?.toResourceStringBasedOnNow(context)?.first ?: "",
-                                style = MaterialTheme.typography.subtitle1,
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = getIconByPriority(task?.priority ?: 0),
+                                        contentDescription = "Priority",
+                                        tint = getColorByPriority(task?.priority ?: 0),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Column {
+                                        Text(
+                                            "Priority",
+                                            style = MaterialTheme.typography.caption,
+                                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                        )
+                                        Text(
+                                            getPriorityText(task?.priority ?: 0),
+                                            style = MaterialTheme.typography.subtitle1,
+                                            color = getColorByPriority(task?.priority ?: 0)
+                                        )
+                                    }
+                                }
+                                if (task?.dueDateTime != null) {
+                                    Column(
+                                        horizontalAlignment = Alignment.End
+                                    ) {
+                                        Text(
+                                            "Due Date",
+                                            style = MaterialTheme.typography.caption,
+                                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                                        )
+                                        Text(
+                                            task.dueDateTime?.toLocalDateTime()?.toResourceStringBasedOnNow(context)?.first ?: "",
+                                            style = MaterialTheme.typography.subtitle2,
+                                        )
+                                    }
+                                }
+                            }
                         }
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
                         
                         // Status Display
                         Box(
@@ -279,8 +323,42 @@ fun TaskDetailScreen(
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
+                        // Tags Section
+                        if (!task?.tags.isNullOrEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Tags", 
+                                style = MaterialTheme.typography.h3,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                backgroundColor = Color.White,
+                                elevation = 0.dp,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                LazyRow(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    items(task?.tags ?: emptyList()) { tag ->
+                                        TagChip(
+                                            tag = tag,
+                                            onClick = { /* Could navigate to tag detail in future */ },
+                                            selected = false
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        
                         // Reminders Section
                         if (!task?.reminders.isNullOrEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = "Reminders", 
                                 style = MaterialTheme.typography.h3,

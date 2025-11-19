@@ -28,6 +28,7 @@ import com.esteban.ruano.ui.components.HabitList
 import com.esteban.ruano.ui.components.TaskList
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalTime
+import com.esteban.ruano.utils.TimeBasedUtils
 import com.lifecommander.models.Habit
 import com.lifecommander.models.Task
 import kotlinx.coroutines.launch
@@ -261,16 +262,91 @@ fun DashboardScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
+                            // Time-based greeting
+                            val currentHour = getCurrentDateTime(TimeZone.currentSystemDefault()).hour
+                            val (greeting, emoji) = remember(currentHour) {
+                                TimeBasedUtils.getTimeBasedGreeting(currentHour)
+                            }
+                            
+                            // Get pending items count
+                            val pendingHabits = habitsViewModel.habits.collectAsState().value.count { it.done != true }
+                            val pendingTasks = tasksViewModel.tasks.collectAsState().value.count { it.done != true }
+                            val timeBasedMessage = remember(currentHour, pendingHabits, pendingTasks) {
+                                TimeBasedUtils.getTimeBasedMessage(currentHour, pendingHabits, pendingTasks)
+                            }
+                            
                             Text(
-                                text = "Dashboard",
+                                text = "$emoji $greeting!",
                                 style = MaterialTheme.typography.h4,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Welcome back! Here's your overview for today.",
+                                text = timeBasedMessage,
                                 style = MaterialTheme.typography.subtitle1,
                                 color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                             )
+                            
+                            // Pending items summary
+                            if (pendingHabits > 0 || pendingTasks > 0) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (pendingHabits > 0) {
+                                        Card(
+                                            shape = RoundedCornerShape(8.dp),
+                                            backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Text(
+                                                    text = "$pendingHabits",
+                                                    style = MaterialTheme.typography.body2.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colors.primary
+                                                    )
+                                                )
+                                                Text(
+                                                    text = if (pendingHabits == 1) "habit" else "habits",
+                                                    style = MaterialTheme.typography.caption.copy(
+                                                        color = MaterialTheme.colors.primary
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                    if (pendingTasks > 0) {
+                                        Card(
+                                            shape = RoundedCornerShape(8.dp),
+                                            backgroundColor = MaterialTheme.colors.secondary.copy(alpha = 0.1f)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Text(
+                                                    text = "$pendingTasks",
+                                                    style = MaterialTheme.typography.body2.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colors.secondary
+                                                    )
+                                                )
+                                                Text(
+                                                    text = if (pendingTasks == 1) "task" else "tasks",
+                                                    style = MaterialTheme.typography.caption.copy(
+                                                        color = MaterialTheme.colors.secondary
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 

@@ -31,6 +31,7 @@ object Routes {
     //Tasks
     const val TASK_DETAIL = "to_do/tasks/task_detail"
     const val NEW_EDIT_TASK = "to_do/tasks/new_task"
+    const val TAGS_MANAGEMENT = "to_do/tasks/tags"
     //Workout
     const val WORKOUT_DAY_DETAIL = "workout_detail"
     const val WORKOUT_PROGRESS = "workout_progress"

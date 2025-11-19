@@ -9,10 +9,11 @@ import com.esteban.ruano.models.tasks.CreateTaskDTO
 import com.esteban.ruano.models.tasks.UpdateTaskDTO
 import com.esteban.ruano.models.users.LoggedUserDTO
 import com.esteban.ruano.repository.TaskRepository
+import com.esteban.ruano.repository.TagRepository
 import com.esteban.ruano.utils.Validator
 import java.util.*
 
-fun Route.tasksRouting(taskRepository: TaskRepository) {
+fun Route.tasksRouting(taskRepository: TaskRepository, tagRepository: TagRepository) {
 
     route("/tasks") {
         get {
@@ -21,7 +22,15 @@ fun Route.tasksRouting(taskRepository: TaskRepository) {
             val offset = call.request.queryParameters["offset"]?.toLong() ?: 0
             val date = call.request.queryParameters["date"]
             val withOverdue = call.request.queryParameters["withOverdue"]?.toBoolean()?:true
+            val tagSlug = call.request.queryParameters["tagSlug"]
             val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+
+            // Filter by tag if tagSlug is provided
+            if (tagSlug != null) {
+                val tasks = tagRepository.findTasksByTag(userId, tagSlug, limit, offset)
+                call.respond(tasks)
+                return@get
+            }
 
             if(date!=null){
                 try{
@@ -176,6 +185,59 @@ fun Route.tasksRouting(taskRepository: TaskRepository) {
                     call.respond(HttpStatusCode.OK)
                 } else {
                     call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+            
+            // Tag management endpoints
+            route("/tags") {
+                put {
+                    val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                    val taskId = UUID.fromString(call.parameters["id"]!!)
+                    val updateTaskTagsDTO = call.receive<com.esteban.ruano.models.tags.UpdateTaskTagsDTO>()
+                    
+                    val tagIds = updateTaskTagsDTO.tagIds.mapNotNull { 
+                        try { UUID.fromString(it) } catch (e: Exception) { null }
+                    }
+                    
+                    if (tagIds.size != updateTaskTagsDTO.tagIds.size) {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid tag ID format")
+                        return@put
+                    }
+                    
+                    val success = tagRepository.replaceTaskTags(userId, taskId, tagIds)
+                    if (success) {
+                        call.respond(HttpStatusCode.OK)
+                    } else {
+                        call.respond(HttpStatusCode.NotFound)
+                    }
+                }
+            }
+            
+            route("/tags/{tagId}") {
+                post {
+                    val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                    val taskId = UUID.fromString(call.parameters["id"]!!)
+                    val tagId = UUID.fromString(call.parameters["tagId"]!!)
+                    
+                    val success = tagRepository.attachTagToTask(userId, taskId, tagId)
+                    if (success) {
+                        call.respond(HttpStatusCode.OK)
+                    } else {
+                        call.respond(HttpStatusCode.NotFound)
+                    }
+                }
+                
+                delete {
+                    val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+                    val taskId = UUID.fromString(call.parameters["id"]!!)
+                    val tagId = UUID.fromString(call.parameters["tagId"]!!)
+                    
+                    val success = tagRepository.detachTagFromTask(userId, taskId, tagId)
+                    if (success) {
+                        call.respond(HttpStatusCode.OK)
+                    } else {
+                        call.respond(HttpStatusCode.NotFound)
+                    }
                 }
             }
         }

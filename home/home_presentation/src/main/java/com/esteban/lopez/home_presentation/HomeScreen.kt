@@ -17,7 +17,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.CenterFocusWeak
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
@@ -62,8 +64,14 @@ import com.esteban.ruano.tasks_presentation.ui.viewmodel.TaskViewModel
 import com.esteban.ruano.test_core.base.TestTags
 import com.esteban.ruano.ui.*
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
-import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
+import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime as toLocalUiDateTime
 import com.esteban.ruano.utils.HabitsUtils.findCurrentHabit
+import com.esteban.ruano.utils.HabitsUtils.isCurrent
+import com.esteban.ruano.utils.HabitsUtils.isOverdue
+import com.esteban.ruano.utils.TimeBasedUtils
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import com.esteban.ruano.workout_presentation.intent.WorkoutIntent
 import com.esteban.ruano.workout_presentation.ui.composable.WorkoutCard
 import com.esteban.ruano.workout_presentation.ui.viewmodel.WorkoutDetailViewModel
@@ -285,11 +293,17 @@ fun HomeScreen(
                             val pendingHabits = allHabits.count { it.done != true }
                             val pendingTasks = tasks.count { it.done != true }
                             val currentHabit = allHabits.findCurrentHabit()
+                            
+                            // Get current hour for time-based greeting
+                            val currentHour = Clock.System.now()
+                                .toLocalDateTime(TimeZone.currentSystemDefault())
+                                .hour
 
                             OtterWelcomeCard(
                                 pendingHabits = pendingHabits,
                                 pendingTasks = pendingTasks,
                                 currentHabitName = currentHabit?.name,
+                                currentHour = currentHour,
                                 onHabitClick = { onCurrentHabitClick(currentHabit) },
                                 onTasksClick = onGoToTasks
                             )
@@ -313,11 +327,46 @@ fun HomeScreen(
                         item { Spacer(Modifier.height(100.dp)) }
                     } else if (!isBrandNew) {
                         // ---------- Normal Home ----------
+                        // Filter daily habits for main section
+                        val dailyHabits = allHabits.filter { 
+                            it.frequency?.uppercase() == "DAILY" 
+                        }
+                        
                         item {
                             HabitsSectionOrEmpty(
-                                habits = allHabits,
+                                habits = dailyHabits,
                                 onCreateHabit = { onCurrentHabitClick(null) }
                             )
+                        }
+                        
+                        // Non-daily habits card (scheduled for today)
+                        val nonDailyHabits = allHabits.filter { habit ->
+                            val freq = habit.frequency?.uppercase() ?: "DAILY"
+                            freq != "DAILY" && habit.isCurrent() && !habit.isOverdue()
+                        }
+                        
+                        if (nonDailyHabits.isNotEmpty()) {
+                            item {
+                                NonDailyHabitsCard(
+                                    habits = nonDailyHabits,
+                                    onHabitClick = { onCurrentHabitClick(it) }
+                                )
+                            }
+                        }
+                        
+                        // Overdue non-daily habits card
+                        val overdueNonDailyHabits = allHabits.filter { habit ->
+                            val freq = habit.frequency?.uppercase() ?: "DAILY"
+                            freq != "DAILY" && habit.isOverdue()
+                        }
+                        
+                        if (overdueNonDailyHabits.isNotEmpty()) {
+                            item {
+                                OverdueNonDailyHabitsCard(
+                                    habits = overdueNonDailyHabits,
+                                    onHabitClick = { onCurrentHabitClick(it) }
+                                )
+                            }
                         }
 
                         item {
@@ -459,41 +508,79 @@ private fun HabitRowItem(
 ) {
     val isDone = habit.done == true
 
-    Row(
+    // Use Surface instead of Card to avoid nested cards with elevation
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick)
-            .background(
-                if (isCurrent) LifeCommanderDesignSystem.colors.Surface.copy(alpha = 0.6f)
-                else Color.Transparent
-            )
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(8.dp),
+        color = if (isCurrent) {
+            LifeCommanderDesignSystem.colors.Primary.copy(alpha = 0.08f)
+        } else {
+            Color.Transparent
+        },
+        border = if (isCurrent) {
+            BorderStroke(1.dp, LifeCommanderDesignSystem.colors.Primary.copy(alpha = 0.2f))
+        } else null
     ) {
-        Checkbox(
-            checked = isDone,
-            onCheckedChange = { onToggleDone() }
-        )
-        Spacer(Modifier.width(8.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = habit.name,
-                style = MaterialTheme.typography.body1.copy(
-                    fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal
-                ),
-                color = LifeCommanderDesignSystem.colors.OnSurface
-            )
-            if (isCurrent) {
-                Text(
-                    text = "Current",
-                    style = MaterialTheme.typography.caption,
-                    color = LifeCommanderDesignSystem.colors.OnSurfaceVariant
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = isDone,
+                onCheckedChange = { onToggleDone() },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = if (isCurrent) LifeCommanderDesignSystem.colors.Primary else MaterialTheme.colors.primary
                 )
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = habit.name ?: "Unnamed Habit",
+                    style = MaterialTheme.typography.body1.copy(
+                        fontWeight = if (isCurrent) FontWeight.Bold else if (isDone) FontWeight.Normal else FontWeight.Medium,
+                        textDecoration = if (isDone) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
+                    ),
+                    color = if (isDone) {
+                        LifeCommanderDesignSystem.colors.OnSurfaceVariant
+                    } else {
+                        LifeCommanderDesignSystem.colors.OnSurface
+                    }
+                )
+                if (isCurrent) {
+                    Spacer(Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CenterFocusStrong,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = LifeCommanderDesignSystem.colors.Primary
+                        )
+                        Text(
+                            text = "Current",
+                            style = MaterialTheme.typography.caption.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = LifeCommanderDesignSystem.colors.Primary
+                        )
+                    }
+                }
+                if (habit.streak != null && habit.streak > 0) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "🔥 ${habit.streak} day streak",
+                        style = MaterialTheme.typography.caption,
+                        color = LifeCommanderDesignSystem.colors.OnSurfaceVariant
+                    )
+                }
             }
         }
-        // Optional right icon/chevron if you use one
-        // Icon(Icons.AutoMirrored.Filled.ChevronRight, contentDescription = null, tint = LifeCommanderDesignSystem.colors.OnSurfaceVariant)
     }
 }
 
@@ -517,6 +604,212 @@ private fun HabitsSectionOrEmpty(
             action = "Create a Habit",
             onClick = onCreateHabit
         )
+    }
+}
+
+@Composable
+private fun NonDailyHabitsCard(
+    habits: List<Habit>,
+    onHabitClick: (Habit) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        backgroundColor = LifeCommanderDesignSystem.colors.Surface,
+        elevation = 0.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Schedule,
+                        contentDescription = null,
+                        tint = LifeCommanderDesignSystem.colors.Secondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Scheduled Habits",
+                        style = MaterialTheme.typography.h6,
+                        fontWeight = FontWeight.Bold,
+                        color = LifeCommanderDesignSystem.colors.OnSurface
+                    )
+                }
+                Text(
+                    text = "${habits.size}",
+                    style = MaterialTheme.typography.body2,
+                    color = LifeCommanderDesignSystem.colors.OnSurfaceVariant
+                )
+            }
+            
+            // Habit list
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                habits.forEach { habit ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onHabitClick(habit) },
+                        shape = RoundedCornerShape(8.dp),
+                        color = LifeCommanderDesignSystem.colors.Surface,
+                        border = BorderStroke(1.dp, LifeCommanderDesignSystem.colors.Border.copy(alpha = 0.5f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text = habit.name ?: "Unnamed Habit",
+                                    style = MaterialTheme.typography.body1.copy(
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    color = LifeCommanderDesignSystem.colors.OnSurface
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = habit.frequency?.lowercase()?.replace("_", " ")?.replaceFirstChar { it.uppercase() } ?: "Daily",
+                                    style = MaterialTheme.typography.caption,
+                                    color = LifeCommanderDesignSystem.colors.OnSurfaceVariant
+                                )
+                            }
+                            if (habit.done == true) {
+                                Icon(
+                                    imageVector = Icons.Filled.CheckCircle,
+                                    contentDescription = "Done",
+                                    tint = LifeCommanderDesignSystem.colors.Secondary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OverdueNonDailyHabitsCard(
+    habits: List<Habit>,
+    onHabitClick: (Habit) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        backgroundColor = MaterialTheme.colors.error.copy(alpha = 0.05f),
+        elevation = 0.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colors.error.copy(alpha = 0.2f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Error,
+                        contentDescription = null,
+                        tint = MaterialTheme.colors.error,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Overdue Habits",
+                        style = MaterialTheme.typography.h6,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colors.error
+                    )
+                }
+                Text(
+                    text = "${habits.size}",
+                    style = MaterialTheme.typography.body2.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colors.error
+                )
+            }
+            
+            // Habit list
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                habits.forEach { habit ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onHabitClick(habit) },
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colors.error.copy(alpha = 0.05f),
+                        border = BorderStroke(1.dp, MaterialTheme.colors.error.copy(alpha = 0.3f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text = habit.name ?: "Unnamed Habit",
+                                    style = MaterialTheme.typography.body1.copy(
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    color = LifeCommanderDesignSystem.colors.OnSurface
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = habit.frequency?.lowercase()?.replace("_", " ")?.replaceFirstChar { it.uppercase() } ?: "Daily",
+                                        style = MaterialTheme.typography.caption,
+                                        color = MaterialTheme.colors.error
+                                    )
+                                    Text(
+                                        text = "•",
+                                        style = MaterialTheme.typography.caption,
+                                        color = MaterialTheme.colors.error
+                                    )
+                                    Text(
+                                        text = "Overdue",
+                                        style = MaterialTheme.typography.caption.copy(
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = MaterialTheme.colors.error
+                                    )
+                                }
+                            }
+                            if (habit.done == true) {
+                                Icon(
+                                    imageVector = Icons.Filled.CheckCircle,
+                                    contentDescription = "Done",
+                                    tint = LifeCommanderDesignSystem.colors.Secondary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -909,6 +1202,7 @@ fun OtterWelcomeCard(
     pendingHabits: Int,
     pendingTasks: Int,
     currentHabitName: String?,
+    currentHour: Int,
     onHabitClick: () -> Unit,
     onTasksClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -916,7 +1210,21 @@ fun OtterWelcomeCard(
     val mood = remember(pendingHabits, pendingTasks, currentHabitName) {
         computeOtterMood(pendingHabits, pendingTasks, currentHabitName)
     }
-    val (title, subtitle) = remember(mood) { moodMessage(mood, currentHabitName, pendingTasks) }
+    
+    // Get time-based greeting
+    val (greeting, emoji) = remember(currentHour) {
+        TimeBasedUtils.getTimeBasedGreeting(currentHour)
+    }
+    val timeBasedMessage = remember(currentHour, pendingHabits, pendingTasks) {
+        TimeBasedUtils.getTimeBasedMessage(currentHour, pendingHabits, pendingTasks)
+    }
+    
+    // Combine mood message with time-based context
+    val (title, subtitle) = remember(mood, greeting, emoji, timeBasedMessage, currentHabitName, pendingTasks) {
+        val baseMessage = moodMessage(mood, currentHabitName, pendingTasks)
+        // Use time-based greeting for title, combine with mood message
+        "$emoji $greeting" to timeBasedMessage
+    }
     val painter = rememberOtterPainter(mood)
 
     Surface(
@@ -978,7 +1286,67 @@ fun OtterWelcomeCard(
                 )
 
                 Spacer(Modifier.height(12.dp))
-
+                
+                // Pending items summary
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (pendingHabits > 0) {
+                        Card(
+                            shape = RoundedCornerShape(8.dp),
+                            backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.1f),
+                            modifier = Modifier.clickable(onClick = onHabitClick)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "$pendingHabits",
+                                    style = MaterialTheme.typography.body2.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colors.primary
+                                    )
+                                )
+                                Text(
+                                    text = if (pendingHabits == 1) "habit" else "habits",
+                                    style = MaterialTheme.typography.caption.copy(
+                                        color = MaterialTheme.colors.primary
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    if (pendingTasks > 0) {
+                        Card(
+                            shape = RoundedCornerShape(8.dp),
+                            backgroundColor = MaterialTheme.colors.secondary.copy(alpha = 0.1f),
+                            modifier = Modifier.clickable(onClick = onTasksClick)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "$pendingTasks",
+                                    style = MaterialTheme.typography.body2.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colors.secondary
+                                    )
+                                )
+                                Text(
+                                    text = if (pendingTasks == 1) "task" else "tasks",
+                                    style = MaterialTheme.typography.caption.copy(
+                                        color = MaterialTheme.colors.secondary
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -1006,7 +1374,7 @@ private fun TasksSection(
             SharedTaskCard(
                 taskName = task.name,
                 taskNote = task.note,
-                dueDate = task.dueDateTime?.toLocalDateTime()?.formatDefault(),
+                dueDate = task.dueDateTime?.toLocalUiDateTime()?.formatDefault(),
                 isCompleted = task.done
             )
         }

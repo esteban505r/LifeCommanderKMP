@@ -12,6 +12,7 @@ data class Task(
     val scheduledDateTime: String? = null,
     val reminders: List<Reminder>? = null,
     val priority: Int = 0,
+    val tags: List<Tag>? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null,
     val clearFields: List<String>? = null

@@ -13,4 +13,5 @@ data class TaskResponse(
     override val priority: Int?=null,
     override val dueDateTime: String?=null,
     override val reminders: List<TaskReminderResponse>?=null,
+    val tags: List<TagResponse>? = null,
 ): TaskResponseInterface

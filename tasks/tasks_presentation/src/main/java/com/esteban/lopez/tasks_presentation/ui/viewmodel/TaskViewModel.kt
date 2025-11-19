@@ -91,6 +91,13 @@ class TaskViewModel @Inject constructor(
                 is TaskIntent.SetDateRange -> changeDateRange(it.startDate to it.endDate)
                 is TaskIntent.ClearDateRange -> changeDateRange(null)
                 is TaskIntent.RescheduleTask -> rescheduleTask(it.id, it.task)
+                is TaskIntent.ToggleGroupByTags -> {
+                    emitState {
+                        currentState.copy(
+                            groupByTags = currentState.groupByTags.not()
+                        )
+                    }
+                }
                 else -> {}
             }
         }

@@ -27,6 +27,7 @@ val appModule = module {
     single<EmailSender> { SesEmailSender() }
     single { PasswordResetService(get(),BASE_URL_PROD,) }
     single { TaskService(get()) }
+    single { TagService() }
     single { HabitService(get()) }
     single { NotificationService() }
     single { TimerService() }
@@ -70,6 +71,7 @@ val appModule = module {
     // Repositories
     single { WorkoutRepository(get()) }
     single { TaskRepository(get()) }
+    single { TagRepository(get()) }
     single { HabitRepository(get()) }
     single { SyncRepository(get()) }
     single { NutritionRepository(get()) }

@@ -45,12 +45,14 @@ import services.dailyjournal.PomodoroService
 import services.dashboard.DashboardService
 import services.habits.HabitService
 import services.tasks.TaskService
+import services.tags.TagService
 import ui.ui.viewmodels.AuthViewModel
 import ui.viewmodels.AppViewModel
 import ui.viewmodels.DailyJournalViewModel
 import ui.viewmodels.DashboardViewModel
 import ui.viewmodels.HabitsViewModel
 import ui.viewmodels.TasksViewModel
+import ui.viewmodels.TagsViewModel
 import utils.BackgroundServiceManager
 import utils.StatusBarService
 import utils.TimerService
@@ -127,6 +129,7 @@ val managersModule = module {
 val servicesModule = module {
     single { HabitService(get()) }
     single { TaskService(get()) }
+    single { TagService(get()) }
     single { AuthService(get(), get()) }
     single { FinanceService(BASE_URL, get(), get()) }
     single { AppPreferencesService(get()) }
@@ -151,6 +154,7 @@ val viewModelsModule = module {
     viewModel { AppViewModel(get(), get(), get(), get(), get()) }
     viewModel { HabitsViewModel(get(), get()) }
     viewModel { TasksViewModel(get(), get(), get()) }
+    viewModel { TagsViewModel(get(), get()) }
     viewModel { AuthViewModel(get()) }
     viewModel { DailyJournalViewModel(get(), get()) }
     viewModel { CalendarViewModel(get(), get(), get(), get()) }

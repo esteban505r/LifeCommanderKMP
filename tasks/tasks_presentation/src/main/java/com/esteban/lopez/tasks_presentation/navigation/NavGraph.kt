@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.esteban.ruano.core.routes.Routes
 import com.esteban.ruano.tasks_presentation.ui.NewTaskScreen
+import com.esteban.ruano.tasks_presentation.ui.TagsManagementScreen
 import com.esteban.ruano.tasks_presentation.ui.TaskDetailScreen
 
 fun NavGraphBuilder.tasksGraph(
@@ -23,13 +24,31 @@ fun NavGraphBuilder.tasksGraph(
         })
     }
     composable(Routes.NEW_EDIT_TASK) {
-        NewTaskScreen(onClose = {
-            navController.navigateUp()
-        })
+        NewTaskScreen(
+            onClose = {
+                navController.navigateUp()
+            },
+            onManageTags = {
+                navController.navigate(Routes.TAGS_MANAGEMENT)
+            }
+        )
     }
     composable("${Routes.NEW_EDIT_TASK}/{taskId}") {
-        NewTaskScreen(onClose = {
-            navController.navigateUp()
-        }, taskToEditId = it.arguments?.getString("taskId")!!)
+        NewTaskScreen(
+            onClose = {
+                navController.navigateUp()
+            },
+            taskToEditId = it.arguments?.getString("taskId")!!,
+            onManageTags = {
+                navController.navigate(Routes.TAGS_MANAGEMENT)
+            }
+        )
+    }
+    composable(Routes.TAGS_MANAGEMENT) {
+        TagsManagementScreen(
+            onNavigateUp = {
+                navController.navigateUp()
+            }
+        )
     }
 }

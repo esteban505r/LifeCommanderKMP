@@ -22,7 +22,7 @@ class TaskService(
                 val response = client.get(TASKS_ENDPOINT) {
                     url {
                         parameters.append("filter", "")
-                        parameters.append("page", page.toString())
+                        parameters.append("offset", page.toString())
                         parameters.append("limit", limit.toString())
                         parameters.append("date", date)
                     }
@@ -61,7 +61,7 @@ class TaskService(
             try {
                 val parameters = Parameters.build {
                     append("filter", "")
-                    append("page", page.toString())
+                    append("offset", page.toString())
                     append("limit", limit.toString())
                     append("startDate", startDate)
                     append("endDate", endDate)
@@ -122,7 +122,7 @@ class TaskService(
                 val response = client.get(TASKS_ENDPOINT) {
                     url {
                         parameters.append("filter", "")
-                        parameters.append("page", page.toString())
+                        parameters.append("offset", page.toString())
                         parameters.append("limit", limit.toString())
                     }
                     appHeaders(token)
@@ -130,6 +130,24 @@ class TaskService(
                 response
             } catch (e: Exception) {
                 throw TaskServiceException("Failed to fetch all tasks: ${e.message}", e)
+            }
+        }
+    }
+
+    suspend fun getTasksByTag(token: String, tagSlug: String, page: Int, limit: Int): List<Task> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = client.get(TASKS_ENDPOINT) {
+                    url {
+                        parameters.append("tagSlug", tagSlug)
+                        parameters.append("offset", page.toString())
+                        parameters.append("limit", limit.toString())
+                    }
+                    appHeaders(token)
+                }.body<List<Task>>()
+                response
+            } catch (e: Exception) {
+                throw TaskServiceException("Failed to fetch tasks by tag: ${e.message}", e)
             }
         }
     }
@@ -166,7 +184,7 @@ class TaskService(
                 val response = client.get("$TASKS_ENDPOINT/noDueDate") {
                     url {
                         parameters.append("filter", "")
-                        parameters.append("page", page.toString())
+                        parameters.append("offset", page.toString())
                         parameters.append("limit", limit.toString())
                     }
                     appHeaders(token)

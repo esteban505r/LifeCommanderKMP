@@ -53,6 +53,7 @@ const val SOCKETS_PATH = "/api/v1"
 
 val HABITS_ENDPOINT = "$BASE_URL/habits"
 val TASKS_ENDPOINT = "$BASE_URL/tasks"
+val TAGS_ENDPOINT = "$BASE_URL/tags"
 val TIMER_ENDPOINT = "$BASE_URL/timers"
 val LOGIN_ENDPOINT = "$BASE_URL/auth/login"
 val SIGNUP_ENDPOINT = "$BASE_URL/auth/register"

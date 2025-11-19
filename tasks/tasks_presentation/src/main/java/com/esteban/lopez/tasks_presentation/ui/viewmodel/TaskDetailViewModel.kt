@@ -42,21 +42,22 @@ class TaskDetailViewModel @Inject constructor(
         }
     }
 
-    private fun addTask(name:String, note:String?, dueDate:String?, scheduledDate:String?, reminders:List<Reminder>, onComplete: (Boolean) -> Unit) {
+    private fun addTask(name:String, note:String?, dueDate:String?, scheduledDate:String?, reminders:List<Reminder>, priority: Int? = null, onComplete: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
             emitState {
                 currentState.copy(isLoading = true)
             }
+            val taskId = UUID.randomUUID().toString()
             val added = taskUseCases.addTask(
                 Task(
-                    id = UUID.randomUUID().toString(),
+                    id = taskId,
                     name = name,
                     note = note?:"",
                     scheduledDateTime = scheduledDate,
                     dueDateTime = dueDate,
                     reminders = reminders,
                     done = false,
-                    priority = 0,
+                    priority = priority ?: 0,
                 )
             )
             emitState {
@@ -64,10 +65,10 @@ class TaskDetailViewModel @Inject constructor(
             }
             added.fold(
                 onSuccess = {
-                    onComplete(true)
+                    onComplete(true, taskId)
                 },
                 onFailure = {
-                    onComplete(false)
+                    onComplete(false, null)
                     sendErrorEffect()
                 }
             )
@@ -152,7 +153,7 @@ class TaskDetailViewModel @Inject constructor(
                 is TaskIntent.UnCompleteTask -> unCompleteTask(it.id, it.onComplete)
                 is TaskIntent.DeleteTask -> deleteTask(it.id)
                 is TaskIntent.UpdateTask -> updateTask(it.id, it.task)
-                is TaskIntent.AddTask -> addTask(it.name,it.note,it.dueDate,it.scheduledDate,it.reminders, it.onComplete)
+                is TaskIntent.AddTask -> addTask(it.name,it.note,it.dueDate,it.scheduledDate,it.reminders, it.priority, it.onComplete)
                 is TaskIntent.ToggleCalendarView -> {
 
                 }

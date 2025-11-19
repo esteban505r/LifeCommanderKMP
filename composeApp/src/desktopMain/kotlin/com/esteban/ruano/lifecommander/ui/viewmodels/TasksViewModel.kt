@@ -37,6 +37,9 @@ class TasksViewModel(
     private val _selectedFilter = MutableStateFlow(TaskFilters.TODAY)
     val selectedFilter = _selectedFilter.asStateFlow()
 
+    private val _selectedTagSlug = MutableStateFlow<String?>(null)
+    val selectedTagSlug = _selectedTagSlug.asStateFlow()
+
     val _loading = MutableStateFlow(false)
     val loading = _loading.asStateFlow()
 
@@ -137,6 +140,18 @@ class TasksViewModel(
             _loading.value = true
             _error.value = null
             try {
+                // If a tag is selected, filter by tag
+                if (_selectedTagSlug.value != null) {
+                    val response = taskService.getTasksByTag(
+                        token = tokenStorageImpl.getToken() ?: "",
+                        tagSlug = _selectedTagSlug.value!!,
+                        page = 0,
+                        limit = 30
+                    )
+                    _tasks.value = response.sortedByDefault()
+                    return@launch
+                }
+
                 if (_selectedFilter.value == TaskFilters.ALL) {
                     getTasks()
                     return@launch
@@ -173,6 +188,11 @@ class TasksViewModel(
                 _loading.value = false
             }
         }
+    }
+
+    fun filterByTag(tagSlug: String?) {
+        _selectedTagSlug.value = tagSlug
+        getTasksByFilter()
     }
 
     fun addTask(name: String, dueDate: String?, scheduledDate: String?, note: String?, priority: Int) {

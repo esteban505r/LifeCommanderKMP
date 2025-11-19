@@ -195,7 +195,7 @@ fun Application.connectToPostgres() {
         driver = if (iamMode) "software.amazon.jdbc.Driver" else "org.postgresql.Driver",
         user = cfg.db.user,
         password = cfg.db.password,
-        properties = poolProperties
+//        properties = poolProperties
     )
 
 
@@ -208,7 +208,8 @@ fun Application.connectToPostgres() {
             DailyJournals, Pomodoros, Questions, QuestionAnswers,
             Transactions, ScheduledTransactions, Accounts, Budgets, SavingsGoals, TimerLists,
             Timers, UserSettings, DeviceTokens, CategoryKeywords, Portfolios, RecipeTracks, ExerciseTracks, RecipeDays,
-            Ingredients, Instructions, PasswordResetPins, PasswordResetSessions, RefreshSessions
+            Ingredients, Instructions, PasswordResetPins, PasswordResetSessions, RefreshSessions,
+            Tags, TaskTags
         )
     }
 }

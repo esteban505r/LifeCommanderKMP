@@ -2,6 +2,8 @@ package com.esteban.ruano.lifecommander.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +17,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.esteban.ruano.lifecommander.ui.components.TagChip
+import com.esteban.ruano.lifecommander.utils.UiUtils.getColorByPriority
+import com.esteban.ruano.lifecommander.utils.UiUtils.getIconByPriority
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.toLocalDateTime
 import com.esteban.ruano.utils.DateUIUtils.toLocalTime
@@ -104,25 +109,34 @@ fun TaskDetailScreen(
             ) {
                 Card(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = getPriorityColor(task.priority).copy(alpha = 0.1f),
+                    backgroundColor = getColorByPriority(task.priority).copy(alpha = 0.1f),
                     elevation = 2.dp,
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Column(
+                    Row(
                         modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Priority",
-                            style = MaterialTheme.typography.caption,
-                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                        Icon(
+                            imageVector = getIconByPriority(task.priority),
+                            contentDescription = "Priority",
+                            tint = getColorByPriority(task.priority),
+                            modifier = Modifier.size(24.dp)
                         )
-                        Text(
-                            text = getPriorityText(task.priority),
-                            style = MaterialTheme.typography.h6,
-                            fontWeight = FontWeight.Bold,
-                            color = getPriorityColor(task.priority)
-                        )
+                        Column {
+                            Text(
+                                text = "Priority",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                text = getPriorityText(task.priority),
+                                style = MaterialTheme.typography.h6,
+                                fontWeight = FontWeight.Bold,
+                                color = getColorByPriority(task.priority)
+                            )
+                        }
                     }
                 }
                 
@@ -241,6 +255,51 @@ fun TaskDetailScreen(
                             text = task.scheduledDateTime?.toLocalDateTime()?.formatDefault() ?: "",
                             style = MaterialTheme.typography.body1
                         )
+                    }
+                }
+            }
+            
+            // Tags Section
+            if (!task.tags.isNullOrEmpty()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    elevation = 2.dp,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Label,
+                                contentDescription = "Tags",
+                                tint = MaterialTheme.colors.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Tags",
+                                style = MaterialTheme.typography.h6,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(task.tags ?: emptyList()) { tag ->
+                                TagChip(
+                                    tag = tag,
+                                    onClick = { /* Could navigate to tag detail in future */ },
+                                    selected = false
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -411,15 +470,6 @@ private fun getPriorityText(priority: Int): String {
     }
 }
 
-private fun getPriorityColor(priority: Int): Color {
-    return when (priority) {
-        0 -> Color.Gray
-        1 -> Color.Blue
-        2 -> Color(0xFFFF9800) // Orange
-        3 -> Color.Red
-        else -> Color.Gray
-    }
-}
 
 private fun getTaskStatus(task: Task): String {
     return when {

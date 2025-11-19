@@ -5,11 +5,16 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Icon
+import com.esteban.ruano.lifecommander.utils.UiUtils.getColorByPriority
+import com.esteban.ruano.lifecommander.utils.UiUtils.getIconByPriority
+import com.esteban.ruano.lifecommander.utils.UiUtils.parseHexColor
 import androidx.compose.runtime.*
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,12 +56,8 @@ fun TaskItem(
             task.scheduledDateTime?.toLocalDateTime()?.let { it < now } == true)
 
     val showContextMenu = remember { mutableStateOf(false) }
-    val priorityColor = when (task.priority) {
-        3, 4, 5 -> Color(0xFFD32F2F) // High - Red
-        2 -> Color(0xFFFFA000) // Medium - Orange
-        1 -> Color(0xFF388E3C) // Low - Green
-        else -> MaterialTheme.colors.primary
-    }
+    val priorityColor = getColorByPriority(task.priority ?: 0)
+    val priorityIcon = getIconByPriority(task.priority ?: 0)
 
     CommonItem(
         modifier = modifier,
@@ -76,7 +77,7 @@ fun TaskItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Color-coded priority indicator
+                // Color-coded priority indicator with icon
                 Box(
                     modifier = Modifier
                         .size(32.dp)
@@ -89,18 +90,11 @@ fun TaskItem(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = when (task.priority) {
-                            3, 4, 5 -> "H"
-                            2 -> "M"
-                            1 -> "L"
-                            else -> "?"
-                        },
-                        style = MaterialTheme.typography.caption.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = priorityColor,
-                            fontSize = 12.sp
-                        )
+                    Icon(
+                        imageVector = priorityIcon,
+                        contentDescription = "Priority",
+                        tint = priorityColor,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 

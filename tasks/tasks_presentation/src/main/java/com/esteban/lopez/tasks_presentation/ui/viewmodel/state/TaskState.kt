@@ -15,5 +15,6 @@ data class TaskState(
     val isRefreshing : Boolean = false,
     val isError : Boolean = false,
     val errorMessage : String = EMPTY_STRING,
-    val dateRange: Pair<String?, String?>? = TaskFilters.TODAY.getDateRangeByFilter()
+    val dateRange: Pair<String?, String?>? = TaskFilters.TODAY.getDateRangeByFilter(),
+    val groupByTags: Boolean = false
 ) : ViewState

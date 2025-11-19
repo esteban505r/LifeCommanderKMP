@@ -13,4 +13,5 @@ data class TaskResponse(
     val dueDateTime: String? = null,
     val scheduledDateTime: String? = null,
     val reminders: List<Reminder>?=null,
+    val tags: List<com.lifecommander.models.Tag>? = null,
 )

@@ -31,4 +31,5 @@ class Task(id: EntityID<UUID>) :  UUIDEntity(id) {
     var note by Tasks.note
     var user by User referencedOn Tasks.user
     var status by Tasks.status
+    var tags by Tag via TaskTags
 }

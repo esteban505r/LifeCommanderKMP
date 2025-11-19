@@ -34,7 +34,7 @@ class BudgetViewModel @Inject constructor(
             is BudgetIntent.GetBudgetProgress -> getBudgetProgress(intent.budgetId)
             is BudgetIntent.GetBudgetTransactions -> getBudgetTransactions(intent.budgetId, intent.refresh)
             is BudgetIntent.ChangeBudgetFilters -> changeBudgetFilters(intent.filters)
-            is BudgetIntent.ChangeBudgetBaseDate -> changeBudgetBaseDate(intent.date.toKotlinLocalDate())
+            is BudgetIntent.ChangeBudgetBaseDate -> changeBudgetBaseDate(intent.date)
             is BudgetIntent.CategorizeAll -> categorizeAll()
             is BudgetIntent.CategorizeUnbudgeted -> categorizeUnbudgeted()
         }

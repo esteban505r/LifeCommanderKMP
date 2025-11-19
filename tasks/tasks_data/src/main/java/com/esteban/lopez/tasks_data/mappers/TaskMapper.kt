@@ -2,8 +2,10 @@ package com.esteban.ruano.tasks_data.mappers
 
 import com.esteban.ruano.tasks_data.remote.model.TaskReminderResponse
 import com.esteban.ruano.tasks_data.remote.model.TaskResponse
+import com.esteban.ruano.tasks_data.remote.model.TagResponse
 import com.lifecommander.models.Reminder
 import com.lifecommander.models.Task
+import com.lifecommander.models.Tag
 import com.esteban.ruano.tasks_data.local.model.Task as TaskEntity
 
 fun TaskResponse.toDomainModel(): Task {
@@ -15,7 +17,17 @@ fun TaskResponse.toDomainModel(): Task {
         priority = priority ?: 0,
         scheduledDateTime = scheduledDateTime,
         dueDateTime = dueDateTime,
-        reminders = reminders?.map { it.toDomainModel() }
+        reminders = reminders?.map { it.toDomainModel() },
+        tags = tags?.map { it.toDomainModel() }
+    )
+}
+
+fun TagResponse.toDomainModel(): Tag {
+    return Tag(
+        id = id,
+        name = name,
+        slug = slug ?: "", // slug is required in Tag model, use empty string as fallback
+        color = color
     )
 }
 

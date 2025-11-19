@@ -14,7 +14,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -58,6 +60,7 @@ fun TasksScreen(
     onNavigateUp: () -> Unit,
     onTaskClick: (Task) -> Unit,
     onNewTaskClick: () -> Unit,
+    onManageTagsClick: () -> Unit = {},
     state: TaskState,
     userIntent: (TaskIntent) -> Unit,
 ) {
@@ -119,6 +122,28 @@ fun TasksScreen(
                         )
                     },
                     actions = {
+                        IconButton(
+                            onClick = onManageTagsClick
+                        ) {
+                            Icon(
+                                Icons.Default.Label,
+                                contentDescription = "Manage Tags",
+                                tint = MaterialTheme.colors.primary
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    userIntent(TaskIntent.ToggleGroupByTags)
+                                }
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.Sort,
+                                contentDescription = if (state.groupByTags) "Group by Status" else "Group by Tags",
+                                tint = if (state.groupByTags) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
 
                     /*Switch(
                         checked = state.offlineModeEnabled,
@@ -303,17 +328,19 @@ fun TasksScreen(
                                     }
                                 }
                                 else -> {
-                                    TaskList(state.tasks, state.isRefreshing, onPullRefresh = {
-                                        coroutineScope.launch {
-                                            userIntent(
-                                                TaskIntent.Refresh
-                                            )
-                                        }
-                                    }, onTaskClick = onTaskClick,
-                                        onCheckedChange = { task, it ->
+                                    TaskList(
+                                        taskList = state.tasks,
+                                        isRefreshing = state.isRefreshing,
+                                        onPullRefresh = {
+                                            coroutineScope.launch {
+                                                userIntent(TaskIntent.Refresh)
+                                            }
+                                        },
+                                        onTaskClick = onTaskClick,
+                                        onCheckedChange = { task, checked ->
                                             coroutineScope.launch {
                                                 userIntent(
-                                                    if (it) TaskIntent.CompleteTask(
+                                                    if (checked) TaskIntent.CompleteTask(
                                                         task.id!!
                                                     ) {
                                                        /* coroutineScope.launch {
@@ -350,7 +377,8 @@ fun TasksScreen(
                                                 )
                                             }
                                         },
-                                        itemWrapper = { content,task ->
+                                        groupByTags = state.groupByTags,
+                                        itemWrapper = { content, task ->
                                             Box {
                                                 content.invoke()
                                             }
