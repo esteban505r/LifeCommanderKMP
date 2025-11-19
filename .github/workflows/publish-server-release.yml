@@ -1,5 +1,5 @@
-# .github/workflows/build-and-deploy.yml
-name: build-and-deploy
+# .github/workflows/publish-server-release.yml
+name: Publish Server Release
 
 # Triggers on:
 # - main branch (for continuous deployment)
@@ -14,7 +14,7 @@ on:
     tags:     [ "v*" ]
 
 concurrency:
-  group: build-and-deploy-${{ github.ref }}
+  group: publish-server-release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
