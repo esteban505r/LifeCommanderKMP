@@ -26,17 +26,81 @@ class DailyJournalService(
 
     fun create(userId: Int, journal: CreateDailyJournalDTO): UUID? {
         return transaction {
-            val id = DailyJournals.insertOperation(userId) {
-                insert {
-                    it[date] = journal.date.toLocalDate()
-                    it[summary] = journal.summary
-                    it[user] = userId
-                }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
+            val journalDate = journal.date.toLocalDate()
+            
+            // Try to find existing journal entry first
+            var existingJournal = DailyJournal.find {
+                (DailyJournals.user eq userId) and
+                (DailyJournals.date eq journalDate) and
+                (DailyJournals.status eq Status.ACTIVE)
+            }.firstOrNull()
+            
+            val id = if (existingJournal != null) {
+                // Update existing journal entry
+                DailyJournals.updateOperation(userId) {
+                    val updatedRows = update({ (DailyJournals.id eq existingJournal.id.value) }) {
+                        it[summary] = journal.summary
+                    }
+                    if (updatedRows > 0) existingJournal.id.value else null
+                }
+            } else {
+                // Try to insert new journal entry
+                // If unique constraint violation occurs, retry with update
+                try {
+                    DailyJournals.insertOperation(userId) {
+                        insert {
+                            it[date] = journalDate
+                            it[summary] = journal.summary
+                            it[user] = userId
+                        }.resultedValues?.firstOrNull()?.getOrNull(this.id)?.value
+                    } ?: run {
+                        // If insert returned null, try to find existing (race condition occurred)
+                        existingJournal = DailyJournal.find {
+                            (DailyJournals.user eq userId) and
+                            (DailyJournals.date eq journalDate) and
+                            (DailyJournals.status eq Status.ACTIVE)
+                        }.firstOrNull()
+                        
+                        existingJournal?.let {
+                            DailyJournals.updateOperation(userId) {
+                                val updatedRows = update({ (DailyJournals.id eq it.id.value) }) {
+                                    it[summary] = journal.summary
+                                }
+                                if (updatedRows > 0) it.id.value else null
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Handle unique constraint violation or other database errors
+                    // Try to find and update existing journal
+                    existingJournal = DailyJournal.find {
+                        (DailyJournals.user eq userId) and
+                        (DailyJournals.date eq journalDate) and
+                        (DailyJournals.status eq Status.ACTIVE)
+                    }.firstOrNull()
+                    
+                    existingJournal?.let {
+                        DailyJournals.updateOperation(userId) {
+                            val updatedRows = update({ (DailyJournals.id eq it.id.value) }) {
+                                it[summary] = journal.summary
+                            }
+                            if (updatedRows > 0) it.id.value else null
+                        }
+                    }
+                }
             }
-            id?.let {
-                // Create question answers
+            
+            id?.let { journalId ->
+                // Always delete existing question answers and recreate them
+                // This ensures consistency whether it's a new or updated journal
+                val existingAnswers = questionAnswerService.getByDailyJournalId(journalId)
+                existingAnswers.forEach { answer ->
+                    questionAnswerService.delete(userId, UUID.fromString(answer.id))
+                }
+                
+                // Create new question answers
                 journal.questionAnswers.forEach { answer ->
-                    questionAnswerService.create(userId, it, answer)
+                    questionAnswerService.create(userId, journalId, answer)
                 }
             }
             id

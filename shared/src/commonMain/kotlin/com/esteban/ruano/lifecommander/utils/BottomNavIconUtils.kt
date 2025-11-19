@@ -24,6 +24,7 @@ object BottomNavIconUtils {
             "workout" -> if (selected) Res.drawable.ic_work_out_selected else Res.drawable.ic_work_out_unselected
             "nutrition" -> if (selected) Res.drawable.ic_nutrition_selected else Res.drawable.ic_nutrition_unselected
             "finance" -> if (selected) Res.drawable.ic_finance_selected else Res.drawable.ic_finance_unselected
+            "journal" -> if (selected) Res.drawable.ic_home_selected else Res.drawable.ic_home_unselected // TODO: Add journal icons
             "to_do" -> if (selected) Res.drawable.ic_habits_selected else Res.drawable.ic_habits_unselected
             else -> if (selected) Res.drawable.ic_home_selected else Res.drawable.ic_home_unselected
         }

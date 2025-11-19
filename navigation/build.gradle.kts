@@ -27,4 +27,6 @@ dependencies {
     implementation(project(":onboarding:onboarding_presentation"))
     implementation(project(":workout:workout_presentation"))
     implementation(project(":workout:workout_domain"))
+    implementation(project(":journal:journal_presentation"))
+    implementation(project(":journal:journal_domain"))
 }

@@ -14,6 +14,10 @@ object DailyJournals : UUIDTable() {
     val summary = text("summary")
     val user = reference("user_id", Users, ReferenceOption.CASCADE)
     val status = enumerationByName("status", 10, Status::class).default(Status.ACTIVE)
+    
+    init {
+        uniqueIndex(user, date) // Ensure one journal entry per user per date
+    }
 }
 
 class DailyJournal(id: EntityID<UUID>) : UUIDEntity(id) {

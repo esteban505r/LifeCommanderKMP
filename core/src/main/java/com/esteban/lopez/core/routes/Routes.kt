@@ -17,7 +17,8 @@ object Routes {
         val WORKOUT = BottomNavRoute("workout", "workout", "Workout")
         val NUTRITION = BottomNavRoute("nutrition", "nutrition", "Nutrition")
         val FINANCE = BottomNavRoute("finance", "finance", "Finance")
-        fun getAllRoutes() = listOf(HOME, TO_DO, WORKOUT, NUTRITION, FINANCE)
+        val JOURNAL = BottomNavRoute("journal", "journal", "Journal")
+        fun getAllRoutes() = listOf(HOME, TO_DO, WORKOUT, NUTRITION, FINANCE, JOURNAL)
     }
 
     const val WELCOME = "welcome"
@@ -32,6 +33,8 @@ object Routes {
     const val TASK_DETAIL = "to_do/tasks/task_detail"
     const val NEW_EDIT_TASK = "to_do/tasks/new_task"
     const val TAGS_MANAGEMENT = "to_do/tasks/tags"
+    //Journal
+    const val JOURNAL_HISTORY = "journal/history"
     //Workout
     const val WORKOUT_DAY_DETAIL = "workout_detail"
     const val WORKOUT_PROGRESS = "workout_progress"

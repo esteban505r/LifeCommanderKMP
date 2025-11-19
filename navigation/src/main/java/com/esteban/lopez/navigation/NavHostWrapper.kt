@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.esteban.lopez.journal_presentation.navigation.journalGraph
 import com.esteban.ruano.core.routes.Routes
 import com.esteban.ruano.finance_presentation.ui.navigation.financeGraph
 import com.esteban.ruano.habits_presentation.navigation.habitsGraph
@@ -36,5 +37,7 @@ fun NavHostWrapper(
         nutritionGraph(navController)
 
         financeGraph(navController)
+
+        journalGraph(navController)
     }
 }

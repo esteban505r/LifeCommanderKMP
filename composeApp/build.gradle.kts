@@ -113,6 +113,10 @@ kotlin {
                     implementation(project(":workout:workout_presentation"))
                     implementation(project(":workout:workout_domain"))
                     implementation(project(":workout:workout_data"))
+                    implementation(project(":journal:journal_presentation"))
+                    implementation(project(":journal:journal_domain"))
+                    implementation(project(":journal:journal_data"))
+                
 
                     implementation(libs.androidx.core.ktx)
                     implementation(libs.androidx.appcompat)

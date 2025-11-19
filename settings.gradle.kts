@@ -68,6 +68,11 @@ if (includeAndroid) {
     include(":finance:finance_domain")
     include(":finance:finance_data")
 
+    include(":journal")
+    include(":journal:journal_presentation")
+    include(":journal:journal_domain")
+    include(":journal:journal_data")
+
     include(":test-core")
     include(":navigation")
     include(":home")
