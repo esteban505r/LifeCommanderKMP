@@ -31,26 +31,47 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Extract and parse version
+      - name: Read version from VERSION file
         id: version
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            # Extract version from tag (e.g., v1.0.0 -> 1.0.0)
-            VERSION_RAW=${GITHUB_REF_NAME}
-            VERSION=${VERSION_RAW#v}
-            VERSION_TAG=${GITHUB_REF_NAME}
-          elif [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-            # Use commit SHA for main branch
-            VERSION="sha-${GITHUB_SHA::7}"
-            VERSION_TAG="sha-${GITHUB_SHA::7}"
+          
+          # Try to read from VERSION file first
+          if [ -f "VERSION" ]; then
+            VERSION_FROM_FILE=$(grep "^SERVER_VERSION=" VERSION | cut -d'=' -f2 | tr -d ' ' || echo "")
           else
-            # Extract version from branch (e.g., release/server/1.0.0 -> 1.0.0)
-            BRANCH_NAME=${GITHUB_REF#refs/heads/}
-            VERSION_RAW=${BRANCH_NAME#release/server/}
-            VERSION=${VERSION_RAW#v}
-            VERSION_TAG="sha-${GITHUB_SHA::7}"
+            VERSION_FROM_FILE=""
+          fi
+          
+          if [[ -n "$VERSION_FROM_FILE" ]]; then
+            # Use version from VERSION file
+            VERSION="$VERSION_FROM_FILE"
+            if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+              VERSION_TAG=${GITHUB_REF_NAME}
+            elif [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+              VERSION_TAG="sha-${GITHUB_SHA::7}"
+            else
+              VERSION_TAG="sha-${GITHUB_SHA::7}"
+            fi
+          else
+            # Fallback to branch/tag extraction
+            if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+              # Extract version from tag (e.g., v1.0.0 -> 1.0.0)
+              VERSION_RAW=${GITHUB_REF_NAME}
+              VERSION=${VERSION_RAW#v}
+              VERSION_TAG=${GITHUB_REF_NAME}
+            elif [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+              # Use commit SHA for main branch
+              VERSION="sha-${GITHUB_SHA::7}"
+              VERSION_TAG="sha-${GITHUB_SHA::7}"
+            else
+              # Extract version from branch (e.g., release/server/1.0.0 -> 1.0.0)
+              BRANCH_NAME=${GITHUB_REF#refs/heads/}
+              VERSION_RAW=${BRANCH_NAME#release/server/}
+              VERSION=${VERSION_RAW#v}
+              VERSION_TAG="sha-${GITHUB_SHA::7}"
+            fi
           fi
           
           echo "Server version: $VERSION"

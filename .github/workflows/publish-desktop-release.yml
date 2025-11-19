@@ -40,55 +40,91 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Extract and parse version from branch
+      - name: Read version from VERSION file
         id: version
+        shell: bash
         run: |
-          BRANCH_NAME=${GITHUB_REF#refs/heads/}
-          VERSION_RAW=${BRANCH_NAME#release/desktop/}
-          # Remove 'v' prefix if present (e.g., v1.0.0 -> 1.0.0)
-          VERSION=${VERSION_RAW#v}
-          
-          echo "Building Desktop version: $VERSION for ${{ matrix.os }}"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "APP_VERSION_NAME=$VERSION" >> $GITHUB_ENV
+          # Read version from VERSION file
+          if [ -f "VERSION" ]; then
+            VERSION=$(grep "^DESKTOP_VERSION=" VERSION | cut -d'=' -f2 | tr -d ' ')
+            
+            # Fallback to branch name if VERSION file doesn't have the value
+            if [ -z "$VERSION" ]; then
+              BRANCH_NAME=${GITHUB_REF#refs/heads/}
+              VERSION_RAW=${BRANCH_NAME#release/desktop/}
+              VERSION=${VERSION_RAW#v}
+            fi
+            
+            echo "Building Desktop version: $VERSION for ${{ matrix.os }}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "APP_VERSION_NAME=$VERSION" >> $GITHUB_ENV
+          else
+            echo "Error: VERSION file not found"
+            exit 1
+          fi
 
       - name: Build Desktop release distribution
+        shell: bash
         env:
           APP_VERSION_NAME: ${{ env.APP_VERSION_NAME }}
         run: |
           ./gradlew :composeApp:${{ matrix.task }}
 
-      - name: List build outputs
+      - name: List and rename build outputs with version
+        id: rename
+        shell: bash
         run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          DIST_PATH="${{ matrix.output-path }}"
+          
           echo "Checking for distribution files..."
           find composeApp/build/compose/binaries -name "*.dmg" -o -name "*.msi" -o -name "*.tar" 2>/dev/null || true
-          ls -la composeApp/build/compose/binaries/main/app/release/*/ 2>/dev/null || true
+          
+          # Find and rename distribution file to include version
+          for dist in $DIST_PATH; do
+            if [ -f "$dist" ]; then
+              DIR=$(dirname "$dist")
+              EXT="${dist##*.}"
+              FILENAME=$(basename "$dist" .$EXT)
+              # Remove existing version if present and add new one
+              FILENAME_CLEAN=$(echo "$FILENAME" | sed 's/-v[0-9.]*$//')
+              NEW_NAME="LifeCommander-v${VERSION}-${{ matrix.os }}.${EXT}"
+              NEW_PATH="${DIR}/${NEW_NAME}"
+              cp "$dist" "$NEW_PATH"
+              echo "Renamed: $(basename "$dist") -> $NEW_NAME"
+              echo "dist_path=$NEW_PATH" >> $GITHUB_OUTPUT
+              echo "dist_name=$NEW_NAME" >> $GITHUB_OUTPUT
+              break
+            fi
+          done
 
       - name: Install rclone
         if: matrix.os != 'windows-latest'
+        shell: bash
         run: |
           curl https://rclone.org/install.sh | sudo bash
 
       - name: Install rclone (Windows)
         if: matrix.os == 'windows-latest'
+        shell: pwsh
         run: |
           choco install rclone -y
 
       - name: Upload Desktop distribution to Google Drive
+        shell: bash
         env:
           RCLONE_CONFIG_GDRIVE_TYPE: drive
           RCLONE_DRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
           RCLONE_DRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
           RCLONE_DRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
         run: |
-          DIST_PATH="${{ matrix.output-path }}"
-          echo "Looking for distribution files matching: $DIST_PATH"
-          if ls $DIST_PATH 1> /dev/null 2>&1; then
-            echo "Found distribution file(s), uploading to Google Drive..."
-            rclone copy $DIST_PATH gdrive:/Desktop/LifeCommander --progress
+          DIST_PATH="${{ steps.rename.outputs.dist_path }}"
+          if [ -f "$DIST_PATH" ]; then
+            echo "Uploading distribution: ${{ steps.rename.outputs.dist_name }} to Google Drive..."
+            rclone copy "$DIST_PATH" gdrive:/Desktop/LifeCommander --progress
             echo "Distribution uploaded successfully"
           else
-            echo "Error: No distribution files found matching $DIST_PATH"
+            echo "Error: Distribution file not found at $DIST_PATH"
             echo "Attempting to find any distribution files..."
             find composeApp/build/compose/binaries -type f \( -name "*.dmg" -o -name "*.msi" -o -name "*.tar" \) -exec ls -lh {} \;
             exit 1

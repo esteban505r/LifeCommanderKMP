@@ -33,29 +33,39 @@ jobs:
             echo "⚠ Warning: keystore.jks not found, but build will use default Android debug signing"
           fi
 
-      - name: Extract and parse version from branch
+      - name: Read version from VERSION file
         id: version
         run: |
-          BRANCH_NAME=${GITHUB_REF#refs/heads/}
-          VERSION_RAW=${BRANCH_NAME#release/android/}
-          # Remove 'v' prefix if present (e.g., v1.0.0 -> 1.0.0)
-          VERSION=${VERSION_RAW#v}
-          
-          # Parse version components (assumes format: major.minor.patch or major.minor)
-          IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
-          MAJOR=${VERSION_PARTS[0]:-1}
-          MINOR=${VERSION_PARTS[1]:-0}
-          PATCH=${VERSION_PARTS[2]:-0}
-          
-          # Calculate versionCode: major * 10000 + minor * 100 + patch
-          # This allows up to 99.99.99 versions
-          VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
-          
-          echo "Building Android version: $VERSION (versionCode: $VERSION_CODE)"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
-          echo "APP_VERSION_NAME=$VERSION" >> $GITHUB_ENV
-          echo "APP_VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+          # Read version from VERSION file
+          if [ -f "VERSION" ]; then
+            VERSION=$(grep "^ANDROID_VERSION=" VERSION | cut -d'=' -f2 | tr -d ' ')
+            VERSION_CODE=$(grep "^ANDROID_VERSION_CODE=" VERSION | cut -d'=' -f2 | tr -d ' ')
+            
+            # Fallback to branch name if VERSION file doesn't have the value
+            if [ -z "$VERSION" ]; then
+              BRANCH_NAME=${GITHUB_REF#refs/heads/}
+              VERSION_RAW=${BRANCH_NAME#release/android/}
+              VERSION=${VERSION_RAW#v}
+            fi
+            
+            # Calculate versionCode if not in VERSION file
+            if [ -z "$VERSION_CODE" ]; then
+              IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
+              MAJOR=${VERSION_PARTS[0]:-1}
+              MINOR=${VERSION_PARTS[1]:-0}
+              PATCH=${VERSION_PARTS[2]:-0}
+              VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+            fi
+            
+            echo "Building Android version: $VERSION (versionCode: $VERSION_CODE)"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+            echo "APP_VERSION_NAME=$VERSION" >> $GITHUB_ENV
+            echo "APP_VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+          else
+            echo "Error: VERSION file not found"
+            exit 1
+          fi
 
       - name: Build Android release APK
         env:
@@ -68,6 +78,27 @@ jobs:
         run: |
           curl https://rclone.org/install.sh | sudo bash
 
+      - name: Rename APK with version
+        id: rename
+        run: |
+          APK_PATH="composeApp/build/outputs/apk/release/*.apk"
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Find and rename APK file to include version
+          for apk in $APK_PATH; do
+            if [ -f "$apk" ]; then
+              DIR=$(dirname "$apk")
+              FILENAME=$(basename "$apk" .apk)
+              NEW_NAME="LifeCommander-v${VERSION}-${FILENAME}.apk"
+              NEW_PATH="${DIR}/${NEW_NAME}"
+              cp "$apk" "$NEW_PATH"
+              echo "Renamed: $apk -> $NEW_NAME"
+              echo "apk_path=$NEW_PATH" >> $GITHUB_OUTPUT
+              echo "apk_name=$NEW_NAME" >> $GITHUB_OUTPUT
+              break
+            fi
+          done
+
       - name: Upload APK to Google Drive
         env:
           RCLONE_CONFIG_GDRIVE_TYPE: drive
@@ -75,13 +106,13 @@ jobs:
           RCLONE_DRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
           RCLONE_DRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
         run: |
-          APK_PATH="composeApp/build/outputs/apk/release/*.apk"
-          echo "Uploading APK(s) from $APK_PATH to Google Drive..."
-          if ls $APK_PATH 1> /dev/null 2>&1; then
-            rclone copy $APK_PATH gdrive:/APKS/LifeCommander --progress
+          APK_PATH="${{ steps.rename.outputs.apk_path }}"
+          if [ -f "$APK_PATH" ]; then
+            echo "Uploading APK: ${{ steps.rename.outputs.apk_name }} to Google Drive..."
+            rclone copy "$APK_PATH" gdrive:/APKS/LifeCommander --progress
             echo "APK uploaded successfully"
           else
-            echo "Error: No APK files found at $APK_PATH"
+            echo "Error: APK file not found at $APK_PATH"
             exit 1
           fi
 
