@@ -221,11 +221,11 @@ val appVersionCode = System.getenv("APP_VERSION_CODE")?.toIntOrNull()
     ?: 1
 
 android {
-    namespace = "com.esteban.ruano.oter"
+    namespace = "com.esteban.ruano.lifecommander"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.esteban.ruano.oter"
+        applicationId = "com.esteban.ruano.lifecommander"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = appVersionCode
