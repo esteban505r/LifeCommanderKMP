@@ -272,10 +272,23 @@ compose.desktop {
         mainClass = "com.esteban.ruano.lifecommander.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.AppImage)
+            // Common settings
             packageName = "LifeCommander"
             packageVersion = appVersionName
             modules("jdk.unsupported")
+            
+            // Platform-specific formats
+            linux {
+                targetFormats( TargetFormat.AppImage)
+            }
+            
+            macOS {
+                targetFormats(TargetFormat.Dmg)
+            }
+            
+            windows {
+                targetFormats(TargetFormat.Msi)
+            }
         }
 
         buildTypes.release.proguard {

@@ -17,10 +17,6 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            format: tar
-            task: packageReleaseDistributionForLinuxX64
-            output-path: composeApp/build/compose/binaries/main/app/release/linux-x64/LifeCommander-*.tar
-          - os: ubuntu-latest
             format: AppImage
             task: packageReleaseDistributionForLinuxX64
             output-path: composeApp/build/compose/binaries/main/app/release/linux-x64/LifeCommander-*.AppImage
