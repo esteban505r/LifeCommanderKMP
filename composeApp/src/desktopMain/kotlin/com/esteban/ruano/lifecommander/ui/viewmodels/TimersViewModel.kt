@@ -188,7 +188,7 @@ class TimersViewModel(
                             println("Timer list refresh requested: ${msg.listId ?: "all"}")
                             // Refresh timer lists when requested
                             if (msg.listId != null) {
-                                fetchTimerList(msg.listId)
+                                fetchTimerList(msg.listId!!)
                             } else {
                                 fetchTimerLists()
                             }
@@ -715,6 +715,16 @@ class TimersViewModel(
                 _timersLoading.value = false
             }
         }
+    }
+
+    // Alias for consistency with mobile ViewModel
+    fun fetchTimerLists() {
+        loadTimerLists()
+    }
+
+    // Alias for consistency with mobile ViewModel
+    fun fetchTimerList(listId: String) {
+        loadTimerListByID(listId)
     }
 
     fun loadUserSettings() {
