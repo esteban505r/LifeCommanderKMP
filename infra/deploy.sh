@@ -54,7 +54,10 @@ if [[ -n "${GHCR_READ_USER:-}" && -n "${GHCR_READ_TOKEN:-}" ]]; then
   echo "${GHCR_READ_TOKEN}" | docker login ghcr.io -u "${GHCR_READ_USER}" --password-stdin
 fi
 
-mkdir -p certbot/conf certbot/www
+# Create SSL directory for Cloudflare certificates
+# Place your Cloudflare origin certificate as ssl/cloudflare/cert.pem
+# and your private key as ssl/cloudflare/key.pem
+mkdir -p ssl/cloudflare
 echo "Deploying ${IMAGE_REPO}:${IMAGE_TAG}"
 
 export IMAGE_REPO IMAGE_TAG
