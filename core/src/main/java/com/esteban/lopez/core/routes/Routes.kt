@@ -14,11 +14,13 @@ object Routes {
         val ROUTE = "base"
         val HOME = BottomNavRoute("home", "home", "Home")
         val TO_DO = BottomNavRoute("to_do", "to-do", "To-do")
-        val WORKOUT = BottomNavRoute("workout", "workout", "Workout")
-        val NUTRITION = BottomNavRoute("nutrition", "nutrition", "Nutrition")
+        val HEALTH = BottomNavRoute("health", "health", "Health")
+        val WORKOUT = BottomNavRoute("workout", "workout", "Workout") // Keep for internal navigation
+        val NUTRITION = BottomNavRoute("nutrition", "nutrition", "Nutrition") // Keep for internal navigation
+        val TIMERS = BottomNavRoute("timers", "timers", "Timers")
         val FINANCE = BottomNavRoute("finance", "finance", "Finance")
         val JOURNAL = BottomNavRoute("journal", "journal", "Journal")
-        fun getAllRoutes() = listOf(HOME, TO_DO, WORKOUT, NUTRITION, FINANCE, JOURNAL)
+        fun getAllRoutes() = listOf(HOME, TO_DO, HEALTH, TIMERS, FINANCE, JOURNAL)
     }
 
     const val WELCOME = "welcome"
@@ -57,5 +59,6 @@ object Routes {
 
     const val TRACKER_OVERVIEW = "tracker_overview"
     const val SEARCH = "search"
-
+    //Timers
+    const val TIMER_LIST_DETAIL = "timers/list_detail"
 }

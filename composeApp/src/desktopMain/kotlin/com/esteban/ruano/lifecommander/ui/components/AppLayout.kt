@@ -334,6 +334,42 @@ fun AppLayout(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
+                        .clickable { navController.navigate(Screen.Study.route) },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (navController.currentDestination?.route == Screen.Study.route)
+                                    MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                else Color.Transparent,
+                                shape = MaterialTheme.shapes.medium
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Book,
+                            contentDescription = "Study",
+                            tint = if (navController.currentDestination?.route == Screen.Study.route)
+                                MaterialTheme.colors.primary
+                            else MaterialTheme.colors.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Study",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (navController.currentDestination?.route == Screen.Study.route)
+                            MaterialTheme.colors.primary
+                        else MaterialTheme.colors.onSurface
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
                         .clickable { navController.navigate(Screen.Calendar.route) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {

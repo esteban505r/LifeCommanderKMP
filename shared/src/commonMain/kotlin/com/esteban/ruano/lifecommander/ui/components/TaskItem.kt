@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -118,10 +120,9 @@ fun TaskItem(
             }
         },
         bottomContent = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Date information with improved styling
                 Row(
@@ -174,8 +175,23 @@ fun TaskItem(
                         }
                     }
                 }
-
-
+                
+                // Tags display
+                if (!task.tags.isNullOrEmpty()) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(task.tags ?: emptyList()) { tag ->
+                            TagChip(
+                                tag = tag,
+                                onClick = { /* Tags are read-only in list view */ },
+                                selected = false,
+                                modifier = Modifier.height(24.dp)
+                            )
+                        }
+                    }
+                }
             }
         },
         contextMenuContent = {

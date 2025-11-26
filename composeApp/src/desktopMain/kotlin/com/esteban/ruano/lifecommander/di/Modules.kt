@@ -44,6 +44,7 @@ import org.koin.core.qualifier.named
 import services.dailyjournal.PomodoroService
 import services.dashboard.DashboardService
 import services.habits.HabitService
+import services.study.StudyService
 import services.tasks.TaskService
 import services.tags.TagService
 import ui.ui.viewmodels.AuthViewModel
@@ -53,6 +54,7 @@ import ui.viewmodels.DashboardViewModel
 import ui.viewmodels.HabitsViewModel
 import ui.viewmodels.TasksViewModel
 import ui.viewmodels.TagsViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.StudyViewModel
 import utils.BackgroundServiceManager
 import utils.StatusBarService
 import utils.TimerService
@@ -147,6 +149,7 @@ val servicesModule = module {
     single { RecipesService(BASE_URL, get(), get()) }
     single { WorkoutService(BASE_URL, get(), get()) }
     single { SettingsService(BASE_URL, get(), get()) }
+    single { StudyService(BASE_URL, get(), get()) }
 }
 
 // ViewModels Module
@@ -174,6 +177,7 @@ val viewModelsModule = module {
     viewModel { RecipesViewModel(get()) }
     viewModel { WorkoutViewModel(get()) }
     viewModel { SettingsViewModel(get()) }
+    viewModel { StudyViewModel(get(), get()) }
 }
 
 // Combine all modules

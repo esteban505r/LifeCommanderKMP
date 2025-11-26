@@ -128,6 +128,7 @@ class TimerService(
         duration: Long,
         enabled: Boolean,
         countsAsPomodoro: Boolean,
+        sendNotificationOnComplete: Boolean,
         order: Int
     ): TimerList {
         return withContext(Dispatchers.IO) {
@@ -142,6 +143,7 @@ class TimerService(
                             duration = duration,
                             enabled = enabled,
                             countsAsPomodoro = countsAsPomodoro,
+                            sendNotificationOnComplete = sendNotificationOnComplete,
                             order = order
                         )
                     )
@@ -164,6 +166,7 @@ class TimerService(
         duration: Long?,
         enabled: Boolean?,
         countsAsPomodoro: Boolean?,
+        sendNotificationOnComplete: Boolean?,
         order: Int?
     ): TimerList {
         return withContext(Dispatchers.IO) {
@@ -177,6 +180,7 @@ class TimerService(
                             duration = duration,
                             enabled = enabled,
                             countsAsPomodoro = countsAsPomodoro,
+                            sendNotificationOnComplete = sendNotificationOnComplete,
                             order = order,
                             timerListId = timerId
                         )
@@ -244,6 +248,107 @@ class TimerService(
                 response.body()
             } catch (e: Exception) {
                 throw TimerServiceException("Failed to update user settings: ${e.message}", e)
+            }
+        }
+    }
+    
+    // Timer control actions
+    suspend fun startTimer(token: String, listId: String, timerId: String? = null): List<Timer> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = if (timerId != null) {
+                    "$TIMER_ENDPOINT/control/$listId/start?timerId=$timerId"
+                } else {
+                    "$TIMER_ENDPOINT/control/$listId/start"
+                }
+                val response = client.post(url) {
+                    appHeaders(token)
+                }
+                if (response.status != HttpStatusCode.OK) {
+                    throw TimerServiceException("Failed to start timer: ${response.status}")
+                }
+                response.body()
+            } catch (e: Exception) {
+                throw TimerServiceException("Failed to start timer: ${e.message}", e)
+            }
+        }
+    }
+    
+    suspend fun pauseTimer(token: String, listId: String, timerId: String? = null): List<Timer> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = if (timerId != null) {
+                    "$TIMER_ENDPOINT/control/$listId/pause?timerId=$timerId"
+                } else {
+                    "$TIMER_ENDPOINT/control/$listId/pause"
+                }
+                val response = client.post(url) {
+                    appHeaders(token)
+                }
+                if (response.status != HttpStatusCode.OK) {
+                    throw TimerServiceException("Failed to pause timer: ${response.status}")
+                }
+                response.body()
+            } catch (e: Exception) {
+                throw TimerServiceException("Failed to pause timer: ${e.message}", e)
+            }
+        }
+    }
+    
+    suspend fun resumeTimer(token: String, listId: String): List<Timer> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = client.post("$TIMER_ENDPOINT/control/$listId/resume") {
+                    appHeaders(token)
+                }
+                if (response.status != HttpStatusCode.OK) {
+                    throw TimerServiceException("Failed to resume timer: ${response.status}")
+                }
+                response.body()
+            } catch (e: Exception) {
+                throw TimerServiceException("Failed to resume timer: ${e.message}", e)
+            }
+        }
+    }
+    
+    suspend fun stopTimer(token: String, listId: String, timerId: String? = null): List<Timer> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = if (timerId != null) {
+                    "$TIMER_ENDPOINT/control/$listId/stop?timerId=$timerId"
+                } else {
+                    "$TIMER_ENDPOINT/control/$listId/stop"
+                }
+                val response = client.post(url) {
+                    appHeaders(token)
+                }
+                if (response.status != HttpStatusCode.OK) {
+                    throw TimerServiceException("Failed to stop timer: ${response.status}")
+                }
+                response.body()
+            } catch (e: Exception) {
+                throw TimerServiceException("Failed to stop timer: ${e.message}", e)
+            }
+        }
+    }
+    
+    suspend fun restartTimer(token: String, listId: String, timerId: String? = null): List<Timer> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = if (timerId != null) {
+                    "$TIMER_ENDPOINT/control/$listId/restart?timerId=$timerId"
+                } else {
+                    "$TIMER_ENDPOINT/control/$listId/restart"
+                }
+                val response = client.post(url) {
+                    appHeaders(token)
+                }
+                if (response.status != HttpStatusCode.OK) {
+                    throw TimerServiceException("Failed to restart timer: ${response.status}")
+                }
+                response.body()
+            } catch (e: Exception) {
+                throw TimerServiceException("Failed to restart timer: ${e.message}", e)
             }
         }
     }

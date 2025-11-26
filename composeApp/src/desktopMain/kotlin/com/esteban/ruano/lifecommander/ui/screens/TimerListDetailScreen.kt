@@ -1,5 +1,6 @@
 package com.esteban.ruano.lifecommander.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,6 +16,7 @@ import com.esteban.ruano.lifecommander.models.TimerList
 import com.esteban.ruano.lifecommander.timer.TimerNotification
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackState
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
+import com.esteban.ruano.lifecommander.ui.components.TimerControls
 import com.esteban.ruano.utils.DateUtils.formatDefault
 import kotlinx.coroutines.launch
 import ui.composables.TimersDialog
@@ -26,8 +28,8 @@ fun TimerListDetailScreen(
     timerPlaybackState: TimerPlaybackState,
     listNotifications: List<TimerNotification>,
     onBack: () -> Unit,
-    onAddTimer: (String, String, Long, Boolean, Boolean, Int) -> Unit,
-    onUpdateTimer: (String, String, Long, Boolean, Boolean, Int) -> Unit,
+    onAddTimer: (String, String, Long, Boolean, Boolean, Boolean, Int) -> Unit,
+    onUpdateTimer: (String, String, Long, Boolean, Boolean, Boolean, Int) -> Unit,
     onDeleteTimer: (String) -> Unit,
     onReorderTimers: (List<Timer>) -> Unit,
     onGetTimerNotifications: (String) -> List<TimerNotification>,
@@ -35,9 +37,11 @@ fun TimerListDetailScreen(
     onPauseTimer: () -> Unit,
     onResumeTimer: () -> Unit,
     onStopTimer: () -> Unit,
-    onUpdateListSettings: (TimerList) -> Unit
+    onUpdateListSettings: (TimerList) -> Unit,
+    onRefresh: () -> Unit
 ) {
     var showAddTimerDialog by remember { mutableStateOf(false) }
+    var editingTimerId by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     Column(
@@ -66,28 +70,15 @@ fun TimerListDetailScreen(
                     )
                 }
             }
-            Row {
-                when (timerPlaybackState.status) {
-                    TimerPlaybackStatus.Running -> {
-                        IconButton(onClick = onPauseTimer) {
-                            Icon(Icons.Default.Pause, contentDescription = "Pause")
-                        }
-                    }
-                    TimerPlaybackStatus.Paused -> {
-                        IconButton(onClick = onResumeTimer) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = "Resume")
-                        }
-                    }
-                    else -> {
-                        IconButton(onClick = { onStartTimer(timerList) }) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = "Play")
-                        }
-                    }
-                }
-                IconButton(onClick = onStopTimer) {
-                    Icon(Icons.Default.Stop, contentDescription = "Stop")
-                }
-            }
+            TimerControls(
+                timerList = timerList,
+                timerPlaybackState = timerPlaybackState,
+                onStart = { onStartTimer(timerList) },
+                onPause = onPauseTimer,
+                onResume = onResumeTimer,
+                onStop = onStopTimer,
+                isActiveForThisList = timerPlaybackState.timerList?.id == timerList.id
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -221,10 +212,15 @@ fun TimerListDetailScreen(
                                         updatedTimer.duration,
                                         updatedTimer.enabled,
                                         updatedTimer.countsAsPomodoro,
+                                        updatedTimer.sendNotificationOnComplete,
                                         updatedTimer.order
                                     )
                                 },
-                                onDelete = { onDeleteTimer(timer.id) }
+                                onDelete = { onDeleteTimer(timer.id) },
+                                onEdit = { 
+                                    editingTimerId = timer.id
+                                    showAddTimerDialog = true
+                                }
                             )
                         }
                     }
@@ -236,30 +232,43 @@ fun TimerListDetailScreen(
     if (showAddTimerDialog) {
         TimersDialog(
             show = true,
-            onDismiss = { showAddTimerDialog = false },
+            onDismiss = { 
+                showAddTimerDialog = false
+                editingTimerId = null
+            },
             timersList = timerList.timers?.sortedBy { it.order } ?: emptyList(),
-            onCreate = { timerId, name, duration, enabled, countsAsPomodoro, order ->
+            initialSelectedTimerId = editingTimerId,
+            onCreate = { timerId, name, duration, enabled, countsAsPomodoro, sendNotificationOnComplete, order ->
                 onAddTimer(
                     timerList.id,
                     name,
                     duration,
                     enabled,
                     countsAsPomodoro,
+                    sendNotificationOnComplete,
                     order
                 )
+                // Don't close the dialog here - let the Apply button handle it
             },
-            onUpdate = { timerId, name, duration, enabled, countsAsPomodoro, order ->
+            onUpdate = { timerId, name, duration, enabled, countsAsPomodoro, sendNotificationOnComplete, order ->
                 onUpdateTimer(
                     timerId,
                     name,
                     duration,
                     enabled,
                     countsAsPomodoro,
+                    sendNotificationOnComplete,
                     order
                 )
+                showAddTimerDialog = false
+                editingTimerId = null
             },
             onDelete = { timerId ->
                 onDeleteTimer(timerId)
+                if (editingTimerId == timerId) {
+                    showAddTimerDialog = false
+                    editingTimerId = null
+                }
             },
         )
     }
@@ -271,7 +280,8 @@ private fun TimerItem(
     timerListCountAsPomodoro: Boolean,
     notifications: List<TimerNotification>,
     onUpdate: (Timer) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -304,7 +314,7 @@ private fun TimerItem(
                     }
                 }
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Enabled Switch with Tooltip
@@ -334,7 +344,21 @@ private fun TimerItem(
                         )
                     }
 
-                    IconButton(onClick = onDelete) {
+                    IconButton(
+                        onClick = onEdit,
+                        modifier = Modifier.background(
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Timer")
+                    }
+                    
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.background(
+                            color = MaterialTheme.colors.error.copy(alpha = 0.1f)
+                        )
+                    ) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete Timer")
                     }
                 }

@@ -19,25 +19,28 @@ import kotlinx.coroutines.launch
 import models.TimeTypes
 import utils.DateUtils.getTimeSeparated
 import utils.swap
+import com.esteban.ruano.lifecommander.utils.DurationConverter
 
 @Composable
 fun TimersDialog(
     show: Boolean,
     timersList : List<Timer>,
-    onCreate: (timerId:String, name: String, duration: Long, enabled: Boolean, countsAsPomodoro: Boolean, order: Int) -> Unit,
+    initialSelectedTimerId: String? = null,
+    onCreate: (timerId:String, name: String, duration: Long, enabled: Boolean, countsAsPomodoro: Boolean, sendNotificationOnComplete: Boolean, order: Int) -> Unit,
     onUpdate: (
         timerId: String,
         name: String,
         duration: Long,
         enabled: Boolean,
         countsAsPomodoro: Boolean,
+        sendNotificationOnComplete: Boolean,
         order: Int
     ) -> Unit,
     onDelete: (timerId: String) -> Unit,
     onDismiss: () -> Unit
 ) {
     if (show) {
-        val timerSelected = remember { mutableStateOf<String?>(null) }
+        val timerSelected = remember(initialSelectedTimerId) { mutableStateOf<String?>(initialSelectedTimerId) }
         val state = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
         var timers by remember(timersList) { mutableStateOf(timersList) }
@@ -106,6 +109,7 @@ fun TimersDialog(
                         }
                         if (timerSelected.value != null) {
                             val selectedTimer = timers.first { it.id == timerSelected.value!! }
+                            // Duration is stored in milliseconds in DB, getTimeSeparated expects milliseconds
                             val timeSeparated = selectedTimer.duration.toLong().getTimeSeparated()
                             val hours = timeSeparated[TimeTypes.HOUR] ?: 0L
                             val minutes = timeSeparated[TimeTypes.MINUTE] ?: 0L
@@ -132,7 +136,8 @@ fun TimersDialog(
                                         value = hours.toString(),
                                         onValueChange = {
                                             val temp = it.toLongOrNull() ?: hours
-                                            val value = temp * 3600 + minutes * 60 + seconds
+                                            // Calculate in milliseconds (duration is stored in milliseconds)
+                                            val value = DurationConverter.toMillis(temp, minutes, seconds)
                                             timers = timers.map { timer ->
                                                 if (timer.id == timerSelected.value!!) {
                                                     timer.copy(duration = value)
@@ -149,7 +154,8 @@ fun TimersDialog(
                                         value = minutes.toString(),
                                         onValueChange = {
                                             val temp = it.toLongOrNull() ?: minutes
-                                            val value = (hours * 3600 + temp * 60 + seconds) * 1000
+                                            // Calculate in milliseconds (duration is stored in milliseconds)
+                                            val value = DurationConverter.toMillis(hours, temp, seconds)
                                             timers = timers.map { timer ->
                                                 if (timer.id == timerSelected.value!!) {
                                                     timer.copy(duration = value)
@@ -166,7 +172,8 @@ fun TimersDialog(
                                         value = seconds.toString(),
                                         onValueChange = {
                                             val temp = it.toLongOrNull() ?: seconds
-                                            val value = (hours * 3600 + minutes * 60 + temp) * 1000
+                                            // Calculate in milliseconds (duration is stored in milliseconds)
+                                            val value = DurationConverter.toMillis(hours, minutes, temp)
                                             timers = timers.map { timer ->
                                                 if (timer.id == timerSelected.value!!) {
                                                     timer.copy(duration = value)
@@ -224,6 +231,28 @@ fun TimersDialog(
                                     Text("Counts as Pomodoro")
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                    horizontalArrangement = Arrangement.Start,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = selectedTimer.sendNotificationOnComplete,
+                                        onCheckedChange = { value ->
+                                            coroutineScope.launch {
+                                                timers = timers.map {
+                                                    if (it.id == timerSelected.value!!) {
+                                                        it.copy(sendNotificationOnComplete = value)
+                                                    } else {
+                                                        it
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    )
+                                    Text("Send notification on complete")
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Row {
                                     Button(
                                         onClick = {
@@ -268,14 +297,29 @@ fun TimersDialog(
                                     Button(onClick = {
                                         coroutineScope.launch {
                                             timers.forEachIndexed { index, timer ->
-                                                onUpdate(
-                                                    timer.id,
-                                                    timer.name,
-                                                    timer.duration,
-                                                    timer.enabled,
-                                                    timer.countsAsPomodoro,
-                                                    index
-                                                )
+                                                if (timer.id.startsWith("new-")) {
+                                                    // This is a new timer, create it
+                                                    onCreate(
+                                                        timer.id,
+                                                        timer.name,
+                                                        timer.duration,
+                                                        timer.enabled,
+                                                        timer.countsAsPomodoro,
+                                                        timer.sendNotificationOnComplete,
+                                                        index
+                                                    )
+                                                } else {
+                                                    // This is an existing timer, update it
+                                                    onUpdate(
+                                                        timer.id,
+                                                        timer.name,
+                                                        timer.duration,
+                                                        timer.enabled,
+                                                        timer.countsAsPomodoro,
+                                                        timer.sendNotificationOnComplete,
+                                                        index
+                                                    )
+                                                }
                                             }
                                             onDismiss()
                                         }
@@ -298,16 +342,21 @@ fun TimersDialog(
                                 ) {
                                     Button(
                                         onClick = {
-                                            coroutineScope.launch {
-                                                onCreate(
-                                                    "",
-                                                    "New Timer",
-                                                    0,
-                                                    true,
-                                                    false,
-                                                    timers.size
-                                                )
-                                            }
+                                            // Create a new timer in the local list and select it for editing
+                                            val newTimerId = "new-${System.currentTimeMillis()}"
+                                            val newTimer = Timer(
+                                                id = newTimerId,
+                                                name = "New Timer",
+                                                duration = 0L, // Duration in milliseconds
+                                                state = "IDLE",
+                                                enabled = true,
+                                                remainingSeconds = 0,
+                                                countsAsPomodoro = false,
+                                                sendNotificationOnComplete = true,
+                                                order = timers.size
+                                            )
+                                            timers = timers + newTimer
+                                            timerSelected.value = newTimerId
                                         },
                                         colors = ButtonDefaults.buttonColors(
                                             backgroundColor = MaterialTheme.colors.secondary

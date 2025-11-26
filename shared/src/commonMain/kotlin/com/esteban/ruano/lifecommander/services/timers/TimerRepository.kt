@@ -32,6 +32,7 @@ interface TimerRepository {
         duration: Long,
         enabled: Boolean,
         countsAsPomodoro: Boolean,
+        sendNotificationOnComplete: Boolean,
         order: Int
     ): TimerList
     
@@ -43,6 +44,7 @@ interface TimerRepository {
         duration: Long? = null,
         enabled: Boolean? = null,
         countsAsPomodoro: Boolean? = null,
+        sendNotificationOnComplete: Boolean? = null,
         order: Int? = null
     ): TimerList
     

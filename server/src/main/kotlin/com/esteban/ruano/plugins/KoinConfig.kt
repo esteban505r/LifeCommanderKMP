@@ -50,6 +50,8 @@ val appModule = module {
     single { SyncService(get(), get(), get()) }
     single { SettingsService() }
     single { FinanceStatisticsService(get(), get()) }
+    single { StudyService() }
+    single { StudyImageService() }
     single { FirstRunSeeder(get(),get(),get()) }
     single { AuthService(
         get()
@@ -89,4 +91,5 @@ val appModule = module {
     single { ScheduledTransactionRepository(get()) }
     single { SettingsRepository(get()) }
     single { FinanceStatisticsRepository(get()) }
+    single { StudyRepository(get()) }
 } 

@@ -29,4 +29,5 @@ dependencies {
     implementation(project(":workout:workout_domain"))
     implementation(project(":journal:journal_presentation"))
     implementation(project(":journal:journal_domain"))
+    implementation(project(":timers:timers_presentation"))
 }

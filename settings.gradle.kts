@@ -73,6 +73,11 @@ if (includeAndroid) {
     include(":journal:journal_domain")
     include(":journal:journal_data")
 
+    include(":timers")
+    include(":timers:timers_presentation")
+    include(":timers:timers_domain")
+    include(":timers:timers_data")
+
     include(":test-core")
     include(":navigation")
     include(":home")

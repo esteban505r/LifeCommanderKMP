@@ -9,5 +9,6 @@ data class UpdateTimerRequest(
     val duration: Long ? = null,
     val enabled: Boolean ? = null,
     val countsAsPomodoro: Boolean ? = null,
+    val sendNotificationOnComplete: Boolean? = null,
     val order: Int ? = null
 )

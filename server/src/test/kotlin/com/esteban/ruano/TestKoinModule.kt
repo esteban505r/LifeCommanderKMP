@@ -28,6 +28,7 @@ val testModule = module {
     single { PortfolioService() }
     single { ScheduledTransactionService() }
     single { SyncService(get(), get(), get()) }
+    single { StudyService() }
     single { FirstRunSeeder(get(),get(),get()) }
     
     // Dashboard Service with dependencies
@@ -61,4 +62,5 @@ val testModule = module {
     single { CategoryKeywordRepository(get()) }
     single { ScheduledTransactionRepository(get()) }
     single { PortfolioRepository(get()) }
+    single { StudyRepository(get()) }
 } 

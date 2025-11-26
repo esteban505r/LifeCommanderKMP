@@ -8,6 +8,7 @@ import io.ktor.server.routing.*
 import com.esteban.ruano.repository.*
 import com.esteban.ruano.routing.*
 import com.esteban.ruano.routing.habitsRouting
+import com.esteban.ruano.routing.studyRouting
 import com.esteban.ruano.service.*
 import com.esteban.ruano.utils.VERSION
 import com.esteban.ruano.routing.portfolioRouting
@@ -54,6 +55,8 @@ fun Application.configureRouting() {
     val portfolioRepository: PortfolioRepository by inject()
     val settingsRepository: SettingsRepository by inject()
     val financeStatisticsRepository: FinanceStatisticsRepository by inject()
+    val studyRepository: StudyRepository by inject()
+    val studyImageService: StudyImageService by inject()
     
     // Inject services
     val authService: AuthService by inject()
@@ -95,6 +98,7 @@ fun Application.configureRouting() {
                     scheduledTransactionRepository = scheduledTransactionRepository,
                     financeStatisticsRepository = financeStatisticsRepository,
                 )
+                studyRouting(studyRepository, studyImageService)
             }
 
             blogRouting(blogRepository, postCategoryService)

@@ -4,6 +4,7 @@ import android.content.Context
 import com.esteban.ruano.core.di.HabitsAlarmReceiverClass
 import com.esteban.ruano.core.di.TasksAlarmReceiverClass
 import com.esteban.ruano.core.di.TasksNotificationHelper
+import com.esteban.ruano.core.di.WebSocketHttpClient
 import com.esteban.ruano.core.domain.preferences.Preferences
 import com.esteban.ruano.core.helpers.NotificationsHelper
 import com.esteban.ruano.core.models.habits.HabitNotificationWrapper
@@ -20,8 +21,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.compression.ContentEncoding
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.serialization.gson.gson
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -58,6 +61,20 @@ object CoreModule {
                 deflate()
                 identity()
             }
+        }
+    }
+
+    @Provides
+    @Singleton
+    @WebSocketHttpClient
+    fun provideWebSocketHttpClient(): HttpClient {
+        return HttpClient(OkHttp) {
+            install(ContentNegotiation) {
+                gson {
+                    setPrettyPrinting()
+                }
+            }
+            install(WebSockets)
         }
     }
 

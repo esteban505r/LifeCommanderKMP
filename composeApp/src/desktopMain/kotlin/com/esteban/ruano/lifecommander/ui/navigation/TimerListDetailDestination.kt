@@ -53,13 +53,13 @@ fun TimerListDetailDestination(
                     timerPlaybackState = timerPlaybackState,
                     listNotifications = listNotifications,
                     onBack = onBack,
-                    onAddTimer = { listId, name, duration, enabled, countsAsPomodoro, order ->
-                        timersViewModel.createTimer(listId, name, duration, enabled, countsAsPomodoro, order, onSuccess = {
+                    onAddTimer = { listId, name, duration, enabled, countsAsPomodoro, sendNotificationOnComplete, order ->
+                        timersViewModel.createTimer(listId, name, duration, enabled, countsAsPomodoro, sendNotificationOnComplete, order, onSuccess = {
                             timersViewModel.loadTimerListByID(listId)
                         })
                     },
-                    onUpdateTimer = { timerId, name, duration, enabled, countsAsPomodoro, order ->
-                        timersViewModel.updateTimer(timerId, name, duration, enabled, countsAsPomodoro, order, onSuccess = {
+                    onUpdateTimer = { timerId, name, duration, enabled, countsAsPomodoro, sendNotificationOnComplete, order ->
+                        timersViewModel.updateTimer(timerId, name, duration, enabled, countsAsPomodoro, sendNotificationOnComplete, order, onSuccess = {
                             timersViewModel.loadTimerListByID(timerListId)
                         })
                     },
@@ -93,6 +93,10 @@ fun TimerListDetailDestination(
                             loopTimers = it.loopTimers,
                             pomodoroGrouped = it.pomodoroGrouped,
                         )
+                    },
+                    onRefresh = {
+                        timersViewModel.loadTimerListByID(timerListId)
+                        timersViewModel.updateListNotifications(timerListId)
                     }
                 )
             }

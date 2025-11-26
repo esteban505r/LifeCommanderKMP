@@ -15,22 +15,31 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.esteban.ruano.core.routes.Routes
 import com.esteban.ruano.lifecommander.utils.BottomNavIconUtils
 import com.esteban.ruano.navigation.NavHostWrapper
+import com.esteban.ruano.timers_presentation.service.TimerServiceManagerViewModel
 
 @Composable
 fun LoggedScreen(onRootNavigate: (String) -> Unit) {
     val navController = rememberNavController()
     val bottomNavColor = Color.White
+    val timerServiceManagerViewModel: TimerServiceManagerViewModel = hiltViewModel()
+
+    // Initialize timer service when user is logged in
+    LaunchedEffect(Unit) {
+        timerServiceManagerViewModel.timerServiceManager.initialize()
+    }
 
     Scaffold(
         bottomBar = {
@@ -46,9 +55,14 @@ fun LoggedScreen(onRootNavigate: (String) -> Unit) {
                     Log.d("CURRENT ROUTE" , currentRoute.toString())
                     Log.d("SCREEN NAME" , screen.name.toString())
                     val selected = when {
+                        // Handle TO_DO grouping
                         currentRoute?.startsWith(Routes.BASE.TO_DO.name) ?: false &&
                                 screen.name.startsWith(Routes.BASE.TO_DO.name) -> true
-
+                        // Handle HEALTH grouping (workout and nutrition)
+                        (currentRoute?.startsWith(Routes.BASE.WORKOUT.name) ?: false ||
+                         currentRoute?.startsWith(Routes.BASE.NUTRITION.name) ?: false) &&
+                                screen.name.startsWith(Routes.BASE.HEALTH.name) -> true
+                        // Exact match
                         currentRoute == screen.name -> true
                         else -> false
                     }

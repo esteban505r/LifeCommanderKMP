@@ -36,12 +36,13 @@ import org.slf4j.LoggerFactory
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
+import com.esteban.ruano.service.TimerTimeCalculator
 
 class TimerService : BaseService() {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    fun createTimerList(userId: Int, name: String, loopTimers: Boolean, pomodoroGrouped: Boolean): DomainTimerList? {
-        return transaction {
+    suspend fun createTimerList(userId: Int, name: String, loopTimers: Boolean, pomodoroGrouped: Boolean): DomainTimerList? {
+        val timerList = transaction {
             try {
                 TimerList.new {
                     this.name = name
@@ -53,6 +54,21 @@ class TimerService : BaseService() {
                 null
             }
         }
+        
+        // Broadcast WebSocket update
+        timerList?.let {
+            CoroutineScope(Dispatchers.Default).launch {
+                TimerNotifier.broadcastUpdate(
+                    TimerWebSocketServerMessage.TimerListUpdate(
+                        timerList = it,
+                        action = "created"
+                    ),
+                    userId
+                )
+            }
+        }
+        
+        return timerList
     }
 
     fun getTimerLists(userId: Int): List<DomainTimerList> {
@@ -85,18 +101,42 @@ class TimerService : BaseService() {
         }
     }
 
-    fun updateTimerList(listId: UUID, name: String, loopTimers: Boolean, pomodoroGrouped: Boolean): DomainTimerList? {
-        return transaction {
+    suspend fun updateTimerList(listId: UUID, name: String, loopTimers: Boolean, pomodoroGrouped: Boolean): DomainTimerList? {
+        val timerList = transaction {
             TimerList.findById(listId)?.apply {
                 this.name = name
                 this.loopTimers = loopTimers
                 this.pomodoroGrouped = pomodoroGrouped
             }?.toDomainModel()
         }
+        
+        // Broadcast WebSocket update
+        timerList?.let {
+            val userId = transaction {
+                TimerList.findById(listId)?.userId?.id?.value
+            }
+            userId?.let { uid ->
+                CoroutineScope(Dispatchers.Default).launch {
+                    TimerNotifier.broadcastUpdate(
+                        TimerWebSocketServerMessage.TimerListUpdate(
+                            timerList = it,
+                            action = "updated"
+                        ),
+                        uid
+                    )
+                }
+            }
+        }
+        
+        return timerList
     }
 
-    fun deleteTimerList(listId: UUID): Boolean {
-        return transaction {
+    suspend fun deleteTimerList(listId: UUID): Boolean {
+        val userId = transaction {
+            TimerList.findById(listId)?.userId?.id?.value
+        }
+        
+        val deleted = transaction {
             try {
                 TimerList.findById(listId)?.delete()
                 true
@@ -104,74 +144,166 @@ class TimerService : BaseService() {
                 false
             }
         }
+        
+        // Broadcast WebSocket update
+        if (deleted && userId != null) {
+            CoroutineScope(Dispatchers.Default).launch {
+                TimerNotifier.broadcastUpdate(
+                    TimerWebSocketServerMessage.TimerListRefresh(
+                        listId = null // Refresh all lists when one is deleted
+                    ),
+                    userId
+                )
+            }
+        }
+        
+        return deleted
     }
 
-    fun createTimer(
+    @OptIn(ExperimentalTime::class)
+    suspend fun createTimer(
         listId: UUID,
         name: String,
         duration: Long,
         enabled: Boolean,
         countsAsPomodoro: Boolean,
+        sendNotificationOnComplete: Boolean = true,
         order: Int? = null
     ): DomainTimer? {
-        return transaction {
+        val timer = transaction {
             try {
                 val defaultOrder = order ?: (Timer.find { Timers.listId eq listId }
                     .maxOfOrNull { it.order }?.plus(1) ?: 0)
+                val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
 
                 Timer.new {
                     this.name = name
                     this.duration = duration
                     this.enabled = enabled
                     this.countsAsPomodoro = countsAsPomodoro
+                    this.sendNotificationOnComplete = sendNotificationOnComplete
                     this.list = TimerList[listId]
                     this.order = defaultOrder
+                    this.accumulatedPausedMs = 0
+                    this.updatedAt = now
                 }.toDomainModel()
             } catch (e: Exception) {
                 null
             }
         }
+        
+        // Broadcast WebSocket update
+        timer?.let {
+            val userId = transaction {
+                TimerList.findById(listId)?.userId?.id?.value
+            }
+            userId?.let { uid ->
+                CoroutineScope(Dispatchers.Default).launch {
+                    TimerNotifier.broadcastUpdate(
+                        TimerWebSocketServerMessage.TimerUpdate(
+                            timer = it,
+                            listId = listId.toString(),
+                            remainingTime = it.duration / 1000 // Convert ms to seconds
+                        ),
+                        uid
+                    )
+                }
+            }
+        }
+        
+        return timer
     }
 
 
 
-    fun updateTimer(
+    @OptIn(ExperimentalTime::class)
+    suspend fun updateTimer(
         userId: Int,
         timerId: UUID,
         name: String?,
         duration: Long?,
         enabled: Boolean?,
         countsAsPomodoro: Boolean?,
+        sendNotificationOnComplete: Boolean?,
         order: Int?
     ): DomainTimer? {
-        return transaction {
+        val now = Clock.System.now()
+        val timer = transaction {
             val lists = TimerList.find {
                 (TimerLists.userId eq userId)
             }
             Timer.find {
                 (Timers.id eq timerId) and
                         (Timers.listId inList lists.map { it.id })
-            }.firstOrNull()?.let { timer ->
-                timer.apply {
+            }.firstOrNull()?.let { timerEntity ->
+                timerEntity.apply {
                     name?.let { this.name = it }
                     duration?.let { this.duration = it }
                     enabled?.let { this.enabled = it }
                     countsAsPomodoro?.let { this.countsAsPomodoro = it }
+                    sendNotificationOnComplete?.let { this.sendNotificationOnComplete = it }
                     order?.let { this.order = it }
+                    this.updatedAt = now.toLocalDateTime(TimeZone.UTC)
                 }
             }?.toDomainModel()
         }
+        
+        // Broadcast WebSocket update
+        timer?.let {
+            val listId = transaction {
+                Timer.findById(timerId)?.list?.id?.value
+            }
+            listId?.let { lid ->
+                CoroutineScope(Dispatchers.Default).launch {
+                    val remainingSeconds = TimerTimeCalculator.calculateRemainingSeconds(
+                        Timer.findById(timerId)!!,
+                        now
+                    )
+                    TimerNotifier.broadcastUpdate(
+                        TimerWebSocketServerMessage.TimerUpdate(
+                            timer = it,
+                            listId = lid.toString(),
+                            remainingTime = remainingSeconds
+                        ),
+                        userId
+                    )
+                }
+            }
+        }
+        
+        return timer
     }
 
-    fun deleteTimer(timerId: UUID): Boolean {
-        return transaction {
+    suspend fun deleteTimer(timerId: UUID): Boolean {
+        val (userId, listId) = transaction {
+            val timer = Timer.findById(timerId)
+            val uid = timer?.list?.userId?.id?.value
+            val lid = timer?.list?.id?.value
+            timer?.delete()
+            uid to lid
+        }
+        
+        val deleted = transaction {
             try {
-                Timer.findById(timerId)?.delete()
-                true
+                Timer.findById(timerId) == null // Check if deleted
             } catch (e: Exception) {
                 false
             }
         }
+        
+        // Broadcast WebSocket update to refresh the list
+        if (deleted && userId != null && listId != null) {
+            CoroutineScope(Dispatchers.Default).launch {
+                TimerNotifier.broadcastUpdate(
+                    TimerWebSocketServerMessage.TimerListRefresh(
+                        listId = listId.toString()
+                    ),
+                    userId
+                )
+            }
+        }
+        
+        return deleted
     }
 
     fun reorderTimers(listId: UUID, timerOrders: List<Pair<UUID, Int>>): DomainTimerList? {
@@ -255,9 +387,11 @@ class TimerService : BaseService() {
         userId: Int,
         listId: UUID,
         timerId: UUID? = null
-    ): List<DomainTimer> = transaction {
+    ): List<DomainTimer> {
         val now = Clock.System.now()
+        val nowLocal = now.toLocalDateTime(TimeZone.UTC)
 
+        val affectedTimers = transaction {
         val list = TimerList.findById(listId) ?: return@transaction emptyList()
         if (list.userId.id.value != userId) return@transaction emptyList()
 
@@ -271,7 +405,7 @@ class TimerService : BaseService() {
         val timerToStart = if (timerId != null) {
             val timer = Timer.findById(timerId)
             if (timer == null || timer.list.id.value != listId) {
-                println("[startTimer] Invalid timerId or does not belong to the list")
+                    logger.warn("[startTimer] Invalid timerId or does not belong to the list")
                 null
             } else {
                 timer
@@ -287,19 +421,48 @@ class TimerService : BaseService() {
         }
 
         if (timerToStart != null) {
-            timerToStart.startTime = now.toLocalDateTime(TimeZone.UTC)
+                // Reset timer state for fresh start
+                timerToStart.startTime = nowLocal
+                timerToStart.pauseTime = null
+                timerToStart.accumulatedPausedMs = 0
             timerToStart.state = TimerState.RUNNING
-            println("[startTimer] Starting timer: ${timerToStart.name}")
+                timerToStart.updatedAt = nowLocal
+                logger.info("[startTimer] Starting timer: ${timerToStart.name}")
             listOf(timerToStart.toDomainModel())
         } else {
-            println("[startTimer] No timer found to start")
+                logger.warn("[startTimer] No timer found to start")
             emptyList()
         }
+        }
+        
+        // Broadcast WebSocket update for each affected timer
+        affectedTimers.forEach { timer ->
+            CoroutineScope(Dispatchers.Default).launch {
+                val remainingSeconds = TimerTimeCalculator.calculateRemainingSeconds(
+                    Timer.findById(UUID.fromString(timer.id))!!,
+                    now
+                )
+                TimerNotifier.broadcastUpdate(
+                    TimerWebSocketServerMessage.TimerUpdate(
+                        timer = timer,
+                        listId = listId.toString(),
+                        remainingTime = remainingSeconds
+                    ),
+                    userId
+                )
+            }
+        }
+        
+        return affectedTimers
     }
 
 
     @OptIn(ExperimentalTime::class)
-    suspend fun pauseTimer(userId: Int, listId: UUID, timerId: UUID? = null): List<DomainTimer> = transaction {
+    suspend fun pauseTimer(userId: Int, listId: UUID, timerId: UUID? = null): List<DomainTimer> {
+        val now = Clock.System.now()
+        val nowLocal = now.toLocalDateTime(TimeZone.UTC)
+        
+        val affectedTimers = transaction {
         val list = TimerList.findById(listId) ?: return@transaction emptyList()
         if (list.userId.id.value != userId) return@transaction emptyList()
 
@@ -314,14 +477,42 @@ class TimerService : BaseService() {
         }
 
         timersToPause.forEach { timer ->
+                // When pausing, we just record the pause time
+                // The accumulated pause time will be calculated when resuming
             timer.state = TimerState.PAUSED
-            timer.pauseTime = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+                timer.pauseTime = nowLocal
+                timer.updatedAt = nowLocal
         }
 
         timersToPause.map { it.toDomainModel() }
     }
 
+        // Broadcast WebSocket update for each affected timer
+        affectedTimers.forEach { timer ->
+            CoroutineScope(Dispatchers.Default).launch {
+                val remainingSeconds = TimerTimeCalculator.calculateRemainingSeconds(
+                    Timer.findById(UUID.fromString(timer.id))!!,
+                    now
+                )
+                TimerNotifier.broadcastUpdate(
+                    TimerWebSocketServerMessage.TimerUpdate(
+                        timer = timer,
+                        listId = listId.toString(),
+                        remainingTime = remainingSeconds
+                    ),
+                    userId
+                )
+            }
+        }
+        
+        return affectedTimers
+    }
+
+    @OptIn(ExperimentalTime::class)
     suspend fun stopTimer(userId: Int, listId: UUID, timerId: UUID? = null): List<DomainTimer> {
+        val now = Clock.System.now()
+        val nowLocal = now.toLocalDateTime(TimeZone.UTC)
+        
         val affectedTimers = transaction {
             val list = TimerList.findById(listId) ?: return@transaction emptyList()
             if (list.userId.id.value != userId) return@transaction emptyList()
@@ -337,7 +528,13 @@ class TimerService : BaseService() {
                 }.toList()
             }
 
-            timers.forEach { it.state = TimerState.STOPPED }
+            timers.forEach { timer ->
+                // When stopping, we don't need to update accumulated pause time
+                // The timer state will be STOPPED and time calculations will use the last known state
+                timer.state = TimerState.STOPPED
+                timer.updatedAt = nowLocal
+            }
+            
             timers.map { it.toDomainModel() }
         }
 
@@ -353,8 +550,8 @@ class TimerService : BaseService() {
                 )
                 sendPushNotificationToUser(
                     userId = userId,
-                    title = "Timer Completed",
-                    body = "Timer '${timer.name}' has been marked as completed."
+                    title = "Timer Stopped",
+                    body = "Timer '${timer.name}' has been stopped."
                 )
             }
         }
@@ -364,7 +561,11 @@ class TimerService : BaseService() {
 
 
     @OptIn(ExperimentalTime::class)
-    suspend fun resumeTimer(userId: Int, listId: UUID): List<DomainTimer> = transaction {
+    suspend fun resumeTimer(userId: Int, listId: UUID): List<DomainTimer> {
+        val now = Clock.System.now()
+        val nowLocal = now.toLocalDateTime(TimeZone.UTC)
+        
+        val affectedTimers = transaction {
         val list = TimerList.findById(listId) ?: return@transaction emptyList()
         if (list.userId.id.value != userId) return@transaction emptyList()
 
@@ -376,14 +577,50 @@ class TimerService : BaseService() {
             .firstOrNull()
 
         pausedTimer?.let {
+                // When resuming, calculate how long we were paused and add to accumulated
+                // The pause duration is the time from pauseTime to now
+                if (it.pauseTime != null) {
+                    val pauseInstant = it.pauseTime!!.toInstant(TimeZone.UTC)
+                    val pauseDuration = (now - pauseInstant).inWholeMilliseconds
+                    // Add this pause duration to the accumulated paused time
+                    it.accumulatedPausedMs += pauseDuration
+                }
+                
+                // Resume: keep original startTime, just update state and clear pauseTime
             it.state = TimerState.RUNNING
-            it.startTime = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+                it.pauseTime = null // Clear pause time
+                it.updatedAt = nowLocal
             listOf(it.toDomainModel())
         } ?: emptyList()
+        }
+        
+        // Broadcast WebSocket update for each affected timer
+        affectedTimers.forEach { timer ->
+            CoroutineScope(Dispatchers.Default).launch {
+                val remainingSeconds = TimerTimeCalculator.calculateRemainingSeconds(
+                    Timer.findById(UUID.fromString(timer.id))!!,
+                    now
+                )
+                TimerNotifier.broadcastUpdate(
+                    TimerWebSocketServerMessage.TimerUpdate(
+                        timer = timer,
+                        listId = listId.toString(),
+                        remainingTime = remainingSeconds
+                    ),
+                    userId
+                )
+            }
+        }
+        
+        return affectedTimers
     }
 
     @OptIn(ExperimentalTime::class)
-    suspend fun restartTimer(userId: Int, listId: UUID, timerId: UUID? = null): List<DomainTimer> = transaction {
+    suspend fun restartTimer(userId: Int, listId: UUID, timerId: UUID? = null): List<DomainTimer> {
+        val now = Clock.System.now()
+        val nowLocal = now.toLocalDateTime(TimeZone.UTC)
+        
+        val affectedTimers = transaction {
         val list = TimerList.findById(listId) ?: return@transaction emptyList()
         if (list.userId.id.value != userId) return@transaction emptyList()
 
@@ -393,14 +630,37 @@ class TimerService : BaseService() {
             Timer.find { Timers.listId eq listId }.toList()
         }
 
-        val now = Clock.System.now()
         timers.forEach { timer ->
-            timer.startTime = now.toLocalDateTime(TimeZone.UTC)
+                // Reset all timer state for fresh restart
+                timer.startTime = nowLocal
             timer.state = TimerState.RUNNING
             timer.pauseTime = null
+                timer.accumulatedPausedMs = 0
+                timer.updatedAt = nowLocal
         }
 
         timers.map { it.toDomainModel() }
+        }
+        
+        // Broadcast WebSocket update for each affected timer
+        affectedTimers.forEach { timer ->
+            CoroutineScope(Dispatchers.Default).launch {
+                val remainingSeconds = TimerTimeCalculator.calculateRemainingSeconds(
+                    Timer.findById(UUID.fromString(timer.id))!!,
+                    now
+                )
+                TimerNotifier.broadcastUpdate(
+                    TimerWebSocketServerMessage.TimerUpdate(
+                        timer = timer,
+                        listId = listId.toString(),
+                        remainingTime = remainingSeconds
+                    ),
+                    userId
+                )
+            }
+        }
+        
+        return affectedTimers
     }
 
 
@@ -479,6 +739,8 @@ class TimerService : BaseService() {
         userId: Int? = null
     ): List<CompletedTimerInfo> {
         return transaction {
+            val nowServer = Clock.System.now()
+            
             val query = if (userId != null) {
                 Timer.find {
                     (Timers.state eq TimerState.RUNNING) and
@@ -494,14 +756,12 @@ class TimerService : BaseService() {
             
             query.limit(1000)
                 .filter { timer ->
-                    val endTime = timer.startTime!!
-                        .toInstant(timezone)
-                        .plus(timer.duration.seconds)
-                        .toLocalDateTime(timezone)
-                    endTime <= currentTime
+                    // Use the new time calculation logic
+                    TimerTimeCalculator.shouldComplete(timer, nowServer)
                 }
                 .map { timer ->
                     timer.state = TimerState.COMPLETED
+                    timer.updatedAt = currentTime
                     CompletedTimerInfo(
                         domainTimer = timer.toDomainModel(),
                         listId = timer.list.id.value.toString(),

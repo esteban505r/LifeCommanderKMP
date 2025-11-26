@@ -16,7 +16,8 @@ data class CreateTimerRequest(
     val duration: Long,
     val enabled: Boolean,
     val countsAsPomodoro: Boolean,
-    val order: Int
+    val order: Int,
+    val sendNotificationOnComplete:Boolean
 )
 
 @Serializable
@@ -25,7 +26,8 @@ data class UpdateTimerRequest(
     val duration: Long? = null,
     val enabled: Boolean? = null,
     val countsAsPomodoro: Boolean? = null,
-    val order: Int? = null
+    val order: Int? = null,
+    val sendNotificationOnComplete:Boolean
 )
 
 @Serializable

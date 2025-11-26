@@ -19,6 +19,8 @@ import java.time.temporal.ChronoUnit
 import com.esteban.ruano.utils.DateUIUtils.formatDefault
 import com.esteban.ruano.utils.DateUIUtils.getCurrentDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 
 class TasksViewModel(
     private val tokenStorageImpl: TokenStorageImpl,
@@ -140,37 +142,100 @@ class TasksViewModel(
             _loading.value = true
             _error.value = null
             try {
-                // If a tag is selected, filter by tag
+                var response: List<Task> = emptyList()
+                
+                // If a tag is selected, get tasks by tag first
                 if (_selectedTagSlug.value != null) {
-                    val response = taskService.getTasksByTag(
+                    response = taskService.getTasksByTag(
                         token = tokenStorageImpl.getToken() ?: "",
                         tagSlug = _selectedTagSlug.value!!,
                         page = 0,
-                        limit = 30
+                        limit = 100 // Get more tasks to filter client-side
                     )
-                    _tasks.value = response.sortedByDefault()
-                    return@launch
+                } else {
+                    // No tag selected, use normal filtering
+                    if (_selectedFilter.value == TaskFilters.ALL) {
+                        response = taskService.getAll(
+                            token = tokenStorageImpl.getToken() ?: "",
+                            page = 0,
+                            limit = 30
+                        )
+                        _tasks.value = response.sortedByDefault()
+                        return@launch
+                    }
+                    if (_selectedFilter.value == TaskFilters.NO_DUE_DATE) {
+                        response = taskService.getNoDueDateTasks(
+                            token = tokenStorageImpl.getToken() ?: "",
+                            page = 0,
+                            limit = 30
+                        )
+                        _tasks.value = response.sortedByDefault()
+                        return@launch
+                    }
+                    val dates = _selectedFilter.value.getDateRangeByFilter()
+                    val isTodayFilter = _selectedFilter.value == TaskFilters.TODAY
+                    response = taskService.getByDateRangeWithSmartFiltering(
+                        token = tokenStorageImpl.getToken() ?: "",
+                        page = 0,
+                        limit = 100, // Get more tasks to filter client-side
+                        startDate = dates.first!!,
+                        endDate = dates.second!!,
+                        isTodayFilter = isTodayFilter
+                    )
                 }
-
-                if (_selectedFilter.value == TaskFilters.ALL) {
-                    getTasks()
-                    return@launch
+                
+                // Apply date filter client-side if tag is selected and date filter is not ALL
+                if (_selectedTagSlug.value != null && _selectedFilter.value != TaskFilters.ALL) {
+                    val dates = _selectedFilter.value.getDateRangeByFilter()
+                    val currentDate = getCurrentDateTime(TimeZone.currentSystemDefault()).date
+                    
+                    response = when (_selectedFilter.value) {
+                        TaskFilters.TODAY -> {
+                            response.filter { task ->
+                                val taskDate = task.dueDateTime?.toLocalDateTime()?.date 
+                                    ?: task.scheduledDateTime?.toLocalDateTime()?.date
+                                taskDate == currentDate
+                            }
+                        }
+                        TaskFilters.TOMORROW -> {
+                            val tomorrow = currentDate.plus(1, kotlinx.datetime.DateTimeUnit.DAY)
+                            response.filter { task ->
+                                val taskDate = task.dueDateTime?.toLocalDateTime()?.date 
+                                    ?: task.scheduledDateTime?.toLocalDateTime()?.date
+                                taskDate == tomorrow
+                            }
+                        }
+                        TaskFilters.NEXT_WEEK -> {
+                            val daysUntilNextMonday = (kotlinx.datetime.DayOfWeek.MONDAY.ordinal - currentDate.dayOfWeek.ordinal + 7) % 7
+                            val startOfNextWeek = currentDate.plus(daysUntilNextMonday.toLong(), kotlinx.datetime.DateTimeUnit.DAY)
+                            val endOfNextWeek = startOfNextWeek.plus(6, kotlinx.datetime.DateTimeUnit.DAY)
+                            response.filter { task ->
+                                val taskDate = task.dueDateTime?.toLocalDateTime()?.date 
+                                    ?: task.scheduledDateTime?.toLocalDateTime()?.date
+                                taskDate != null && taskDate >= startOfNextWeek && taskDate <= endOfNextWeek
+                            }
+                        }
+                        TaskFilters.THIS_MONTH -> {
+                            val firstDayOfMonth = kotlinx.datetime.LocalDate(currentDate.year, currentDate.monthNumber, 1)
+                            val firstDayOfNextMonth = firstDayOfMonth.plus(1, kotlinx.datetime.DateTimeUnit.MONTH)
+                            val lastDayOfMonth = firstDayOfNextMonth.minus(1, kotlinx.datetime.DateTimeUnit.DAY)
+                            response.filter { task ->
+                                val taskDate = task.dueDateTime?.toLocalDateTime()?.date 
+                                    ?: task.scheduledDateTime?.toLocalDateTime()?.date
+                                taskDate != null && taskDate >= firstDayOfMonth && taskDate <= lastDayOfMonth
+                            }
+                        }
+                        TaskFilters.NO_DUE_DATE -> {
+                            response.filter { task ->
+                                task.dueDateTime == null && task.scheduledDateTime == null
+                            }
+                        }
+                        else -> response
+                    }
                 }
-                if (_selectedFilter.value == TaskFilters.NO_DUE_DATE) {
-                    getNoDueDateTasks()
-                    return@launch
-                }
-                val dates = _selectedFilter.value.getDateRangeByFilter()
-                val isTodayFilter = _selectedFilter.value == TaskFilters.TODAY
-                val response = taskService.getByDateRangeWithSmartFiltering(
-                    token = tokenStorageImpl.getToken() ?: "",
-                    page = 0,
-                    limit = 30,
-                    startDate = dates.first!!,
-                    endDate = dates.second!!,
-                    isTodayFilter = isTodayFilter
-                )
+                
                 _tasks.value = response.sortedByDefault()
+                
                 if(_selectedFilter.value == TaskFilters.TODAY) {
                     statusBarService.updateTaskStatus(
                         TimeBasedItemUtils.getTaskStatusBarText(

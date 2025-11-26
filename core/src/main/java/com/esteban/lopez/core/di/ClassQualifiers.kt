@@ -17,3 +17,7 @@ annotation class TasksNotificationHelper
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class HabitNotificationHelper
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class WebSocketHttpClient

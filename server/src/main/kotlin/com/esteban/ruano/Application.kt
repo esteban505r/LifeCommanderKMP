@@ -175,6 +175,7 @@ fun Application.connectToPostgres() {
     Flyway.configure()
         .baselineOnMigrate(true)
         .validateMigrationNaming(true)
+        .locations("classpath:db/migration")
         .dataSource(cfg.db.url, cfg.db.user, if (iamMode) "" else cfg.db.password)
         .load()
         .migrate()
@@ -209,7 +210,7 @@ fun Application.connectToPostgres() {
             Transactions, ScheduledTransactions, Accounts, Budgets, SavingsGoals, TimerLists,
             Timers, UserSettings, DeviceTokens, CategoryKeywords, Portfolios, RecipeTracks, ExerciseTracks, RecipeDays,
             Ingredients, Instructions, PasswordResetPins, PasswordResetSessions, RefreshSessions,
-            Tags, TaskTags
+            Tags, TaskTags, StudyTopics, StudyItems, StudySessions
         )
     }
 }

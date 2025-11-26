@@ -11,5 +11,6 @@ data class Timer(
     val enabled: Boolean,
     val remainingSeconds: Long = 0,
     val countsAsPomodoro: Boolean,
+    val sendNotificationOnComplete: Boolean = true,
     val order: Int
 )

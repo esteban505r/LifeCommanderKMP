@@ -43,8 +43,10 @@ import services.NightBlockService
 import ui.viewmodels.HabitsViewModel
 import ui.viewmodels.TasksViewModel
 import com.esteban.ruano.lifecommander.ui.navigation.JournalScreenDestination
+import com.esteban.ruano.lifecommander.ui.navigation.StudyScreenDestination
 import com.esteban.ruano.lifecommander.ui.screens.StatisticsScreenDestination
 import com.esteban.ruano.lifecommander.ui.viewmodels.SettingsViewModel
+import com.esteban.ruano.lifecommander.ui.viewmodels.StudyViewModel
 
 sealed class Screen(val route: String) {
     object Auth : Screen("auth")
@@ -63,6 +65,7 @@ sealed class Screen(val route: String) {
     object Workout : Screen("workout")
     object Statistics : Screen("statistics")
     object Journal : Screen("journal")
+    object Study : Screen("study")
     object Test : Screen("test")
 }
 
@@ -72,6 +75,7 @@ fun AppNavHost(
     navController: NavHostController = rememberNavController(),
     taskViewModel: TasksViewModel = koinViewModel(),
     habitViewModel: HabitsViewModel = koinViewModel(),
+    studyViewModel: StudyViewModel = koinViewModel(),
     authService: AuthService = koinInject(),
     coordinatorViewModel: FinanceCoordinatorViewModel = koinViewModel(),
     accountViewModel: AccountViewModel = koinViewModel(),
@@ -382,6 +386,13 @@ fun AppNavHost(
                         onNavigateBack = {
                             navController.navigateUp()
                         }
+                    )
+                }
+
+                composable(Screen.Study.route) {
+                    StudyScreenDestination(
+                        studyViewModel = studyViewModel,
+                        modifier = modifier
                     )
                 }
 

@@ -9,5 +9,6 @@ data class CreateTimerRequest(
     val duration: Long,
     val enabled: Boolean,
     val countsAsPomodoro: Boolean,
+    val sendNotificationOnComplete: Boolean = true,
     val order: Int
 )

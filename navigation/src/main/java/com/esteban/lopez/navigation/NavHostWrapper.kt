@@ -11,6 +11,8 @@ import com.esteban.ruano.core.routes.Routes
 import com.esteban.ruano.finance_presentation.ui.navigation.financeGraph
 import com.esteban.ruano.habits_presentation.navigation.habitsGraph
 import com.esteban.ruano.habits_presentation.navigation.toDoGraph
+import com.esteban.ruano.habits_presentation.navigation.healthGraph
+import com.esteban.ruano.habits_presentation.navigation.timersGraph
 import com.esteban.ruano.home_presentation.navigation.homeGraph
 import com.esteban.ruano.tasks_presentation.navigation.tasksGraph
 import com.esteban.ruano.nutrition_presentation.ui.screens.navigation.nutritionGraph
@@ -32,9 +34,9 @@ fun NavHostWrapper(
 
         toDoGraph(navController)
 
-        workoutGraph(navController)
+        healthGraph(navController)
 
-        nutritionGraph(navController)
+        timersGraph(navController)
 
         financeGraph(navController)
 

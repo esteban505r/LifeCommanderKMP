@@ -1,6 +1,7 @@
 package com.esteban.ruano.service
 
 import com.esteban.ruano.lifecommander.models.Timer
+import com.esteban.ruano.lifecommander.models.TimerList
 import com.esteban.ruano.lifecommander.timer.TimerWebSocketServerMessage
 import io.ktor.websocket.*
 import kotlinx.coroutines.CoroutineScope
@@ -11,9 +12,36 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
+// Json instance configured for polymorphic serialization of WebSocket messages
+val webSocketJson = Json {
+    ignoreUnknownKeys = true
+    classDiscriminator = "type"
+    serializersModule = SerializersModule {
+        polymorphic(TimerWebSocketServerMessage::class) {
+            subclass(
+                TimerWebSocketServerMessage.TimerUpdate::class,
+                TimerWebSocketServerMessage.TimerUpdate.serializer()
+            )
+            subclass(
+                TimerWebSocketServerMessage.Pong::class,
+                TimerWebSocketServerMessage.Pong.serializer()
+            )
+            subclass(
+                TimerWebSocketServerMessage.TimerListUpdate::class,
+                TimerWebSocketServerMessage.TimerListUpdate.serializer()
+            )
+            subclass(
+                TimerWebSocketServerMessage.TimerListRefresh::class,
+                TimerWebSocketServerMessage.TimerListRefresh.serializer()
+            )
+        }
+    }
+}
 
 object TimerNotifier {
     // Map of user ID to their WebSocket sessions
@@ -47,7 +75,10 @@ object TimerNotifier {
     suspend fun broadcastUpdate(timerWebSocketServerMessage: TimerWebSocketServerMessage, userId: Int) {
         val sessions = userSessions[userId] ?: return
 
-        val message = Json.encodeToString(timerWebSocketServerMessage)
+        val message = webSocketJson.encodeToString(
+            TimerWebSocketServerMessage.serializer(),
+            timerWebSocketServerMessage
+        )
         val deadSessions = mutableSetOf<DefaultWebSocketSession>()
 
         sessions.forEach { session ->
@@ -108,28 +139,11 @@ object TimerNotifier {
 
     /**
      * Start a heartbeat for a WebSocket session
+     * Note: Heartbeat is now handled via ping/pong messages from client
+     * This method is kept for backward compatibility but may be deprecated
      */
     private fun launchHeartbeat(userId: Int, session: DefaultWebSocketSession) {
-        CoroutineScope(Dispatchers.Default).launch {
-            try {
-                while (true) {
-                    delay(30.seconds)
-                    try {
-                        session.send(Frame.Text("heartbeat"))
-                    } catch (e: ClosedSendChannelException) {
-                        println("Heartbeat failed for user $userId: ${e.message}")
-                        unregisterSession(userId, session)
-                        break
-                    } catch (e: Exception) {
-                        println("Error during heartbeat for user $userId: ${e.message}")
-                        unregisterSession(userId, session)
-                        break
-                    }
-                }
-            } catch (e: Exception) {
-                println("Error in heartbeat coroutine for user $userId: ${e.message}")
-                unregisterSession(userId, session)
-            }
-        }
+        // Deprecated: Heartbeat is now handled via ping/pong messages
+        // Keeping for backward compatibility but not actively used
     }
 } 

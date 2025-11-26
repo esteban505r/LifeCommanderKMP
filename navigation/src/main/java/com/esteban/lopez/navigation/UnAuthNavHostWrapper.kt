@@ -15,8 +15,7 @@ import com.esteban.ruano.habits_presentation.navigation.habitsGraph
 import com.esteban.ruano.habits_presentation.navigation.toDoGraph
 import com.esteban.ruano.home_presentation.navigation.homeGraph
 import com.esteban.ruano.tasks_presentation.navigation.tasksGraph
-import com.esteban.ruano.nutrition_presentation.ui.screens.navigation.nutritionGraph
-import com.esteban.ruano.workout_presentation.navigation.workoutGraph
+import com.esteban.ruano.habits_presentation.navigation.healthGraph
 
 @Composable
 fun UnAuthNavHostWrapper(

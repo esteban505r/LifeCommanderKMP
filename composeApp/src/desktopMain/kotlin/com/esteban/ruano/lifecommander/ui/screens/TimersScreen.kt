@@ -13,23 +13,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.models.Timer
 import com.esteban.ruano.lifecommander.models.TimerList
+import com.esteban.ruano.lifecommander.timer.TimerConnectionState
 import com.esteban.ruano.lifecommander.timer.TimerNotification
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackState
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
-import com.esteban.ruano.lifecommander.websocket.TimerWebSocketClient
+import com.esteban.ruano.lifecommander.ui.components.TimerControls
 import kotlinx.coroutines.launch
 
 @Composable
 fun TimersScreen(
     timerLists: List<TimerList>,
     timerPlaybackState: TimerPlaybackState,
-    connectionState: TimerWebSocketClient.ConnectionState,
+    connectionState: TimerConnectionState,
     notifications: List<TimerNotification>,
     onAddTimerList: (String, Boolean, Boolean) -> Unit,
     onUpdateTimerList: (String, String, Boolean, Boolean) -> Unit,
     onDeleteTimerList: (String) -> Unit,
-    onAddTimer: (String, String, Long, Boolean, Boolean, Int) -> Unit,
-    onUpdateTimer: (String, String, Long, Boolean, Boolean, Int) -> Unit,
+    onAddTimer: (String, String, Long, Boolean, Boolean, Int,Boolean) -> Unit,
+    onUpdateTimer: (String, String, Long, Boolean, Boolean, Int,Boolean) -> Unit,
     onDeleteTimer: (String) -> Unit,
     onReorderTimers: (String, List<Timer>) -> Unit,
     onNavigateToDetail: (TimerList) -> Unit,
@@ -51,11 +52,10 @@ fun TimersScreen(
             modifier = Modifier.fillMaxWidth(),
             elevation = 4.dp,
             color = when (connectionState) {
-                is TimerWebSocketClient.ConnectionState.Connected -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                is TimerWebSocketClient.ConnectionState.Disconnected,
-                is TimerWebSocketClient.ConnectionState.Error -> MaterialTheme.colors.error.copy(alpha = 0.1f)
-                TimerWebSocketClient.ConnectionState.Reconnecting -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                else -> MaterialTheme.colors.surface
+                is TimerConnectionState.Connected -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                is TimerConnectionState.Disconnected,
+                is TimerConnectionState.Error -> MaterialTheme.colors.error.copy(alpha = 0.1f)
+                TimerConnectionState.Reconnecting -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
             }
         ) {
             Row(
@@ -71,40 +71,36 @@ fun TimersScreen(
                 ) {
                     Icon(
                         imageVector = when (connectionState) {
-                            is TimerWebSocketClient.ConnectionState.Connected -> Icons.Default.CloudDone
-                            is TimerWebSocketClient.ConnectionState.Disconnected -> Icons.Default.CloudOff
-                            is TimerWebSocketClient.ConnectionState.Error -> Icons.Default.Error
-                            TimerWebSocketClient.ConnectionState.Reconnecting -> Icons.Default.CloudSync
-                            else -> Icons.Default.CloudOff
+                            is TimerConnectionState.Connected -> Icons.Default.CloudDone
+                            is TimerConnectionState.Disconnected -> Icons.Default.CloudOff
+                            is TimerConnectionState.Error -> Icons.Default.Error
+                            TimerConnectionState.Reconnecting -> Icons.Default.CloudSync
                         },
                         contentDescription = null,
                         tint = when (connectionState) {
-                            is TimerWebSocketClient.ConnectionState.Connected -> MaterialTheme.colors.primary
-                            is TimerWebSocketClient.ConnectionState.Disconnected,
-                            is TimerWebSocketClient.ConnectionState.Error -> MaterialTheme.colors.error
-                            TimerWebSocketClient.ConnectionState.Reconnecting -> MaterialTheme.colors.primary
-                            else -> MaterialTheme.colors.onSurface
+                            is TimerConnectionState.Connected -> MaterialTheme.colors.primary
+                            is TimerConnectionState.Disconnected,
+                            is TimerConnectionState.Error -> MaterialTheme.colors.error
+                            TimerConnectionState.Reconnecting -> MaterialTheme.colors.primary
                         }
                     )
                     Text(
                         text = when (connectionState) {
-                            is TimerWebSocketClient.ConnectionState.Connected -> "Connected to server"
-                            is TimerWebSocketClient.ConnectionState.Disconnected -> "Disconnected from server"
-                            is TimerWebSocketClient.ConnectionState.Error -> "Connection error"
-                            TimerWebSocketClient.ConnectionState.Reconnecting -> "Reconnecting..."
-                            else -> "Disconnected"
+                            is TimerConnectionState.Connected -> "Connected to server"
+                            is TimerConnectionState.Disconnected -> "Disconnected from server"
+                            is TimerConnectionState.Error -> "Connection error"
+                            TimerConnectionState.Reconnecting -> "Reconnecting..."
                         },
                         style = MaterialTheme.typography.caption,
                         color = when (connectionState) {
-                            is TimerWebSocketClient.ConnectionState.Connected -> MaterialTheme.colors.primary
-                            is TimerWebSocketClient.ConnectionState.Disconnected,
-                            is TimerWebSocketClient.ConnectionState.Error -> MaterialTheme.colors.error
-                            TimerWebSocketClient.ConnectionState.Reconnecting -> MaterialTheme.colors.primary
-                            else -> MaterialTheme.colors.onSurface
+                            is TimerConnectionState.Connected -> MaterialTheme.colors.primary
+                            is TimerConnectionState.Disconnected,
+                            is TimerConnectionState.Error -> MaterialTheme.colors.error
+                            TimerConnectionState.Reconnecting -> MaterialTheme.colors.primary
                         }
                     )
                 }
-                if (connectionState !is TimerWebSocketClient.ConnectionState.Connected) {
+                if (connectionState !is TimerConnectionState.Connected) {
                     Button(
                         onClick = { coroutineScope.launch { onReconnectToSocket() } },
                         colors = ButtonDefaults.buttonColors(
@@ -205,6 +201,9 @@ private fun TimerListCard(
     onDelete: () -> Unit,
     onViewDetail: () -> Unit
 ) {
+    val timerCount = timerList.timers?.size ?: 0
+    val enabledTimerCount = timerList.timers?.count { it.enabled } ?: 0
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = 4.dp
@@ -222,6 +221,13 @@ private fun TimerListCard(
                         text = timerList.name,
                         style = MaterialTheme.typography.h6
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "$enabledTimerCount of $timerCount timers enabled",
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -260,6 +266,7 @@ private fun TimerListCard(
                         }
                     }
                     if (notifications.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
                         val latestNotification = notifications.last()
                         Text(
                             text = "${latestNotification.type}: ${latestNotification.status}",
@@ -269,52 +276,26 @@ private fun TimerListCard(
                     }
                 }
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    when (timerPlaybackState.status) {
-                        TimerPlaybackStatus.Running -> {
-                            IconButton(
-                                onClick = onPause,
-                                modifier = Modifier.background(
-                                    color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                                ),
-                            ) {
-                                Icon(Icons.Default.Pause, contentDescription = "Pause")
-                            }
-                        }
-                        TimerPlaybackStatus.Paused -> {
-                            IconButton(
-                                onClick = onResume,
-                                modifier = Modifier.background(
-                                    color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                                ),
-                            ) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = "Resume")
-                            }
-                        }
-                        else -> {
-                            IconButton(
-                                onClick = onPlay,
-                                modifier = Modifier.background(
-                                    color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                                ),
-                            ) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = "Play")
-                            }
-                        }
-                    }
-                    IconButton(
-                        onClick = onStop,
-                        modifier = Modifier.background(
-                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                        ),
-                    ) {
-                        Icon(Icons.Default.Stop, contentDescription = "Stop")
-                    }
+                    // Timer Controls
+                    TimerControls(
+                        timerList = timerList,
+                        timerPlaybackState = timerPlaybackState,
+                        onStart = onPlay,
+                        onPause = onPause,
+                        onResume = onResume,
+                        onStop = onStop,
+                        isActiveForThisList = timerPlaybackState.timerList?.id == timerList.id
+                    )
+                    
+                    // Action Buttons
                     IconButton(
                         onClick = onEdit,
                         modifier = Modifier.background(
-                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f),
+                            shape = MaterialTheme.shapes.small
                         ),
                     ) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit")
@@ -322,18 +303,20 @@ private fun TimerListCard(
                     IconButton(
                         onClick = onDelete,
                         modifier = Modifier.background(
-                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                            color = MaterialTheme.colors.error.copy(alpha = 0.1f),
+                            shape = MaterialTheme.shapes.small
                         ),
                     ) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colors.error)
                     }
                     IconButton(
                         onClick = onViewDetail,
                         modifier = Modifier.background(
-                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.1f),
+                            shape = MaterialTheme.shapes.small
                         ),
                     ) {
-                        Icon(Icons.Default.Info, contentDescription = "View Details")
+                        Icon(Icons.Default.ArrowForward, contentDescription = "View Details")
                     }
                 }
             }

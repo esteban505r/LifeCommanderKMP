@@ -15,8 +15,8 @@ const val APP_NAME_BASE = "Life Commander"
 const val VERSION = "0.0.0.1"
 
 
-//const val VARIANT = DEV_VARIANT
-const val VARIANT = PROD_VARIANT
+const val VARIANT = DEV_VARIANT
+//const val VARIANT = PROD_VARIANT
 
 
 val APP_NAME: String
@@ -60,6 +60,7 @@ val SIGNUP_ENDPOINT = "$BASE_URL/auth/register"
 val FORGOT_PASSWORD_ENDPOINT = "$BASE_URL/auth/forgot-password"
 val RESET_PASSWORD_ENDPOINT = "$BASE_URL/auth/reset-password"
 val VERIFY_RESET_PIN_ENDPOINT = "$BASE_URL/auth/reset-password/verify"
+val STUDY_ENDPOINT = "$BASE_URL/study"
 
 fun HttpMessageBuilder.appHeaders(token: String?): HeadersBuilder {
     return this.headers {

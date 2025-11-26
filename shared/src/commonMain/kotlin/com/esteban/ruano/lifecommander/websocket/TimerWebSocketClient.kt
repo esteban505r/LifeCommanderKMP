@@ -1,7 +1,8 @@
 package com.esteban.ruano.lifecommander.websocket
 
-import com.esteban.ruano.lifecommander.utils.TokenStorage
+import com.esteban.ruano.lifecommander.timer.TimerConnectionState
 import com.esteban.ruano.lifecommander.timer.TimerNotification
+import com.esteban.ruano.lifecommander.utils.TokenStorage
 import com.esteban.ruano.lifecommander.utils.appHeaders
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
@@ -29,21 +30,14 @@ class TimerWebSocketClient(
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var session: WebSocketSession? = null
-    private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
-    val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
+    private val _connectionState = MutableStateFlow<TimerConnectionState>(TimerConnectionState.Disconnected)
+    val connectionState: StateFlow<TimerConnectionState> = _connectionState.asStateFlow()
 
     private val _timerNotifications = MutableStateFlow<List<TimerNotification>>(emptyList())
     val timerNotifications: StateFlow<List<TimerNotification>> = _timerNotifications.asStateFlow()
 
     private val _incomingEvents = MutableSharedFlow<String>()
     val incomingEvents: SharedFlow<String> = _incomingEvents
-
-    sealed class ConnectionState {
-        object Connected : ConnectionState()
-        object Disconnected : ConnectionState()
-        object Reconnecting : ConnectionState()
-        data class Error(val message: String) : ConnectionState()
-    }
 
     fun connect() {
         scope.launch {
@@ -54,7 +48,7 @@ class TimerWebSocketClient(
                     println("❌ No token found. Cannot connect to WebSocket.")
                     return@launch
                 }
-                println("Connecting to ws://localhost:8080/api/v1/timers/notifications")
+                println("Connecting to ws://$host:$port$path/timers/notifications")
                 httpClient.webSocket(
                     host = host,
                     path = "$path/timers/notifications",
@@ -71,7 +65,7 @@ class TimerWebSocketClient(
                     session = currentSession
 
                     println("✅ WebSocket connected")
-                    _connectionState.value = ConnectionState.Connected
+                    _connectionState.value = TimerConnectionState.Connected
 
                     try {
                         for (frame in incoming) {
@@ -92,7 +86,7 @@ class TimerWebSocketClient(
                     } catch (e: Exception) {
                         println("❌ Error during WebSocket session: ${e.message}")
                         e.printStackTrace()
-                        _connectionState.value = ConnectionState.Error(e.message ?: "Unknown error")
+                        _connectionState.value = TimerConnectionState.Error(e.message ?: "Unknown error")
                     } finally {
                         try {
                             session?.close(CloseReason(CloseReason.Codes.NORMAL, "Client cleanup"))
@@ -102,18 +96,18 @@ class TimerWebSocketClient(
                         }
 
                         session = null
-                        _connectionState.value = ConnectionState.Disconnected
+                        _connectionState.value = TimerConnectionState.Disconnected
 
                         if (attempts < 3) {
                             attempts++
                         } else {
                             println("❌ Max reconnection attempts reached. Giving up.")
-                            _connectionState.value = ConnectionState.Disconnected
+                            _connectionState.value = TimerConnectionState.Disconnected
                         }
 
                         // 🔁 Reconnect after delay
                         println("🔄 Attempting to reconnect in 5 seconds...")
-                        _connectionState.value = ConnectionState.Reconnecting
+                        _connectionState.value = TimerConnectionState.Reconnecting
                         delay(5000)
                         connect()
                     }
@@ -121,17 +115,17 @@ class TimerWebSocketClient(
             } catch (e: Exception) {
                 println("🚫 Failed to connect to WebSocket: ${e.message}")
                 e.printStackTrace()
-                _connectionState.value = ConnectionState.Error(e.message ?: "Failed to connect")
+                _connectionState.value = TimerConnectionState.Error(e.message ?: "Failed to connect")
 
                 if(attempts < 3) {
                     attempts++
                 } else {
-                    _connectionState.value = ConnectionState.Disconnected
+                    _connectionState.value = TimerConnectionState.Disconnected
                     return@launch
                 }
 
                 println("🔄 Retry connection in 5 seconds...")
-                _connectionState.value = ConnectionState.Reconnecting
+                _connectionState.value = TimerConnectionState.Reconnecting
                 delay(5000)
                 connect()
             }
@@ -143,7 +137,7 @@ class TimerWebSocketClient(
             try {
                 session?.close()
                 session = null
-                _connectionState.value = ConnectionState.Disconnected
+                _connectionState.value = TimerConnectionState.Disconnected
                 println("WebSocket disconnected")
             } catch (e: Exception) {
                 println("Error disconnecting WebSocket: ${e.message}")
@@ -153,14 +147,6 @@ class TimerWebSocketClient(
 
     private suspend fun handleMessage(text: String) {
         _incomingEvents.emit(text)
-        /*try {
-            val notification = Json.decodeFromString<TimerNotification>(text)
-            _timerNotifications.value = _timerNotifications.value + notification
-            println("Received timer notification: $notification")
-        } catch (e: Exception) {
-            println("Error parsing WebSocket message: $text")
-            println("Error details: ${e.message}")
-        }*/
     }
 
     fun clearNotifications() {
@@ -174,4 +160,5 @@ class TimerWebSocketClient(
             println("Sent message: $message")
         }
     }
-} 
+}
+

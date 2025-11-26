@@ -76,31 +76,46 @@ class TimerPlaybackManager(
     private fun startTicking(onEachTimerFinished: (Timer) -> Unit = {}) {
         playbackJob?.cancel()
         playbackJob = scope.launch {
-            val startInstant = Clock.System.now().toEpochMilliseconds()
-            var lastTimestamp = startInstant
-
+            println("[TimerPlaybackManager] Starting tick loop")
+            // Note: This is a local UI update loop
+            // The actual timer state is server-authoritative
+            // We update the UI every second based on the last known server state
             while (isActive) {
-                delay(16)
+                delay(1000) // Update every second (not every 16ms for performance)
 
                 val state = _uiState.value
-                if (state.status != TimerPlaybackStatus.Running) break
+                println("[TimerPlaybackManager] Tick - status: ${state.status}, remaining: ${state.remainingMillis}ms")
+                
+                if (state.status != TimerPlaybackStatus.Running) {
+                    println("[TimerPlaybackManager] Timer not running, stopping tick loop. Status: ${state.status}")
+                    break
+                }
 
-                val now = Clock.System.now().toEpochMilliseconds()
-                val elapsed = now - lastTimestamp
-                lastTimestamp = now
-
-                val newRemaining = _uiState.value.remainingMillis - elapsed
-                println("Remaining time: $newRemaining")
+                // Decrement remaining time by 1 second
+                val newRemaining = state.remainingMillis - 1000
 
                 if (newRemaining <= 0) {
-                    println("Timer completed: ${state.currentTimer?.name}")
+                    println("[TimerPlaybackManager] Timer completed locally: ${state.currentTimer?.name}")
+                    // Note: Server will also detect completion and send update
+                    // This is just for immediate UI feedback
                     onEachTimerFinished(state.currentTimer ?: return@launch)
                     moveToNextTimer(onEachTimerFinished)
                     break
                 }
 
-                _uiState.update { it.copy(remainingMillis = newRemaining) }
+                // Update state atomically
+                _uiState.update { currentState ->
+                    if (currentState.status == TimerPlaybackStatus.Running && currentState.currentTimer?.id == state.currentTimer?.id) {
+                        currentState.copy(remainingMillis = newRemaining)
+                    } else {
+                        // State changed externally, don't update
+                        println("[TimerPlaybackManager] State changed externally during update, stopping tick loop")
+                        currentState
+                    }
+                }
+                println("[TimerPlaybackManager] Updated remaining to: ${newRemaining}ms")
             }
+            println("[TimerPlaybackManager] Tick loop ended")
         }
     }
 
@@ -140,15 +155,20 @@ class TimerPlaybackManager(
         timeRemaining: Long,
         onEachTimerFinished: (Timer) -> Unit = {}
     ) {
+        println("[TimerPlaybackManager] overridePlaybackState called: timer=${timer.name}, state=${timer.state}, timeRemaining=${timeRemaining}ms")
         playbackJob?.cancel()
 
         val status = when (timer.state) {
             TimerState.RUNNING.toString() -> TimerPlaybackStatus.Running
             TimerState.PAUSED.toString() -> TimerPlaybackStatus.Paused
             TimerState.COMPLETED.toString() -> TimerPlaybackStatus.Stopped
-            else -> TimerPlaybackStatus.Stopped
+            else -> {
+                println("[TimerPlaybackManager] Unknown timer state: ${timer.state}, defaulting to Stopped")
+                TimerPlaybackStatus.Stopped
+            }
         }
 
+        println("[TimerPlaybackManager] Setting playback state: status=$status, remaining=${timeRemaining}ms")
         _uiState.value = TimerPlaybackState(
             timerList = timerList,
             currentTimerIndex = timerIndex,
@@ -158,9 +178,12 @@ class TimerPlaybackManager(
         )
 
         if (status == TimerPlaybackStatus.Running) {
+            println("[TimerPlaybackManager] Status is Running, starting tick loop")
             startTicking(
                 onEachTimerFinished = onEachTimerFinished
             )
+        } else {
+            println("[TimerPlaybackManager] Status is $status, NOT starting tick loop")
         }
     }
 }

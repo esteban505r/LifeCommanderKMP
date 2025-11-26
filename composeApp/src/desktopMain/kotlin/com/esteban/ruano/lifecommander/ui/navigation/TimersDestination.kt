@@ -60,11 +60,11 @@ fun TimersScreenDestination(
                 onDeleteTimerList = { listId ->
                     timersViewModel.deleteTimerList(listId)
                 },
-                onAddTimer = { listId, name, duration, enabled, countsAsPomodoro, order ->
-                    timersViewModel.createTimer(listId, name, duration, enabled, countsAsPomodoro, order)
+                onAddTimer = { listId, name, duration, enabled, countsAsPomodoro, order, sendNotificationOnComplete ->
+                    timersViewModel.createTimer(listId, name, duration, enabled, countsAsPomodoro, sendNotificationOnComplete,order,)
                 },
-                onUpdateTimer = { timerId, name, duration, enabled, countsAsPomodoro, order ->
-                    timersViewModel.updateTimer(timerId, name, duration, enabled, countsAsPomodoro, order)
+                onUpdateTimer = { timerId, name, duration, enabled, countsAsPomodoro, order, sendNotificationOnComplete ->
+                    timersViewModel.updateTimer(timerId, name, duration, enabled, countsAsPomodoro, sendNotificationOnComplete,order, )
                 },
                 onDeleteTimer = { timerId ->
                     timersViewModel.deleteTimer(timerId)

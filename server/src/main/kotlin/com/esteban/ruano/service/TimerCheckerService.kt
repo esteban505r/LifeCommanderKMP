@@ -1,6 +1,7 @@
 package com.esteban.ruano.service
 
 import com.esteban.ruano.database.entities.*
+import com.esteban.ruano.database.entities.Timer
 import com.esteban.ruano.database.models.Status
 import com.esteban.ruano.lifecommander.models.UserSettings
 import com.esteban.ruano.lifecommander.models.timers.CompletedTimerInfo
@@ -172,17 +173,27 @@ class TimerCheckerService(
 
             for (info in completed) {
                 try {
-                    val tokens = timerService.getDeviceTokensForUser(info.userId)
-                    notificationService.sendNotificationToTokens(
-                        tokens,
-                        title = "Timer Completed",
-                        body = "Your timer '${info.name}' has completed.",
-                        data = mapOf(
-                            "type" to "TIMER_COMPLETED",
-                            "timerId" to info.domainTimer.id,
-                            "listId" to info.listId.toString()
+                    // Check if notification is enabled for this timer
+                    val timer = db {
+                        Timer.findById(UUID.fromString(info.domainTimer.id))
+                    }
+                    
+                    if (timer?.sendNotificationOnComplete == true) {
+                        val tokens = timerService.getDeviceTokensForUser(info.userId)
+                        notificationService.sendNotificationToTokens(
+                            tokens,
+                            title = "Timer Completed",
+                            body = "Your timer '${info.name}' has completed.",
+                            data = mapOf(
+                                "type" to "TIMER_COMPLETED",
+                                "timerId" to info.domainTimer.id,
+                                "listId" to info.listId.toString()
+                            )
                         )
-                    )
+                        logger("[Timers] Notification sent for timer '${info.name}' (user ${info.userId})")
+                    } else {
+                        logger("[Timers] Notification skipped for timer '${info.name}' (notifications disabled)")
+                    }
 
                     val next = timerService.getNextTimerToStart(UUID.fromString(info.listId), info.domainTimer)
                     val updated = next?.let {

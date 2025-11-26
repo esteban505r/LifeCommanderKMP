@@ -23,6 +23,8 @@ object BottomNavIconUtils {
             "tasks" -> if (selected) Res.drawable.ic_tasks_selected else Res.drawable.ic_tasks_unselected
             "workout" -> if (selected) Res.drawable.ic_work_out_selected else Res.drawable.ic_work_out_unselected
             "nutrition" -> if (selected) Res.drawable.ic_nutrition_selected else Res.drawable.ic_nutrition_unselected
+            "health" -> if (selected) Res.drawable.ic_work_out_selected else Res.drawable.ic_work_out_unselected // Use workout icon for health
+            "timers" -> if (selected) Res.drawable.ic_home_selected else Res.drawable.ic_home_unselected // TODO: Add timer icons
             "finance" -> if (selected) Res.drawable.ic_finance_selected else Res.drawable.ic_finance_unselected
             "journal" -> if (selected) Res.drawable.ic_home_selected else Res.drawable.ic_home_unselected // TODO: Add journal icons
             "to_do" -> if (selected) Res.drawable.ic_habits_selected else Res.drawable.ic_habits_unselected
