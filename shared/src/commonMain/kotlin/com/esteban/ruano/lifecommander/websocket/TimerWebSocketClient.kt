@@ -42,14 +42,14 @@ class TimerWebSocketClient(
     fun connect() {
         scope.launch {
             var attempts = 0
+            val protocol = if (port == 443) "wss" else "ws"
+            val fullUrl = "$protocol://$host:$port$path/timers/notifications"
             try {
                 val token = tokenStorage.getToken()
                 if (token == null) {
                     println("❌ No token found. Cannot connect to WebSocket.")
                     return@launch
                 }
-                val protocol = if (port == 443) "wss" else "ws"
-                val fullUrl = "$protocol://$host:$port$path/timers/notifications"
                 println("🔌 [WebSocket] Connecting to $fullUrl")
                 println("🔌 [WebSocket] Host: $host, Port: $port, Path: $path/timers/notifications")
                 println("🔌 [WebSocket] Token present: ${token != null}, Token length: ${token?.length ?: 0}")
