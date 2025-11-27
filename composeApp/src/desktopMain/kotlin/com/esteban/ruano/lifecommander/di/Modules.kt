@@ -55,11 +55,13 @@ import ui.viewmodels.HabitsViewModel
 import ui.viewmodels.TasksViewModel
 import ui.viewmodels.TagsViewModel
 import com.esteban.ruano.lifecommander.ui.viewmodels.StudyViewModel
+import com.esteban.ruano.lifecommander.utils.PROD_VARIANT
 import utils.BackgroundServiceManager
 import utils.StatusBarService
 import utils.TimerService
 import utils.createDataStore
 import java.io.FileInputStream
+import java.io.InputStream
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import javax.net.ssl.TrustManagerFactory
@@ -79,16 +81,96 @@ fun trustManagerFromPem(pemPath: String): X509TrustManager {
     return tmf.trustManagers.single() as X509TrustManager
 }
 
-val tm = trustManagerFromPem("${System.getProperty("user.home")}/Downloads/httptoolkit.pem")
+fun trustManagerFromResource(resourcePath: String): X509TrustManager? {
+    return try {
+        val inputStream: InputStream? = object {}.javaClass.classLoader.getResourceAsStream(resourcePath)
+        if (inputStream == null) {
+            println("Warning: Cloudflare certificate not found at $resourcePath")
+            return null
+        }
+        val cf = CertificateFactory.getInstance("X.509")
+        val cert = inputStream.use { cf.generateCertificate(it) }
+        
+        // Load default system trust store
+        val defaultTrustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+        defaultTrustManagerFactory.init(null as KeyStore?)
+        val defaultTrustManager = defaultTrustManagerFactory.trustManagers.single() as X509TrustManager
+        
+        // Create a new keystore with default certificates + Cloudflare certificate
+        val ks = KeyStore.getInstance(KeyStore.getDefaultType())
+        ks.load(null, null)
+        
+        // Add Cloudflare certificate
+        ks.setCertificateEntry("cloudflare-origin", cert)
+        
+        // Create trust manager with combined certificates
+        val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+        tmf.init(ks)
+        
+        // Return a combined trust manager that trusts both default CAs and Cloudflare
+        object : X509TrustManager {
+            private val cloudflareTrustManager = tmf.trustManagers.single() as X509TrustManager
+            
+            override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>?, authType: String?) {
+                defaultTrustManager.checkClientTrusted(chain, authType)
+            }
+            
+            override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>?, authType: String?) {
+                try {
+                    // Try default trust manager first
+                    defaultTrustManager.checkServerTrusted(chain, authType)
+                } catch (e: Exception) {
+                    // If default fails, try Cloudflare certificate
+                    try {
+                        cloudflareTrustManager.checkServerTrusted(chain, authType)
+                    } catch (e2: Exception) {
+                        throw e // Re-throw original exception if both fail
+                    }
+                }
+            }
+            
+            override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
+                return defaultTrustManager.acceptedIssuers
+            }
+        }
+    } catch (e: Exception) {
+        println("Warning: Failed to load Cloudflare certificate from resources: ${e.message}")
+        null
+    }
+}
+
+fun createTrustManager(): X509TrustManager? {
+    return when (VARIANT) {
+        DEV_VARIANT -> {
+            // Dev mode: use HTTP Toolkit certificate
+            try {
+                trustManagerFromPem("${System.getProperty("user.home")}/Downloads/httptoolkit.pem")
+            } catch (e: Exception) {
+                println("Warning: HTTP Toolkit certificate not found, using default trust manager")
+                null
+            }
+        }
+        PROD_VARIANT -> {
+            // Prod mode: use Cloudflare certificate
+            trustManagerFromResource("certs/cloudflare-cert.pem")
+        }
+        else -> null
+    }
+}
+
+val tm = createTrustManager()
 
 val networkModule = module {
     single {
         HttpClient(CIO) {
-            if (VARIANT == DEV_VARIANT) {
-                engine {
+            engine {
+                if (VARIANT == DEV_VARIANT) {
                     //Proxy for debugging
                     proxy = ProxyBuilder.http("https://localhost:8000")
-                    https { trustManager = tm }
+                }
+                // Use custom trust manager if available (for dev HTTP Toolkit or prod Cloudflare cert)
+                tm?.let { trustManager ->
+                    https { this.trustManager = trustManager }
                 }
             }
             install(ContentNegotiation) {
@@ -105,6 +187,12 @@ val networkModule = module {
     }
     single(socketQualifier) {
         HttpClient(CIO) {
+            engine {
+                // Use custom trust manager for WebSocket connections too
+                tm?.let { trustManager ->
+                    https { this.trustManager = trustManager }
+                }
+            }
             install(ContentNegotiation) {
                 gson {
                     setPrettyPrinting()

@@ -25,3 +25,7 @@ firebase-service-account*.json
 firebase-service-account.json
 **/firebase-service-account*.json
 **/firebase-service-account.json
+
+# SSL Certificates
+*.pem
+**/*.pem
