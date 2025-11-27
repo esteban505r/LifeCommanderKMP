@@ -49,7 +49,11 @@ class TimerWebSocketClient(
                     return@launch
                 }
                 val protocol = if (port == 443) "wss" else "ws"
-                println("Connecting to $protocol://$host:$port$path/timers/notifications")
+                val fullUrl = "$protocol://$host:$port$path/timers/notifications"
+                println("🔌 [WebSocket] Connecting to $fullUrl")
+                println("🔌 [WebSocket] Host: $host, Port: $port, Path: $path/timers/notifications")
+                println("🔌 [WebSocket] Token present: ${token != null}, Token length: ${token?.length ?: 0}")
+                
                 httpClient.webSocket(
                     method = HttpMethod.Get,
                     host = host,
@@ -59,6 +63,7 @@ class TimerWebSocketClient(
                         appHeaders(
                             token = token,
                         )
+                        println("🔌 [WebSocket] Request headers set - Authorization: ${headers.contains("Authorization")}")
                         timeout { requestTimeoutMillis = 10000 }
                     }
                 ) {
@@ -114,7 +119,9 @@ class TimerWebSocketClient(
                     }
                 }
             } catch (e: Exception) {
-                println("🚫 Failed to connect to WebSocket: ${e.message}")
+                println("🚫 [WebSocket] Failed to connect to WebSocket: ${e.message}")
+                println("🚫 [WebSocket] Exception type: ${e::class.simpleName}")
+                println("🚫 [WebSocket] Full URL was: $protocol://$host:$port$path/timers/notifications")
                 e.printStackTrace()
                 _connectionState.value = TimerConnectionState.Error(e.message ?: "Failed to connect")
 

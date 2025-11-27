@@ -189,8 +189,30 @@ fun Route.timerRouting(timerService: TimerService) {
         }
 
         webSocket("/notifications") {
-            val userId = call.authentication.principal<LoggedUserDTO>()!!.id
+            val logger = org.slf4j.LoggerFactory.getLogger("TimerWebSocket")
+            logger.info("WebSocket connection attempt - Headers: ${call.request.headers.toMap()}")
+            logger.info("WebSocket connection attempt - URI: ${call.request.uri}")
+            logger.info("WebSocket connection attempt - Method: ${call.request.httpMethod}")
+            logger.info("WebSocket connection attempt - Remote Host: ${call.request.origin.remoteHost}")
+            
+            val userId = try {
+                call.authentication.principal<LoggedUserDTO>()?.id
+            } catch (e: Exception) {
+                logger.error("WebSocket authentication error: ${e.message}", e)
+                null
+            }
+            
+            if (userId == null) {
+                logger.error("WebSocket connection rejected: No authenticated user found")
+                logger.error("Authorization header present: ${call.request.headers.contains("Authorization")}")
+                logger.error("Authorization header value: ${call.request.headers["Authorization"]?.take(20)}...")
+                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Authentication required"))
+                return@webSocket
+            }
+            
+            logger.info("WebSocket connection accepted for user: $userId")
             TimerNotifier.registerSession(userId, this)
+            
             try {
                 for (frame in incoming) {
                     when (frame) {
@@ -259,10 +281,13 @@ fun Route.timerRouting(timerService: TimerService) {
                     }
                 }
             } catch (e: Exception) {
-                println("WebSocket error: ${e.message}")
+                logger.error("WebSocket error: ${e.message}", e)
                 close(CloseReason(CloseReason.Codes.INTERNAL_ERROR, "WebSocket error"))
             } finally {
-                TimerNotifier.unregisterSession(userId, this)
+                if (userId != null) {
+                    logger.info("Unregistering WebSocket session for user: $userId")
+                    TimerNotifier.unregisterSession(userId, this)
+                }
             }
         }
 
