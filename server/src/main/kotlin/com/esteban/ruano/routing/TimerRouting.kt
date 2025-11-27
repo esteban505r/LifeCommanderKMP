@@ -12,6 +12,7 @@ import com.esteban.ruano.service.TimerService
 import com.esteban.ruano.service.webSocketJson
 import io.ktor.http.*
 import io.ktor.server.auth.*
+import io.ktor.server.plugins.origin
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -190,10 +191,11 @@ fun Route.timerRouting(timerService: TimerService) {
 
         webSocket("/notifications") {
             val logger = org.slf4j.LoggerFactory.getLogger("TimerWebSocket")
-            logger.info("WebSocket connection attempt - Headers: ${call.request.headers.toMap()}")
+            val headersList = call.request.headers.entries().map { "${it.key}: ${it.value.joinToString(", ")}" }
+            logger.info("WebSocket connection attempt - Headers: ${headersList.joinToString("; ")}")
             logger.info("WebSocket connection attempt - URI: ${call.request.uri}")
             logger.info("WebSocket connection attempt - Method: ${call.request.httpMethod}")
-            logger.info("WebSocket connection attempt - Remote Host: ${call.request.origin.remoteHost}")
+//            logger.info("WebSocket connection attempt - Remote Host: ${call.request.origin.remoteHost}")
             
             val userId = try {
                 call.authentication.principal<LoggedUserDTO>()?.id
