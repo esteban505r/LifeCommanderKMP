@@ -6,6 +6,11 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import com.esteban.ruano.service.AuthService
+import io.ktor.http.ContentType
+import io.ktor.http.withCharset
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.uri
+import io.ktor.server.response.respondText
 import org.koin.ktor.ext.inject
 
 fun Application.configureSecurity() {
@@ -45,7 +50,13 @@ fun Application.configureSecurity() {
                 logger.warn("Request URI: ${call.request.uri}")
                 logger.warn("Request method: ${call.request.httpMethod}")
                 logger.warn("Authorization header present: ${call.request.headers.contains("Authorization")}")
-                call.respond(io.ktor.http.HttpStatusCode.Unauthorized, "Token is not valid or missing")
+                call.respondText(
+                    ContentType.Text.Plain.withCharset(Charsets.UTF_8),
+                    io.ktor.http.HttpStatusCode.Unauthorized,
+                    {
+                        "Token is not valid or missing"
+                    }
+                )
             }
         }
     }
