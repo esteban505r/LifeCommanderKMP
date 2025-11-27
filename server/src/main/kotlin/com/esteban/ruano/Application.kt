@@ -86,7 +86,17 @@ fun Application.configureLogging() {
     install(CallLogging) {
         level = Level.INFO
         callIdMdc(MDC_KEY)                 // <- surfaces CallId in MDC
-        filter { !it.request.path().startsWith("/health") }
+        filter { 
+            val path = it.request.path()
+            // Log all requests including WebSocket attempts
+            if (path.contains("/timers/notifications")) {
+                val logger = LoggerFactory.getLogger("WebSocketRequestLogger")
+                logger.info("WebSocket request detected - Method: ${it.request.httpMethod}, URI: ${it.request.uri}")
+                logger.info("WebSocket request - Headers: ${it.request.headers.entries().map { "${it.key}: ${it.value.joinToString(", ")}" }.joinToString("; ")}")
+                logger.info("WebSocket request - Authorization: ${it.request.headers["Authorization"]?.take(30)}...")
+            }
+            !path.startsWith("/health") 
+        }
         format { call ->
             val status = call.response.status()?.value ?: 0
             "${call.request.httpMethod.value} ${call.request.uri} -> $status"

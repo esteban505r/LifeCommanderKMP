@@ -25,7 +25,27 @@ fun Application.configureSecurity() {
                     .build()
             )
             validate { credential ->
-                credential.payload.getClaim("id").asInt()?.let(authService::findByID)
+                val logger = org.slf4j.LoggerFactory.getLogger("JWT-Auth")
+                try {
+                    val id = credential.payload.getClaim("id").asInt()
+                    logger.info("JWT validation - User ID: $id")
+                    id?.let(authService::findByID)?.also {
+                        logger.info("JWT validation successful for user: ${it.id}")
+                    } ?: run {
+                        logger.warn("JWT validation failed - User ID not found in token")
+                    }
+                } catch (e: Exception) {
+                    logger.error("JWT validation error: ${e.message}", e)
+                    null
+                }
+            }
+            challenge { defaultScheme, realm ->
+                val logger = org.slf4j.LoggerFactory.getLogger("JWT-Auth")
+                logger.warn("JWT authentication challenge - Scheme: $defaultScheme, Realm: $realm")
+                logger.warn("Request URI: ${call.request.uri}")
+                logger.warn("Request method: ${call.request.httpMethod}")
+                logger.warn("Authorization header present: ${call.request.headers.contains("Authorization")}")
+                call.respond(io.ktor.http.HttpStatusCode.Unauthorized, "Token is not valid or missing")
             }
         }
     }
