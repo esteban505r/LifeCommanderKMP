@@ -51,11 +51,10 @@ class TimerWebSocketClient(
                 val protocol = if (port == 443) "wss" else "ws"
                 println("Connecting to $protocol://$host:$port$path/timers/notifications")
                 httpClient.webSocket(
-                    host = host,
-                    path = "$path/timers/notifications",
                     method = HttpMethod.Get,
+                    host = host,
                     port = port,
-                    secure = port == 443,
+                    path = "$path/timers/notifications",
                     request = {
                         appHeaders(
                             token = token,
