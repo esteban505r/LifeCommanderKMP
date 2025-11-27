@@ -8,7 +8,9 @@ const val BASE_URL_PROD = "https://api.estebanruano.com/api/v1"
 const val BASE_URL_DEV = "https://api.estebanruano.com/api/v1" //FOR DEBUGGING PROD
 //const val BASE_URL_DEV = "http://localhost:8080/api/v1"
 const val SOCKETS_HOST_DEV = "localhost"
-const val SOCKETS_HOST_PROD = "https://api.estebanruano.com"
+const val SOCKETS_HOST_PROD = "api.estebanruano.com"
+const val SOCKETS_PORT_DEV = 8080
+const val SOCKETS_PORT_PROD = 443
 const val PROD_VARIANT = "prod"
 const val DEV_VARIANT = "dev"
 const val APP_NAME_BASE = "Life Commander"
@@ -48,7 +50,14 @@ val SOCKETS_HOST: String
         }
     }
 
-const val SOCKETS_PORT = 8080
+val SOCKETS_PORT: Int
+    get() {
+        return when (VARIANT) {
+            PROD_VARIANT -> SOCKETS_PORT_PROD
+            DEV_VARIANT -> SOCKETS_PORT_DEV
+            else -> throw IllegalArgumentException("Unknown variant: $VARIANT")
+        }
+    }
 const val SOCKETS_PATH = "/api/v1"
 
 val HABITS_ENDPOINT = "$BASE_URL/habits"

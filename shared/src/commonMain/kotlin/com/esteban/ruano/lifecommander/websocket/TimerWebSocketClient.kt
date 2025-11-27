@@ -48,12 +48,14 @@ class TimerWebSocketClient(
                     println("❌ No token found. Cannot connect to WebSocket.")
                     return@launch
                 }
-                println("Connecting to ws://$host:$port$path/timers/notifications")
+                val protocol = if (port == 443) "wss" else "ws"
+                println("Connecting to $protocol://$host:$port$path/timers/notifications")
                 httpClient.webSocket(
                     host = host,
                     path = "$path/timers/notifications",
                     method = HttpMethod.Get,
                     port = port,
+                    secure = port == 443,
                     request = {
                         appHeaders(
                             token = token,
