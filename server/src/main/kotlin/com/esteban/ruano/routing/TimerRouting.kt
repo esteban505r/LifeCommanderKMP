@@ -191,26 +191,48 @@ fun Route.timerRouting(timerService: TimerService) {
 
         webSocket("/notifications") {
             val logger = org.slf4j.LoggerFactory.getLogger("TimerWebSocket")
-            val headersList = call.request.headers.entries().map { "${it.key}: ${it.value.joinToString(", ")}" }
-            logger.info("WebSocket connection attempt - Headers: ${headersList.joinToString("; ")}")
-            logger.info("WebSocket connection attempt - URI: ${call.request.uri}")
-            logger.info("WebSocket connection attempt - Method: ${call.request.httpMethod}")
-//            logger.info("WebSocket connection attempt - Remote Host: ${call.request.origin.remoteHost}")
+            
+            // Log all request details
+            val headersList = call.request.headers.entries().map { "${it.key}: ${it.value.joinToString()}" }
+            logger.info("========== WebSocket Connection Attempt ==========")
+            logger.info("URI: ${call.request.uri}")
+            logger.info("Method: ${call.request.httpMethod}")
+            logger.info("Path: ${call.request.path()}")
+            logger.info("Query String: ${call.request.queryParameters.entries().joinToString { "${it.key}=${it.value.joinToString()}" }}")
+            logger.info("Headers (${headersList.size}):")
+            headersList.forEach { logger.info("  $it") }
+            logger.info("Authorization header present: ${call.request.headers.contains("Authorization")}")
+            logger.info("Authorization header value: ${call.request.headers["Authorization"]?.take(50)}...")
+            logger.info("Upgrade header: ${call.request.headers["Upgrade"]}")
+            logger.info("Connection header: ${call.request.headers["Connection"]}")
+            logger.info("Sec-WebSocket-Key: ${call.request.headers["Sec-WebSocket-Key"]}")
+            logger.info("Sec-WebSocket-Version: ${call.request.headers["Sec-WebSocket-Version"]}")
             
             val userId = try {
                 call.authentication.principal<LoggedUserDTO>()?.id
             } catch (e: Exception) {
                 logger.error("WebSocket authentication error: ${e.message}", e)
+                logger.error("Authentication exception stack trace:", e)
                 null
             }
             
             if (userId == null) {
-                logger.error("WebSocket connection rejected: No authenticated user found")
+                logger.error("========== WebSocket Connection REJECTED ==========")
+                logger.error("Reason: No authenticated user found")
                 logger.error("Authorization header present: ${call.request.headers.contains("Authorization")}")
-                logger.error("Authorization header value: ${call.request.headers["Authorization"]?.take(20)}...")
+                logger.error("Authorization header value: ${call.request.headers["Authorization"]?.take(50)}...")
+                logger.error("All headers were logged above")
+                try {
+                    call.respond(io.ktor.http.HttpStatusCode.Unauthorized, "Authentication required")
+                } catch (e: Exception) {
+                    logger.error("Failed to send response: ${e.message}")
+                }
                 close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Authentication required"))
                 return@webSocket
             }
+            
+            logger.info("========== WebSocket Connection ACCEPTED ==========")
+            logger.info("User ID: $userId")
             
             logger.info("WebSocket connection accepted for user: $userId")
             TimerNotifier.registerSession(userId, this)

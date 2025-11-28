@@ -152,7 +152,13 @@ fun createTrustManager(): X509TrustManager? {
         }
         PROD_VARIANT -> {
             // Prod mode: use Cloudflare certificate
-            trustManagerFromResource("certs/cloudflare-cert.pem")
+            val tm = trustManagerFromResource("certs/cloudflare-cert.pem")
+            if (tm == null) {
+                println("⚠️ [SSL] Cloudflare certificate not found or failed to load. WebSocket connections may fail.")
+            } else {
+                println("✅ [SSL] Cloudflare certificate loaded successfully")
+            }
+            tm
         }
         else -> null
     }
@@ -170,7 +176,16 @@ val networkModule = module {
                 }
                 // Use custom trust manager if available (for dev HTTP Toolkit or prod Cloudflare cert)
                 tm?.let { trustManager ->
-                    https { this.trustManager = trustManager }
+                    https {
+                        this.trustManager = trustManager
+                    }
+                    if (VARIANT == PROD_VARIANT) {
+                        println("✅ [HTTP] Trust manager configured for HTTP client")
+                    }
+                } ?: run {
+                    if (VARIANT == PROD_VARIANT) {
+                        println("⚠️ [HTTP] No trust manager available - certificate may be missing!")
+                    }
                 }
             }
             install(ContentNegotiation) {
@@ -188,9 +203,21 @@ val networkModule = module {
     single(socketQualifier) {
         HttpClient(CIO) {
             engine {
-                // Use custom trust manager for WebSocket connections too
-                tm?.let { trustManager ->
-                    https { this.trustManager = trustManager }
+                // Only configure SSL trust manager for SSL connections (port 443 or PROD_VARIANT)
+                // For non-SSL connections (ws://), don't configure trust manager
+                if (VARIANT == PROD_VARIANT || SOCKETS_PORT == 443) {
+                    tm?.let { trustManager ->
+                        https {
+                            this.trustManager = trustManager
+                        }
+                        println("✅ [WebSocket] Trust manager configured for WebSocket client (SSL)")
+                    } ?: run {
+                        if (VARIANT == PROD_VARIANT) {
+                            println("⚠️ [WebSocket] No trust manager available - certificate may be missing!")
+                        }
+                    }
+                } else {
+                    println("ℹ️ [WebSocket] Using non-SSL WebSocket connection (ws://) - no trust manager needed")
                 }
             }
             install(ContentNegotiation) {

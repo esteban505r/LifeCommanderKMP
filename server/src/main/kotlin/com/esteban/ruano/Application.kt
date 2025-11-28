@@ -85,10 +85,9 @@ fun Application.configureLogging() {
 
     install(CallLogging) {
         level = Level.INFO
-        callIdMdc(MDC_KEY)                 // <- surfaces CallId in MDC
+        callIdMdc(MDC_KEY)                 
         filter { 
             val path = it.request.path()
-            // Log all requests including WebSocket attempts
             if (path.contains("/timers/notifications")) {
                 val logger = LoggerFactory.getLogger("WebSocketRequestLogger")
                 logger.info("WebSocket request detected - Method: ${it.request.httpMethod}, URI: ${it.request.uri}")

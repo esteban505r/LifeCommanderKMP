@@ -7,7 +7,8 @@ const val BASE_URL_PROD = "https://api.estebanruano.com/api/v1"
 
 const val BASE_URL_DEV = "https://api.estebanruano.com/api/v1" //FOR DEBUGGING PROD
 //const val BASE_URL_DEV = "http://localhost:8080/api/v1"
-const val SOCKETS_HOST_DEV = "localhost"
+const val SOCKETS_HOST_DEV = "api.estebanruano.com" /// FOR DEBUGGING PROD
+//const val SOCKETS_HOST_DEV = "localhost"
 const val SOCKETS_HOST_PROD = "api.estebanruano.com"
 const val SOCKETS_PORT_DEV = 8080
 const val SOCKETS_PORT_PROD = 443

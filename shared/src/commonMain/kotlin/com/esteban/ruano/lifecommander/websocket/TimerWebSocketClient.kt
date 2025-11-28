@@ -53,6 +53,9 @@ class TimerWebSocketClient(
                 println("🔌 [WebSocket] Connecting to $fullUrl")
                 println("🔌 [WebSocket] Host: $host, Port: $port, Path: $path/timers/notifications")
                 println("🔌 [WebSocket] Token present: ${token != null}, Token length: ${token?.length ?: 0}")
+                if (token != null) {
+                    println("🔌 [WebSocket] Token preview: ${token.take(20)}...${token.takeLast(10)}")
+                }
                 
                 httpClient.webSocket(
                     method = HttpMethod.Get,
@@ -63,7 +66,16 @@ class TimerWebSocketClient(
                         appHeaders(
                             token = token,
                         )
-                        println("🔌 [WebSocket] Request headers set - Authorization: ${headers.contains("Authorization")}")
+                        // Log all headers being sent
+                        println("🔌 [WebSocket] Request headers:")
+                        headers.forEach { name, values ->
+                            if (name == "Authorization") {
+                                println("  - $name: ${values.firstOrNull()?.take(30)}...")
+                            } else {
+                                println("  - $name: ${values.joinToString(", ")}")
+                            }
+                        }
+                        println("🔌 [WebSocket] Full request URL: $protocol://$host:$port$path/timers/notifications")
                         timeout { requestTimeoutMillis = 10000 }
                     }
                 ) {
@@ -122,6 +134,23 @@ class TimerWebSocketClient(
                 println("🚫 [WebSocket] Failed to connect to WebSocket: ${e.message}")
                 println("🚫 [WebSocket] Exception type: ${e::class.simpleName}")
                 println("🚫 [WebSocket] Full URL was: $protocol://$host:$port$path/timers/notifications")
+                
+                // Try to extract more details from the exception
+                when (e) {
+                    is io.ktor.client.plugins.websocket.WebSocketException -> {
+                        println("🚫 [WebSocket] WebSocketException details:")
+                        println("  - Message: ${e.message}")
+                        println("  - Cause: ${e.cause?.message}")
+                        // Try to get response details if available
+                        e.cause?.let { cause ->
+                            if (cause is io.ktor.client.call.HttpClientCall) {
+                                println("  - Response status: ${cause.response.status}")
+                                println("  - Response headers: ${cause.response.headers.entries().joinToString { "${it.key}: ${it.value.joinToString()}" }}")
+                            }
+                        }
+                    }
+                }
+                
                 e.printStackTrace()
                 _connectionState.value = TimerConnectionState.Error(e.message ?: "Failed to connect")
 
