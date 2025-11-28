@@ -68,11 +68,11 @@ class TimerWebSocketClient(
                         )
                         // Log all headers being sent
                         println("🔌 [WebSocket] Request headers:")
-                        headers.forEach { name, values ->
-                            if (name == "Authorization") {
-                                println("  - $name: ${values.firstOrNull()?.take(30)}...")
+                        headers.entries().forEach { name ->
+                            if (name.key == "Authorization") {
+                                println("  - $name: ${name.value.firstOrNull()?.take(30)}...")
                             } else {
-                                println("  - $name: ${values.joinToString(", ")}")
+                                println("  - $name: ${name.value.joinToString(", ")}")
                             }
                         }
                         println("🔌 [WebSocket] Full request URL: $protocol://$host:$port$path/timers/notifications")
