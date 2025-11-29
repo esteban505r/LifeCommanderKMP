@@ -200,7 +200,7 @@ fun Route.timerRouting(timerService: TimerService) {
             logger.info("Path: ${call.request.path()}")
             logger.info("Query String: ${call.request.queryParameters.entries().joinToString { "${it.key}=${it.value.joinToString()}" }}")
             logger.info("Headers (${headersList.size}):")
-            headersList.forEach { logger.info("  $it") }
+            headersList.forEach { logger.info("HEADER  $it") }
             logger.info("Authorization header present: ${call.request.headers.contains("Authorization")}")
             logger.info("Authorization header value: ${call.request.headers["Authorization"]?.take(50)}...")
             logger.info("Upgrade header: ${call.request.headers["Upgrade"]}")

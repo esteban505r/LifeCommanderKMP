@@ -29,6 +29,7 @@ fun CommonItem(
     interactionSource: MutableInteractionSource,
     borderColor: Color,
     leftIcon: @Composable (() -> Unit)? = null,
+    topContent: @Composable (() -> Unit)? = null,
     rightContent: @Composable (() -> Unit)? = null,
     rightContentTextStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.body2,
     bottomContent: @Composable (() -> Unit)? = null,
@@ -105,6 +106,18 @@ fun CommonItem(
                         .padding(vertical = 20.dp, horizontal = 16.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
+                    // Optional content above the title (e.g., tags)
+                    if (topContent != null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            topContent()
+                        }
+                    }
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()

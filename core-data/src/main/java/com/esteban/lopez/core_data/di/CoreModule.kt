@@ -25,6 +25,9 @@ import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.compression.ContentEncoding
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.request.HttpRequestPipeline
+import io.ktor.http.HttpHeaders
+import io.ktor.http.encodedPath
 import io.ktor.serialization.gson.gson
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -75,6 +78,37 @@ object CoreModule {
                 }
             }
             install(WebSockets)
+        }.also { client ->
+            // Add request logging interceptor after client creation
+            client.requestPipeline.intercept(HttpRequestPipeline.State) {
+                val request = context
+                android.util.Log.d("SocketClient", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                android.util.Log.d("SocketClient", "🔌 [HTTP Request] Request Details:")
+                android.util.Log.d("SocketClient", "  Method: ${request.method}")
+                android.util.Log.d("SocketClient", "  URL: ${request.url}")
+                android.util.Log.d("SocketClient", "  Protocol: ${request.url.protocol}")
+                android.util.Log.d("SocketClient", "  Host: ${request.url.host}")
+                android.util.Log.d("SocketClient", "  Port: ${request.url.port}")
+                android.util.Log.d("SocketClient", "  Path: ${request.url.encodedPath}")
+                android.util.Log.d("SocketClient", "  Full URL: ${request.url.buildString()}")
+                android.util.Log.d("SocketClient", "  Headers:")
+                request.headers.entries().forEach { header ->
+                    val headerName = header.key
+                    val headerValue = header.value.firstOrNull() ?: ""
+                    if (headerName == HttpHeaders.Authorization) {
+                        // Mask authorization token for security
+                        val maskedValue = if (headerValue.length > 20) {
+                            "${headerValue.take(20)}...${headerValue.takeLast(10)}"
+                        } else {
+                            "***masked***"
+                        }
+                        android.util.Log.d("SocketClient", "    $headerName: $maskedValue")
+                    } else {
+                        android.util.Log.d("SocketClient", "    $headerName: ${header.value.joinToString(", ")}")
+                    }
+                }
+                android.util.Log.d("SocketClient", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            }
         }
     }
 

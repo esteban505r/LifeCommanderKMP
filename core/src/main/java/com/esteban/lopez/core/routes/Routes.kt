@@ -13,14 +13,17 @@ object Routes {
     object BASE {
         val ROUTE = "base"
         val HOME = BottomNavRoute("home", "home", "Home")
+        val CALENDAR = BottomNavRoute("calendar", "calendar", "Calendar")
         val TO_DO = BottomNavRoute("to_do", "to-do", "To-do")
         val HEALTH = BottomNavRoute("health", "health", "Health")
+        val OTHERS = BottomNavRoute("others", "others", "Others")
         val WORKOUT = BottomNavRoute("workout", "workout", "Workout") // Keep for internal navigation
         val NUTRITION = BottomNavRoute("nutrition", "nutrition", "Nutrition") // Keep for internal navigation
         val TIMERS = BottomNavRoute("timers", "timers", "Timers")
         val FINANCE = BottomNavRoute("finance", "finance", "Finance")
         val JOURNAL = BottomNavRoute("journal", "journal", "Journal")
-        fun getAllRoutes() = listOf(HOME, TO_DO, HEALTH, TIMERS, FINANCE, JOURNAL)
+        val STUDY = BottomNavRoute("study", "study", "Study")
+        fun getAllRoutes() = listOf(HOME, CALENDAR, TO_DO, HEALTH, OTHERS)
     }
 
     const val WELCOME = "welcome"
@@ -61,4 +64,7 @@ object Routes {
     const val SEARCH = "search"
     //Timers
     const val TIMER_LIST_DETAIL = "timers/list_detail"
+
+    // Study (mobile)
+    const val STUDY = "study"
 }

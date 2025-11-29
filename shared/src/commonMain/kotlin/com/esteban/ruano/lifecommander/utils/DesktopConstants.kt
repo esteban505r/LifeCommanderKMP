@@ -10,7 +10,8 @@ const val BASE_URL_DEV = "https://api.estebanruano.com/api/v1" //FOR DEBUGGING P
 const val SOCKETS_HOST_DEV = "api.estebanruano.com" /// FOR DEBUGGING PROD
 //const val SOCKETS_HOST_DEV = "localhost"
 const val SOCKETS_HOST_PROD = "api.estebanruano.com"
-const val SOCKETS_PORT_DEV = 8080
+const val SOCKETS_PORT_DEV = 443
+//const val SOCKETS_PORT_DEV = 8080
 const val SOCKETS_PORT_PROD = 443
 const val PROD_VARIANT = "prod"
 const val DEV_VARIANT = "dev"
@@ -18,8 +19,8 @@ const val APP_NAME_BASE = "Life Commander"
 const val VERSION = "0.0.0.1"
 
 
-//const val VARIANT = DEV_VARIANT
-const val VARIANT = PROD_VARIANT
+const val VARIANT = DEV_VARIANT
+//const val VARIANT = PROD_VARIANT
 
 
 val APP_NAME: String

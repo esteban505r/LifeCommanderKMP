@@ -10,10 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
+import com.esteban.ruano.lifecommander.timer.TimerConnectionState
 import com.esteban.ruano.lifecommander.ui.composables.GeneralFloatingActionButtons
 import com.esteban.ruano.lifecommander.ui.viewmodels.TimersViewModel
 import com.esteban.ruano.lifecommander.utils.APP_NAME
@@ -22,6 +24,7 @@ import services.NightBlockService
 import services.tasks.models.Priority
 import ui.components.NightBlockComposable
 import ui.navigation.Screen
+import ui.theme.DarkGreen
 import ui.viewmodels.AppViewModel
 import ui.viewmodels.DailyJournalViewModel
 import ui.viewmodels.HabitsViewModel
@@ -52,6 +55,7 @@ fun AppLayout(
     var timerDialogMessage by remember { mutableStateOf("") }
 
     val timerPlaybackState by timersViewModel.timerPlaybackState.collectAsState()
+    val connectionState by timersViewModel.connectionState.collectAsState()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -84,25 +88,79 @@ fun AppLayout(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(LocalDateTime.now().dayOfWeek.name, style = MaterialTheme.typography.subtitle1)
                         
-                        if (timerPlaybackState.status != TimerPlaybackStatus.Stopped) {
+                        // Active Timer Display (always visible when timer is running or paused)
+                        if (timerPlaybackState.currentTimer != null && timerPlaybackState.status != TimerPlaybackStatus.Stopped) {
                             Spacer(modifier = Modifier.width(16.dp))
-                            Box(
+                            Surface(
                                 modifier = Modifier
-                                    .padding(8.dp)
-                                    .border(
-                                        width = 1.dp,
-                                        color = MaterialTheme.colors.onSurface,
-                                        shape = MaterialTheme.shapes.small
-                                    )
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                shape = MaterialTheme.shapes.small,
+                                color = when (timerPlaybackState.status) {
+                                    TimerPlaybackStatus.Running -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
+                                    TimerPlaybackStatus.Paused -> MaterialTheme.colors.secondary.copy(alpha = 0.1f)
+                                    TimerPlaybackStatus.Stopped -> MaterialTheme.colors.surface
+                                    TimerPlaybackStatus.Completed -> DarkGreen
+                                },
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = when (timerPlaybackState.status) {
+                                        TimerPlaybackStatus.Running -> MaterialTheme.colors.primary.copy(alpha = 0.3f)
+                                        TimerPlaybackStatus.Paused -> MaterialTheme.colors.secondary.copy(alpha = 0.3f)
+                                        TimerPlaybackStatus.Stopped -> MaterialTheme.colors.onSurface.copy(alpha = 0.1f)
+                                        TimerPlaybackStatus.Completed -> DarkGreen
+                                    }
+                                )
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
+                                    // Status Icon
+                                    Icon(
+                                        imageVector = when (timerPlaybackState.status) {
+                                            TimerPlaybackStatus.Running -> Icons.Default.Timer
+                                            TimerPlaybackStatus.Paused -> Icons.Default.Pause
+                                            TimerPlaybackStatus.Stopped -> Icons.Default.Stop
+                                            TimerPlaybackStatus.Completed -> Icons.Default.CheckCircle
+                                        },
+                                        contentDescription = when (timerPlaybackState.status) {
+                                            TimerPlaybackStatus.Running -> "Running"
+                                            TimerPlaybackStatus.Paused -> "Paused"
+                                            TimerPlaybackStatus.Stopped -> "Stopped"
+                                            TimerPlaybackStatus.Completed -> "Completed"
+                                        },
+                                        modifier = Modifier.size(18.dp),
+                                        tint = when (timerPlaybackState.status) {
+                                            TimerPlaybackStatus.Running -> MaterialTheme.colors.primary
+                                            TimerPlaybackStatus.Paused -> MaterialTheme.colors.secondary
+                                            TimerPlaybackStatus.Stopped -> MaterialTheme.colors.onSurface
+                                            TimerPlaybackStatus.Completed -> DarkGreen
+                                        }
+                                    )
+                                    // Timer Name
                                     Text(
-                                        text = "${timerPlaybackState.currentTimer?.name} ${timerPlaybackState.remainingMillis.milliseconds.formatDefault()}",
-                                        style = MaterialTheme.typography.subtitle1,
+                                        text = timerPlaybackState.currentTimer?.name ?: "",
+                                        style = MaterialTheme.typography.subtitle2,
+                                        fontWeight = FontWeight.Medium,
                                         color = MaterialTheme.colors.onSurface
+                                    )
+                                    Text(
+                                        text = "•",
+                                        style = MaterialTheme.typography.subtitle2,
+                                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
+                                    )
+                                    // Remaining Time
+                                    Text(
+                                        text = timerPlaybackState.remainingMillis.milliseconds.formatDefault(),
+                                        style = MaterialTheme.typography.subtitle2,
+                                        fontWeight = FontWeight.Bold,
+                                        color = when (timerPlaybackState.status) {
+                                            TimerPlaybackStatus.Running -> MaterialTheme.colors.primary
+                                            TimerPlaybackStatus.Paused -> MaterialTheme.colors.secondary
+                                            TimerPlaybackStatus.Stopped -> MaterialTheme.colors.onSurface
+                                            TimerPlaybackStatus.Completed -> DarkGreen
+                                        }
                                     )
                                 }
                             }
@@ -110,6 +168,36 @@ fun AppLayout(
                     }
                 },
                 actions = {
+                    // WebSocket Connection Status Icon
+                    IconButton(
+                        onClick = {
+                            if (connectionState !is TimerConnectionState.Connected) {
+                                timersViewModel.connectWebSocket()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = when (connectionState) {
+                                is TimerConnectionState.Connected -> Icons.Default.CloudDone
+                                is TimerConnectionState.Disconnected -> Icons.Default.CloudOff
+                                is TimerConnectionState.Error -> Icons.Default.Error
+                                TimerConnectionState.Reconnecting -> Icons.Default.CloudSync
+                            },
+                            contentDescription = when (connectionState) {
+                                is TimerConnectionState.Connected -> "Connected to server"
+                                is TimerConnectionState.Disconnected -> "Disconnected from server"
+                                is TimerConnectionState.Error -> "Connection error - Click to reconnect"
+                                TimerConnectionState.Reconnecting -> "Reconnecting..."
+                            },
+                            tint = when (connectionState) {
+                                is TimerConnectionState.Connected -> MaterialTheme.colors.primary
+                                is TimerConnectionState.Disconnected,
+                                is TimerConnectionState.Error -> MaterialTheme.colors.error
+                                TimerConnectionState.Reconnecting -> MaterialTheme.colors.primary
+                            }
+                        )
+                    }
+                    
                     if (timerPlaybackState.currentTimer != null) {
                         if (timerPlaybackState.status == TimerPlaybackStatus.Running) {
                             IconButton(onClick = { timersViewModel.pauseTimer() }) {

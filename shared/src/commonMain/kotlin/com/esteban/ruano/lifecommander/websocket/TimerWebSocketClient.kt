@@ -7,6 +7,7 @@ import com.esteban.ruano.lifecommander.utils.appHeaders
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.http.HttpMethod
+import io.ktor.http.URLProtocol
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,6 +53,7 @@ class TimerWebSocketClient(
                 }
                 println("🔌 [WebSocket] Connecting to $fullUrl")
                 println("🔌 [WebSocket] Host: $host, Port: $port, Path: $path/timers/notifications")
+                println("🔌 [WebSocket] Protocol: $protocol")
                 println("🔌 [WebSocket] Token present: ${token != null}, Token length: ${token?.length ?: 0}")
                 if (token != null) {
                     println("🔌 [WebSocket] Token preview: ${token.take(20)}...${token.takeLast(10)}")
@@ -63,6 +65,9 @@ class TimerWebSocketClient(
                     port = port,
                     path = "$path/timers/notifications",
                     request = {
+                        // Set the protocol based on port (wss for 443, ws otherwise)
+                        url.protocol = if (port == 443) URLProtocol.WSS else URLProtocol.WS
+                        
                         appHeaders(
                             token = token,
                         )
@@ -75,7 +80,7 @@ class TimerWebSocketClient(
                                 println("  - $name: ${name.value.joinToString(", ")}")
                             }
                         }
-                        println("🔌 [WebSocket] Full request URL: $protocol://$host:$port$path/timers/notifications")
+                        println("🔌 [WebSocket] Full request URL: ${url.protocol.name}://$host:$port$path/timers/notifications")
                         timeout { requestTimeoutMillis = 10000 }
                     }
                 ) {

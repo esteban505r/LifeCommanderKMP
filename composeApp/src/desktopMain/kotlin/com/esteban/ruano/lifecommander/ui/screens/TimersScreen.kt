@@ -13,18 +13,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.esteban.ruano.lifecommander.models.Timer
 import com.esteban.ruano.lifecommander.models.TimerList
-import com.esteban.ruano.lifecommander.timer.TimerConnectionState
 import com.esteban.ruano.lifecommander.timer.TimerNotification
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackState
 import com.esteban.ruano.lifecommander.timer.TimerPlaybackStatus
 import com.esteban.ruano.lifecommander.ui.components.TimerControls
-import kotlinx.coroutines.launch
 
 @Composable
 fun TimersScreen(
     timerLists: List<TimerList>,
     timerPlaybackState: TimerPlaybackState,
-    connectionState: TimerConnectionState,
     notifications: List<TimerNotification>,
     onAddTimerList: (String, Boolean, Boolean) -> Unit,
     onUpdateTimerList: (String, String, Boolean, Boolean) -> Unit,
@@ -34,7 +31,6 @@ fun TimersScreen(
     onDeleteTimer: (String) -> Unit,
     onReorderTimers: (String, List<Timer>) -> Unit,
     onNavigateToDetail: (TimerList) -> Unit,
-    onReconnectToSocket: () -> Unit,
     onStartTimer: (TimerList) -> Unit,
     onPauseTimer: () -> Unit,
     onResumeTimer: () -> Unit,
@@ -42,80 +38,10 @@ fun TimersScreen(
 ) {
     var showAddTimerListDialog by remember { mutableStateOf(false) }
     var showEditTimerListDialog by remember { mutableStateOf<TimerList?>(null) }
-    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
-        // Connection Status Bar
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = 4.dp,
-            color = when (connectionState) {
-                is TimerConnectionState.Connected -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
-                is TimerConnectionState.Disconnected,
-                is TimerConnectionState.Error -> MaterialTheme.colors.error.copy(alpha = 0.1f)
-                TimerConnectionState.Reconnecting -> MaterialTheme.colors.primary.copy(alpha = 0.1f)
-            }
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = when (connectionState) {
-                            is TimerConnectionState.Connected -> Icons.Default.CloudDone
-                            is TimerConnectionState.Disconnected -> Icons.Default.CloudOff
-                            is TimerConnectionState.Error -> Icons.Default.Error
-                            TimerConnectionState.Reconnecting -> Icons.Default.CloudSync
-                        },
-                        contentDescription = null,
-                        tint = when (connectionState) {
-                            is TimerConnectionState.Connected -> MaterialTheme.colors.primary
-                            is TimerConnectionState.Disconnected,
-                            is TimerConnectionState.Error -> MaterialTheme.colors.error
-                            TimerConnectionState.Reconnecting -> MaterialTheme.colors.primary
-                        }
-                    )
-                    Text(
-                        text = when (connectionState) {
-                            is TimerConnectionState.Connected -> "Connected to server"
-                            is TimerConnectionState.Disconnected -> "Disconnected from server"
-                            is TimerConnectionState.Error -> "Connection error"
-                            TimerConnectionState.Reconnecting -> "Reconnecting..."
-                        },
-                        style = MaterialTheme.typography.caption,
-                        color = when (connectionState) {
-                            is TimerConnectionState.Connected -> MaterialTheme.colors.primary
-                            is TimerConnectionState.Disconnected,
-                            is TimerConnectionState.Error -> MaterialTheme.colors.error
-                            TimerConnectionState.Reconnecting -> MaterialTheme.colors.primary
-                        }
-                    )
-                }
-                if (connectionState !is TimerConnectionState.Connected) {
-                    Button(
-                        onClick = { coroutineScope.launch { onReconnectToSocket() } },
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = MaterialTheme.colors.primary
-                        )
-                    ) {
-                        Icon(Icons.Default.Refresh, contentDescription = null)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Reconnect")
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         // Header
         Row(

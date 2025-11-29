@@ -46,10 +46,6 @@ fun TimersScreenDestination(
             TimersScreen(
                 timerLists = timerLists,
                 timerPlaybackState = timerPlaybackState,
-                connectionState = connectionState,
-                onReconnectToSocket = {
-                    timersViewModel.connectWebSocket()
-                },
                 notifications = notifications,
                 onAddTimerList = { name, loopTimers, pomodoroGrouped ->
                     timersViewModel.createTimerList(name, loopTimers, pomodoroGrouped)

@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.Icon
 import com.esteban.ruano.lifecommander.utils.UiUtils.getColorByPriority
 import com.esteban.ruano.lifecommander.utils.UiUtils.getIconByPriority
@@ -68,66 +69,40 @@ fun TaskItem(
         isHovered = isHovered,
         interactionSource = interactionSource,
         borderColor = priorityColor,
+        topContent = {
+            // Tags above the title
+            if (!task.tags.isNullOrEmpty()) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(task.tags ?: emptyList()) { tag ->
+                        TagChip(
+                            tag = tag,
+                            onClick = { /* Tags are read-only in list view */ },
+                            selected = false,
+                            modifier = Modifier.height(24.dp)
+                        )
+                    }
+                }
+            }
+        },
         textDecoration = textDecoration,
         onCheckedChange = { checked -> onCheckedChange(task, checked) },
         onClick = { onClick(task) },
         onLongClick = { showContextMenu.value = true },
         showContextMenu = showContextMenu.value,
         onDismissContextMenu = { showContextMenu.value = false },
-        rightContent = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Color-coded priority indicator with icon
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(priorityColor.copy(alpha = 0.15f))
-                        .border(
-                            width = 2.dp,
-                            color = priorityColor,
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = priorityIcon,
-                        contentDescription = "Priority",
-                        tint = priorityColor,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-
-                // Reschedule button for overdue tasks
-                if (overdue && onReschedule != null) {
-                    IconButton(
-                        onClick = {
-                            showContextMenu.value = false
-                            onReschedule()
-                        },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Schedule,
-                            contentDescription = "Reschedule",
-                            tint = MaterialTheme.colors.error,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-            }
-        },
+        rightContent = null,
         bottomContent = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Date information with improved styling
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                Column(
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     if (task.dueDateTime != null) {
                         Row(
@@ -175,19 +150,63 @@ fun TaskItem(
                         }
                     }
                 }
-                
-                // Tags display
-                if (!task.tags.isNullOrEmpty()) {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
+
+                // Divider between title/dates and actions
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.08f)
+                )
+
+                // Actions row (priority + optional reschedule) below the divider
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Priority indicator
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(task.tags ?: emptyList()) { tag ->
-                            TagChip(
-                                tag = tag,
-                                onClick = { /* Tags are read-only in list view */ },
-                                selected = false,
-                                modifier = Modifier.height(24.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(priorityColor.copy(alpha = 0.15f))
+                                .border(
+                                    width = 2.dp,
+                                    color = priorityColor,
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = priorityIcon,
+                                contentDescription = "Priority",
+                                tint = priorityColor,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    // Reschedule action (if overdue)
+                    if (overdue && onReschedule != null) {
+                        IconButton(
+                            onClick = {
+                                showContextMenu.value = false
+                                onReschedule()
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Update,
+                                contentDescription = "Reschedule",
+                                tint = MaterialTheme.colors.error,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }

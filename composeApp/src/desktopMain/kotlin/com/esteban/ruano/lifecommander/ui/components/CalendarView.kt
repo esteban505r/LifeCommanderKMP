@@ -507,17 +507,53 @@ private fun TaskItem(task: Task, onTaskClick: (String) -> Unit) {
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = task.name?:"",
+                    text = task.name ?: "",
                     style = MaterialTheme.typography.body1
                 )
-                val dateTime = task.dueDateTime?.toLocalDateTime() 
-                    ?: task.scheduledDateTime?.toLocalDateTime()
-                dateTime?.let {
-                    Text(
-                        text = it.formatDefault(),
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                    )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Due date uses a calendar-like icon (CalendarClock analogous)
+                    task.dueDateTime?.toLocalDateTime()?.let { due ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = "Due",
+                                tint = MaterialTheme.colors.error,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = due.formatDefault(),
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.error
+                            )
+                        }
+                    }
+
+                    // Scheduled date always uses the Event icon
+                    task.scheduledDateTime?.toLocalDateTime()?.let { scheduled ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Event,
+                                contentDescription = "Scheduled",
+                                tint = MaterialTheme.colors.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = scheduled.formatDefault(),
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.primary
+                            )
+                        }
+                    }
                 }
             }
         }
